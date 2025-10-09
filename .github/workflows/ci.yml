@@ -1,23 +1,33 @@
 name: CI
+
 on:
-  pull_request:
-    branches: [ main ]
   push:
     branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
+      # Node + Corepack
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'pnpm'
 
+      # Instala PNPM 9 en el runner
       - uses: pnpm/action-setup@v4
         with:
           version: 9
+          run_install: false
+
+      # Sanity check (verás la versión en los logs)
+      - name: pnpm --version
+        run: pnpm -v
 
       - name: Install
         run: pnpm install --frozen-lockfile
