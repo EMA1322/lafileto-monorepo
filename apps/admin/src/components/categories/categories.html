@@ -1,0 +1,114 @@
+<!-- Admin / Categories (fragmento inyectado en #app) -->
+<!-- Code-splitting: CSS del módulo se carga aquí -->
+<link rel="stylesheet" href="/src/styles/categories.css" />
+
+<section id="categories-view" class="categories" aria-labelledby="categories-title">
+  <!-- Header -->
+  <header class="categories__header">
+    <h2 id="categories-title" class="categories__title">Categorías</h2>
+
+    <!-- Toolbar: búsqueda, estado, orden y acciones -->
+    <div class="categories__toolbar" role="region" aria-label="Búsqueda y filtros">
+      <!-- Buscar por nombre -->
+      <div class="categories__tool">
+        <label for="filter-q" class="visually-hidden">Buscar</label>
+        <input
+          id="filter-q"
+          class="categories__search"
+          type="search"
+          placeholder="Buscar por nombre…"
+          autocomplete="off"
+          inputmode="search"
+        />
+      </div>
+
+      <!-- Estado: todas / activas / inactivas -->
+      <div class="categories__tool">
+        <label for="filter-status" class="visually-hidden">Estado</label>
+        <select id="filter-status" class="categories__select" aria-label="Estado">
+          <option value="all" selected>Todas</option>
+          <option value="active">Activas</option>
+          <option value="inactive">Inactivas</option>
+        </select>
+      </div>
+
+      <!-- Dirección de orden: asc / desc (por nombre) -->
+      <div class="categories__tool categories__tool--order">
+        <label for="filter-dir" class="visually-hidden">Orden</label>
+        <select id="filter-dir" class="categories__select" aria-label="Orden">
+          <option value="asc" selected>Ascendente</option>
+          <option value="desc">Descendente</option>
+        </select>
+      </div>
+
+      <!-- Acciones -->
+      <div class="categories__tool categories__tool--cta">
+        <button id="btn-refresh" class="btn btn--ghost" type="button" title="Refrescar">
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M20 12a8 8 0 10-2.34 5.66" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+            <path d="M20 4v6h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+          </svg>
+          Refrescar
+        </button>
+        <button id="btn-create" class="btn" type="button" data-requires="write">+ Nuevo</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Tabla -->
+  <div class="categories__tableWrap">
+    <table class="categories__table">
+      <thead>
+        <tr>
+          <th scope="col">Nombre</th>
+          <th scope="col">Estado</th>
+          <th scope="col">Productos</th>
+          <th scope="col" class="col-actions">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="cat-tbody">
+        <!-- rows dinámicas -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Empty -->
+  <p class="empty" id="cat-empty" hidden>No hay categorías para mostrar.</p>
+
+  <!-- Footer / Meta + Pager -->
+  <footer class="categories__footer" aria-label="Paginación">
+    <div id="cat-meta" class="categories__summary">—</div>
+    <div class="categories__pager">
+      <button id="btn-prev" class="btn btn--ghost" type="button" title="Página anterior">◀</button>
+      <span id="cat-page" class="categories__page">1 / 1</span>
+      <button id="btn-next" class="btn btn--ghost" type="button" title="Página siguiente">▶</button>
+    </div>
+  </footer>
+
+  <!-- Dialog nativo: Crear/Editar -->
+  <dialog id="cat-dialog" class="categories__dialog" aria-labelledby="cat-dialog-title">
+    <form id="cat-form" method="dialog" class="categories__form">
+      <header class="categories__dialogHeader">
+        <h3 id="cat-dialog-title" class="categories__dialogTitle">Nueva categoría</h3>
+      </header>
+
+      <div class="categories__field">
+        <label for="cat-name" class="categories__label">Nombre</label>
+        <input id="cat-name" class="categories__input" type="text" required placeholder="Ej: Pizzas" />
+      </div>
+
+      <div class="categories__field">
+        <label for="cat-status-input" class="categories__label">Estado</label>
+        <select id="cat-status-input" class="categories__input">
+          <option value="active" selected>Activa</option>
+          <option value="inactive">Inactiva</option>
+        </select>
+      </div>
+
+      <footer class="categories__dialogFooter">
+        <button id="cat-cancel" type="button" class="btn btn-secondary">Cancelar</button>
+        <button id="cat-save"   type="submit"  class="btn">Guardar</button>
+      </footer>
+    </form>
+  </dialog>
+</section>

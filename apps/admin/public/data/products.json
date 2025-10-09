@@ -1,0 +1,180 @@
+[
+  {
+    "id": "prod-001",
+    "name": "Pizza Napolitana",
+    "description": "Salsa de tomate, mozzarella, albahaca",
+    "price": 4500,
+    "image": "/img/pizza_napolitana.jpg",
+    "categoryId": "pizzas",
+    "isOffer": true,
+    "discount": 10,
+    "status": "active"
+  },
+  {
+    "id": "prod-002",
+    "name": "Pizza Muzarella",
+    "description": "Mozzarella y aceitunas",
+    "price": 4200,
+    "image": "/img/pizza_muzarella.jpg",
+    "categoryId": "pizzas",
+    "isOffer": false,
+    "discount": 0,
+    "status": "active"
+  },
+  {
+    "id": "prod-003",
+    "name": "Pizza Fugazzeta",
+    "description": "Cebolla y queso",
+    "price": 4800,
+    "image": "/img/pizza_fugazzeta.jpg",
+    "categoryId": "pizzas",
+    "isOffer": false,
+    "discount": 0,
+    "status": "active"
+  },
+  {
+    "id": "prod-004",
+    "name": "Ravioles de Ricota",
+    "description": "Con salsa fileto",
+    "price": 3900,
+    "image": "/img/ravioles_ricota.jpg",
+    "categoryId": "pastas",
+    "isOffer": false,
+    "discount": 0,
+    "status": "active"
+  },
+  {
+    "id": "prod-005",
+    "name": "Sorrentinos Jamón y Queso",
+    "description": "Con salsa cuatro quesos",
+    "price": 5200,
+    "image": "/img/sorrentinos_jyq.jpg",
+    "categoryId": "pastas",
+    "isOffer": true,
+    "discount": 15,
+    "status": "active"
+  },
+  {
+    "id": "prod-006",
+    "name": "Lasaña Boloñesa",
+    "description": "Clásica al horno",
+    "price": 5600,
+    "image": "/img/lasagna_bolonesa.jpg",
+    "categoryId": "pastas",
+    "isOffer": false,
+    "discount": 0,
+    "status": "inactive"
+  },
+  {
+    "id": "prod-007",
+    "name": "Empanada de Carne",
+    "description": "Cortada a cuchillo",
+    "price": 700,
+    "image": "/img/empanada_carne.jpg",
+    "categoryId": "empanadas",
+    "isOffer": false,
+    "discount": 0,
+    "status": "active"
+  },
+  {
+    "id": "prod-008",
+    "name": "Empanada de Jamón y Queso",
+    "description": "Horneada",
+    "price": 700,
+    "image": "/img/empanada_jyq.jpg",
+    "categoryId": "empanadas",
+    "isOffer": false,
+    "discount": 0,
+    "status": "active"
+  },
+  {
+    "id": "prod-009",
+    "name": "Cerveza Artesanal 500cc",
+    "description": "Rubia",
+    "price": 2500,
+    "image": "/img/cerveza_artesanal.jpg",
+    "categoryId": "bebidas",
+    "isOffer": false,
+    "discount": 0,
+    "status": "active"
+  },
+  {
+    "id": "prod-010",
+    "name": "Gaseosa 500cc",
+    "description": "Variedades",
+    "price": 1600,
+    "image": "/img/gaseosa_500.jpg",
+    "categoryId": "bebidas",
+    "isOffer": false,
+    "discount": 0,
+    "status": "active"
+  },
+  {
+    "id": "prod-011",
+    "name": "Agua Mineral 500cc",
+    "description": "Sin gas",
+    "price": 1200,
+    "image": "/img/agua_500.jpg",
+    "categoryId": "bebidas",
+    "isOffer": false,
+    "discount": 0,
+    "status": "active"
+  },
+  {
+    "id": "prod-012",
+    "name": "Flan Casero",
+    "description": "Con dulce de leche",
+    "price": 2200,
+    "image": "/img/flan_casero.jpg",
+    "categoryId": "postres",
+    "isOffer": false,
+    "discount": 0,
+    "status": "active"
+  },
+  {
+    "id": "prod-013",
+    "name": "Helado 1/4 Kg",
+    "description": "Sabores clásicos",
+    "price": 3000,
+    "image": "/img/helado_cuarto.jpg",
+    "categoryId": "postres",
+    "isOffer": true,
+    "discount": 20,
+    "status": "active"
+  },
+  {
+    "id": "prod-014",
+    "name": "Tiramisú",
+    "description": "Clásico italiano",
+    "price": 3200,
+    "image": "/img/tiramisu.jpg",
+    "categoryId": "postres",
+    "isOffer": false,
+    "discount": 0,
+    "status": "inactive"
+  },
+  {
+    "id": "prod-015",
+    "name": "Milanesa con Papas",
+    "description": "De ternera",
+    "price": 5200,
+    "image": "/img/milanesa_papas.jpg",
+    "categoryId": "carnes",
+    "isOffer": false,
+    "discount": 0,
+    "status": "active"
+  },
+  {
+    "id": "prod-016",
+    "name": "Ensalada César",
+    "description": "Lechuga, pollo, croutons",
+    "price": 3800,
+    "image": "/img/ensalada_cesar.jpg",
+    "categoryId": "ensaladas",
+    "isOffer": false,
+    "discount": 0,
+    "status": "active"
+  }
+]
+
+

@@ -1,0 +1,96 @@
+<!-- =====================================================
+     Confirm — vista de confirmación de pedido (SPA)
+     - BEM, mobile-first, accesible
+     - Sin <DOCTYPE> (fragmento SPA)
+     ===================================================== -->
+<section class="confirm" aria-labelledby="confirm-title">
+  <div class="confirm__container">
+    <header class="confirm__header">
+      <h1 id="confirm-title" class="confirm__title">Confirmá tu pedido</h1>
+      <p class="confirm__subtitle">Revisá el resumen y completá tus datos para enviar por WhatsApp.</p>
+    </header>
+
+    <div class="confirm__layout">
+      <!-- Resumen del pedido -->
+      <section class="confirm__summary" aria-labelledby="confirm-summary-title">
+        <h2 id="confirm-summary-title" class="confirm__section-title">Resumen</h2>
+
+        <ul id="confirm-order-list" class="confirm__list" role="list" aria-busy="false">
+          <!-- Ítems generados por JS -->
+        </ul>
+
+        <div class="confirm__total-row">
+          <span>Total</span>
+          <span id="confirm-total-price">—</span>
+        </div>
+      </section>
+
+      <!-- Datos del cliente -->
+      <section class="confirm__form" aria-labelledby="confirm-form-title">
+        <h2 id="confirm-form-title" class="confirm__section-title">Tus datos</h2>
+
+        <div class="confirm__field">
+          <label for="confirm-name" class="confirm__label">Nombre</label>
+          <input id="confirm-name" class="confirm__input" type="text" placeholder="Tu nombre" autocomplete="name" />
+        </div>
+
+        <fieldset class="confirm__fieldset">
+          <legend class="confirm__label">Modalidad de entrega</legend>
+          <div class="confirm__radio-group">
+            <label class="confirm__radio">
+              <input
+                type="radio"
+                name="delivery"
+                id="delivery-pickup"
+                value="pickup"
+                checked
+                aria-controls="confirm-address-wrapper"
+                aria-expanded="false"
+              />
+              <span>Retiro en el local</span>
+            </label>
+            <label class="confirm__radio">
+              <input
+                type="radio"
+                name="delivery"
+                id="delivery-delivery"
+                value="delivery"
+                aria-controls="confirm-address-wrapper"
+                aria-expanded="false"
+              />
+              <span>Envío a domicilio</span>
+            </label>
+          </div>
+        </fieldset>
+
+        <!-- Dirección (se muestra sólo si Envío) -->
+        <div id="confirm-address-wrapper" class="confirm__field" hidden aria-hidden="true">
+          <label for="confirm-address" class="confirm__label">Dirección</label>
+          <input id="confirm-address" class="confirm__input" type="text" placeholder="Calle, número, piso/depto" autocomplete="street-address" />
+        </div>
+
+        <div class="confirm__field">
+          <label for="confirm-notes" class="confirm__label">Notas (opcional)</label>
+          <textarea id="confirm-notes" class="confirm__textarea" rows="3" placeholder="Aclaraciones para el pedido"></textarea>
+        </div>
+      </section>
+
+      <!-- Vista previa del mensaje -->
+      <section class="confirm__preview" aria-labelledby="confirm-preview-title">
+        <h2 id="confirm-preview-title" class="confirm__section-title">Vista previa</h2>
+        <textarea id="confirm-message" class="confirm__preview-text" rows="10" readonly></textarea>
+        <p class="confirm__hint" role="note">Este es el mensaje que se enviará por WhatsApp.</p>
+      </section>
+    </div>
+
+    <!-- Footer de acciones -->
+    <footer class="confirm__footer">
+      <p id="confirm-closed-note" class="confirm__closed-note" hidden>Estamos cerrados en este momento.</p>
+
+      <div class="confirm__actions">
+        <a class="btn btn-outline" href="#cart">Volver al carrito</a>
+        <button id="confirm-send-btn" class="btn confirm__send-btn" type="button">Enviar por WhatsApp</button>
+      </div>
+    </footer>
+  </div>
+</section>

@@ -1,0 +1,26 @@
+```mermaid
+%% C4 Model — Components (Admin SPA)
+C4Component
+title La Fileto — Admin SPA (Componentes)
+
+Container_Boundary(adminSpa, "Admin SPA (Vite)") {
+
+  Component(router, "Router", "Hash routing", "Resuelve rutas y carga vistas")
+  Component(guardRBAC, "RBAC Guard", "Guard", "Bloquea vistas/acciones según permisos")
+  Component(apiClient, "ApiClient", "Fetch wrapper", "Llama a /api/v1 con JWT y maneja envelope")
+  Component(sessionStore, "SessionStore", "State", "Token, usuario y roles activos")
+
+  Component(loginView, "LoginView", "View", "Ingreso y obtención de JWT")
+  Component(dashboardView, "DashboardView", "View", "Atajos y métricas básicas")
+  Component(categoriesView, "CategoriesView", "View", "CRUD de categorías")
+  Component(productsView, "ProductsView", "View", "CRUD de productos (precio/discount)")
+  Component(usersView, "UsersView", "View", "CRUD de usuarios")
+  Component(settingsView, "SettingsView (placeholder)", "View", "Ajustes del negocio")
+
+  Component(uiModal, "Modal", "UI", "Diálogos con focus trap")
+  Component(uiSnackbar, "Snackbar", "UI", "Feedback de operación")
+  Component(uiDataTable, "DataTable", "UI", "Listados con orden/búsqueda/paginación")
+}
+System_Ext(api, "API Backend", "Express / JSON")
+Rel(apiClient, api, "HTTP/JSON con JWT")
+```

@@ -1,0 +1,15 @@
+```mermaid
+C4Context
+title La Fileto — Context
+Person(cliente, "Cliente")
+Person(admin, "Admin")
+System_Boundary(sys, "La Fileto") {
+  System(client, "Client SPA", "Catálogo + Carrito + WhatsApp")
+  System(adminSpa, "Admin SPA", "Gestión con RBAC")
+  System(api, "API Backend", "Express/Prisma/MySQL")
+}
+Rel(cliente, client, "Navega catálogo")
+Rel(client, api, "HTTP/JSON (público)")
+Rel(admin, adminSpa, "Gestiona")
+Rel(adminSpa, api, "HTTP/JSON con JWT")
+```

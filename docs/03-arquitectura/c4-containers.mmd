@@ -1,0 +1,13 @@
+```mermaid
+C4Container
+title La Fileto — Containers
+System_Boundary(sys, "La Fileto") {
+  Container(client, "Client SPA", "Vite", "Catálogo público")
+  Container(admin, "Admin SPA", "Vite", "Gestión con RBAC")
+  Container(api, "API", "Node/Express", "REST JSON")
+  ContainerDb(db, "MySQL", "RDS/local", "Datos persistentes")
+}
+Rel(client, api, "GET público")
+Rel(admin, api, "JWT Bearer")
+Rel(api, db, "Prisma ORM")
+```

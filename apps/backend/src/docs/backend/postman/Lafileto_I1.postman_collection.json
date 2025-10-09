@@ -1,0 +1,190 @@
+{
+  "info": {
+    "name": "La Fileto — I1",
+    "_postman_id": "a6a6d2dd-3b6d-4c1d-9e7c-i1-collection",
+    "description": "Colección I1: Auth + RBAC (con variables y tests)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth — Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "X-Request-Id", "value": "{{$guid}}" }
+        ],
+        "url": {
+          "raw": "{{API_BASE}}/auth/login",
+          "host": ["{{API_BASE}}"],
+          "path": ["auth", "login"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{ADMIN_EMAIL}}\",\n  \"password\": \"{{ADMIN_PASSWORD}}\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "let ok=false;",
+              "try {",
+              "  const json = pm.response.json();",
+              "  ok = json?.ok;",
+              "  if (json?.ok && json?.data?.token) {",
+              "    pm.environment.set('AUTH_TOKEN', json.data.token);",
+              "  } else { pm.environment.unset('AUTH_TOKEN'); }",
+              "} catch(e) { pm.environment.unset('AUTH_TOKEN'); }",
+              "pm.test('status 200', () => pm.response.code === 200);",
+              "pm.test('ok true', () => ok === true);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth — Me",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{AUTH_TOKEN}}",
+            "type": "text"
+          },
+          { "key": "X-Request-Id", "value": "{{$guid}}" }
+        ],
+        "url": {
+          "raw": "{{API_BASE}}/auth/me",
+          "host": ["{{API_BASE}}"],
+          "path": ["auth", "me"]
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "if (!pm.environment.get('AUTH_TOKEN')) {",
+              "  throw new Error('Falta AUTH_TOKEN. Primero ejecuta Auth — Login.');",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('status 200', () => pm.response.code === 200);",
+              "pm.test('ok true', () => pm.response.json().ok === true);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "RBAC — Roles (GET)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{AUTH_TOKEN}}" },
+          { "key": "X-Request-Id", "value": "{{$guid}}" }
+        ],
+        "url": {
+          "raw": "{{API_BASE}}/rbac/roles",
+          "host": ["{{API_BASE}}"],
+          "path": ["rbac", "roles"]
+        }
+      }
+    },
+    {
+      "name": "RBAC — Create Role (POST)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{AUTH_TOKEN}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{API_BASE}}/rbac/roles",
+          "host": ["{{API_BASE}}"],
+          "path": ["rbac", "roles"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"roleId\": \"role-temp\",\n  \"name\": \"Temporal\"\n}"
+        }
+      }
+    },
+    {
+      "name": "RBAC — Modules (GET)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{AUTH_TOKEN}}" },
+          { "key": "X-Request-Id", "value": "{{$guid}}" }
+        ],
+        "url": {
+          "raw": "{{API_BASE}}/rbac/modules",
+          "host": ["{{API_BASE}}"],
+          "path": ["rbac", "modules"]
+        }
+      }
+    },
+    {
+      "name": "RBAC — Role Permissions (GET)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{AUTH_TOKEN}}" },
+          { "key": "X-Request-Id", "value": "{{$guid}}" }
+        ],
+        "url": {
+          "raw": "{{API_BASE}}/rbac/roles/role-supervisor/permissions",
+          "host": ["{{API_BASE}}"],
+          "path": ["rbac", "roles", "role-supervisor", "permissions"]
+        }
+      }
+    },
+    {
+      "name": "RBAC — Save Permissions (PUT)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{AUTH_TOKEN}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{API_BASE}}/rbac/roles/role-supervisor/permissions",
+          "host": ["{{API_BASE}}"],
+          "path": ["rbac", "roles", "role-supervisor", "permissions"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"products\": { \"r\": true, \"w\": false, \"u\": true, \"d\": false }\n}"
+        }
+      }
+    },
+    {
+      "name": "Auth — Login (wrong password) → 401",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": {
+          "raw": "{{API_BASE}}/auth/login",
+          "host": ["{{API_BASE}}"],
+          "path": ["auth", "login"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{ADMIN_EMAIL}}\",\n  \"password\": \"bad\"\n}"
+        }
+      }
+    }
+  ]
+}

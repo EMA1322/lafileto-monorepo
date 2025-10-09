@@ -1,0 +1,15 @@
+```mermaid
+%% C4 Model — Components (Client SPA)
+C4Component
+title La Fileto — Client SPA (Componentes)
+
+Container_Boundary(clientSpa, "Client SPA (Vite)") {
+
+  Component(router, "Router", "Hash routing", "Resuelve rutas públicas")
+  Component(apiClient, "ApiClient", "Fetch wrapper", "Lectura de /api/v1 (sin JWT)")
+  Component(cartStore, "CartStore", "State", "Ítems, cantidades, totales")
+  Component(priceHelper, "PriceHelper", "Helper", "Calcula offerPrice")
+  Component(whatsHelper, "WhatsAppHelper", "Helper", "Arma mensaje para deep link")
+}
+System_Ext(api, "API Backend", "Express / JSON")
+```

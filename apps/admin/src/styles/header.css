@@ -1,0 +1,281 @@
+/* ===========================================================
+   MÓDULO: ADMIN HEADER (Mobile-first, BEM, accesible)
+   Estilos para barra superior + drawer lateral responsive.
+   Usa variables definidas en /styles/global.css
+   =========================================================== */
+
+/* ---------- Accesibilidad: Skip link (visible al enfocar) ---------- */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+.skip-link:focus {
+  position: fixed;
+  left: 1rem;
+  top: 1rem;
+  width: auto;
+  height: auto;
+  z-index: 1100;
+  background: var(--surface-card);
+  color: var(--text-color);
+  padding: .5rem .75rem;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-soft);
+  outline: 2px solid rgba(13,110,253,.35);
+}
+
+/* ---------- Barra superior (header fijo) ---------- */
+.header {
+  position: sticky;   /* fijo superior durante el scroll */
+  top: 0;
+  z-index: 1000;
+  background: var(--surface-card);
+  border-bottom: 1px solid var(--border-color);
+}
+.header__container {
+  /* .container viene en global.css (ancho máx) */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  padding: .75rem var(--spacing-sm);
+}
+
+/* ---------- Logo ---------- */
+.header__logo {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  color: var(--text-color);
+  text-decoration: none;
+}
+.header__logo-icon {
+  display: inline-block;
+}
+.header__logo-text {
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: .2px;
+  color: var(--text-strong);
+}
+
+/* ---------- Botón hamburguesa (solo mobile) ---------- */
+.header__menu-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--surface-card);
+  color: var(--text-color);
+  cursor: pointer;
+  transition: box-shadow .2s ease, transform .12s ease, border-color .2s ease;
+}
+.header__menu-toggle:hover {
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-soft);
+}
+.header__menu-toggle:active {
+  transform: scale(.98);
+}
+.header__menu-toggle:focus-visible {
+  outline: 2px solid rgba(13,110,253,.35);
+  outline-offset: 2px;
+}
+.header__menu-icon {
+  pointer-events: none;
+}
+
+/* ---------- Overlay para cerrar drawer con clic fuera ---------- */
+.header__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.38);         /* overlay semitransparente */
+  z-index: 998;                         /* debajo del drawer (999) */
+  backdrop-filter: saturate(120%) blur(2px);
+}
+.header__overlay[hidden] {
+  display: none !important;
+}
+
+/* ---------- Drawer de navegación (mobile) ---------- */
+.header__drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100dvh;                       /* viewport dinámico (móviles) */
+  width: min(82vw, 320px);
+  background: var(--surface-card);
+  border-right: 1px solid var(--border-color);
+  box-shadow: 0 10px 30px rgba(0,0,0,.12);
+  transform: translateX(-100%);         /* oculto por defecto */
+  transition: transform .26s ease-in-out;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  padding-top: var(--header-height, 4rem);   
+  padding-bottom: calc(var(--spacing-sm) + 12px + env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;          /* espacio bajo la barra superior */
+}
+.header__drawer.is-open {
+  transform: translateX(0);             /* visible cuando está abierto */
+}
+
+/* ---------- Lista de navegación ---------- */
+.header__nav-list {
+  list-style: none;
+  margin: 0;
+  padding: var(--spacing-sm);
+  display: flex;
+  flex-direction: column;
+  gap: .25rem;
+  flex: 1 1 auto;     /* 🔹 ocupa el alto disponible */
+  overflow: auto;     /* 🔹 scrollea si excede */
+  min-height: 0;
+}
+.header__nav-item { /* contenedor del link */ }
+
+.header__nav-link {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  text-decoration: none;
+  color: var(--text-color);
+  font-weight: 500;
+  padding: .625rem .75rem;
+  border-radius: var(--radius-sm);
+  transition: background-color .18s ease, color .18s ease, transform .12s ease;
+}
+.header__nav-link:hover {
+  background: var(--surface-muted);
+}
+.header__nav-link:active {
+  transform: translateY(1px);
+}
+.header__nav-link:focus-visible {
+  outline: 2px solid rgba(13,110,253,.35);
+  outline-offset: 2px;
+}
+/* Estado activo accesible: aria-current="page" */
+.header__nav-link[aria-current="page"] {
+  color: var(--primary-color);
+  background: color-mix(in srgb, var(--primary-color) 10%, transparent);
+}
+
+/* ---------- Pie del drawer: usuario + logout ---------- */
+.header__footer {
+  margin-top: auto;                     /* empuja al final */
+  padding: var(--spacing-sm);
+  border-top: 1px solid var(--border-color);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: .75rem;
+}
+.header__user-name {
+  font-weight: 600;
+  color: var(--text-strong);
+}
+.header__logout-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .5rem .75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--surface-card);
+  color: var(--text-color);
+  cursor: pointer;
+  transition: border-color .2s ease, box-shadow .2s ease, transform .12s ease, background .2s ease;
+}
+.header__logout-btn:hover {
+  border-color: var(--danger-color);
+  box-shadow: var(--shadow-soft);
+  background: color-mix(in srgb, var(--danger-color) 10%, var(--surface-card));
+  color: var(--text-strong);
+}
+.header__logout-btn:active {
+  transform: scale(.98);
+}
+.header__logout-btn:focus-visible {
+  outline: 2px solid rgba(220,53,69,.35); /* danger */
+  outline-offset: 2px;
+}
+.header__logout-icon {
+  pointer-events: none;
+}
+
+/* ===========================================================
+   Desktop / pantallas medianas+: nav horizontal sin drawer
+   =========================================================== */
+@media (min-width: 768px) {
+  /* Ocultar overlay y botón hamburguesa */
+  .header__overlay { display: none !important; }
+  .header__menu-toggle { display: none; }
+
+  /* El nav se vuelve parte del flujo del header (inline) */
+  .header__drawer {
+    position: static;
+    height: auto;
+    width: auto;
+    transform: none;            /* visible siempre */
+    border: 0;
+    box-shadow: none;
+    padding: 0;
+    flex-direction: row;        /* el footer queda al lado si se desea */
+    align-items: center;
+    gap: var(--spacing-md);
+  }
+
+  .header__nav-list {
+    padding: 0;
+    flex-direction: row;
+    align-items: center;
+    gap: .5rem;
+  }
+
+  .header__nav-link {
+    border-radius: var(--radius-sm);
+    padding: .5rem .75rem;
+  }
+
+  .header__footer {
+    margin-top: 0;
+    border: 0;
+    padding: 0;
+    display: inline-grid;
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    align-items: center;
+    gap: .75rem;
+  }
+}
+
+/* ===========================================================
+   Micro-ajustes de densidad y estética en pantallas grandes
+   =========================================================== */
+@media (min-width: 1024px) {
+  .header__container {
+    padding: .85rem var(--spacing-md);
+  }
+  .header__logo-text {
+    font-size: 1.15rem;
+  }
+  .header__nav-link {
+    padding: .55rem .85rem;
+  }
+}
+
+/* ===========================================================
+   Utilidades del módulo (si fueran necesarias)
+   =========================================================== */
+/* Forzar ocultamiento de elementos RBAC filtrados por JS */
+[data-module-key][aria-hidden="true"] { display: none !important; }
+

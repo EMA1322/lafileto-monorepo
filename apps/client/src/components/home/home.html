@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<!-- ===========================
+     MÓDULO: HOME
+     Página principal SPA
+     =========================== -->
+<section class="home" id="home">
+    <!-- ===========================
+     HERO PRINCIPAL
+=========================== -->
+
+    <section class="home__hero" aria-label="Bienvenida La Fileto">
+        <!-- Imagen de fondo (parallax) -->
+        <figure class="home__hero-image">
+            <img src="./img/hero1.png" alt="Plato principal de La Fileto" />
+        </figure>
+
+        <!-- Contenido -->
+        <div class="home__hero-content">
+            <h1 class="home__hero-title">¡Bienvenido a La Fileto!</h1>
+            <p class="home__hero-subtitle">
+                Armá tu pedido sin registrarte. Enviá por WhatsApp fácil y rápido.
+            </p>
+            <a href="#products" class="home__hero-btn btn-primary">Ver Menú</a>
+        </div>
+    </section>
+
+
+    <!-- ===========================
+         BOTÓN FLOTANTE DE WHATSAPP
+         =========================== -->
+    <a href="https://wa.me/XXXXXXXXXX" class="home__whatsapp-btn" aria-label="Contactar por WhatsApp">
+        <img src="/img/whatsapp-icon.svg" alt="WhatsApp" />
+    </a>
+
+    <!-- ===========================
+         SECCIÓN ¿CÓMO FUNCIONA?
+         =========================== -->
+    <section class="home__steps" aria-labelledby="steps-title">
+        <h2 id="steps-title" class="home__steps-title">¿Cómo funciona La Fileto?</h2>
+        <div class="home__steps-container">
+            <article class="home__step">
+                <img src="/public/img/categorias.PNG" alt="Ícono menú" class="home__step-icon" />
+                <h3 class="home__step-title">Explorá el Menú</h3>
+                <p class="home__step-text">Descubrí nuestras categorías y ofertas.</p>
+            </article>
+            <article class="home__step">
+                <img src="/public/img/carrito12.PNG" alt="Ícono carrito" class="home__step-icon" />
+                <h3 class="home__step-title">Agregá productos</h3>
+                <p class="home__step-text">Sumalos al carrito en segundos.</p>
+            </article>
+            <article class="home__step">
+                <img src="/public/img/pedido1.PNG" alt="Ícono WhatsApp" class="home__step-icon" />
+                <h3 class="home__step-title">Confirmá por WhatsApp</h3>
+                <p class="home__step-text">Enviá el pedido directo al local.</p>
+            </article>
+        </div>
+    </section>
+
+    <!-- =============================
+     CARRUSEL DE OFERTAS (Home)
+     ============================= -->
+    <section class="home__offers" role="region" aria-roledescription="carousel" aria-labelledby="offers-title"
+        aria-live="off">
+        <header class="home__offers-header">
+            <h2 id="offers-title" class="home__offers-title">Ofertas del Día</h2>
+            <a href="#products" class="home__offers-btn btn-secondary">Ver más ofertas</a>
+        </header>
+
+        <!-- Contenedor Swiper (vacío, el JS inyecta wrapper+slides+controles) -->
+        <div id="offers-carousel" class="swiper home__offers-carousel"></div>
+    </section>
+
+
+    <!-- ===========================
+         SECCIÓN BENEFICIOS CLAVE
+         =========================== -->
+    <section class="home__benefits" aria-labelledby="benefits-title">
+        <h2 id="benefits-title" class="home__benefits-title">¿Por qué elegirnos?</h2>
+        <div class="home__benefits-container">
+            <article class="home__benefit">
+                <img src="/public/img/carritonew.svg" alt="Rápido y sin registro" class="home__benefit-icon" />
+                <p class="home__benefit-text">Rápido y sin registro</p>
+            </article>
+            <article class="home__benefit">
+                <img src="/public/img/Productos.svg" alt="Pedidos por WhatsApp" class="home__benefit-icon" />
+                <p class="home__benefit-text">Pedidos directos por WhatsApp</p>
+            </article>
+            <article class="home__benefit">
+                <img src="/public/img/Frescos_simple.svg" alt="Calidad garantizada" class="home__benefit-icon" />
+                <p class="home__benefit-text">Productos frescos y caseros</p>
+            </article>
+        </div>
+    </section>
+
+    <!-- ===========================
+         CTA SECUNDARIAS
+         =========================== -->
+    <section class="home__cta-secondary">
+        <a href="https://wa.me/+542665048476" class="btn-secondary">Contactar por WhatsApp</a>
+        <a href="#contact" class="btn-outline">Ver Horarios</a>
+    </section>
+
+    <!-- ===========================
+         TEXTO PERSUASIVO FINAL
+         =========================== -->
+    <section class="home__closing">
+        <p class="home__closing-text">
+            ¡Tu comida favorita, lista para vos en minutos!
+        </p>
+        <a href="#products" class="home__closing-btn btn-primary">Ver Menú</a>
+    </section>
+</section>

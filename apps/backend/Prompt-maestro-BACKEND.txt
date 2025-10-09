@@ -1,0 +1,538 @@
+⚠️ IMPORTANTE — ALCANCE DE ESTE PROMPT
+- **NO GENERAR CÓDIGO** ni estructuras de carpetas. Solo **relevar, analizar, estudiar y definir objetivos** + plan del backend.
+- Entregables de esta fase: **inventarios, objetivos, decisiones arquitectónicas, modelo de datos preliminar (conceptual), alcance de API, roadmap, riesgos y criterios de éxito**.
+
+Contexto (fijo)
+- Proyecto: Menú Digital – La Fileto (ADMIN + Cliente) · SPA con Vite + HTML + CSS + JS (ES Modules).
+- Núcleo Front: hash routing con guardia RBAC, renderView con loader, header/sidebar por permisos, modales accesibles y snackbar global.
+- Estándares: BEM, mobile-first, accesibilidad básica (roles/aria). Sin React/Tailwind.
+- Convención: nombres en inglés (funciones/variables/IDs), comentarios y documentación en español.
+- RBAC (semilla actual):
+  • Administrador: R/W/U/D en todos los módulos.
+  • Supervisor: Dashboard (R), Products/Categories (R/W/U), resto sin acceso (sin Delete).
+- Datos mock (hasta la API): public/data/*.json. Persistencia Front actual: LocalStorage > JSON.
+- Backend objetivo: Node.js + Express + MySQL, arquitectura **MVC + capa de servicios**, **RBAC server‑side**, validación, errores consistentes, documentación y tests mínimos.
+
+Objetivo de este prompt
+1) **Analizar el Front** (Cliente + Admin) para mapear **rutas, acciones y datos** que la API deberá soportar.
+2) **Definir objetivos** del backend (negocio y técnicos), alcance de Fase 1 (MVP) y backlog posterior.
+3) **Diseñar un plan** de arquitectura, **modelo de datos conceptual** (MySQL) y **alcance de API** (sin endpoints ni SQL aún).
+4) Establecer el **flujo de trabajo del backend**, criterios de calidad, riesgos y **estructura ideal conceptual** (sin scaffolding).
+5) Mantener este chat como **hub** del backend (historial, decisiones, artefactos de análisis).
+
+Modo de uso
+- Pegá este prompt en un **chat nuevo** llamado “Backend – Menú Digital – La Fileto (Plan)”. Ese hilo guardará el estado del backend.
+- Trabajamos por **tandas** y **tokens**. Yo **no** emitiré código hasta que cambies de prompt a uno de construcción.
+
+TANDAS DE ANÁLISIS (qué adjuntar)
+---------------------------------
+🔹 TANDA A — Admin (SPA + RBAC: núcleo y módulos)
+Adjuntar:
+- /admin/src/main.js
+- /admin/src/utils/router.js
+- /admin/src/utils/renderView.js
+- /admin/index.html
+- /admin/src/styles/global.css
+- /admin/src/utils/helpers.js
+- /admin/src/utils/modals.js
+- /admin/src/utils/snackbar.js
+- /admin/src/utils/auth.js
+- /admin/src/utils/rbac.js
+- public/data/rbac_permissions.json
+- Módulos Admin (si existen): users, products, categories, dashboard, login (HTML/CSS/JS)
+
+🔹 TANDA B — Cliente (SPA) + Datos mock
+Adjuntar:
+- /client/src/main.js
+- /client/src/utils/router.js
+- /client/src/utils/renderView.js
+- /client/index.html
+- /client/src/styles/global.css
+- Módulos Cliente: home, products, cart, confirm (HTML/CSS/JS)
+- Datos mock: public/data/products.json, categories.json, users.json, roles.json (si existen)
+
+🔹 TANDA C — Restricciones y entorno
+Adjuntar/describir:
+- Hosting objetivo (Render/Railway/VPS), variables de entorno, límites de CPU/RAM.
+- Preferencia de ORM/Query Builder (Prisma recomendado; o Knex/Sequelize/raw).
+- Requisitos de seguridad (CORS dominios, JWT exp/refresh, rate‑limit, logs/auditoría).
+
+TOKENS DE CONTROL (OBLIGATORIOS) — Fase de análisis (SIN CÓDIGO)
+-----------------------------------------------------------------
+Reglas
+- Al finalizar cada etapa responderé: “Quedo en pausa. Esperando token.”
+- **No** emitiré ningún fragmento de código ni estructuras de archivos.
+
+Secuencia
+1) TOKEN: DISCOVERY
+   - Te haré **preguntas mínimas** si faltan datos clave (supuestos explícitos). *Sin código.*
+
+2) TOKEN: ANALISIS-FRONT-A (Admin)
+   - Lectura de router/hash → catálogo de vistas.
+   - Identificación de **acciones UI** (CRUD, filtros, orden, paginado, modales) por módulo.
+   - Mapeo **RBAC**: module_key + acción (R/W/U/D) implicadas.
+   - **Salida**: **Inventario de endpoints (Admin)** y **contratos de datos preliminares**. *Sin código.*
+
+3) TOKEN: ANALISIS-FRONT-B (Cliente)
+   - Flujos: listado → detalle (si aplica) → carrito → confirmar; ofertas; estados; validaciones.
+   - **Salida**: **Inventario de endpoints (Cliente)** y **contratos de datos preliminares**. *Sin código.*
+
+4) TOKEN: OBJETIVOS
+   - Objetivos de **negocio** y **técnicos** (auth, RBAC, rendimiento, seguridad, observabilidad, disponibilidad).
+   - Alcance **Fase 1 (MVP)** y backlog **Fase 2/3**. *Sin código.*
+
+5) TOKEN: PLAN-BACKEND
+   - Propuesta de **arquitectura** (MVC + servicios), **estándares** (envelope de respuesta, paginación/orden/búsqueda, manejo de errores, versionado API v1, CORS, JWT, RBAC server‑side), **políticas** de auditoría/logs, y **workflow** del equipo. *Sin código.*
+
+6) TOKEN: DATA-MODEL (Conceptual)
+   - **Modelo conceptual** (ER de alto nivel) y tablas propuestas (texto, sin SQL).
+   - Campos clave, relaciones y reglas (unique, FK, cascadas, soft delete si aplica). *Sin código.*
+
+7) TOKEN: API-SCOPE (Alcance de API)
+   - **Listado de recursos** y **operaciones necesarias** (por Admin/Cliente), con pre/post‑condiciones y errores típicos.
+   - **RBAC mapping**: cada operación ↔ (module_key, acción). *Sin código.*
+
+8) TOKEN: RIESGOS
+   - Matriz de **riesgos y mitigaciones** (datos, seguridad, escalabilidad, tiempos). *Sin código.*
+
+9) TOKEN: ROADMAP
+   - Iteraciones y prioridades (I0 planificación, I1 auth+RBAC, I2 categories, I3 products, I4 orders/cart, I5 admin extra, I6 observabilidad, I7 hardening, I8 deploy). *Sin código.*
+
+10) TOKEN: DOCS
+    - Set documental: **/docs/backend/** con: decisiones (ADR), esquema conceptual ER, alcance de API (texto), políticas de errores, checklist de seguridad, matriz Front↔API↔RBAC, plan de migración JSON/LS→DB. *Sin código.*
+
+11) TOKEN: APPROVE-PLAN
+    - Confirmación final del **plan** (sin iniciar construcción). *Sin código.*
+
+Qué información vamos a extraer del Front (plantilla)
+-----------------------------------------------------
+- **Rutas y vistas** (hash/router).
+- **Módulos y acciones** (UI) por vista.
+- **Entidades y atributos** usados (ej. Product: id, name, price, categoryId, isOffer, discount, status…).
+- **Validaciones** (únicos, rangos, formatos) y **reglas de negocio** (ej. no eliminar última categoría con productos sin reasignación).
+- **Estados de UI** (loading/empty/error) y mensajes.
+- **Dependencias cruzadas** (ej. Users ↔ RBAC; Products ↔ Categories).
+- **RBAC** actual (semilla + overrides) y su impacto en UI.
+- **Necesidades no cubiertas** para Fase 1 de API (paginación real, orden server‑side, búsqueda, auditoría).
+
+Vista general del flujo (alto nivel)
+-----------------------------------
+SPA (Cliente/Admin) → Auth (JWT) → Guard RBAC (Front) → Request API → Middlewares (authJWT → rbacGuard(module_key, action) → validator) → Controller → Service → Repository/DB → Envelope de respuesta → Snackbar/UI.
+
+Base de Datos (MySQL) — línea guía conceptual
+---------------------------------------------
+- Identidades sugeridas: **users**, **roles**, **permissions/role_permissions**, **categories**, **products**, **orders**, **order_items**, **audit_logs**. *(Sin SQL)*
+- Reglas destacadas: email único, slug único, FK consistentes, DECIMAL para precios, timestamps, timezone, collation.
+- Discusiones pendientes: UUID vs autoincrement, soft delete, cascadas, índices para búsquedas/orden.
+
+Tecnologías — pros y contras (para el análisis)
+-----------------------------------------------
+- **Express**: (+) flexible y estándar; (–) requiere convenciones sólidas.
+- **MySQL**: (+) soporte amplio y costos previsibles; (–) cuidar timezone/collation/DECIMAL.
+- **Prisma** (opcional): (+) DX, migraciones/seeds; (–) menos control fino SQL.
+- **Knex**: (+) control SQL; (–) más boilerplate.
+- **Sequelize**: (+) maduro; (–) curva de aprendizaje/overhead.
+
+Estructura ideal (conceptual, sin scaffolding)
+----------------------------------------------
+- Capas: **routes → controllers → services → repositories(DB)** + **validators** + **middlewares (authJWT, rbacGuard, errorHandler)** + **utils/logging**.
+- Documentación: **OpenAPI** (descriptiva, sin implementar), Postman collection a generar en fase posterior.
+- Configuración: `.env` (DB_URL, JWT_SECRET, JWT_EXPIRES_IN, CORS_ORIGIN, LOG_LEVEL, PORT, TZ).
+
+Criterios de éxito (Fase de Análisis)
+-------------------------------------
+- Inventarios Front (Admin/Cliente) consolidados y verificados.
+- Objetivos y alcance del Backend definidos (MVP + backlog).
+- Modelo de datos conceptual acordado.
+- Alcance de API documentado (operaciones por recurso).
+- Riesgos/mitigaciones y roadmap acordados.
+- Set documental inicial creado.
+
+Frase de arranque (copiar tal cual)
+-----------------------------------
+TOKEN: DISCOVERY — Nuevo chat “Backend – Menú Digital – La Fileto (Plan)”.
+Arranco con **TANDA A (Admin SPA + RBAC)**. Voy a adjuntar:
+- router/renderView/index/global.css + helpers/modals/snackbar/auth/rbac
+- módulos Admin (users, products, categories, dashboard, login)
+- rbac_permissions.json
+Objetivo: levantar inventario de endpoints/contratos y mapa RBAC sin producir código.
+(Después paso a **TANDA B** para Cliente y datos mock; y **TANDA C** para restricciones y entorno.)
+
+
+
+
+
+
+-------------------------------------------------------------------------------------------------------------------
+
+
+
+SUPER PROMPT — BUILD I1 (Auth & RBAC)
+
+Contexto (fijo)
+- Proyecto: Menú Digital – La Fileto (Cliente + Admin SPA).
+- Backend: Node.js + Express + MySQL, arquitectura MVC + Services + Repositories, RBAC server-side.
+- Convenciones: nombres en inglés (código), comentarios y documentación en español.
+- Estándares: envelope de respuesta, paginación/orden/búsqueda común, manejador de errores uniforme, JWT (access), soft-delete (deletedAt).
+- Seguridad: CORS (allowlist), rate-limit (login/público), sanitización, límites de body/timeout.
+- Documentación viva en /docs/backend/ + OpenAPI v1 + Postman.
+- Este build no debe romper el Front; respetar parámetros esperados por las SPAs.
+
+Objetivo del prompt (I1)
+- Implementar autenticación y RBAC mínimos operativos:
+  • Auth: login (email/password), me (perfil + permisos efectivos).
+  • RBAC: roles (list/create/update), modules (list), permissions by role (read/save).
+  • Middlewares: authJWT, rbacGuard(module_key, action), validator, errorHandler, requestId.
+  • Seeds: roles (admin/supervisor), modules (catálogo), role_permissions (seed), admin user, settings (isOpen=false, whatsAppNumber=null).
+  • Rate-limit login y CORS (dev).
+  • Envelope y taxonomía de errores acordada (códigos estables).
+
+Reglas (en este chat SÍ generamos código)
+- Código en inglés, comentarios/docs en español.
+- Capas obligatorias: routes → controllers → services → repositories → middlewares → validators → utils → config.
+- Sin frameworks tipo Nest; usar Express. ORM recomendado: Prisma (alternativa: Knex). Migraciones y seeds obligatorios.
+- Respuestas siempre con envelope: { ok, data?, error?, meta? }.
+- Cada token entrega artefactos listos (código, migraciones, seeds, docs, pruebas). Nada de “luego lo hago”.
+- Si un token excede 10 archivos, fraccionar en sub-tokens (I1-ENDPOINTS-A / I1-ENDPOINTS-B, etc.).
+
+TANDAS DE ANÁLISIS (solo si hace falta revisar Front; máx. 10 archivos por token)
+TOKEN: FE-ANALISIS-I1-A (hasta 10 archivos)
+- /admin/src/utils/rbac.js
+- /admin/public/data/rbac_permissions.json
+- /admin/src/utils/auth.js
+- /admin/src/utils/router.js
+- /admin/index.html
+- /admin/src/components/users/* (hasta completar 10)
+
+(Si hiciera falta más, usar FE-ANALISIS-I1-B, etc., respetando el tope de 10 archivos por token.)
+
+TOKENS DE CONTROL (OBLIGATORIOS)
+1) TOKEN: I1-SETUP
+   Entregables:
+   - README-dev-setup.md (pasos locales), .env.example (sin secretos), package.json con scripts (lint, dev, build, test).
+   - Config de CORS (dev) y rate-limit (login).
+   - Estructura inicial de carpetas.
+
+2) TOKEN: I1-DB-SCHEMA+MIGRATIONS
+   Entregables:
+   - Esquema (Prisma o SQL) para: users, roles, modules, role_permissions, settings, audit_logs.
+   - Migraciones iniciales.
+   - Seeds: roles, modules, role_permissions, admin user, settings.
+   - Nota de collation/TZ y DECIMAL.
+
+3) TOKEN: I1-MIDDLEWARES
+   Entregables:
+   - authJWT, rbacGuard(module_key, action), validator, errorHandler, requestId, rateLimiterLogin.
+   - Utilidad de envelope y tabla de error codes.
+
+4) TOKEN: I1-ENDPOINTS
+   Entregables (código + tests unitarios mínimos de service):
+   - POST /auth/login, GET /auth/me
+   - GET /rbac/roles, POST /rbac/roles, PUT /rbac/roles/:roleId
+   - GET /rbac/modules
+   - GET /rbac/roles/:roleId/permissions, PUT /rbac/roles/:roleId/permissions
+   - Auditoría permission_change
+
+5) TOKEN: I1-TESTS+POSTMAN
+   Entregables:
+   - Tests unitarios (services) y 2–3 de integración (auth/rbac).
+   - Colección Postman con ejemplos (200/4xx) y variables.
+   - Script npm run test pasando en verde.
+
+6) TOKEN: I1-DOCS+ZIP
+   Entregables:
+   - OpenAPI v1 (solo endpoints de I1).
+   - Actualización /docs/backend/* (ADRs, políticas si algo cambió).
+   - ZIP con el build de I1 (código + migraciones + seeds + docs + Postman).
+
+Lo que vamos a lograr (criterios de salida de I1)
+- Login y Me funcionales (JWT), con lockout por intentos fallidos.
+- RBAC por rol operativo (crear rol, editar permisos; rbacGuard haciendo cumplir).
+- Seeds listos para levantar un entorno nuevo en minutos.
+- Postman y tests mínimos en verde.
+- OpenAPI v1 actualizado.
+
+Esquema de datos (I1)
+- Users: id, fullName, email (unique), passwordHash, roleId, status, failedLoginAttempts, lockUntil, createdAt, updatedAt, deletedAt.
+- Roles: roleId (string), name, createdAt, updatedAt.
+- Modules: moduleKey (string), name, createdAt, updatedAt.
+- RolePermissions: roleId, moduleKey, r,w,u,d, updatedAt (unique por par).
+- Settings: key, value(JSON/string), updatedAt (keys: isOpen, whatsAppNumber).
+- AuditLogs: id, actorUserId?, action, entity, entityId, summary, changedFields(JSON), createdAt.
+
+Validaciones clave (I1)
+- Login: email válido, password presente; rate-limit 10 req/15min por IP; lockout tras intentos fallidos.
+- Users: email único; status (active|inactive).
+- RBAC: roleId existente; moduleKey del catálogo; r,w,u,d booleanos.
+- Errores y HTTP: 401 AUTH_REQUIRED/INVALID, 403 PERMISSION_DENIED, 404 RESOURCE_NOT_FOUND, 409 CONFLICT, 422 VALIDATION_ERROR, 429 RATE_LIMITED.
+
+Estructura esperada (salida)
+/backend
+  /src
+    /routes        # rutas + (module_key, action)
+    /controllers   # orquestación + envelope
+    /services      # reglas de negocio (auth, rbac, settings)
+    /repositories  # acceso DB
+    /middlewares   # authJWT, rbacGuard, validator, errorHandler, requestId, rateLimiterLogin
+    /validators    # schemas
+    /utils         # helpers (hash, envelope, error codes)
+    /config        # env, cors, logger
+  /prisma|/db      # schema, migrations, seeds
+  /tests           # unit e integración
+  /docs/backend    # OpenAPI, ADRs, policies, runbook
+  package.json, .env.example, README-dev-setup.md
+
+Checklist de PRUEBAS (I1)
+- Postman (manual):
+  • Login 200 con admin seed → token.
+  • Me 200 con effectivePermissions.
+  • Roles list 200; create 201; update 200.
+  • Modules list 200.
+  • Permissions read/save 200; audit registrado.
+  • Ruta protegida con rol sin permiso → 403.
+  • 10 logins fallidos seguidos → 429 / bloqueo temporal.
+- Unit (services): auth (password ok/no), rbac (permisos válidos/ inválidos), settings (lectura).
+- Integración (mín): login→me; save permissions→audit.
+
+Entrega documental (I1)
+- OpenAPI v1 (Auth + RBAC + Settings básico).
+- Colección Postman.
+- /docs/backend/ actualizada: adr-001-auth-jwt.md, adr-002-rbac-por-rol.md, error-policy.md, rbac-policy.md, environments.md, release-checklist.md.
+- Changelog de I1.
+- ZIP final: backend_I1.zip.
+
+Notas finales
+- Si es necesario revisar el Front para alinear permisos/vistas, usar los tokens FE-ANALISIS-I1-* (máx. 10 archivos por token).
+- Mantener nombres en inglés y documentación en español en todo el código entregado durante el build.
+
+
+
+
+
+
+
+-------------------------------------------------------------------------------------------------------------------
+
+
+"""SUPER PROMPT — BUILD I2 (Categories) — v2
+(Con pre-chequeo de I1 y análisis de Front al inicio y al cierre)
+
+
+CONTEXTO (fijo)
+- Proyecto: Menú Digital – La Fileto (Cliente + Admin SPA).
+- Backend: Node.js + Express + MySQL, arquitectura MVC + Services + Repositories, RBAC server-side.
+- Convenciones: nombres en inglés (código), comentarios y docs en español.
+- Estándares: envelope { ok, data?, error?, meta? }, paginación/orden/búsqueda, error policy (códigos estables).
+- Seguridad: JWT access, authJWT, rbacGuard(module_key, action), CORS allowlist, rate-limit, sanitización, límites de body/timeout.
+- Sin frameworks tipo Nest; Express puro; ORM recomendado Prisma; migraciones y seeds obligatorios.
+- Reglas ya acordadas: status=active|inactive; soft-delete con deletedAt; público name ASC; pageSize default 20, máx 100.
+
+OBJETIVO DEL PROMPT (I2)
+Implementar Categories para Admin y Público sin romper lo de I1:
+- Admin (module_key: 'categories'): list/create/update/delete/restore (+ toggle status si aplica).
+- Público: list (solo activas, orden name ASC).
+- Búsqueda q por name, paginación y orden (name|createdAt), filtros por status.
+- Auditoría: create/update/delete/restore.
+- Reglas de negocio: unicidad de name “entre activas”; delete preparado para 409 CATEGORY_REASSIGN_REQUIRED (stub hasta I3).
+
+REGLAS (en este chat SÍ generamos código)
+- Código en inglés; comentarios y documentación en español.
+- Capas: routes → controllers → services → repositories → middlewares → validators → utils → config.
+- Reusar helpers/middlewares de I1 (no duplicar envelope, errores, paginación).
+- Contratos y errores exactamente como I1; nuevos errores deben justificarse.
+- Si un token supera 10 archivos, fraccionar (I2-ENDPOINTS-A, I2-ENDPOINTS-B).
+
+— — — — — — — — — — — — — — — —
+
+PRE-TOKEN OBLIGATORIO: I2-PRECHECK-I1 (sin código)
+Objetivo: inventariar reusos de I1 para no reescribir nada en I2.
+Adjuntar (máx. 10 archivos):
+1) src/middlewares/authJWT
+2) src/middlewares/rbacGuard
+3) src/middlewares/errorHandler
+4) src/middlewares/requestId
+5) src/utils/envelope
+6) src/utils/error-codes
+7) src/utils/pagination  (si existe; si no, cómo se resuelve en I1)
+8) src/validators/_shared  (convenciones con Zod, si aplica)
+9) src/config/env         (carga .env, CORS)
+10) src/routes/index      (patrón /api/v1 y montaje admin/público)
+
+Salida esperada (1 página máx):
+- Reusos obligatorios: nombres de helpers/funciones y cómo se invocan.
+- Contrato de paginación/orden/búsqueda (params y forma de meta).
+- Códigos de error a reusar y sus HTTP.
+- RBAC: confirmar module_key 'categories' y permisos por rol (Admin R/W/U/D, Supervisor R/W/U).
+- Prefijos de rutas: admin /admin/categories ; público /categories.
+
+— — — — — — — — — — — — — — — —
+
+ANÁLISIS DEL FRONT (mini al inicio y verificación al final)
+• FE-ANÁLISIS-I2-A (inicio, máx. 10 archivos) — si hace falta
+  - /admin/src/main.js
+  - /admin/src/utils/router.js
+  - /admin/src/utils/renderView.js
+  - /admin/src/modules/categories/* (HTML/CSS/JS del módulo)
+  - /admin/src/utils/rbac.js
+  - /admin/src/utils/helpers.js
+  - /admin/index.html
+  - /client/src/main.js (si home muestra categorías)
+  - /client/src/utils/renderView.js
+  - /public/data/categories.json (si existe)
+  Salida: contratos UI (params q/status/orderBy/orderDir/page/pageSize/includeDeleted), orden por defecto name ASC, mensajes de vacío/error.
+
+• FE-VERIFICACIÓN-I2 (final, mini)
+  - Probar Front contra API: público list name ASC, Admin CRUD + soft-delete, manejo de 409 CATEGORY_REASSIGN_REQUIRED (mock en I2).
+
+— — — — — — — — — — — — — — — —
+
+CONTRACT LOCK (congelado de contrato con I1)
+- Envelope fijo: { ok, data?, error?, meta? }
+- Meta de listados: { page, pageSize, total, orderBy, orderDir, q, filters }
+- Query params (whitelist):
+  • page ≥1 ; pageSize 1..100 (default 20)
+  • orderBy ∈ { name, createdAt } ; orderDir ∈ { asc, desc }
+  • q  (aplica a name)
+  • status ∈ { active, inactive }
+  • includeDeleted=true  (solo Admin)
+- Orden secundario determinista: si orderBy=name empata, usar createdAt ASC.
+- Errores a usar: VALIDATION_ERROR(422), CATEGORY_REASSIGN_REQUIRED(409), RESOURCE_NOT_FOUND(404), CONFLICT(409), PERMISSION_DENIED(403), AUTH_REQUIRED/INVALID(401), RATE_LIMITED(429).
+
+NO TOCAR (guardrails de I1)
+- Envelope, error codes, middlewares y su orden, CORS/rate-limit, montaje /api/v1, RBAC y seeds de I1.
+- Nombres de campos y convenciones: status, deletedAt, createdAt, updatedAt.
+
+— — — — — — — — — — — — — — — —
+
+TOKENS DE CONTROL (OBLIGATORIOS)
+1) TOKEN: I2-DB-SCHEMA+MIGRATIONS
+   Entregables:
+   - Esquema (Prisma/SQL) para categories: id (PK), name (unique entre activas a nivel service), status, createdAt, updatedAt, deletedAt.
+   - Índices: name, status.
+   - Migración nueva (sin romper I1).
+   - Seeds de prueba (3–5 categorías; ver “Seeds de prueba”).
+
+2) TOKEN: I2-VALIDATORS
+   Entregables:
+   - Schemas zod/u otro: create/update/list (name requerido 1..80, status enum).
+   - Normalización: trim, collapse spaces, Unicode NFKC, lower para búsquedas.
+   - Mensajes claros de validación (español).
+
+3) TOKEN: I2-ENDPOINTS-ADMIN
+   Entregables (código + unit tests de service):
+   - GET /admin/categories  → page,pageSize,orderBy=name|createdAt,orderDir,q,status,includeDeleted?
+   - POST /admin/categories → create (validaciones + audit create)
+   - PUT /admin/categories/:id → update (unicidad entre activas + audit update)
+   - DELETE /admin/categories/:id → soft-delete (stub de conteo productos ⇒ 409 si >0 + audit delete si procede)
+   - PUT /admin/categories/:id/restore → restore (status='active' + audit update)
+
+4) TOKEN: I2-ENDPOINTS-PUBLIC
+   Entregables:
+   - GET /categories  → solo activas, orden name ASC (+ createdAt ASC como desempate), page/pageSize, q por name.
+
+5) TOKEN: I2-TESTS+POSTMAN
+   Entregables:
+   - Unit (services): unicidad entre activas; delete con/sin productos (mock); list con filtros/orden.
+   - Integración: admin ciclo create→update→delete→restore; público list.
+   - Postman: carpeta Categories (200/4xx), usa {{JWT}} de I1; ejemplos con includeDeleted, q, status.
+
+6) TOKEN: FE-VERIFICACIÓN-I2 (final)
+   Entregables:
+   - Sanity UI: Front Admin y Cliente apuntando a API; flujo de listado/CRUD/soft-delete ok; snackbar maneja errores mapeados.
+
+7) TOKEN: I2-DOCS+ZIP
+   Entregables:
+   - OpenAPI v1 actualizado (rutas admin + público de categories).
+   - /docs/backend/ actualizado (api-scope.md, er-conceptual.md si cambió algo, changelog I2).
+   - ZIP backend_I2.zip con código + migraciones + seeds + docs + Postman.
+
+— — — — — — — — — — — — — — — —
+
+ESQUEMA DE DATOS (I2)
+- Categories:
+  • id (PK)
+  • name (único “entre activas”: validar en service; case-insensitive)
+  • status (active|inactive)
+  • createdAt, updatedAt, deletedAt (soft-delete)
+- Índices: name, status.
+
+VALIDACIONES CLAVE (I2)
+- name: requerido, 1..80, trim/collapse, case-insensitive para unicidad activa.
+- status: enum 'active' | 'inactive'.
+- Listados: pageSize 1..100; orderBy whitelisted; q sobre name (lower/trim).
+- Delete: si countProductsByCategory(id) > 0 ⇒ 409 CATEGORY_REASSIGN_REQUIRED.
+- Restore: set status='active'; limpiar deletedAt.
+
+PUNTO DE EXTENSIÓN (stub I2 → real en I3)
+- countProductsByCategory(categoryId): en I2 devolver 0 (o mock en tests). En I3 se implementa contra products.
+
+SEEDS DE PRUEBA (I2)
+- Categorías: 'Parrilla' (active), 'Pastas' (active), 'Bebidas' (active), 'Veggie' (inactive), 'Postres' (active).
+- Diseñadas para probar: q (p.ej., 'as'), orden por name con acentos, y filtros por status.
+
+— — — — — — — — — — — — — — — —
+
+ESTRUCTURA ESPERADA (salida orientativa)
+/backend
+  /src
+    /routes/categories.routes.js
+    /controllers/categories.controller.js
+    /services/categories.service.js
+    /repositories/categories.repository.js
+    /validators/categories.validators.js
+  /tests/categories/  (unit + integración)
+  /docs/backend/openapi.yaml (actualizado)
+
+CHECKLIST DE PRUEBAS (I2)
+• Postman (manual):
+  - Admin: GET /admin/categories (paginado; q; status; includeDeleted).
+  - Admin: POST /admin/categories → 201; duplicado name activo → 422.
+  - Admin: PUT /admin/categories/:id → update name; colisión activa → 422.
+  - Admin: DELETE /admin/categories/:id → 200 si sin productos; si con productos → 409 CATEGORY_REASSIGN_REQUIRED.
+  - Admin: PUT /admin/categories/:id/restore → vuelve a active.
+  - Público: GET /categories → solo activas; orden name ASC (+ createdAt ASC de desempate); page/pageSize.
+• Unit (services):
+  - Unicidad entre activas (create/update).
+  - Delete con/sin productos (mock).
+  - Paginación + orden por name.
+• Integración:
+  - Ciclo create → update → delete → restore (auditoría presente).
+  - Público list de activas.
+
+ENTREGA DOCUMENTAL (I2)
+- OpenAPI v1 ampliado (categorías admin/público).
+- Colección Postman actualizada (carpeta Categories).
+- /docs/backend/ actualizado: api-scope.md, er-conceptual.md (si hubo ajuste), changelog I2.
+- ZIP backend_I2.zip.
+
+— — — — — — — — — — — — — — — —
+
+MINI TABLA Front ↔ API (filtros y errores → snackbar)
+
+FILTROS / QUERIES
+| Front (param)     | API (query)     | Tipo/valores         | Ejemplo                                 |
+|-------------------|-----------------|----------------------|------------------------------------------|
+| Búsqueda          | q               | string (trim, lower) | ?q=pasta                                 |
+| Estado            | status          | active|inactive      | ?status=active                           |
+| Página            | page            | int ≥1               | ?page=2                                  |
+| Tamaño            | pageSize        | 1..100 (default 20)  | ?pageSize=20                             |
+| Ordenar por       | orderBy         | name|createdAt       | ?orderBy=name                            |
+| Dirección orden   | orderDir        | asc|desc             | ?orderDir=asc                            |
+| Incluir borrados* | includeDeleted  | true|false (Admin)   | ?includeDeleted=true                     |
+
+ERRORES → SNACKBAR (mensaje en español)
+| error.code                 | HTTP | Mensaje sugerido (UI)                                       |
+|---------------------------|------|--------------------------------------------------------------|
+| VALIDATION_ERROR          | 422  | Revísá los datos: hay campos inválidos.                     |
+| CATEGORY_REASSIGN_REQUIRED| 409  | No podés eliminar: hay productos asociados. Reasigná primero.|
+| RESOURCE_NOT_FOUND        | 404  | El recurso no existe o fue eliminado.                        |
+| PERMISSION_DENIED         | 403  | No tenés permisos para esta acción.                          |
+| AUTH_REQUIRED             | 401  | Iniciá sesión para continuar.                                |
+| AUTH_INVALID              | 401  | Tu sesión expiró. Volvé a iniciar sesión.                    |
+| CONFLICT                  | 409  | Operación en conflicto. Revisá los datos.                    |
+| RATE_LIMITED              | 429  | Demasiadas solicitudes. Probá de nuevo en unos minutos.      |
+
+*401 en rutas admin*: redirigir a login. *403*: mostrar vista “sin acceso”.  
+*Empty state público*: “No hay categorías disponibles por el momento.”
+
+FIN DEL PROMPT

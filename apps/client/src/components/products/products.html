@@ -1,0 +1,63 @@
+<!-- =====================================================
+     Products — Vista de listado y filtros
+     - Estructura semántica, BEM, mobile-first
+     - IDs y clases compatibles con el JS refactorizado
+     ===================================================== -->
+<section class="products" aria-labelledby="products-title">
+  <header class="products__header">
+    <h1 id="products-title" class="products__title">Nuestro Menú</h1>
+    <p class="products__subtitle">
+      Elegí por categoría, buscá por nombre y ordená como prefieras.
+    </p>
+
+    <div class="products__controls" role="group" aria-label="Controles del listado">
+      <!-- Búsqueda -->
+      <label class="products__control" for="search-input">
+        <span class="visually-hidden">Buscar productos</span>
+        <input
+          id="search-input"
+          class="products__search"
+          type="search"
+          placeholder="Buscar productos..."
+          autocomplete="off"
+          inputmode="search"
+          aria-label="Buscar productos"
+        />
+      </label>
+
+      <!-- Orden -->
+      <label class="products__control" for="sort-select">
+        <span class="visually-hidden">Ordenar por</span>
+        <select id="sort-select" class="products__sort" aria-label="Ordenar productos">
+          <option value="name-asc">Nombre (A–Z)</option>
+          <option value="price-asc">Precio (menor a mayor)</option>
+          <option value="price-desc">Precio (mayor a menor)</option>
+          <option value="createdAt-desc">Novedades</option>
+        </select>
+      </label>
+
+      <!-- Vista: grilla / lista -->
+      <div class="products__view-toggle" role="group" aria-label="Cambiar vista">
+        <button id="btn-grid" class="products__view-btn is-active" type="button" aria-pressed="true">Grilla</button>
+        <button id="btn-list" class="products__view-btn" type="button" aria-pressed="false">Lista</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Filtros por categoría -->
+  <nav class="products__categories" aria-label="Categorías">
+    <div id="category-list" class="products__category-list" role="list">
+      <!-- Se completa por JS: botón "Todas" + categorías -->
+    </div>
+  </nav>
+
+  <!-- Contenedor de resultados -->
+  <div
+    id="products-grid"
+    class="products__grid"
+    aria-live="polite"
+    aria-busy="false"
+  >
+    <!-- Tarjetas generadas por JS -->
+  </div>
+</section>

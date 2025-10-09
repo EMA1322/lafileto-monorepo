@@ -1,0 +1,27 @@
+{
+  "name": "lafileto-monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    
+    "dev": "concurrently -n API,ADMIN,CLIENT -c auto \"pnpm -F backend dev\" \"pnpm -F admin dev\" \"pnpm -F client dev\"",
+    "dev:backend": "pnpm -F backend dev",
+    "dev:admin": "pnpm -F admin dev",
+    "dev:client": "pnpm -F client dev",
+    "build": "pnpm -F backend build && pnpm -F admin build && pnpm -F client build",
+    "build:backend": "pnpm -F backend build",
+    "build:admin": "pnpm -F admin build",
+    "build:client": "pnpm -F client build",
+    "preview": "concurrently -n PREVIEW-ADMIN,PREVIEW-CLIENT -c auto \"pnpm -F admin preview\" \"pnpm -F client preview\"",
+    "clean": "rimraf **/node_modules **/dist || true"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "kill-port": "^2.0.1",
+    "rimraf": "^6.0.1"
+  },
+  "packageManager": "pnpm@9.15.9+sha512.68046141893c66fad01c079231128e9afb89ef87e2691d69e4d40eee228988295fd4682181bae55b58418c3a253bde65a505ec7c5f9403ece5cc3cd37dcf2531"
+}

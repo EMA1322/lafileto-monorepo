@@ -1,0 +1,59 @@
+<!-- =====================================================
+     Cart — vista de carrito (SPA)
+     - BEM, mobile-first, accesible
+     - Sin lógica inline, IDs que el JS necesita
+     ===================================================== -->
+<section class="cart" aria-labelledby="cart-title">
+  <div class="cart__container">
+    <header class="cart__header">
+      <h1 id="cart-title" class="cart__title">Tu Carrito</h1>
+      <p class="cart__subtitle">Revisá los productos antes de confirmar el pedido.</p>
+    </header>
+
+    <!-- Mensajes no intrusivos (A11y) -->
+    <div id="cart-status" class="cart__status" aria-live="polite"></div>
+
+    <div class="cart__layout">
+      <!-- Lista -->
+      <div class="cart__list">
+        <ul id="cart-items" class="cart__items" role="list" aria-busy="false">
+          <!-- Items generados por JS -->
+        </ul>
+
+        <!-- Estado vacío -->
+<div id="cart-empty" class="cart__empty" hidden>
+  <img src="/img/carrito.png" alt="" width="96" height="96" loading="lazy" />
+  <h2 class="cart__empty-title">Tu carrito está vacío</h2>
+  <p class="cart__empty-text">Agregá productos desde el menú.</p>
+  <a class="btn cart__empty-cta" href="#products">Ir al Menú</a>
+</div>
+
+      </div>
+
+      <!-- Resumen -->
+      <aside class="cart__summary" aria-label="Resumen del pedido">
+        <div class="cart__summary-row">
+          <span>Subtotal</span>
+          <span id="cart-subtotal">—</span>
+        </div>
+        <div class="cart__summary-row cart__summary-total">
+          <span>Total</span>
+          <span id="cart-total">—</span>
+        </div>
+
+        <div class="cart__summary-actions">
+          <button id="confirm-order-btn" class="btn cart__confirm-btn" type="button">
+            Confirmar pedido
+          </button>
+          <button id="clear-cart-btn" class="btn btn-outline cart__clear-btn" type="button">
+            Vaciar carrito
+          </button>
+        </div>
+
+        <p id="cart-closed-note" class="cart__closed-note" hidden>
+          Estamos cerrados en este momento.
+        </p>
+      </aside>
+    </div>
+  </div>
+</section>

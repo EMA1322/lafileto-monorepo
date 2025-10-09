@@ -1,0 +1,201 @@
+/* ==========================================================================
+   Admin / Categories — integrado con variables de global.css
+   - BEM + mobile-first + accesible
+   - No modifica IDs/clases usados por categories.js
+   ========================================================================== */
+
+/* Alias local para compatibilidad con el HTML del módulo */
+.visually-hidden,
+.sr-only {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+/* Tokens locales (usando fallbacks a global.css) */
+:root {
+  --c-bg: var(--bg-color, #fafafa);
+  --c-card: var(--surface-card, #fff);
+  --c-border: var(--border-color, #e5e7eb);
+  --c-text: var(--text-color, #1f2937);
+  --c-text-muted: var(--muted-color, #6b7280);
+  --c-primary: var(--primary-color, #2563eb);
+  --c-success: var(--success-color, #16a34a);
+  --c-danger: var(--danger-color, #dc2626);
+  --c-subtle: color-mix(in srgb, #000 3%, #fff);
+  --c-muted-surface: color-mix(in srgb, var(--c-border) 25%, #fff);
+  --c-shadow: 0 1px 4px rgba(0,0,0,.06);
+  --radius-md: 12px;
+  --spacing-2: .5rem;
+  --spacing-3: .75rem;
+  --spacing-4: 1rem;
+}
+
+/* Layout base */
+.categories {
+  padding: var(--spacing-4);
+  color: var(--c-text);
+  background: var(--c-bg);
+}
+
+.categories__title {
+  margin: 0 0 var(--spacing-3);
+  font-size: clamp(1.25rem, 1rem + 1vw, 1.6rem);
+  font-weight: 800;
+}
+
+.categories__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-3);
+  align-items: center;
+  margin-bottom: var(--spacing-4);
+}
+
+.categories__tool { display: inline-flex; gap: .5rem; align-items: center; }
+.categories__tool--order { margin-left: auto; }
+.categories__tool--cta { display: inline-flex; gap: .5rem; }
+
+.categories__search,
+.categories__select {
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  padding: .55rem .7rem;
+  background: var(--c-card);
+  color: var(--c-text);
+}
+
+.btn {
+  border: 1px solid var(--c-border);
+  background: var(--c-card);
+  border-radius: 999px;
+  padding: .55rem .9rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+.btn:hover { box-shadow: var(--c-shadow); }
+.btn--ghost { background: transparent; }
+
+.btn[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Tabla */
+.categories__tableWrap {
+  overflow: auto;
+  background: var(--c-card);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--c-shadow);
+}
+.categories__table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.categories__table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--c-card);
+  color: var(--c-text);
+  text-align: left;
+  padding: .75rem;
+  font-weight: 700;
+  border-bottom: 1px solid var(--c-border);
+}
+.categories__table tbody td {
+  padding: .7rem .75rem;
+  border-bottom: 1px solid var(--c-border);
+  vertical-align: middle;
+  background: var(--c-card);
+}
+.categories__table tbody tr:nth-child(odd) td {
+  background: var(--c-subtle);
+}
+
+.empty {
+  color: var(--c-text-muted);
+  text-align: center;
+}
+
+/* Badges de estado */
+.badge {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  padding: 4px 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+.badge.active {
+  background: color-mix(in srgb, var(--c-success) 12%, #fff);
+  border-color: rgba(25, 135, 84, 0.3);
+  color: var(--c-success);
+}
+.badge.inactive {
+  background: var(--c-muted-surface);
+  border-color: var(--c-border);
+  color: var(--c-text-muted);
+}
+
+/* Footer / paginación */
+.categories__footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  justify-content: space-between;
+  align-items: center;
+  margin-top: var(--spacing-4);
+}
+.categories__summary { color: var(--c-text-muted); }
+.categories__pager { display: inline-flex; gap: .5rem; }
+.categories__page  { min-width: 7ch; text-align: center; }
+
+/* Dialog */
+.categories__dialog::backdrop {
+  background: linear-gradient(0deg, rgba(0,0,0,.5), rgba(0,0,0,.5));
+}
+.categories__form {
+  background: var(--c-card);
+  border: 1px solid var(--c-border);
+  border-radius: 14px;
+  padding: 1rem;
+  min-width: min(96vw, 420px);
+}
+.categories__dialogHeader { margin-bottom: .5rem; }
+.categories__dialogTitle {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+.categories__field { display: grid; gap: .35rem; margin-bottom: .65rem;}
+.categories__label { font-weight: 600; font-size: .95rem; }
+.categories__input {
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  padding: .6rem .7rem;
+}
+.categories__dialogFooter {
+  display: flex;
+  gap: .5rem;
+  justify-content: flex-end;
+  margin-top: .35rem;
+}
+
+/* Acciones a la derecha en desktop */
+@media (min-width: 720px) {
+  .categories__table thead th:last-child {
+    text-align: right;
+  }
+  .categories__table tbody td:last-child {
+    text-align: right;
+  }
+}
+

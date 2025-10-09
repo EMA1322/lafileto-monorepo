@@ -1,0 +1,90 @@
+/* ================================
+   LOGIN MODULE STYLES
+   Adaptado a admin-global.css
+================================ */
+
+/* 1. Contenedor principal */
+.login {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: var(--secondary-color);
+    padding: var(--spacing-md);
+}
+
+/* 2. Caja central */
+.login__container {
+    max-width: 400px;
+    width: 100%;
+    padding: var(--spacing-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    animation: fadeIn 0.6s ease-in-out;
+}
+
+/* Animación suave */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* 3. Encabezado */
+.login__header { text-align: center; }
+.login__title { font-size: 1.8rem; font-weight: 700; color: var(--primary-color); }
+.login__subtitle { font-size: 1rem; color: var(--muted-color); }
+
+/* 4. Formulario */
+.login__form { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.login__field { display: flex; flex-direction: column; gap: 0.3rem; }
+.login__label { font-size: 0.95rem; font-weight: 500; color: var(--text-color); }
+.login__input {
+    padding: 0.8rem;
+    border: 1px solid #ddd;
+    border-radius: var(--radius-sm);
+    font-size: 1rem;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.login__input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 8px rgba(13, 110, 253, 0.3);
+    outline: none;
+}
+
+.login__button { margin-top: var(--spacing-xs); }
+
+/* Grupo input + toggle de contraseña */
+.login__input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.login__input-group .login__input { flex: 1 1 auto; padding-right: 3rem; }
+.login__toggle {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 2.25rem;
+  min-width: 2.25rem;
+  padding: 0 0.5rem;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color .2s, box-shadow .2s, background-color .2s;
+}
+.login__toggle:hover { background-color: rgba(0, 0, 0, 0.04); }
+.login__toggle:focus-visible {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+}
+
+/* 7. Responsividad */
+@media (min-width: 768px) {
+  .login__container { padding: var(--spacing-lg) var(--spacing-lg); }
+}

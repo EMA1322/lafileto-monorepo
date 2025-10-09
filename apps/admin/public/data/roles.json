@@ -1,0 +1,14 @@
+[
+  {
+    "id": "role-admin",
+    "name": "Administrador",
+    "description": "Acceso total al panel",
+    "status": "active"
+  },
+  {
+    "id": "role-supervisor",
+    "name": "Supervisor",
+    "description": "Gestión de catálogo sin permisos de eliminación",
+    "status": "active"
+  }
+]

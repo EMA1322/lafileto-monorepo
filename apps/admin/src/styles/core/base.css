@@ -1,0 +1,43 @@
+/* ==========================================================================
+   BASE — reset ligero, tipografía y utilidades de accesibilidad
+   - Esqueleto sin reglas invasivas; completá donde corresponda.
+   ========================================================================== */
+@layer base {
+  /* ---- Reset mínimo ---- */
+  *, *::before, *::after { box-sizing: border-box; }
+  /* body { margin: 0; }  <-- activalo si tu reset actual no lo tiene */
+
+  /* ---- Tipografía y colores base (no-op por defecto) ----
+     Activá estas líneas cuando valides que no rompen tu look actual. */
+  /*
+  html { font-family: var(--font-sans); font-size: var(--fs-md); line-height: var(--lh-normal); }
+  body { color: var(--text-color); background: var(--surface-bg); }
+  */
+
+  /* ---- Imágenes y medios ---- */
+  img, svg, video, canvas { max-width: 100%; height: auto; display: block; }
+
+  /* ---- Focus visible unificado (comentado para no alterar aún) ----
+     Descomentá cuando quieras aplicar anillo de foco global. */
+  /*
+  :where(a, button, input, select, textarea, summary):focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+  */
+
+  /* ---- Utilidades de accesibilidad ---- */
+  .sr-only,
+  .visually-hidden {
+    position: absolute !important;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0, 0, 0, 0);
+    white-space: nowrap; border: 0;
+  }
+
+  /* ---- Motion safe ---- */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+  }
+}

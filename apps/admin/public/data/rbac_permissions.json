@@ -1,0 +1,21 @@
+{
+  "role_permissions": {
+    "role-admin": {
+      "admin-header": { "r": true, "w": true, "u": true, "d": true },
+      "dashboard":    { "r": true, "w": true, "u": true, "d": true },
+      "categories":   { "r": true, "w": true, "u": true, "d": true },
+      "products":     { "r": true, "w": true, "u": true, "d": true },
+      "users":        { "r": true, "w": true, "u": true, "d": true },
+      "settings":     { "r": true, "w": true, "u": true, "d": true }
+    },
+    "role-supervisor": {
+      "admin-header": { "r": true, "w": false, "u": false, "d": false },
+      "dashboard":    { "r": true, "w": false, "u": false, "d": false },
+      "categories":   { "r": true, "w": true,  "u": true,  "d": false },
+      "products":     { "r": true, "w": true,  "u": true,  "d": false },
+      "users":        { "r": false,"w": false, "u": false, "d": false },
+      "settings":     { "r": false,"w": false, "u": false, "d": false }
+    }
+  }
+}
+

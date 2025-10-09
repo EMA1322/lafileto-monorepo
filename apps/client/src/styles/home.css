@@ -1,0 +1,260 @@
+/* ===============================
+   MÓDULO HOME - ESTILOS
+   - BEM, mobile-first, sin tocar Swiper internals
+   =============================== */
+
+/* ===========================
+   1) HERO PRINCIPAL
+   =========================== */
+.home__hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--secondary-color);
+  padding: 2rem 1rem;
+  margin-bottom: 2rem; /* separa secciones */
+}
+
+/* Imagen parallax */
+.home__hero-image {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 1;
+}
+.home__hero-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.1);
+  transition: transform 1.5s ease;
+  will-change: transform;
+}
+/* Animación al cargar */
+.home__hero-image img.loaded { transform: scale(1); }
+
+/* Contenido */
+.home__hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 500px;
+  animation: fadeInUp 1.2s ease-in-out;
+  color: white;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
+  border-radius: 10px;
+  padding: 1rem;
+}
+.home__hero-title {
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+.home__hero-subtitle {
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+}
+.home__hero-btn {
+  display: inline-block;
+  background: var(--primary-color);
+  color: #fff;
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background 0.3s ease, transform 0.3s ease;
+}
+.home__hero-btn:hover { background: #ff7f00; transform: scale(1.05); }
+
+/* Desktop: Imagen izquierda, texto derecha */
+@media (min-width: 1024px) {
+  .home__hero { flex-direction: row; text-align: left; height: 90vh; padding: 0; }
+  .home__hero-image { position: relative; width: 50%; height: 100%; }
+  .home__hero-content { width: 50%; padding: 4rem; }
+}
+
+/* ===========================
+   2) Botón flotante WhatsApp
+   =========================== */
+.home__whatsapp-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  background: rgba(37, 211, 101, 0); /* color base (icono ya tiene verde) */
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-soft);
+  z-index: 999;
+  transition: transform 0.3s ease;
+  cursor: pointer;
+  overflow: hidden;
+}
+.home__whatsapp-btn:hover { transform: scale(1.1); }
+.home__whatsapp-btn img { width: 40px; height: 40px; display: block; }
+
+/* ===========================
+   3) Sección ¿Cómo Funciona?
+   =========================== */
+.home__steps { padding: 2rem 1rem; text-align: center; }
+.home__steps-title { font-size: 1.5rem; margin-bottom: 1.5rem; }
+.home__steps-container { display: grid; gap: 1.5rem; }
+.home__step {
+  background: var(--secondary-color);
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.3s ease;
+}
+.home__step:hover { transform: scale(1.03); }
+.home__step-icon { width: 100px; margin-bottom: 0.75rem; }
+.home__step-title { font-size: 1.2rem; font-weight: 600; }
+/* Desktop: 3 columnas */
+@media (min-width: 768px) { .home__steps-container { grid-template-columns: repeat(3, 1fr); } }
+
+/* ===========================
+   4) Carrusel de Ofertas (Swiper, SCOPEADO)
+   =========================== */
+.home__offers { padding: 2rem 1rem; margin-top: 2rem; }
+.home__offers-header {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: .75rem; margin-bottom: 1rem;
+}
+.home__offers-title { font-size: clamp(1.25rem, 1rem + 1vw, 1.6rem); }
+.home__offers-btn { white-space: nowrap; }
+
+/* Contenedor del carrusel */
+#offers-carousel.home__offers-carousel {
+  position: relative;
+  min-height: 180px; /* asegura espacio mínimo si la data tarda */
+}
+
+/* Slides */
+#offers-carousel .swiper-slide { height: auto; }
+
+/* Card */
+.home__offer-card {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: .75rem;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 6px 16px rgba(0,0,0,.06);
+  overflow: hidden;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.home__offer-card:hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(0,0,0,.08); }
+
+/* Imagen */
+.home__offer-image { aspect-ratio: 16/10; overflow: hidden; }
+.home__offer-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* Badge superpuesto */
+.home__offer-badge {
+  position: absolute; inset: .5rem auto auto .5rem; z-index: 1;
+  display: flex; gap: .4rem;
+}
+.home__offer-tag {
+  background: var(--primary-color); color: #fff; font-weight: 600;
+  font-size: .75rem; padding: .25rem .5rem; border-radius: .5rem;
+}
+.home__offer-timer {
+  background: rgba(0,0,0,.65); color: #fff; font-size: .72rem;
+  padding: .25rem .5rem; border-radius: .5rem;
+}
+
+/* Info */
+.home__offer-info { padding: .75rem .9rem 0 .9rem; }
+.home__offer-title { font-size: 1rem; line-height: 1.25; margin: 0 0 .25rem 0; }
+
+/* Botón agregar */
+.home__offer-card .btn-add-to-cart { margin: 0 .9rem .9rem .9rem; width: 100%; }
+
+/* Controles Swiper (scopeado SOLO a este carrusel) */
+#offers-carousel .swiper-button-prev,
+#offers-carousel .swiper-button-next {
+  width: 40px; height: 40px; border-radius: 999px;
+  background: rgba(0,0,0,.06); backdrop-filter: blur(2px);
+  transition: background .2s ease;
+}
+#offers-carousel .swiper-button-prev:hover,
+#offers-carousel .swiper-button-next:hover { background: rgba(0,0,0,.12); }
+#offers-carousel .swiper-button-prev::after,
+#offers-carousel .swiper-button-next::after { font-size: 16px; color: var(--text-color, #222); }
+#offers-carousel .swiper-button-prev:focus-visible,
+#offers-carousel .swiper-button-next:focus-visible {
+  outline: 2px solid var(--primary-color); outline-offset: 2px;
+}
+
+/* Paginación */
+#offers-carousel .swiper-pagination-bullet { background: rgba(0,0,0,.28); opacity: 1; }
+#offers-carousel .swiper-pagination-bullet-active { background: var(--primary-color); }
+
+/* ===========================
+   5) Beneficios Clave
+   =========================== */
+.home__benefits { padding: 2rem 1rem; background: #fff; text-align: center; }
+.home__benefits-title { font-size: 1.5rem; margin-bottom: 1rem; }
+.home__benefits-container { display: grid; gap: 1rem; }
+.home__benefit {
+  display: flex; flex-direction: column; align-items: center;
+  background: var(--secondary-color); padding: 1rem; border-radius: 8px;
+  box-shadow: var(--shadow-soft); transition: transform 0.3s ease;
+}
+.home__benefit:hover { transform: translateY(-5px); }
+.home__benefit-icon { width: 100px; margin-bottom: .5rem; }
+/* Desktop: 3 columnas */
+@media (min-width: 768px) { .home__benefits-container { grid-template-columns: repeat(3, 1fr); } }
+
+/* ===========================
+   6) CTA Secundarias
+   =========================== */
+.home__cta-secondary {
+  text-align: center; padding: 1rem; display: flex; flex-direction: column; gap: 1rem;
+}
+.home__cta-secondary a {
+  display: inline-block; padding: .75rem 1rem; border-radius: 6px;
+  text-decoration: none; font-weight: 600;
+}
+.btn-secondary { background: var(--primary-color); color: #fff; }
+.btn-outline { border: 2px solid var(--primary-color); color: var(--primary-color); background: transparent; }
+
+/* ===========================
+   7) Texto Persuasivo Final
+   =========================== */
+.home__closing { text-align: center; padding: 2rem 1rem; background: var(--secondary-color); }
+.home__closing-text { font-size: 1.2rem; margin-bottom: 1rem; font-weight: 600; }
+.home__closing-btn { background: var(--primary-color); color: #fff; padding: .75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 600; }
+
+/* ===========================
+   8) Animaciones (globales)
+   =========================== */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px);} to { opacity: 1; transform: translateY(0);} }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(30px);} to { opacity: 1; transform: translateY(0);} }
+
+/* ===========================
+   9) Precios (ofertas)
+   =========================== */
+.home__offer-price {
+  display: flex; align-items: baseline; gap: .5rem; flex-wrap: wrap;
+}
+.home__offer-old-price {
+  color: var(--muted-color); text-decoration: line-through; opacity: .85; font-size: .95rem;
+}
+.home__offer-discounted { font-weight: 700; font-size: 1.05rem; }
+.home__offer-discount-percent {
+  color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+  border-radius: .5rem; padding: .1rem .45rem; line-height: 1; font-size: .85rem;
+}

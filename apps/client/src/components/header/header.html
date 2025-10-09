@@ -1,0 +1,34 @@
+<!-- Header (fragmento SPA, sin <!DOCTYPE>) -->
+<header class="header">
+  <div class="header__overlay" id="header-overlay" aria-hidden="true" hidden></div>
+
+  <nav class="header__nav container" role="navigation" aria-label="Navegación principal">
+    <!-- Logo -->
+    <a href="#home" class="header__logo" aria-label="Ir al inicio">La Fileto</a>
+
+    <!-- Estado del negocio -->
+    <span id="business-status" class="header__status" aria-live="polite" aria-atomic="true">
+      Cargando…
+    </span>
+
+    <!-- Acciones (carrito + menú) -->
+    <div class="header__actions">
+      <a href="#cart" class="header__cart" aria-label="Ir al carrito">
+        <svg class="header__cart-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h-2l1 2h13l-1 9h-11z"/></svg>
+        <span id="cart-count" class="header__cart-count" aria-label="Productos en el carrito" aria-live="polite" aria-atomic="true">0</span>
+      </a>
+
+      <button class="header__toggle" id="menu-toggle" type="button" aria-label="Abrir menú de navegación" aria-controls="nav-menu" aria-expanded="false">
+        <span class="header__bar"></span><span class="header__bar"></span><span class="header__bar"></span>
+        <span class="sr-only">Menú</span>
+      </button>
+    </div>
+
+    <!-- Menú SPA -->
+    <ul class="header__menu" id="nav-menu">
+      <li><a href="#home">Inicio</a></li>
+      <li><a href="#products">Productos</a></li>
+      <li><a href="#contact">Contacto</a></li>
+    </ul>
+  </nav>
+</header>

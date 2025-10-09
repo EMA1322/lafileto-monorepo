@@ -1,0 +1,88 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Prisma schema – La Fileto (I1)
+// Comentarios en español; nombres de modelos/campos en inglés.
+// ─────────────────────────────────────────────────────────────────────────────
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+// ── Enums ───────────────────────────────────────────────────────────────────
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
+// ── Models ──────────────────────────────────────────────────────────────────
+model User {
+  id                  Int        @id @default(autoincrement())
+  fullName            String     @db.VarChar(120)
+  email               String     @unique @db.VarChar(191)
+  passwordHash        String     @db.VarChar(255)
+  roleId              String
+  status              UserStatus @default(ACTIVE)
+  failedLoginAttempts Int        @default(0)
+  lockUntil           DateTime?  // fecha fin de bloqueo por intentos fallidos
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+  deletedAt           DateTime?  // soft-delete
+
+  role     Role?      @relation(fields: [roleId], references: [roleId])
+  auditLog AuditLog[] // relación inversa (opcional)
+
+  @@index([roleId])
+}
+model Role {
+  roleId    String           @id @db.VarChar(50)  // ej.: "role-admin"
+  name      String           @db.VarChar(100)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  users          User[]
+  permissions    RolePermission[]
+}
+model Module {
+  moduleKey String           @id @db.VarChar(50)  // ej.: "products"
+  name      String           @db.VarChar(100)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  rolePermissions RolePermission[]
+}
+model RolePermission {
+  roleId    String
+  moduleKey String
+  r         Boolean   @default(false) // read
+  w         Boolean   @default(false) // write (create)
+  u         Boolean   @default(false) // update
+  d         Boolean   @default(false) // delete
+  updatedAt DateTime  @updatedAt
+
+  role   Role   @relation(fields: [roleId], references: [roleId])
+  module Module @relation(fields: [moduleKey], references: [moduleKey])
+
+  @@id([roleId, moduleKey]) // único por par (rol, módulo)
+  @@index([moduleKey])
+}
+model Setting {
+  key       String   @id @db.VarChar(64) // ej.: "isOpen", "whatsAppNumber"
+  value     Json?
+  updatedAt DateTime @updatedAt
+}
+model AuditLog {
+  id            Int       @id @default(autoincrement())
+  actorUserId   Int?
+  action        String    @db.VarChar(50)   // ej.: "permission_change"
+  entity        String    @db.VarChar(50)   // ej.: "role_permissions"
+  entityId      String?   @db.VarChar(50)   // ej.: "role-supervisor"
+  summary       String?   @db.VarChar(255)
+  changedFields Json?
+  createdAt     DateTime  @default(now())
+
+  actorUser     User?     @relation(fields: [actorUserId], references: [id])
+
+  @@index([actorUserId])
+}

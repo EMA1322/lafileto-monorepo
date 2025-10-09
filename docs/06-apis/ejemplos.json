@@ -1,0 +1,38 @@
+{
+  "success_list": {
+    "ok": true,
+    "data": [
+      {
+        "id": 1,
+        "name": "Milanesa"
+      },
+      {
+        "id": 2,
+        "name": "Napolitana"
+      }
+    ],
+    "meta": {
+      "page": 1,
+      "pageSize": 20,
+      "total": 2
+    }
+  },
+  "success_item": {
+    "ok": true,
+    "data": {
+      "id": 12,
+      "name": "Milanesa Napolitana",
+      "price": 5000,
+      "discount": 10,
+      "isOffer": true,
+      "categoryId": 3
+    }
+  },
+  "error_validation": {
+    "ok": false,
+    "error": {
+      "code": "VALIDATION_ERROR",
+      "message": "discount must be between 0 and 100"
+    }
+  }
+}

@@ -1,0 +1,32 @@
+[
+  {
+    "id": "u-001",
+    "firstName": "Lucía",
+    "lastName": "Pérez",
+    "email": "lucia.perez@lafileto.com",
+    "phone": "11223344",
+    "roleId": "role-admin",
+    "status": "active",
+    "createdAt": "2024-01-15T10:00:00.000Z"
+  },
+  {
+    "id": "u-002",
+    "firstName": "Martín",
+    "lastName": "Suárez",
+    "email": "martin.suarez@lafileto.com",
+    "phone": "11998877",
+    "roleId": "role-supervisor",
+    "status": "active",
+    "createdAt": "2024-01-20T12:30:00.000Z"
+  },
+  {
+    "id": "u-003",
+    "firstName": "Carla",
+    "lastName": "Gómez",
+    "email": "carla.gomez@lafileto.com",
+    "phone": "11445566",
+    "roleId": "role-supervisor",
+    "status": "inactive",
+    "createdAt": "2024-01-22T09:15:00.000Z"
+  }
+]

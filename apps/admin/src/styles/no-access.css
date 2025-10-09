@@ -1,0 +1,48 @@
+/* src/styles/no-access.css */
+/* Estilos mínimos, mobile-first, usando variables globales */
+
+.noaccess {
+  display: grid;
+  place-items: center;
+  min-height: 60vh;
+  padding: var(--spacing-md);
+  background: var(--secondary-color);
+}
+
+.noaccess__card {
+  width: 100%;
+  max-width: 520px;
+  background: var(--surface-card); /* ⬅️ antes: --background-color (no definida) */
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-soft);
+  padding: var(--spacing-md);
+}
+
+.noaccess__header {
+  text-align: center;
+  margin-bottom: var(--spacing-sm);
+}
+
+.noaccess__title {
+  margin: 0 0 .5rem 0;
+  font-size: 1.35rem;
+  color: var(--text-strong, #111);
+}
+
+.noaccess__desc {
+  margin: 0;
+  color: var(--text-color);
+  line-height: 1.45;
+}
+
+.noaccess__actions {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--spacing-sm);
+}
+
+.noaccess__btn {
+  min-width: 220px;
+  text-align: center;
+}

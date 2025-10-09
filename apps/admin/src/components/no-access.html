@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<!-- src/components/no-access.html -->
+<!-- Vista reutilizable para denegar acceso (RBAC Read=false) -->
+<section class="noaccess" role="region" aria-labelledby="noaccess-title">
+  <link rel="stylesheet" href="/src/styles/no-access.css" />
+  <article class="noaccess__card">
+    <header class="noaccess__header">
+      <h1 id="noaccess-title" class="noaccess__title">No autorizado</h1>
+      <p class="noaccess__desc">
+        No tenés permisos para ver esta sección. Si creés que es un error, contactá al administrador.
+      </p>
+    </header>
+
+    <!-- CTA dinámico: el router ajusta href/texto según permisos -->
+    <div class="noaccess__actions">
+      <a id="noaccess-cta" href="#login" class="btn noaccess__btn">Volver al Inicio de sesión</a>
+    </div>
+  </article>
+</section>

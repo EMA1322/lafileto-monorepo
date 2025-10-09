@@ -1,0 +1,66 @@
+<!-- Módulo Login (fragmento que inyecta el router en #app) -->
+<!-- Code-splitting: el CSS del módulo se carga aquí -->
+<link rel="stylesheet" href="/src/styles/login.css" />
+
+<section class="login" aria-labelledby="login-title" aria-describedby="login-help">
+  <article class="login__container card container">
+    <!-- Encabezado -->
+    <header class="login__header">
+      <h1 id="login-title" class="login__title">Panel Administrador</h1>
+      <p id="login-help" class="login__subtitle">Inicia sesión para continuar</p>
+    </header>
+
+    <!-- Formulario de login -->
+    <form class="login__form" novalidate>
+      <!-- Campo EMAIL -->
+      <div class="login__field">
+        <label for="email" class="login__label">Email</label>
+        <input
+          type="email"
+          id="email"
+          class="login__input"
+          placeholder="tu@correo.com"
+          autocomplete="username"
+          required
+          aria-required="true"
+          inputmode="email"
+        />
+      </div>
+
+      <!-- Campo CONTRASEÑA con toggle accesible -->
+      <div class="login__field">
+        <label for="password" class="login__label">Contraseña</label>
+        <div class="login__input-group">
+          <input
+            type="password"
+            id="password"
+            class="login__input"
+            placeholder="Ingresa tu contraseña"
+            autocomplete="current-password"
+            required
+            aria-required="true"
+            minlength="6"
+          />
+          <button
+            type="button"
+            id="password-toggle"
+            class="login__toggle"
+            aria-label="Mostrar contraseña"
+            aria-pressed="false"
+            title="Mostrar contraseña"
+          >
+            <span aria-hidden="true">👁</span>
+            <span class="sr-only">Mostrar u ocultar contraseña</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Acciones -->
+      <button type="submit" class="btn btn--block login__button" id="login-submit">Iniciar sesión</button>
+      <a class="btn btn-secondary" href="#login-recover">Recuperar contraseña</a>
+
+      <!-- Error accesible -->
+      <p id="login-error" class="login__error" aria-live="polite" hidden></p>
+    </form>
+  </article>
+</section>

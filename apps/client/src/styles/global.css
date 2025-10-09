@@ -1,0 +1,252 @@
+/* ===========================================
+   GLOBAL STYLES UNIFICADO (CLIENTE + ADMIN)
+   Uso: Estilos base comunes para SPA y Admin
+   Mobile First + Escalable
+=========================================== */
+
+/* 1. Importación de tipografías */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Dancing+Script:wght@400;700&family=Roboto:wght@400;500;700&display=swap');
+
+[hidden] { display: none !important; }
+/* 2. Reset básico */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 16px;
+    scroll-behavior: smooth;
+    height: 100%;
+}
+
+body {
+    font-family: var(--font-base);
+    color: var(--text-color);
+    background: var(--background-color);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* 3. Variables globales */
+:root {
+    /* Colores principales */
+    --primary-color: #ff6f61;       /* Naranja cálido */
+    --secondary-color: #f8f9fa;     /* Fondo claro */
+    --accent-color: #f77f00;        /* Acento destacado */
+    --muted-color: #6c757d;         /* Texto secundario */
+    --success-color: #198754;       /* Verde éxito */
+    --danger-color: #dc3545;        /* Rojo error */
+
+    /* Texto */
+    --text-color: #212529;
+    --font-base: 'Poppins', sans-serif;
+    --font-accent: 'Dancing Script', cursive; /* Para títulos decorativos */
+    --font-admin: 'Roboto', sans-serif;       /* Para panel admin */
+
+    /* Espaciados */
+    --spacing-xs: 0.5rem;
+    --spacing-sm: 1rem;
+    --spacing-md: 1.5rem;
+    --spacing-lg: 2rem;
+
+    /* Contenedor */
+    --container-width: 1200px;
+
+    /* Sombras y bordes */
+    --shadow-soft: 0 4px 8px rgba(0, 0, 0, 0.1);
+    --shadow-hover: 0 8px 12px rgba(0, 0, 0, 0.15);
+    --radius-sm: 6px;
+    --radius-md: 10px;
+}
+
+/* 4. Tipografía global */
+h1, h2, h3 {
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+p, span, li, input, button {
+    font-weight: 400;
+    color: var(--text-color);
+}
+
+/* 5. Enlaces */
+a {
+    text-decoration: none;
+    color: var(--primary-color);
+    transition: color 0.3s ease;
+}
+a:hover {
+    color: var(--accent-color);
+}
+
+/* 6. Contenedor base */
+.container {
+    width: 95%;
+    max-width: var(--container-width);
+    margin: 0 auto;
+}
+
+/* 7. Botones reutilizables */
+.btn {
+    display: inline-block;
+    padding: var(--spacing-xs) var(--spacing-md);
+    background: var(--primary-color);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s ease;
+}
+.btn:hover {
+    background: #ff4a3d;
+    transform: scale(1.05);
+}
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Variantes de botones */
+.btn-secondary {
+    background: var(--secondary-color);
+    color: var(--text-color);
+}
+.btn-danger {
+    background: var(--danger-color);
+}
+.btn-success {
+    background: var(--success-color);
+}
+
+/* 8. Inputs y formularios */
+input, select, textarea {
+    width: 100%;
+    padding: var(--spacing-xs);
+    border: 1px solid #ddd;
+    border-radius: var(--radius-sm);
+    font-size: 1rem;
+    color: var(--text-color);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 8px rgba(255, 111, 97, 0.4);
+}
+
+/* 9. Tarjetas base */
+.card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-soft);
+    padding: var(--spacing-sm);
+    transition: transform 0.2s ease;
+}
+.card:hover {
+    transform: scale(1.02);
+    box-shadow: var(--shadow-hover);
+}
+
+/* 10. Snackbar (notificaciones flotantes) */
+.snackbar {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) scale(0.9);
+    background: var(--secondary-color);
+    color: #000;
+    padding: var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    opacity: 0;
+    z-index: 999;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.snackbar.visible {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+}
+
+/* 11. Utilidades */
+.text-center { text-align: center; }
+.mt-sm { margin-top: var(--spacing-sm); }
+.mb-sm { margin-bottom: var(--spacing-sm); }
+
+/* 12. Breakpoints (Mobile First) */
+@media (min-width: 576px) {
+    html { font-size: 17px; }
+}
+@media (min-width: 768px) {
+    html { font-size: 18px; }
+}
+@media (min-width: 992px) {
+    html { font-size: 19px; }
+}
+@media (min-width: 1200px) {
+    html { font-size: 20px; }
+}
+
+/* ===========================================
+   Loader del SPA (accesible)
+   - Se muestra dentro de #main-content mientras se carga una vista
+   - Sin estilos inline (JS sólo inserta el HTML mínimo)
+=========================================== */
+
+#main-content {
+  position: relative;
+  min-height: 40vh; /* asegura espacio visual del loader en vistas cortas */
+}
+
+.app-loader {
+  position: relative;
+  display: grid;
+  place-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: clamp(200px, 40vh, 480px);
+  text-align: center;
+  color: var(--muted-color);
+}
+
+.app-loader__spinner {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 3px solid rgba(0, 0, 0, 0.1);
+  border-top-color: var(--primary-color);
+  animation: app-spin 0.9s linear infinite;
+  margin: 0 auto;
+}
+
+.app-loader__text {
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+}
+
+/* Animación del spinner */
+@keyframes app-spin { 
+  to { transform: rotate(360deg); } 
+}
+
+/* ===========================================
+   Vista: Error de carga
+   - Reutiliza estilos base de botones (.btn)
+=========================================== */
+.view-error {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--danger-color);
+}
+.view-error .btn {
+  margin-top: 1rem;
+}
+
+
+
+
