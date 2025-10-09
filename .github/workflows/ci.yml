@@ -1,36 +1,26 @@
 name: CI
-
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  push: { branches: [ main ] }
+  pull_request: { branches: [ main ] }
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'pnpm'
-
-      # PNPM mediante Corepack (seguro y estable)
-      - name: Enable Corepack
-        run: corepack enable
-      - name: Prepare pnpm
-        run: corepack prepare pnpm@9.0.0 --activate
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
       - name: Verify pnpm
         run: |
           which pnpm
           pnpm -v
-
       - name: Install deps
         run: pnpm install --frozen-lockfile
-
       - name: Build backend
         run: pnpm -F backend build
       - name: Build client
