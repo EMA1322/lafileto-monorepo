@@ -1,0 +1,6 @@
+# Propietarios por carpeta (ajusta los usuarios/@org)
+*                @tu-usuario
+/apps/client/**  @tu-usuario
+/apps/admin/**   @tu-usuario
+/apps/backend/** @tu-usuario
+/docs/**         @tu-usuario
