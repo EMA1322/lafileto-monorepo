@@ -1,27 +1,37 @@
 name: CI
+
 on:
-  pull_request:
-    branches: [ main ]
   push:
     branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
+      # Node 20 + cache para pnpm (lockfile en la raíz)
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'pnpm'
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
+      # 🔧 Garantiza pnpm usando Corepack (método seguro)
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Prepare pnpm
+        run: corepack prepare pnpm@9.0.0 --activate
+      - name: pnpm --version
+        run: pnpm -v
 
-      - name: Install
+      # Install en el monorepo (usa pnpm-lock.yaml de la raíz)
+      - name: Install deps
         run: pnpm install --frozen-lockfile
 
+      # Builds por workspace
       - name: Build backend
         run: pnpm -F backend build
 
