@@ -1,29 +1,41 @@
 name: CI
+
 on:
-  push: { branches: [ main ] }
-  pull_request: { branches: [ main ] }
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'pnpm'
+
+      # ✅ instala pnpm 9 y lo añade al PATH del runner
       - uses: pnpm/action-setup@v4
         with:
           version: 9
+
       - name: Verify pnpm
         run: |
           which pnpm
           pnpm -v
+
       - name: Install deps
         run: pnpm install --frozen-lockfile
+
       - name: Build backend
         run: pnpm -F backend build
+
       - name: Build client
         run: pnpm -F client build
+
       - name: Build admin
         run: pnpm -F admin build
