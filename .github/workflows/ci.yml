@@ -13,30 +13,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Node 20 + cache para pnpm (lockfile en la raíz)
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'pnpm'
 
-      # 🔧 Garantiza pnpm usando Corepack (método seguro)
+      # PNPM mediante Corepack (seguro y estable)
       - name: Enable Corepack
         run: corepack enable
       - name: Prepare pnpm
         run: corepack prepare pnpm@9.0.0 --activate
-      - name: pnpm --version
-        run: pnpm -v
+      - name: Verify pnpm
+        run: |
+          which pnpm
+          pnpm -v
 
-      # Install en el monorepo (usa pnpm-lock.yaml de la raíz)
       - name: Install deps
         run: pnpm install --frozen-lockfile
 
-      # Builds por workspace
       - name: Build backend
         run: pnpm -F backend build
-
       - name: Build client
         run: pnpm -F client build
-
       - name: Build admin
         run: pnpm -F admin build
