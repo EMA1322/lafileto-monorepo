@@ -14,12 +14,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Node sin cache (aún no tenemos pnpm instalado)
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'pnpm'
 
-      # ✅ instala pnpm 9 y lo añade al PATH del runner
+      # ✅ Instala pnpm y lo agrega al PATH del runner
       - uses: pnpm/action-setup@v4
         with:
           version: 9
@@ -28,6 +28,19 @@ jobs:
         run: |
           which pnpm
           pnpm -v
+
+      # (Opcional pero bueno) Cache del store de pnpm después de instalar pnpm
+      - name: Resolve pnpm store path
+        id: pnpm-cache
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
 
       - name: Install deps
         run: pnpm install --frozen-lockfile
@@ -40,3 +53,4 @@ jobs:
 
       - name: Build admin
         run: pnpm -F admin build
+
