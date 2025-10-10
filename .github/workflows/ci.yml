@@ -14,12 +14,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Node sin cache (aún no tenemos pnpm instalado)
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      # ✅ Instala pnpm y lo agrega al PATH del runner
+      # Instala pnpm y lo agrega al PATH del runner
       - uses: pnpm/action-setup@v4
         with:
           run_install: false
@@ -29,7 +28,7 @@ jobs:
           which pnpm
           pnpm -v
 
-      # (Opcional pero bueno) Cache del store de pnpm después de instalar pnpm
+      # Cache del store de pnpm (opcional pero recomendado)
       - name: Resolve pnpm store path
         id: pnpm-cache
         run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
@@ -53,4 +52,3 @@ jobs:
 
       - name: Build admin
         run: pnpm -F admin build
-
