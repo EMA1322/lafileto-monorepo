@@ -22,7 +22,7 @@ jobs:
       # ✅ Instala pnpm y lo agrega al PATH del runner
       - uses: pnpm/action-setup@v4
         with:
-          version: 9
+          run_install: false
 
       - name: Verify pnpm
         run: |
