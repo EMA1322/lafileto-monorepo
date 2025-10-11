@@ -32,14 +32,32 @@ function joinUrl(base, path) {
  * - (R-6) No agrega 'Content-Type' si es GET o si no hay body
  */
 export async function apiFetch(path, options = {}) {
-  const url = joinUrl(API_BASE, path);
+  const { params, ...restOptions } = options;
+  let url = joinUrl(API_BASE, path);
+
+  if (params && typeof params === 'object') {
+    const searchParams = new URLSearchParams();
+    for (const [key, value] of Object.entries(params)) {
+      if (value == null) continue;
+      const values = Array.isArray(value) ? value : [value];
+      for (const entry of values) {
+        searchParams.append(key, `${entry}`);
+      }
+    }
+
+    const query = searchParams.toString();
+    if (query) {
+      // Mantener compatibilidad con rutas que ya incluyen query.
+      url += (url.includes('?') ? '&' : '?') + query;
+    }
+  }
 
   // Normalizar método y headers
-  const method = ((options.method || 'GET') + '').toUpperCase();
-  const headers = new Headers(options.headers || {});
+  const method = ((restOptions.method || 'GET') + '').toUpperCase();
+  const headers = new Headers(restOptions.headers || {});
 
   // Sólo para requests con body y no-GET seteamos Content-Type
-  const hasBody = options.body != null && method !== 'GET';
+  const hasBody = restOptions.body != null && method !== 'GET';
   if (hasBody && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
   }
@@ -49,7 +67,7 @@ export async function apiFetch(path, options = {}) {
   if (token) headers.set('Authorization', `Bearer ${token}`);
 
   // Ejecutar request
-  const res = await fetch(url, { ...options, method, headers });
+  const res = await fetch(url, { ...restOptions, method, headers });
 
   // Leer texto y tratar de parsear JSON (útil cuando el server responde texto)
   const text = await res.text();
