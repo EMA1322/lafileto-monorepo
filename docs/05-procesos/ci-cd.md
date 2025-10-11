@@ -50,6 +50,20 @@ concurrency:
       ${{ runner.os }}-pnpm-
 ```
 
+## Pipeline (lint → test → build)
+
+```mermaid
+graph LR
+  lint --> test --> build
+```
+
+- **lint** ejecuta `pnpm -r lint` para todos los workspaces, manteniendo visible que aún son placeholders.
+- **test** ejecuta `pnpm -r test`; se corta la ejecución si alguna app falla.
+- **build** compila backend/admin/client con los mismos comandos que usamos localmente.
+- `pnpm install --frozen-lockfile` dispara `prisma generate` vía `postinstall`, asegurando Prisma Client actualizado en cada job.
+
+Si un job falla, el merge se bloquea porque `main` exige el check **CI** en verde. Podés reintentar con **Re-run jobs** (GitHub UI) o pusheando un fix a la rama.
+
 ## Path filters por workspace (opcional)
 ```yaml
 - uses: dorny/paths-filter@v3

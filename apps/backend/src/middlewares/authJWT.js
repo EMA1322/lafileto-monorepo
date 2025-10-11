@@ -1,10 +1,9 @@
 // Verifica Authorization: Bearer <token> y adjunta req.user
-import jwt from 'jsonwebtoken';
-import { env } from '../config/env.js';
 import { createError } from '../utils/errors.js';
+import { verifyJwt } from '../utils/jwt.js';
 
 export function authJWT() {
-  return (req, _res, next) => {
+  return async (req, _res, next) => {
     const auth = req.headers.authorization || '';
     const [, token] = auth.split(' ');
 
@@ -13,7 +12,7 @@ export function authJWT() {
     }
 
     try {
-      const payload = jwt.verify(token, env.jwt.secret);
+      const payload = await verifyJwt(token);
       // Por convención, nuestros tokens incluirán: { sub, email, fullName, roleId, effectivePermissions? }
       req.user = {
         id: payload.sub,

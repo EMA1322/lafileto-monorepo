@@ -5,6 +5,9 @@ node_modules/
 dist/
 .vite/
 
+# pnpm only (evita reintroducir package-lock de npm)
+package-lock.json
+
 # env/secrets
 *.env
 *.env.*
