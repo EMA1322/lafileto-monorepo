@@ -7,6 +7,15 @@ const toNumber = (v, fallback) => {
   return Number.isFinite(n) ? n : fallback;
 };
 
+const requireString = (value, name) => {
+  const trimmed = (value ?? "").trim();
+  if (!trimmed) {
+    // Fallar temprano para evitar levantar el servidor sin credenciales JWT.
+    throw new Error(`[env] Missing required environment variable ${name}`);
+  }
+  return trimmed;
+};
+
 export const env = {
   nodeEnv: process.env.NODE_ENV || "development",
   port: toNumber(process.env.PORT, 3000),
@@ -19,5 +28,10 @@ export const env = {
       .split(",")
       .map(s => s.trim())
       .filter(Boolean)
+  },
+  jwt: {
+    secret: requireString(process.env.JWT_SECRET, "JWT_SECRET"),
+    // Permitimos configurar la expiración pero con un default razonable.
+    expiresIn: (process.env.JWT_EXPIRES_IN || "1d").trim() || "1d"
   }
 };

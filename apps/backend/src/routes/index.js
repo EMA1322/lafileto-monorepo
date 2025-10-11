@@ -1,6 +1,7 @@
-// Router raíz v1: health + demo de login con rate limit
+// Router raíz v1: health y módulos reales (auth, rbac)
 import { Router } from "express";
-import { loginLimiter } from "../middlewares/rateLimiterLogin.js";
+import { authRoutes } from "./auth.routes.js";
+import { rbacRoutes } from "./rbac.routes.js";
 
 export const router = Router();
 
@@ -14,18 +15,9 @@ router.get("/health", (_req, res) => {
   res.json({ ok: true, data: { status: "healthy", ts: new Date().toISOString() } });
 });
 
-// Stub temporal de login (reemplazar por tu controlador real)
-router.post("/auth/login", loginLimiter, (req, res) => {
-  res.status(501).json({
-    ok: false,
-    error: { code: "NOT_IMPLEMENTED", message: "Login estará disponible en I1-ENDPOINTS." }
-  });
-});
-
-// Aquí colgarás tus routers reales, p. ej.:
-// router.use("/products", productsRouter);
-// router.use("/categories", categoriesRouter);
-// router.use("/settings", settingsRouter);
+// Routers reales bajo /api/v1
+router.use("/auth", authRoutes);
+router.use("/rbac", rbacRoutes);
 
 
 
