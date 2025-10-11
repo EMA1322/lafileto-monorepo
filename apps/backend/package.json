@@ -5,7 +5,11 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
-    "build": "echo \"No build step for pure JS backend\""
+    "build": "echo \"No build step for pure JS backend\"",
+    "postinstall": "prisma generate",
+    "lint": "node ./scripts/lint.mjs",
+    "test": "node ./scripts/test.mjs",
+    "prisma": "prisma"
   },
   "devDependencies": {
     "nodemon": "^3.1.10",
