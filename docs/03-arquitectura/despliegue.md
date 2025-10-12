@@ -28,8 +28,15 @@ scope: Revisión final de entornos/puertos/CI-CD; CORS; seeds; backup/restore.
 
 ## 3) Build y artefactos
 - **Client/Admin**: `pnpm -F client build` / `pnpm -F admin build` → `apps/*/dist/` (estático).
+- **Analizar bundles** (opcional): `pnpm -F client build:analyze` / `pnpm -F admin build:analyze` genera `dist/stats-*.html` con el resumen de chunks.
 - **API**: `pnpm -F backend build` (si aplica) y ejecutar con PM2/systemd.
 - CI sube artefactos opcionales de `dist/` (ver _CI/CD_).
+
+### Checklist rápido de assets estáticos
+- Imágenes en `apps/*/public/img` idealmente < **500 KB**; preferir WebP/AVIF.
+- Convertir assets pesados con `pnpm -F client optimize:images` o `pnpm -F admin optimize:images` (usa [sharp](https://sharp.pixelplumbing.com/)).
+- El script genera `.webp` y `.avif` manteniendo los `.png/.jpg` originales.
+- Usar `--force` si querés regenerar todos los derivados.
 
 ## 4) CORS
 - En producción, si hay proxy (Nginx/Cloudflare), activar en la app: `app.set('trust proxy', 1)`.
@@ -56,7 +63,7 @@ scope: Revisión final de entornos/puertos/CI-CD; CORS; seeds; backup/restore.
 ## 9) Despliegue manual (temporal)
 1. **Build** local o en runner: `pnpm -F client build && pnpm -F admin build`.
 2. **Publicar** el contenido de `apps/*/dist/` en el hosting/CDN.
-3. **API**: exportar `.env` y levantar con PM2:  
+3. **API**: exportar `.env` y levantar con PM2:
    ```bash
    pm2 start apps/backend/src/server.js --name lafileto-api
    pm2 save

@@ -61,12 +61,29 @@ const routes = {
 // --------------------------------
 const viewJsModules = {
   // Absoluto y relativo para mayor compatibilidad de paths
-  ...import.meta.glob("/src/components/**/**.js"),
-  ...import.meta.glob("../components/**/**.js"),
+  ...import.meta.glob('/src/components/home/**/*.js'),
+  ...import.meta.glob('/src/components/products/**/*.js'),
+  ...import.meta.glob('/src/components/cart/**/*.js'),
+  ...import.meta.glob('/src/components/confirm/**/*.js'),
+  ...import.meta.glob('/src/components/contact/**/*.js'),
+  ...import.meta.glob('../components/home/**/*.js'),
+  ...import.meta.glob('../components/products/**/*.js'),
+  ...import.meta.glob('../components/cart/**/*.js'),
+  ...import.meta.glob('../components/confirm/**/*.js'),
+  ...import.meta.glob('../components/contact/**/*.js'),
 };
 
 const routeCssModules = {
-  ...import.meta.glob("/src/styles/*.css"),
+  ...import.meta.glob('/src/styles/home.css'),
+  ...import.meta.glob('/src/styles/products.css'),
+  ...import.meta.glob('/src/styles/cart.css'),
+  ...import.meta.glob('/src/styles/confirm.css'),
+  ...import.meta.glob('/src/styles/contact.css'),
+  ...import.meta.glob('../styles/home.css'),
+  ...import.meta.glob('../styles/products.css'),
+  ...import.meta.glob('../styles/cart.css'),
+  ...import.meta.glob('../styles/confirm.css'),
+  ...import.meta.glob('../styles/contact.css'),
   // si en el futuro movés CSS a cada componente:
   // ...import.meta.glob("/src/components/**/**.css"),
 };
