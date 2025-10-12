@@ -1,3 +1,5 @@
+import globals from 'globals';
+
 const commonGlobals = {
   console: 'readonly',
   globalThis: 'readonly',
@@ -47,7 +49,13 @@ export default [
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
-      globals: { ...commonGlobals, ...browserGlobals, ...nodeGlobals },
+      globals: {
+        ...commonGlobals,
+        ...browserGlobals,
+        ...nodeGlobals,
+        ...globals.browser,
+        Intl: 'readonly',
+      },
     },
     rules: {
       'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
