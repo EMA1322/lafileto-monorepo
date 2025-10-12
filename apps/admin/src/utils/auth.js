@@ -2,6 +2,8 @@
 // Comentarios en español; código en inglés.
 // Fuente única de verdad: API_BASE, token, apiFetch, login/logout, isAuthenticated.
 
+import { setServerSession } from './rbac.js';
+
 export const API_BASE = (() => {
   const raw =
     localStorage.getItem('API_BASE') ||
@@ -104,7 +106,6 @@ export async function login(email, password) {
 
   // Opcional: almacenar usuario/permisos para RBAC UI
   try {
-    const { setServerSession } = await import('./rbac.js');
     if (typeof setServerSession === 'function' && data?.user) {
       await setServerSession(data.user.roleId, data.user.effectivePermissions);
     }

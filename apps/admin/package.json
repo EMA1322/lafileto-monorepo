@@ -5,13 +5,16 @@
   "scripts": {
     "dev": "vite --port 5174 --strictPort",
     "build": "vite build",
+    "build:analyze": "node ../../scripts/run-vite-analyze.mjs",
     "preview": "vite preview --port 4174 --strictPort",
     "lint": "pnpm exec eslint . --no-error-on-unmatched-pattern",
     "test": "node ./scripts/test.mjs",
     "lint:fix": "pnpm exec eslint . --fix --no-error-on-unmatched-pattern",
-    "format": "pnpm exec prettier . --write"
+    "format": "pnpm exec prettier . --write",
+    "optimize:images": "node ../../scripts/optimize-images.mjs ./public/img"
   },
   "devDependencies": {
+    "rollup-plugin-visualizer": "workspace:*",
     "vite": "^5.4.0"
   },
   "dependencies": {

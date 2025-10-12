@@ -1,0 +1,10 @@
+{
+  "name": "rollup-plugin-visualizer",
+  "version": "0.0.0-local",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "main": "./src/index.js"
+}

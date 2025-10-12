@@ -45,6 +45,9 @@ importers:
         specifier: ^8.0.1
         version: 8.0.1
     devDependencies:
+      rollup-plugin-visualizer:
+        specifier: workspace:*
+        version: link:../../packages/rollup-plugin-visualizer
       vite:
         specifier: ^5.4.0
         version: 5.4.20
@@ -101,10 +104,14 @@ importers:
         specifier: ^11
         version: 11.2.10
     devDependencies:
+      rollup-plugin-visualizer:
+        specifier: workspace:*
+        version: link:../../packages/rollup-plugin-visualizer
       vite:
         specifier: ^5.4.0
         version: 5.4.20
 
+  packages/rollup-plugin-visualizer: {}
   packages/shared-design: {}
 
   packages/shared-utils: {}
