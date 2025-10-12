@@ -5,6 +5,11 @@
 // ofrecen formato de números, generación de IDs, sanitización de
 // texto y cálculo de precios con descuento.
 
+import {
+  formatCurrency as sharedFormatCurrency,
+  normalizeText as sharedNormalizeText,
+} from '@shared-utils';
+
 /**
  * Devuelve un número formateado como moneda según la localización.
  * @param {number} value - Valor numérico a formatear
@@ -23,15 +28,9 @@ export function safeParse(jsonString, fallback = null) {
     return fallback;
   }
 }
- 
-export function formatCurrency(value, locale = 'es-AR', currency = 'ARS') {
-  try {
-    return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(value);
-  } catch (err) {
-    console.error('[helpers] Error formateando moneda:', err);
-    return String(value);
-  }
-}
+
+export const formatCurrency = (value, locale = 'es-AR', currency = 'ARS') =>
+  sharedFormatCurrency(value, { locale, currency });
 
 /**
  * Devuelve un número formateado como porcentaje con símbolo %.
@@ -85,20 +84,15 @@ export function getOfferPrice(product) {
 }
 
 /** Normaliza texto: minúsculas y sin acentos (útil para búsquedas) */
-export function normalizeText(value) {
-  return String(value || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-}
+export const normalizeText = sharedNormalizeText;
 
 /** Slugify seguro (coherente con módulos) */
 export function slugify(str) {
   return normalizeText(str)
-    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/[^a-z0-9\s-]/g, '')
     .trim()
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
     .slice(0, 40);
 }
 
@@ -110,7 +104,7 @@ export function isValidSlug(str) {
 
 /** Valida longitud no vacía en rango [min, max] */
 export function isNonEmptyLength(str, min = 1, max = 255) {
-  const s = String(str || "").trim();
+  const s = String(str || '').trim();
   return s.length >= min && s.length <= max;
 }
 
@@ -122,15 +116,22 @@ export function isNonEmptyLength(str, min = 1, max = 255) {
  */
 export function getErrorMessage(code) {
   switch (code) {
-    case 'VALIDATION_ERROR':      return 'Revisá los datos: hay campos inválidos.';
-    case 'RESOURCE_NOT_FOUND':    return 'El recurso no existe o fue eliminado.';
-    case 'CONFLICT':              return 'Operación en conflicto. Revisá los datos.';
+    case 'VALIDATION_ERROR':
+      return 'Revisá los datos: hay campos inválidos.';
+    case 'RESOURCE_NOT_FOUND':
+      return 'El recurso no existe o fue eliminado.';
+    case 'CONFLICT':
+      return 'Operación en conflicto. Revisá los datos.';
     case 'CATEGORY_REASSIGN_REQUIRED':
-                                  return 'No podés eliminar: hay productos asociados.';
-    case 'PERMISSION_DENIED':     return 'No tenés permisos para esta acción.';
+      return 'No podés eliminar: hay productos asociados.';
+    case 'PERMISSION_DENIED':
+      return 'No tenés permisos para esta acción.';
     case 'AUTH_REQUIRED':
-    case 'AUTH_INVALID':          return 'Iniciá sesión o tu sesión expiró.';
-    case 'RATE_LIMITED':          return 'Demasiadas solicitudes. Probá en unos minutos.';
-    default:                      return 'Ocurrió un error. Intentá nuevamente.';
+    case 'AUTH_INVALID':
+      return 'Iniciá sesión o tu sesión expiró.';
+    case 'RATE_LIMITED':
+      return 'Demasiadas solicitudes. Probá en unos minutos.';
+    default:
+      return 'Ocurrió un error. Intentá nuevamente.';
   }
 }

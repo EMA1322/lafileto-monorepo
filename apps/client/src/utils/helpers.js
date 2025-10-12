@@ -7,19 +7,21 @@
 // - No se altera la UX ni la API pública de este archivo.
 // ------------------------------------------------------------
 
+import { formatCurrency } from '@shared-utils';
+
 /**
  * Obtiene el estado del negocio desde estado.json
  * @returns {Promise<boolean>} true si está abierto, false si está cerrado
  */
 export async function isBusinessOpen() {
   try {
-    const res = await fetch("/data/estado.json"); // ✅ Ruta correcta desde public
-    if (!res.ok) throw new Error("Error al cargar estado.json");
+    const res = await fetch('/data/estado.json'); // ✅ Ruta correcta desde public
+    if (!res.ok) throw new Error('Error al cargar estado.json');
 
     const estado = await res.json();
     return estado.open === true; // Devuelve true si está abierto
   } catch (err) {
-    console.error("Error al verificar estado del negocio:", err);
+    console.error('Error al verificar estado del negocio:', err);
     return false; // Por defecto, lo consideramos cerrado
   }
 }
@@ -31,10 +33,10 @@ export async function isBusinessOpen() {
  * @returns {string}
  */
 export function formatPrice(price) {
-  return Number(price).toLocaleString("es-AR", {
-    style: "currency",
-    currency: "ARS",
-    minimumFractionDigits: 0
+  return formatCurrency(price, {
+    locale: 'es-AR',
+    currency: 'ARS',
+    minimumFractionDigits: 0,
   });
 }
 
@@ -44,8 +46,8 @@ export function formatPrice(price) {
  * @param {"text"|"email"} [type="text"]
  * @returns {boolean}
  */
-export function validateInput(value, type = "text") {
-  if (type === "email") {
+export function validateInput(value, type = 'text') {
+  if (type === 'email') {
     // Expresión regular simple para validar formato de email
     return /\S+@\S+\.\S+/.test(value);
   }
@@ -70,7 +72,7 @@ export function showLoader(container) {
  * @param {HTMLElement} container
  * @param {string} [message="Ocurrió un error"]
  */
-export function handleError(container, message = "Ocurrió un error") {
+export function handleError(container, message = 'Ocurrió un error') {
   container.innerHTML = `
     <div class="error-message" role="alert">
       <p>⚠️ ${message}</p>
@@ -132,7 +134,7 @@ export function applyDiscount(price, discount) {
  * @returns {Array}
  */
 export function loadCart() {
-  const cartData = localStorage.getItem("cart");
+  const cartData = localStorage.getItem('cart');
   return cartData ? JSON.parse(cartData) : [];
 }
 
@@ -141,7 +143,7 @@ export function loadCart() {
  * @param {Array} cart
  */
 export function saveCart(cart) {
-  localStorage.setItem("cart", JSON.stringify(cart));
+  localStorage.setItem('cart', JSON.stringify(cart));
 }
 
 // ======================================================

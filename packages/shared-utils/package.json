@@ -1,1 +1,15 @@
-{ "name": "@lafileto/utils", "version": "0.1.0", "private": true, "type": "module", "main": "src/index.js" }
+{
+  "name": "@lafileto/shared-utils",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "lint": "pnpm exec eslint . --no-error-on-unmatched-pattern",
+    "lint:fix": "pnpm exec eslint . --fix --no-error-on-unmatched-pattern",
+    "format": "pnpm exec prettier . --write"
+  }
+}
