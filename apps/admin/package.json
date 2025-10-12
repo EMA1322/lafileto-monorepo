@@ -6,13 +6,16 @@
     "dev": "vite --port 5174 --strictPort",
     "build": "vite build",
     "preview": "vite preview --port 4174 --strictPort",
-    "lint": "node ./scripts/lint.mjs",
-    "test": "node ./scripts/test.mjs"
+    "lint": "pnpm exec eslint . --no-error-on-unmatched-pattern",
+    "test": "node ./scripts/test.mjs",
+    "lint:fix": "pnpm exec eslint . --fix --no-error-on-unmatched-pattern",
+    "format": "pnpm exec prettier . --write"
   },
   "devDependencies": {
     "vite": "^5.4.0"
   },
   "dependencies": {
-    "normalize.css": "^8.0.1"
+    "normalize.css": "^8.0.1",
+    "@lafileto/shared-utils": "workspace:*"
   }
 }
