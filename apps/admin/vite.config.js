@@ -24,10 +24,18 @@ export default defineConfig(() => {
     },
     server: {
       host: true, // 0.0.0.0
-      port: 5173,
+      port: 5174,
       strictPort: true,
+      // Proxy para /api -> backend local; así evitamos CORS en desarrollo.
+      proxy: {
+        '/api': {
+          target: 'http://localhost:3000',
+          changeOrigin: true,
+          secure: false,
+        },
+      },
       // HMR estable en LAN (opcional; si ves problemas de HMR):
-      // hmr: { host: '192.168.1.33', protocol: 'ws', port: 5173 },
+      // hmr: { host: '192.168.1.33', protocol: 'ws', port: 5174 },
     },
   };
 });

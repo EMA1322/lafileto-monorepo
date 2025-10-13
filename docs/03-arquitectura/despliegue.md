@@ -40,8 +40,27 @@ scope: Revisión final de entornos/puertos/CI-CD; CORS; seeds; backup/restore.
 
 ## 4) CORS
 - En producción, si hay proxy (Nginx/Cloudflare), activar en la app: `app.set('trust proxy', 1)`.
-- Definir `CORS_ALLOWLIST` por entorno. Ejemplo (dev):  
-  ``http://localhost:5173,http://localhost:5174,http://<IP-LAN>:5173``.
+- Definir `CORS_ALLOWLIST` por entorno. Ejemplo (dev):
+  ``http://localhost:5174,http://localhost:5173,http://<IP-LAN>:5174``.
+
+### CORS en desarrollo vs LAN
+- **Desarrollo local**: Vite (client y admin) proxyan `http://localhost:3000` cuando la request comienza con `/api`. Eso evita el preflight y cualquier error de CORS mientras trabajás en `http://localhost:5173` o `http://localhost:5174`.
+- **Pruebas en LAN**: el backend valida `Origin` contra `CORS_ALLOWLIST`. Agregá la IP local (ej.: `http://192.168.1.33:5174`) y reiniciá la API.
+- **Validaciones rápidas**:
+  ```bash
+  # Preflight OPTIONS desde un navegador en LAN
+  curl -i -X OPTIONS http://localhost:3000/api/v1/auth/login \
+    -H "Origin: http://192.168.1.33:5174" \
+    -H "Access-Control-Request-Method: POST" \
+    -H "Access-Control-Request-Headers: Content-Type,Authorization"
+
+  # Login real (POST) con el mismo Origin y cookies/headers
+  curl -i -X POST http://localhost:3000/api/v1/auth/login \
+    -H "Origin: http://192.168.1.33:5174" \
+    -H "Content-Type: application/json" \
+    -d '{"email":"demo@lafileto.com","password":"123456"}'
+  ```
+- Si el preflight responde `204` y el POST devuelve `200/401` (según credenciales), la configuración es correcta.
 
 ## 5) Migraciones/Seeds
 - **Prisma Migrate**. Seeds mínimas: roles/permissions/users y `settings.isOpen=true`.
