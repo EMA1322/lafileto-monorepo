@@ -15,6 +15,11 @@ router.get("/health", (_req, res) => {
   res.json({ ok: true, data: { status: "healthy", ts: new Date().toISOString() } });
 });
 
+// Ping rápido para diagnósticos
+router.get("/_debug/ping", (_req, res) => {
+  res.json({ ok: true, data: { ts: new Date().toISOString() } });
+});
+
 // Routers reales bajo /api/v1
 router.use("/auth", authRoutes);
 router.use("/rbac", rbacRoutes);

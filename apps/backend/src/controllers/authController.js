@@ -7,9 +7,20 @@ export const authController = {
   login: async (req, res, next) => {
     try {
       const { email, password } = req.body;
+      const startedAt = Date.now();
+      // TODO: remove debug log (login instrumentation)
+      console.info("[auth.login] start", { requestId: req.id, email });
       const data = await authService.login(email, password);
+      // TODO: remove debug log (login instrumentation)
+      console.info("[auth.login] success", {
+        requestId: req.id,
+        durationMs: Date.now() - startedAt,
+        userId: data?.user?.id
+      });
       return res.json(ok(data));
     } catch (err) {
+      // TODO: remove debug log (login instrumentation)
+      console.error("[auth.login] error", { requestId: req.id, error: err?.message });
       return next(err);
     }
   },
