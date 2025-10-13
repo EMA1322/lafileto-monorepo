@@ -23,5 +23,18 @@ export default defineConfig(() => {
         '@shared-utils': fileURLToPath(new URL('../../packages/shared-utils/src', import.meta.url)),
       },
     },
+    server: {
+      host: true, // 0.0.0.0
+      port: 5173,
+      strictPort: true,
+      // Proxy de /api al backend local para evitar problemas de CORS en desarrollo.
+      proxy: {
+        '/api': {
+          target: 'http://localhost:3000',
+          changeOrigin: true,
+          secure: false,
+        },
+      },
+    },
   };
 });

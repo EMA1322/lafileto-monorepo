@@ -14,7 +14,10 @@ const app = express();
 
 app.use(express.json({ limit: env.limits.bodyLimit }));
 app.use(requestId());
+// Registramos CORS antes de las rutas para que toda request pase por la allowlist.
 app.use(corsMiddleware);
+// Respuesta inmediata a preflight (OPTIONS) para cualquier endpoint.
+app.options("*", corsMiddleware);
 app.use(helmet());
 app.use(morgan("dev"));
 
