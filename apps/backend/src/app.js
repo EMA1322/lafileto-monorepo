@@ -4,6 +4,7 @@ import morgan from "morgan";
 import { env } from "./config/env.js";
 import { corsMiddleware } from "./config/cors.js";
 import { requestId } from "./middlewares/requestId.js";
+import { requestTimeout } from "./middlewares/requestTimeout.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 import { router } from "./routes/index.js";
 
@@ -13,7 +14,9 @@ const app = express();
 // app.set("trust proxy", 1);
 
 app.use(express.json({ limit: env.limits.bodyLimit }));
+app.use(express.urlencoded({ extended: true, limit: env.limits.bodyLimit }));
 app.use(requestId());
+app.use(requestTimeout(env.limits.requestTimeoutMs));
 // Registramos CORS antes de las rutas para que toda request pase por la allowlist.
 app.use(corsMiddleware);
 // Respuesta inmediata a preflight (OPTIONS) para cualquier endpoint.
