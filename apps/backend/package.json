@@ -11,7 +11,8 @@
     "test": "node ./scripts/test.mjs",
     "prisma": "prisma",
     "lint:fix": "pnpm exec eslint . --fix --no-error-on-unmatched-pattern",
-    "format": "pnpm exec prettier . --write"
+    "format": "pnpm exec prettier . --write",
+    "seed": "node prisma/seed.js"
   },
   "devDependencies": {
     "nodemon": "^3.1.10",
