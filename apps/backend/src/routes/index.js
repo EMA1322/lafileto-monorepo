@@ -15,9 +15,9 @@ router.get("/health", (_req, res) => {
   res.json({ ok: true, data: { status: "healthy", ts: new Date().toISOString() } });
 });
 
-// Ping rápido para diagnósticos
+// DEBUG: ping temporal para diagnosticar proxy/login - TODO remover
 router.get("/_debug/ping", (_req, res) => {
-  res.json({ ok: true, data: { ts: new Date().toISOString() } });
+  res.json({ ok: true, ts: new Date().toISOString() });
 });
 
 // Routers reales bajo /api/v1

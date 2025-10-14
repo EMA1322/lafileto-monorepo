@@ -4,14 +4,34 @@
 
 import { setServerSession } from './rbac.js';
 
+function normalizeBase(raw) {
+  const value = String(raw || '').trim();
+  if (!value) return '/api/v1';
+
+  const sanitized = value.replace(/\/+$/, '');
+
+  if (/^https?:\/\//i.test(sanitized)) {
+    if (/\/api\/v\d+$/i.test(sanitized)) return sanitized;
+    if (/\/api$/i.test(sanitized)) return `${sanitized}/v1`;
+    return `${sanitized}/api/v1`;
+  }
+
+  if (/^\/?api$/i.test(sanitized)) return '/api/v1';
+  if (/^\/?api\/v\d+$/i.test(sanitized)) {
+    return sanitized.startsWith('/') ? sanitized : `/${sanitized}`;
+  }
+
+  if (sanitized.startsWith('/')) return `${sanitized}/api/v1`.replace(/\/{2,}/g, '/');
+  return `/${sanitized}/api/v1`.replace(/\/{2,}/g, '/');
+}
+
 export const API_BASE = (() => {
-  const raw =
-    localStorage.getItem('API_BASE') ||
-    (typeof import.meta !== 'undefined' ? import.meta.env?.VITE_API_BASE : '') ||
-    'http://localhost:3000/api/v1';
-  const trimmed = String(raw).replace(/\/+$/, '');
-  if (/\/api\/v\d+$/.test(trimmed)) return trimmed;
-  return `${trimmed}/api/v1`;
+  const fromStorage = typeof localStorage !== 'undefined' ? localStorage.getItem('API_BASE') : '';
+  const fromEnv = typeof import.meta !== 'undefined' ? import.meta.env?.VITE_API_BASE : '';
+  const resolved = normalizeBase(fromStorage || fromEnv || '');
+  // DEBUG: surface API base used to diagnose proxy issues (TODO remove)
+  console.debug('[auth] API_BASE resolved', { base: resolved, fromStorage: !!fromStorage, fromEnv: !!fromEnv });
+  return resolved;
 })();
 
 const TOKEN_KEY = 'auth_token';
@@ -68,13 +88,43 @@ export async function apiFetch(path, options = {}) {
   const token = getToken();
   if (token) headers.set('Authorization', `Bearer ${token}`);
 
-  // Ejecutar request
-  const res = await fetch(url, { ...restOptions, method, headers });
+  const startedAt =
+    typeof performance !== 'undefined' && typeof performance.now === 'function'
+      ? performance.now()
+      : Date.now();
+  // DEBUG: instrumentation to diagnose hanging login (TODO remove)
+  console.debug('[apiFetch] request', {
+    method,
+    url,
+    hasBody,
+    params: params ? Object.keys(params) : [],
+    hasAuth: !!token
+  });
+
+  let res;
+  try {
+    res = await fetch(url, { ...restOptions, method, headers });
+  } catch (networkError) {
+    // DEBUG: instrumentation to diagnose hanging login (TODO remove)
+    console.error('[apiFetch] network error', { url, message: networkError?.message });
+    throw networkError;
+  }
 
   // Leer texto y tratar de parsear JSON (útil cuando el server responde texto)
   const text = await res.text();
   let json = {};
   try { json = JSON.parse(text); } catch { /* no-op */ }
+
+  const endedAt =
+    typeof performance !== 'undefined' && typeof performance.now === 'function'
+      ? performance.now()
+      : Date.now();
+  const responseDebug = {
+    method,
+    url,
+    status: res.status,
+    durationMs: Math.round(endedAt - startedAt)
+  };
 
   // Normalización de errores (envelope)
   if (!res.ok || json?.ok === false) {
@@ -87,9 +137,13 @@ export async function apiFetch(path, options = {}) {
       clearToken();
     }
 
+    console.warn('[apiFetch] error response', responseDebug);
     console.error('API error', { url, status: res.status, body: text });
     throw err;
   }
+
+  // DEBUG: instrumentation to diagnose hanging login (TODO remove)
+  console.debug('[apiFetch] response', responseDebug);
 
   // Devuelve envelope { ok, data, meta }
   return json;

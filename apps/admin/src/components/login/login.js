@@ -8,7 +8,7 @@
    - Toggle de contraseña accesible (aria-pressed/label/icon)
 ========================================================= */
 
-import { login as doLogin, isAuthenticated } from '@/utils/auth.js';
+import { login as doLogin, isAuthenticated, apiFetch } from '@/utils/auth.js';
 import { showSnackbar } from '@/utils/snackbar.js';
 
 /** Mapa de códigos → mensajes de UI (alineado a backend errors.js) */
@@ -79,6 +79,35 @@ function setSubmitting(submitBtn, isSubmitting) {
   return () => setSubmitting(submitBtn, false);
 }
 
+/** DEBUG: Ping rápido a /_debug/ping para validar proxy - TODO remover */
+function attachDebugPing() {
+  if (globalThis.__loginDebugPingAttached) return;
+
+  const trigger = document.querySelector('[data-debug-ping]');
+  if (!trigger) return;
+  globalThis.__loginDebugPingAttached = true;
+
+  const runPing = async () => {
+    try {
+      const result = await apiFetch('/_debug/ping');
+      const ts = result?.data?.ts || result?.ts;
+      console.info('[login.debugPing] success', { ts }); // DEBUG: TODO remover
+      showSnackbar(`API responde ${ts ? `(${ts})` : ''}`, { type: 'success' });
+    } catch (error) {
+      console.error('[login.debugPing] error', error); // DEBUG: TODO remover
+      showSnackbar(`Ping falló: ${error?.message || 'Error inesperado'}`, { type: 'error' });
+    }
+  };
+
+  trigger.addEventListener('click', runPing);
+  document.addEventListener('keydown', (event) => {
+    if (event.altKey && event.shiftKey && event.code === 'KeyP') {
+      event.preventDefault();
+      runPing();
+    }
+  });
+}
+
 /** Punto de entrada invocado por el router */
 export function initLogin() {
   // 1) Redirección si ya existe sesión (mejora UX)
@@ -98,6 +127,7 @@ export function initLogin() {
 
   // Toggle de contraseña accesible
   attachPasswordToggle(passwordInput, toggleBtn);
+  attachDebugPing();
 
   // 2) Submit
   let submitting = false;
