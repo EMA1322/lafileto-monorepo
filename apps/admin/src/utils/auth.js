@@ -4,22 +4,42 @@
 
 import { setServerSession } from './rbac.js';
 
+// Normaliza la base del API para que funcione con proxy de Vite (/api) o URL absoluta.
 export const API_BASE = (() => {
-  const raw =
-    localStorage.getItem('API_BASE') ||
-    (typeof import.meta !== 'undefined' ? import.meta.env?.VITE_API_BASE : '') ||
-    'http://localhost:3000/api/v1';
-  const trimmed = String(raw).replace(/\/+$/, '');
-  if (/\/api\/v\d+$/.test(trimmed)) return trimmed;
-  return `${trimmed}/api/v1`;
+  const ls = (typeof localStorage !== 'undefined' && localStorage.getItem('API_BASE')) || '';
+  const env = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE) || '';
+
+  // preferencia: localStorage > .env > '/api'
+  const raw = String(ls || env || '/api').trim();
+  const s = raw.replace(/\/+$/, ''); // sin barra final
+
+  // URL absoluta
+  if (/^https?:\/\//i.test(s)) {
+    if (/\/api\/v\d+$/i.test(s)) return s; // …/api/v1
+    if (/\/api$/i.test(s)) return `${s}/v1`; // …/api -> …/api/v1
+    return `${s}/api/v1`; // … -> …/api/v1
+  }
+
+  // Ruta relativa (para proxy de Vite)
+  if (/^\/api\/v\d+$/i.test(s)) return s; // /api/v1
+  if (s === '/api' || s === '') return '/api/v1';
+  return `${s}/api/v1`;
 })();
 
 const TOKEN_KEY = 'auth_token';
 
-export function getToken() { return localStorage.getItem(TOKEN_KEY) || ''; }
-export function setToken(token) { token ? localStorage.setItem(TOKEN_KEY, token) : localStorage.removeItem(TOKEN_KEY); }
-export function clearToken() { localStorage.removeItem(TOKEN_KEY); }
-export function isAuthenticated() { return !!getToken(); }
+export function getToken() {
+  return localStorage.getItem(TOKEN_KEY) || '';
+}
+export function setToken(token) {
+  token ? localStorage.setItem(TOKEN_KEY, token) : localStorage.removeItem(TOKEN_KEY);
+}
+export function clearToken() {
+  localStorage.removeItem(TOKEN_KEY);
+}
+export function isAuthenticated() {
+  return !!getToken();
+}
 
 function joinUrl(base, path) {
   const p = path.startsWith('/') ? path : `/${path}`;
@@ -74,7 +94,11 @@ export async function apiFetch(path, options = {}) {
   // Leer texto y tratar de parsear JSON (útil cuando el server responde texto)
   const text = await res.text();
   let json = {};
-  try { json = JSON.parse(text); } catch { /* no-op */ }
+  try {
+    json = JSON.parse(text);
+  } catch {
+    /* no-op */
+  }
 
   // Normalización de errores (envelope)
   if (!res.ok || json?.ok === false) {
@@ -99,7 +123,7 @@ export async function apiFetch(path, options = {}) {
 export async function login(email, password) {
   const { data } = await apiFetch('/auth/login', {
     method: 'POST',
-    body: JSON.stringify({ email, password })
+    body: JSON.stringify({ email, password }),
   });
 
   setToken(data.token);
@@ -110,7 +134,9 @@ export async function login(email, password) {
       await setServerSession(data.user.roleId, data.user.effectivePermissions);
     }
     localStorage.setItem('user', JSON.stringify(data.user));
-  } catch { /* no-op */ }
+  } catch {
+    /* no-op */
+  }
 
   return data;
 }
@@ -119,6 +145,3 @@ export function logout() {
   clearToken();
   localStorage.removeItem('user');
 }
-
-
-

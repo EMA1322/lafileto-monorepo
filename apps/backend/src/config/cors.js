@@ -1,18 +1,41 @@
-// Middleware CORS con allowlist desde .env
-import cors from "cors";
-import { env } from "./env.js";
+// apps/backend/src/config/cors.js
+import cors from 'cors';
+import { env } from './env.js';
 
-// Convertimos la allowlist en un Set para búsquedas O(1) y evitar duplicados.
-const allowlist = new Set(env.cors.allowlist);
+/**
+ * Normaliza el allowlist desde .env
+ *  - acepta vacío (permite same-origin y curl/Postman sin origin)
+ *  - tolera números, undefined, espacios, etc.
+ */
+const raw = (env.cors.allowlist ?? '').toString();
+const allowlist = new Set(
+  raw
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean),
+);
 
-export const corsMiddleware = cors({
-  origin(origin, cb) {
-    // Permitimos peticiones sin origin (curl/Postman) y sólo los orígenes confiables.
-    if (!origin || allowlist.has(origin)) return cb(null, true);
-    cb(new Error(`Not allowed by CORS: ${origin}`));
-  },
+/**
+ * Reglas CORS comunes
+ */
+const options = {
   credentials: true,
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  // Declaramos los headers habituales para JSON + Auth; cubre el preflight completo.
-  allowedHeaders: ["Content-Type", "Authorization"]
-});
+  methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+
+  // Permite same-origin (cuando no viene Origin, p.ej. curl/Postman)
+  origin(origin, cb) {
+    if (!origin) return cb(null, true);
+    if (allowlist.size === 0 || allowlist.has(origin)) return cb(null, true);
+    return cb(new Error('Not allowed by CORS'));
+  },
+
+  optionsSuccessStatus: 204,
+  preflightContinue: false,
+};
+
+const corsMiddleware = cors(options);
+
+export const preflight = cors(options);
+
+export default corsMiddleware;
