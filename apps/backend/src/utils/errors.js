@@ -2,19 +2,31 @@
 // Comentarios en español; código en inglés.
 
 export const ErrorCodes = {
-  AUTH_REQUIRED:       401,
-  AUTH_INVALID:        401,
-  PERMISSION_DENIED:   403,
-  RESOURCE_NOT_FOUND:  404,
-  CONFLICT:            409,
+  // 400 → Request inválida (payload mal formado, parámetros incorrectos, etc.).
+  BAD_REQUEST:                400,
+  // 401 → Falta token o es inválido.
+  UNAUTHORIZED:               401,
+  AUTH_REQUIRED:              401,
+  AUTH_INVALID:               401,
+  // 403 → Usuario autenticado pero sin permisos suficientes.
+  PERMISSION_DENIED:          403,
+  // 404 → Recurso inexistente o ID inválido.
+  NOT_FOUND:                  404,
+  RESOURCE_NOT_FOUND:         404,
+  // 408/504 → Request excedió el tiempo máximo permitido.
+  REQUEST_TIMEOUT:            408,
+  GATEWAY_TIMEOUT:            504,
+  // 409 → Conflictos de negocio (duplicados, dependencias, etc.).
+  CONFLICT:                   409,
   CATEGORY_REASSIGN_REQUIRED: 409,
-  VALIDATION_ERROR:    422,
-  RATE_LIMITED:        429,
-  BAD_REQUEST:         400,
-  UNAUTHORIZED:        401,
-  REQUEST_TIMEOUT:     408,
-  NOT_IMPLEMENTED:     501,
-  INTERNAL_ERROR:      500
+  // 422 → Validación semántica fallida.
+  VALIDATION_ERROR:           422,
+  // 429 → Rate limit superado o bloqueo temporal.
+  RATE_LIMITED:               429,
+  TOO_MANY_REQUESTS:          429,
+  // 500+ → Errores inesperados.
+  INTERNAL_ERROR:             500,
+  NOT_IMPLEMENTED:            501
 };
 
 export class ApiError extends Error {

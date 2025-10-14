@@ -3,6 +3,61 @@
 // Fuente única de verdad: API_BASE, token, apiFetch, login/logout, isAuthenticated.
 
 import { setServerSession } from './rbac.js';
+import { showSnackbar } from './snackbar.js';
+
+const IS_DEV = (() => {
+  try {
+    return Boolean(import.meta?.env?.DEV);
+  } catch {
+    return typeof process !== 'undefined' ? process.env.NODE_ENV !== 'production' : false;
+  }
+})();
+
+const KNOWN_ERROR_STATUS = new Set([401, 403, 408, 422, 429, 500, 504]);
+
+// Mensajes globales por código/status para surfaced legibles.
+const ERROR_MESSAGES = {
+  AUTH_REQUIRED: 'Tu sesión expiró. Iniciá sesión nuevamente.',
+  AUTH_INVALID: 'Credenciales inválidas o token vencido.',
+  PERMISSION_DENIED: 'No tenés permisos para realizar esta acción.',
+  VALIDATION_ERROR: 'Revisá los datos e intentá nuevamente.',
+  RATE_LIMITED: 'Demasiados intentos. Probá en unos minutos.',
+  TOO_MANY_REQUESTS: 'Demasiadas solicitudes. Esperá un momento y reintentá.',
+  REQUEST_TIMEOUT: 'La petición tardó demasiado. Verificá tu conexión.',
+  INTERNAL_ERROR: 'Ocurrió un error interno. Intentá más tarde.',
+  NETWORK_ERROR: 'No se pudo conectar con el servidor. Revisá tu red.'
+};
+
+const STATUS_TO_DEFAULT_CODE = {
+  401: 'AUTH_REQUIRED',
+  403: 'PERMISSION_DENIED',
+  408: 'REQUEST_TIMEOUT',
+  422: 'VALIDATION_ERROR',
+  429: 'RATE_LIMITED',
+  500: 'INTERNAL_ERROR',
+  504: 'REQUEST_TIMEOUT'
+};
+
+function normalizeMessage(value) {
+  if (value == null) return '';
+  return String(value).trim();
+}
+
+function isPlainObject(value) {
+  if (!value || typeof value !== 'object') return false;
+  return Object.prototype.toString.call(value) === '[object Object]';
+}
+
+function resolveErrorMessage(status, code, fallback, override) {
+  const overrideMsg = normalizeMessage(override);
+  if (overrideMsg) return overrideMsg;
+  if (code && ERROR_MESSAGES[code]) return ERROR_MESSAGES[code];
+  const statusCode = STATUS_TO_DEFAULT_CODE[status];
+  if (statusCode && ERROR_MESSAGES[statusCode]) return ERROR_MESSAGES[statusCode];
+  const fallbackMsg = normalizeMessage(fallback);
+  if (fallbackMsg) return fallbackMsg;
+  return ERROR_MESSAGES.INTERNAL_ERROR;
+}
 
 function normalizeBase(raw) {
   const value = String(raw || '').trim();
@@ -29,8 +84,10 @@ export const API_BASE = (() => {
   const fromStorage = typeof localStorage !== 'undefined' ? localStorage.getItem('API_BASE') : '';
   const fromEnv = typeof import.meta !== 'undefined' ? import.meta.env?.VITE_API_BASE : '';
   const resolved = normalizeBase(fromStorage || fromEnv || '');
-  // DEBUG: surface API base used to diagnose proxy issues (TODO remove)
-  console.debug('[auth] API_BASE resolved', { base: resolved, fromStorage: !!fromStorage, fromEnv: !!fromEnv });
+  if (IS_DEV) {
+    // Log de diagnóstico para confirmar que Vite proxy apunta al backend correcto.
+    console.debug('[auth] API_BASE resolved', { base: resolved, fromStorage: !!fromStorage, fromEnv: !!fromEnv });
+  }
   return resolved;
 })();
 
@@ -48,13 +105,19 @@ function joinUrl(base, path) {
 
 /**
  * apiFetch:
- * - Adjunta JWT si existe
- * - Envelope JSON ({ ok, data, meta } / { ok:false, error })
- * - Limpia token en 401/AUTH_* (el router hará el resto)
- * - (R-6) No agrega 'Content-Type' si es GET o si no hay body
+ * - Adjunta JWT si existe y respeta envelope `{ ok, data, meta }`.
+ * - `showErrorToast=false` permite que el caller maneje el error (ej: login).
+ * - Limpia el token ante 401/403 expirados y muestra mensajes legibles.
  */
 export async function apiFetch(path, options = {}) {
-  const { params, ...restOptions } = options;
+  const {
+    params,
+    showErrorToast = true,
+    errorMessage,
+    body,
+    ...restOptions
+  } = options;
+
   let url = joinUrl(API_BASE, path);
 
   if (params && typeof params === 'object') {
@@ -74,51 +137,86 @@ export async function apiFetch(path, options = {}) {
     }
   }
 
-  // Normalizar método y headers
-  const method = ((restOptions.method || 'GET') + '').toUpperCase();
+  const method = String(restOptions.method || 'GET').toUpperCase();
   const headers = new Headers(restOptions.headers || {});
 
-  // Sólo para requests con body y no-GET seteamos Content-Type
-  const hasBody = restOptions.body != null && method !== 'GET';
+  // Sólo para requests con body y no-GET seteamos Content-Type.
+  const hasBody = body != null && method !== 'GET';
   if (hasBody && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
   }
 
-  // Adjuntar token si existe
+  // Adjuntar token si existe.
   const token = getToken();
   if (token) headers.set('Authorization', `Bearer ${token}`);
+
+  let preparedBody = body;
+  if (
+    hasBody &&
+    isPlainObject(preparedBody) &&
+    String(headers.get('Content-Type') || '').startsWith('application/json')
+  ) {
+    try {
+      preparedBody = JSON.stringify(preparedBody);
+    } catch {
+      preparedBody = JSON.stringify({ ...preparedBody });
+    }
+  }
 
   const startedAt =
     typeof performance !== 'undefined' && typeof performance.now === 'function'
       ? performance.now()
       : Date.now();
-  // DEBUG: instrumentation to diagnose hanging login (TODO remove)
-  console.debug('[apiFetch] request', {
-    method,
-    url,
-    hasBody,
-    params: params ? Object.keys(params) : [],
-    hasAuth: !!token
-  });
+
+  if (IS_DEV) {
+    console.debug('[apiFetch] request', {
+      method,
+      url,
+      hasBody,
+      params: params ? Object.keys(params) : [],
+      hasAuth: !!token
+    });
+  }
 
   let res;
   try {
-    res = await fetch(url, { ...restOptions, method, headers });
+    const fetchOptions = hasBody
+      ? { ...restOptions, method, headers, body: preparedBody }
+      : { ...restOptions, method, headers };
+    res = await fetch(url, fetchOptions);
   } catch (networkError) {
-    // DEBUG: instrumentation to diagnose hanging login (TODO remove)
-    console.error('[apiFetch] network error', { url, message: networkError?.message });
-    throw networkError;
+    const err = networkError instanceof Error
+      ? networkError
+      : new Error(String(networkError || 'Network error'));
+    err.code = err.code || 'NETWORK_ERROR';
+
+    if (showErrorToast) {
+      const toastMessage = resolveErrorMessage(undefined, err.code, err.message, errorMessage);
+      showSnackbar(toastMessage, { type: 'error', code: err.code });
+    }
+
+    if (IS_DEV) {
+      console.error('[apiFetch] network error', { url, message: err.message });
+    }
+
+    throw err;
   }
 
-  // Leer texto y tratar de parsear JSON (útil cuando el server responde texto)
   const text = await res.text();
   let json = {};
-  try { json = JSON.parse(text); } catch { /* no-op */ }
+  if (text) {
+    try {
+      json = JSON.parse(text);
+    } catch {
+      json = {};
+    }
+  }
 
   const endedAt =
     typeof performance !== 'undefined' && typeof performance.now === 'function'
       ? performance.now()
       : Date.now();
+
   const responseDebug = {
     method,
     url,
@@ -126,26 +224,48 @@ export async function apiFetch(path, options = {}) {
     durationMs: Math.round(endedAt - startedAt)
   };
 
-  // Normalización de errores (envelope)
   if (!res.ok || json?.ok === false) {
-    const err = new Error(json?.error?.message || `HTTP ${res.status}`);
-    err.code = json?.error?.code;
-    err.details = json?.error?.details;
+    const payloadError = json?.error || {};
+    const codeFromPayload = payloadError?.code ? String(payloadError.code).trim() : '';
+    const statusCode = STATUS_TO_DEFAULT_CODE[res.status];
+    const derivedCode = codeFromPayload || statusCode || 'INTERNAL_ERROR';
+    const errMessage = payloadError?.message || `HTTP ${res.status}`;
 
-    // 401 → limpiar token
-    if (res.status === 401 || err.code === 'AUTH_REQUIRED' || err.code === 'AUTH_INVALID') {
+    const err = new Error(errMessage);
+    err.code = derivedCode;
+    err.status = res.status;
+    err.details = payloadError?.details;
+    err.response = res;
+    err.payload = json;
+    err.rawBody = text;
+
+    if (res.status === 401 || err.code === 'AUTH_REQUIRED' || err.code === 'AUTH_INVALID' || err.code === 'UNAUTHORIZED') {
       clearToken();
     }
 
-    console.warn('[apiFetch] error response', responseDebug);
-    console.error('API error', { url, status: res.status, body: text });
+    if (showErrorToast && (KNOWN_ERROR_STATUS.has(res.status) || ERROR_MESSAGES[err.code])) {
+      const toastMessage = resolveErrorMessage(res.status, err.code, errMessage, errorMessage);
+      showSnackbar(toastMessage, { type: 'error', code: err.code });
+    }
+
+    if (IS_DEV) {
+      console.warn('[apiFetch] error response', { ...responseDebug, code: err.code });
+      if (text) {
+        console.error('[apiFetch] payload', { body: text });
+      }
+    }
+
     throw err;
   }
 
-  // DEBUG: instrumentation to diagnose hanging login (TODO remove)
-  console.debug('[apiFetch] response', responseDebug);
+  if (IS_DEV) {
+    console.debug('[apiFetch] response', responseDebug);
+  }
 
-  // Devuelve envelope { ok, data, meta }
+  if (json && typeof json === 'object' && json.ok === undefined) {
+    json.ok = true;
+  }
+
   return json;
 }
 
@@ -153,7 +273,8 @@ export async function apiFetch(path, options = {}) {
 export async function login(email, password) {
   const { data } = await apiFetch('/auth/login', {
     method: 'POST',
-    body: JSON.stringify({ email, password })
+    body: JSON.stringify({ email, password }),
+    showErrorToast: false
   });
 
   setToken(data.token);

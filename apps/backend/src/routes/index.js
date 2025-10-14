@@ -15,10 +15,12 @@ router.get("/health", (_req, res) => {
   res.json({ ok: true, data: { status: "healthy", ts: new Date().toISOString() } });
 });
 
-// DEBUG: ping temporal para diagnosticar proxy/login - TODO remover
-router.get("/_debug/ping", (_req, res) => {
-  res.json({ ok: true, ts: new Date().toISOString() });
-});
+if (process.env.NODE_ENV !== "production") {
+  // Endpoint de salud en dev para validar que el proxy llega al backend.
+  router.get("/_debug/ping", (_req, res) => {
+    res.json({ ok: true, ts: new Date().toISOString() });
+  });
+}
 
 // Routers reales bajo /api/v1
 router.use("/auth", authRoutes);

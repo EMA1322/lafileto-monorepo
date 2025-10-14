@@ -11,6 +11,14 @@
 import { login as doLogin, isAuthenticated, apiFetch } from '@/utils/auth.js';
 import { showSnackbar } from '@/utils/snackbar.js';
 
+const IS_DEV = (() => {
+  try {
+    return Boolean(import.meta?.env?.DEV);
+  } catch {
+    return false;
+  }
+})();
+
 /** Mapa de códigos → mensajes de UI (alineado a backend errors.js) */
 const AUTH_ERROR_MESSAGES = {
   AUTH_INVALID: 'Credenciales inválidas.',
@@ -89,12 +97,16 @@ function attachDebugPing() {
 
   const runPing = async () => {
     try {
-      const result = await apiFetch('/_debug/ping');
+      const result = await apiFetch('/_debug/ping', { showErrorToast: false });
       const ts = result?.data?.ts || result?.ts;
-      console.info('[login.debugPing] success', { ts }); // DEBUG: TODO remover
+      if (IS_DEV) {
+        console.info('[login.debugPing] success', { ts });
+      }
       showSnackbar(`API responde ${ts ? `(${ts})` : ''}`, { type: 'success' });
     } catch (error) {
-      console.error('[login.debugPing] error', error); // DEBUG: TODO remover
+      if (IS_DEV) {
+        console.error('[login.debugPing] error', error);
+      }
       showSnackbar(`Ping falló: ${error?.message || 'Error inesperado'}`, { type: 'error' });
     }
   };

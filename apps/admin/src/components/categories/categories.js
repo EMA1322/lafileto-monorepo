@@ -62,7 +62,7 @@ async function listCategories() {
       withCounts: 'true' // server: incluir productCount
     };
     const url = '/admin/categories';
-    const res = await apiFetch(url, { method: 'GET', params });
+    const res = await apiFetch(url, { method: 'GET', params, showErrorToast: false });
     if (!res?.ok) throw res?.error || { message: 'Error al listar categorías', code: 'INTERNAL_ERROR' };
     return res;
   }
@@ -178,12 +178,17 @@ async function onSave(ev) {
       if (editingId) {
         const res = await apiFetch(`/admin/categories/${encodeURIComponent(editingId)}`, {
           method: 'PUT',
-          body: payload
+          body: payload,
+          showErrorToast: false
         });
         if (!res?.ok) throw res?.error || { message: 'Error al actualizar', code: 'INTERNAL_ERROR' };
         showSnackbar('Categoría actualizada', { type: 'success' });
       } else {
-        const res = await apiFetch('/admin/categories', { method: 'POST', body: payload });
+        const res = await apiFetch('/admin/categories', {
+          method: 'POST',
+          body: payload,
+          showErrorToast: false
+        });
         if (!res?.ok) throw res?.error || { message: 'Error al crear', code: 'INTERNAL_ERROR' };
         showSnackbar('Categoría creada', { type: 'success' });
       }
@@ -221,7 +226,10 @@ function confirmDeleteFromBtn(btn) {
   const onConfirm = async () => {
     try {
       if (DATA_SOURCE === 'api') {
-        const res = await apiFetch(`/admin/categories/${encodeURIComponent(id)}`, { method: 'DELETE' });
+        const res = await apiFetch(`/admin/categories/${encodeURIComponent(id)}`, {
+          method: 'DELETE',
+          showErrorToast: false
+        });
         if (!res?.ok) throw res?.error || { message: 'No se pudo eliminar', code: 'INTERNAL_ERROR' };
         showSnackbar('Categoría eliminada', { type: 'success' });
       } else {

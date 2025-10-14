@@ -137,49 +137,69 @@ export async function fetchData({
 }
 
 export async function apiUsersList(params) {
-  const res = await apiFetch("/admin/users", { method: "GET", params });
+  const res = await apiFetch("/admin/users", { method: "GET", params, showErrorToast: false });
   if (!res?.ok) throw res?.error || { code: "INTERNAL_ERROR", message: "No se pudo listar usuarios" };
   return res;
 }
 
 export async function apiUsersCreate(body) {
-  const res = await apiFetch("/admin/users", { method: "POST", body });
+  const res = await apiFetch("/admin/users", { method: "POST", body, showErrorToast: false });
   if (!res?.ok) throw res?.error || { code: "INTERNAL_ERROR", message: "No se pudo crear usuario" };
   return res;
 }
 
 export async function apiUsersUpdate(id, body) {
-  const res = await apiFetch(`/admin/users/${encodeURIComponent(id)}`, { method: "PUT", body });
+  const res = await apiFetch(`/admin/users/${encodeURIComponent(id)}`, {
+    method: "PUT",
+    body,
+    showErrorToast: false
+  });
   if (!res?.ok) throw res?.error || { code: "INTERNAL_ERROR", message: "No se pudo actualizar usuario" };
   return res;
 }
 
 export async function apiUsersDelete(id) {
-  const res = await apiFetch(`/admin/users/${encodeURIComponent(id)}`, { method: "DELETE" });
+  const res = await apiFetch(`/admin/users/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+    showErrorToast: false
+  });
   if (!res?.ok) throw res?.error || { code: "INTERNAL_ERROR", message: "No se pudo eliminar usuario" };
   return res;
 }
 
 export async function apiRolesList() {
-  const res = await apiFetch("/admin/rbac/roles", { method: "GET" });
+  const res = await apiFetch("/admin/rbac/roles", { method: "GET", showErrorToast: false });
   if (!res?.ok) throw res?.error || { code: "INTERNAL_ERROR", message: "No se pudo leer roles" };
   return res;
 }
 
 export async function apiRolesUpdate(id, body) {
-  const res = await apiFetch(`/admin/rbac/roles/${encodeURIComponent(id)}`, { method: "PUT", body });
+  const res = await apiFetch(`/admin/rbac/roles/${encodeURIComponent(id)}`, {
+    method: "PUT",
+    body,
+    showErrorToast: false
+  });
   if (!res?.ok) throw res?.error || { code: "INTERNAL_ERROR", message: "No se pudo actualizar rol" };
   return res;
 }
 
 export async function apiPermsGet(roleId) {
-  const res = await apiFetch("/admin/rbac/permissions", { method: "GET", params: { roleId } });
+  const res = await apiFetch("/admin/rbac/permissions", {
+    method: "GET",
+    params: { roleId },
+    showErrorToast: false
+  });
   if (!res?.ok) throw res?.error || { code: "INTERNAL_ERROR", message: "No se pudo leer permisos" };
   return res;
 }
 
 export async function apiPermsPut(roleId, permMap) {
-  const res = await apiFetch("/admin/rbac/permissions", { method: "PUT", body: permMap, params: { roleId } });
+  const res = await apiFetch("/admin/rbac/permissions", {
+    method: "PUT",
+    body: permMap,
+    params: { roleId },
+    showErrorToast: false
+  });
   if (!res?.ok) throw res?.error || { code: "INTERNAL_ERROR", message: "No se pudieron guardar permisos" };
   return res;
 }
