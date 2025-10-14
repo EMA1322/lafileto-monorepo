@@ -12,10 +12,12 @@
     "prisma": "prisma",
     "prisma:generate": "prisma generate",
     "prisma:migrate:deploy": "prisma migrate deploy",
+    "prisma:migrate:reset": "prisma migrate reset --force --skip-seed",
     "lint:fix": "pnpm exec eslint . --fix --no-error-on-unmatched-pattern",
     "format": "pnpm exec prettier . --write",
-    "seed": "node prisma/seed.js",
-    "db:reset": "prisma migrate reset --force && npm run db:seed"
+    "db:seed": "node prisma/seed.js",
+    "seed": "pnpm run db:seed",
+    "db:reset": "pnpm run prisma:migrate:reset && pnpm run db:seed"
   },
   "devDependencies": {
     "nodemon": "^3.1.10",

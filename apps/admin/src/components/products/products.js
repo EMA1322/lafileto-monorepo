@@ -67,7 +67,8 @@ async function loadCategories() {
   if (DATA_SOURCE === 'api') {
     const res = await apiFetch('/admin/categories', {
       method: 'GET',
-      params: { status: 'active', orderBy: 'name', orderDir: 'asc', page: 1, pageSize: 1000 }
+      params: { status: 'active', orderBy: 'name', orderDir: 'asc', page: 1, pageSize: 1000 },
+      showErrorToast: false
     });
     if (!res?.ok) throw res?.error || { code:'INTERNAL_ERROR', message:'No se pudieron cargar categorías' };
     return Array.isArray(res.data) ? res.data.map(c => ({ id: c.id, name: c.name, status: c.status })) : [];
@@ -89,7 +90,7 @@ async function loadProducts() {
       page: state.page,
       pageSize: state.pageSize
     };
-    const res = await apiFetch('/admin/products', { method: 'GET', params });
+    const res = await apiFetch('/admin/products', { method: 'GET', params, showErrorToast: false });
     if (!res?.ok) throw res?.error || { code:'INTERNAL_ERROR', message:'Error al listar productos' };
     return { rows: res.data || [], meta: res.meta || { page: state.page, pageSize: state.pageSize, total: (res.data||[]).length } };
   }
@@ -295,7 +296,7 @@ async function openEditModal(id, product) {
       if (DATA_SOURCE === 'api') {
         const url = isEdit ? `/admin/products/${encodeURIComponent(id)}` : '/admin/products';
         const method = isEdit ? 'PUT' : 'POST';
-        const res = await apiFetch(url, { method, body: payload });
+        const res = await apiFetch(url, { method, body: payload, showErrorToast: false });
         if (!res?.ok) throw res?.error || { code:'INTERNAL_ERROR', message:'No se pudo guardar el producto' };
         showSnackbar(isEdit?'Producto actualizado':'Producto creado', { type:'success' });
       } else {
@@ -351,7 +352,10 @@ function openDeleteModal(id, name) {
   const onConfirm = async () => {
     try {
       if (DATA_SOURCE === 'api') {
-        const res = await apiFetch(`/admin/products/${encodeURIComponent(id)}`, { method:'DELETE' });
+        const res = await apiFetch(`/admin/products/${encodeURIComponent(id)}`, {
+          method:'DELETE',
+          showErrorToast: false
+        });
         if (!res?.ok) throw res?.error || { code:'INTERNAL_ERROR', message:'No se pudo eliminar' };
         showSnackbar('Producto eliminado', { type:'success' });
       } else {

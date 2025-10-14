@@ -7,6 +7,7 @@ export const authController = {
   login: async (req, res, next) => {
     try {
       const { email, password } = req.body;
+      const isDev = process.env.NODE_ENV !== 'production';
       const startedAt = Date.now();
       const debugMeta = {
         requestId: req.id,
@@ -16,23 +17,27 @@ export const authController = {
         contentLength: req.headers['content-length'],
         bodyKeys: Object.keys(req.body || {})
       };
-      // TODO: remove debug log (login instrumentation)
-      console.info("[auth.login] start", { ...debugMeta, email });
+      if (isDev) {
+        // Log de diagnóstico sólo en dev para investigar flujos de login.
+        console.info("[auth.login] start", { ...debugMeta, email });
+      }
       const data = await authService.login(email, password);
-      // TODO: remove debug log (login instrumentation)
-      console.info("[auth.login] success", {
-        ...debugMeta,
-        durationMs: Date.now() - startedAt,
-        userId: data?.user?.id
-      });
+      if (isDev) {
+        console.info("[auth.login] success", {
+          ...debugMeta,
+          durationMs: Date.now() - startedAt,
+          userId: data?.user?.id
+        });
+      }
       return res.json(ok(data));
     } catch (err) {
-      // TODO: remove debug log (login instrumentation)
-      console.error("[auth.login] error", {
-        requestId: req.id,
-        error: err?.message,
-        stack: process.env.NODE_ENV === 'development' ? err?.stack : undefined
-      });
+      if (process.env.NODE_ENV !== 'production') {
+        console.error("[auth.login] error", {
+          requestId: req.id,
+          error: err?.message,
+          stack: process.env.NODE_ENV === 'development' ? err?.stack : undefined
+        });
+      }
       return next(err);
     }
   },
