@@ -1,3 +1,33 @@
+# Debug login Admin (Mayo 2025)
+
+## Qué estaba mal
+- El front resolvía `API_BASE` agregando siempre `/api/v1`, incluso cuando `VITE_API_BASE` ya apuntaba a `/api`. Eso terminaba generando rutas como `/api/api/v1/auth/login`, que nunca alcanzaban el endpoint correcto y el login quedaba sin respuesta visible.
+- No había trazas suficientes en el front/back para confirmar si la request llegaba ni para ver encabezados/body, complicando el diagnóstico.
+
+## Qué se tocó
+- Normalicé `API_BASE` para respetar prefijos relativos y añadí trazas temporales en `apiFetch` y en el submit de login (incluye ping oculto via `Alt+Shift+P`).
+- Instrumenté `POST /api/v1/auth/login` en el backend, agregué el endpoint `GET /api/v1/_debug/ping`, extendí los códigos de error (incluido `REQUEST_TIMEOUT`=408) y mejoré el handler global.
+- Dejé comentarios `// DEBUG:` y TODO en cada pieza temporal para facilitarnos limpiarlos luego.
+
+## Cómo probar rápido
+1. **Proxy:**
+   ```bash
+   curl -i http://localhost:5174/api/v1/_debug/ping
+   curl -i http://localhost:3000/api/v1/_debug/ping
+   ```
+2. **Login:**
+   ```bash
+   curl -i -X POST http://localhost:5174/api/v1/auth/login \
+     -H "Content-Type: application/json" \
+     --data '{"email":"no@ex.com","password":"x"}'
+   ```
+   > Debería devolver 401 con JSON y loggear en backend.
+3. **Front:**
+   - Abrir http://localhost:5174, probar login real.
+   - Usar `Alt+Shift+P` (o el botón oculto) para disparar el ping y verificar en consola/snackbar.
+
+---
+
 # Debug login /api/v1/auth/login (Abril 2025)
 
 ## Contexto
