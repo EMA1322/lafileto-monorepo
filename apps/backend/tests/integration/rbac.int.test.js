@@ -43,7 +43,7 @@ test("POST /rbac/roles → 201 (crear rol nuevo)", async () => {
   assert.equal(res.body?.data?.roleId, roleId);
 });
 
-test("PUT /rbac/roles/:roleId/permissions → 200 y auditoría", async () => {
+test("PUT /rbac/roles/:roleId/permissions → 200 sin auditoría", async () => {
   const matrix = { dashboard: { r: true, w: false, u: false, d: false } };
 
   const res = await API.put(`/rbac/roles/${roleId}/permissions`)
@@ -55,19 +55,9 @@ test("PUT /rbac/roles/:roleId/permissions → 200 y auditoría", async () => {
   assert.equal(res.body?.ok, true);
   assert.equal(res.body?.data?.updated, 1);
 
-  // Verificar que guardó y auditó
+  // Auditoría eliminada: solo verificamos persistencia de permisos
   const rows = await prisma.rolePermission.findMany({ where: { roleId } });
   assert.ok(rows.find((r) => r.moduleKey === "dashboard" && r.r === true));
-
-  const audit = await prisma.auditLog.findFirst({
-    where: {
-      entity: "role_permissions",
-      entityId: roleId,
-      action: "permission_change",
-    },
-    orderBy: { id: "desc" },
-  });
-  assert.ok(audit, "Debe existir registro de auditoría");
 });
 
 // Limpieza (borra el rol y sus permisos)
