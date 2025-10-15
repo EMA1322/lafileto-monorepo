@@ -2,7 +2,7 @@
 import { roleRepository } from '../repositories/roleRepository.js';
 import { moduleRepository } from '../repositories/moduleRepository.js';
 import { rolePermissionRepository } from '../repositories/rolePermissionRepository.js';
-import { auditLogRepository } from '../repositories/auditLogRepository.js';
+import { auditService } from '../services/auditService.js'; // Auditoría deprecada: servicio convertido en no-op
 import { createError } from '../utils/errors.js';
 
 // Helper puro (testeable): convierte filas -> matriz { moduleKey: {r,w,u,d} }
@@ -60,15 +60,15 @@ export const rbacService = {
       await rolePermissionRepository.upsertOne(roleId, mk, perms);
     }
 
-    // Auditoría
-    await auditLogRepository.create({
+    // Auditoría deprecada: registramos evento inofensivo para compatibilidad
+    await auditService.record({
       actorUserId: actorUserId || null,
       action: 'permission_change',
       entity: 'role_permissions',
       entityId: roleId,
       summary: `Actualización de permisos para rol ${roleId}`,
       changedFields: matrix
-    });
+    }); // Auditoría deprecada: llamada sin efecto persistente
 
     return { updated: moduleKeys.length };
   }

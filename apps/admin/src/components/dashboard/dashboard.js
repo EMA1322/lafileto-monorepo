@@ -1,8 +1,8 @@
 /**
  * MÓDULO: Dashboard (ADMIN)
  * Archivo: /src/components/dashboard/dashboard.js
- * Objetivo: Cargar datos del dashboard (mock JSON), renderizar KPIs, Acciones rápidas (RBAC)
- *           y Actividad reciente. Manejo de estados: loading / empty / error.
+ * Objetivo: Cargar datos del dashboard (mock JSON), renderizar KPIs y Acciones rápidas (RBAC)
+ *           sin dependencia de actividad reciente tras remover auditoría. Manejo de estados: loading / empty / error.
  *
  * IMPORTANTE:
  * - En Vite, los archivos dentro de /public/ se sirven desde la raíz → fetch('/data/dashboard.json')
@@ -114,8 +114,6 @@ async function loadDashboardData() {
   // Validación mínima del contrato
   const isOpen = typeof json?.isOpen === 'boolean' ? json.isOpen : null;
   const kpis = json?.kpis || {};
-  const recent = Array.isArray(json?.recent) ? json.recent : [];
-
   const products = toNumberNonNegative(kpis.products);
   const categories = toNumberNonNegative(kpis.categories);
   const onSale = toNumberNonNegative(kpis.onSale);
@@ -123,19 +121,7 @@ async function loadDashboardData() {
   return {
     businessName: safeText(json?.businessName || ''),
     isOpen,
-    kpis: { products, categories, onSale },
-    recent: recent
-      .filter(item => item && typeof item === 'object')
-      .map(sanitizeRecentItem)
-  };
-}
-
-function sanitizeRecentItem(item) {
-  return {
-    type: String(item.type || 'other'),
-    title: safeText(item.title || '—'),
-    action: safeText(item.action || ''),
-    at: String(item.at || '')
+    kpis: { products, categories, onSale } // Auditoría eliminada: sin colección de actividad
   };
 }
 
@@ -149,11 +135,10 @@ function toNumberNonNegative(n) {
 // Render
 // ===================================================================
 
-/** Renderiza todas las regiones: KPIs, Quick Actions, Recent. */
+/** Renderiza KPIs y accesos rápidos; sin bloques de auditoría. */
 function renderAll(data) {
   renderKpis(data.kpis, data.isOpen);
-  renderQuickActions();
-  renderRecent(data.recent);
+  renderQuickActions(); // Auditoría eliminada: ya no se pinta actividad reciente
 }
 
 /** KPIs: escribe valores y badge de estado */
@@ -222,52 +207,6 @@ function renderQuickActions() {
   wrap.appendChild(frag);
 }
 
-/** Actividad reciente: lista con badges por tipo y meta de tiempo. */
-function renderRecent(list) {
-  const container = document.getElementById('dashboard-recent-list');
-  const empty = document.querySelector('.dashboard__recent-empty');
-  if (!container) return;
-
-  container.innerHTML = '';
-  container.setAttribute('aria-busy', String(true));
-
-  if (!list || list.length === 0) {
-    if (empty) empty.hidden = false;
-    container.setAttribute('aria-busy', String(false));
-    return;
-  } else {
-    if (empty) empty.hidden = true;
-  }
-
-  const frag = document.createDocumentFragment();
-  list.forEach(item => {
-    const el = document.createElement('div');
-    el.className = 'dashboard__recent-item';
-    el.setAttribute('role', 'listitem');
-
-    const badge = document.createElement('span');
-    badge.className = 'dashboard__recent-type';
-    badge.textContent = recentTypeLabel(item.type);
-
-    const title = document.createElement('p');
-    title.className = 'dashboard__recent-title';
-    title.textContent = `${item.title} ${item.action ? `· ${item.action}` : ''}`;
-
-    const meta = document.createElement('span');
-    meta.className = 'dashboard__recent-meta';
-    meta.textContent = formatTimeAgo(item.at);
-
-    el.appendChild(badge);
-    el.appendChild(title);
-    el.appendChild(meta);
-    frag.appendChild(el);
-  });
-
-  container.appendChild(frag);
-  container.setAttribute('aria-busy', String(false));
-}
-
-
 // ===================================================================
 // Eventos y utilidades de UI/Accesibilidad
 // ===================================================================
@@ -308,11 +247,9 @@ function mountBindings(root) {
 function setLoading(flag, message = '') {
   const root = getRoot();
   const sr = document.querySelector('.dashboard__sr-status');
-  const recentList = document.getElementById('dashboard-recent-list');
   if (!root) return;
 
-  root.classList.toggle('is-loading', !!flag);
-  if (recentList) recentList.setAttribute('aria-busy', String(!!flag));
+  root.classList.toggle('is-loading', !!flag); // Auditoría eliminada: sin sincronizar listas recientes
   if (sr && message) sr.textContent = message;
 
   // Ocultar error al reiniciar carga
@@ -340,15 +277,13 @@ function setError(message) {
   }
 }
 
-/** Determina si mostrar estado "empty" (sin KPIs significativos y sin recientes). */
+/** Determina si mostrar estado "empty" únicamente con KPIs (sin auditoría). */
 function checkEmptyState(data) {
   const root = getRoot();
   if (!root) return;
 
   const noKpis = (data.kpis.products + data.kpis.categories + data.kpis.onSale) === 0;
-  const noRecent = !Array.isArray(data.recent) || data.recent.length === 0;
-
-  root.classList.toggle('is-empty', noKpis && noRecent);
+  root.classList.toggle('is-empty', noKpis); // Auditoría eliminada: estado vacío depende solo de KPIs
 }
 
 /** Mueve el foco al título tras la primera carga (accesibilidad). */
@@ -385,31 +320,5 @@ function buildIcon(name) {
     default:
       return `<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="currentColor"/></svg>`;
   }
-}
-
-/** Etiqueta visible para badges de "type" en recientes. */
-function recentTypeLabel(type) {
-  const t = String(type || '').toLowerCase();
-  if (t === 'product')  return 'Producto';
-  if (t === 'category') return 'Categoría';
-  return 'General';
-}
-
-/** Formatea un "hace X tiempo" simple (sin dependencias externas). */
-function formatTimeAgo(iso) {
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return '—';
-
-  const diff = Date.now() - d.getTime();
-  const sec = Math.max(Math.floor(diff / 1000), 0);
-  if (sec < 60)  return 'ahora';
-  const min = Math.floor(sec / 60);
-  if (min < 60)  return `hace ${min} min`;
-  const hrs = Math.floor(min / 60);
-  if (hrs < 24)  return `hace ${hrs} h`;
-  const days = Math.floor(hrs / 24);
-  if (days < 7)  return `hace ${days} d`;
-  // Fallback breve a fecha local
-  return d.toLocaleDateString();
 }
 
