@@ -1,32 +1,37 @@
 import { state } from "../state.js";
-import { escapeHTML, norm, clamp } from "../helpers.js";
+import { escapeHTML } from "../helpers.js";
 
 import { renderUsersStatus } from "./status.js";
 import { els } from "./dom.js";
 import { applyRBAC } from "./viewRBAC.js";
 
-export function filterUsers(list, query) {
-  if (!query) return list.slice();
-  const q = norm(query);
-  return list.filter((u) => {
-    const roleName = state.roles.find((r) => r.id === u.roleId)?.name || "";
-    return (
-      norm(u.firstName).includes(q) ||
-      norm(u.lastName).includes(q) ||
-      norm(u.email).includes(q) ||
-      norm(roleName).includes(q)
-    );
-  });
+function formatStatus(status) {
+  if (String(status).toUpperCase() === "ACTIVE") {
+    return `<span class="badge badge--success">Activo</span>`;
+  }
+  if (String(status).toUpperCase() === "INACTIVE") {
+    return `<span class="badge badge--muted">Inactivo</span>`;
+  }
+  return `<span class="badge badge--muted">${escapeHTML(String(status || "Desconocido"))}</span>`;
 }
 
 export function renderUsersCount() {
   const { countUsers } = els();
   if (!countUsers) return;
-  const filtered = filterUsers(state.users, state.filters.query);
-  const from = (state.filters.page - 1) * state.filters.pageSize + 1;
-  const to = Math.min(state.filters.page * state.filters.pageSize, filtered.length);
-  const showing = filtered.length === 0 ? 0 : `${from}–${to}`;
-  countUsers.textContent = `Mostrando ${showing} de ${filtered.length} usuarios`;
+
+  const total = state.users.meta.total || 0;
+  const page = state.users.meta.page || 1;
+  const pageSize = state.users.meta.pageSize || state.filters.pageSize || 10;
+  const itemsOnPage = state.users.items.length;
+
+  if (total === 0 || itemsOnPage === 0) {
+    countUsers.textContent = "Mostrando 0 de 0 usuarios";
+    return;
+  }
+
+  const from = (page - 1) * pageSize + 1;
+  const to = from + itemsOnPage - 1;
+  countUsers.textContent = `Mostrando ${from}-${Math.min(to, total)} de ${total} usuarios`;
 }
 
 export function renderUsersTable() {
@@ -36,68 +41,57 @@ export function renderUsersTable() {
   if (state.ui.loadingUsers) {
     renderUsersStatus("Cargando usuarios…");
     tbodyUsers.innerHTML = "";
+    if (pagePrev) pagePrev.disabled = true;
+    if (pageNext) pageNext.disabled = true;
+    if (pageInfo) pageInfo.textContent = "";
     return;
   }
+
   if (state.ui.errorUsers) {
     renderUsersStatus(state.ui.errorUsers, "error");
     tbodyUsers.innerHTML = "";
+    if (pagePrev) pagePrev.disabled = true;
+    if (pageNext) pageNext.disabled = true;
+    if (pageInfo) pageInfo.textContent = "";
     return;
   }
 
-  const filtered = filterUsers(state.users, state.filters.query);
-  const total = filtered.length;
-
-  if (total === 0) {
-    renderUsersStatus("No hay usuarios que coincidan con la búsqueda.");
+  if (!state.users.items.length) {
+    renderUsersStatus("No hay usuarios que coincidan con los filtros.");
     tbodyUsers.innerHTML = "";
+    if (pagePrev) pagePrev.disabled = true;
+    if (pageNext) pageNext.disabled = true;
+    if (pageInfo) pageInfo.textContent = "0 / 0";
     renderUsersCount();
-    if (pagePrev && pageNext && pageInfo) {
-      pagePrev.disabled = true;
-      pageNext.disabled = true;
-      pageInfo.textContent = "0 / 0";
-    }
     return;
   }
 
   renderUsersStatus("");
-  const pages = Math.max(1, Math.ceil(total / state.filters.pageSize));
-  state.filters.page = clamp(state.filters.page, 1, pages);
 
-  const start = (state.filters.page - 1) * state.filters.pageSize;
-  const end = Math.min(start + state.filters.pageSize, total);
-  const slice = filtered.slice(start, end);
-
-  tbodyUsers.innerHTML = slice
-    .map((u) => {
-      const roleName = escapeHTML(state.roles.find((r) => r.id === u.roleId)?.name || "");
-      const badge =
-        u.status === "active"
-          ? `<span class="badge badge--success">Activo</span>`
-          : `<span class="badge badge--muted">Inactivo</span>`;
-
+  tbodyUsers.innerHTML = state.users.items
+    .map((user) => {
+      const phone = user.phone ? escapeHTML(user.phone) : "-";
+      const roleId = escapeHTML(user.roleId || "");
       return `
-      <tr data-id="${escapeHTML(u.id)}">
-        <td>${escapeHTML(u.firstName)}</td>
-        <td>${escapeHTML(u.lastName)}</td>
-        <td>${escapeHTML(u.email)}</td>
-        <td>${escapeHTML(u.phone || "")}</td>
-        <td>${roleName}</td>
-        <td>${badge}</td>
-        <td class="users__row-actions">
-          <button class="btn btn-secondary" type="button" data-action="view" title="Ver usuario">Ver</button>
-          <button class="btn btn-secondary" type="button" data-action="edit" title="Editar usuario">Editar</button>
-          <button class="btn btn-secondary" type="button" data-action="delete" title="Eliminar usuario">Eliminar</button>
-        </td>
-      </tr>
-    `;
+        <tr data-id="${escapeHTML(String(user.id))}">
+          <td>${escapeHTML(user.fullName || "")}</td>
+          <td>${escapeHTML(user.email || "")}</td>
+          <td>${phone}</td>
+          <td>${roleId}</td>
+          <td>${formatStatus(user.status)}</td>
+        </tr>
+      `;
     })
     .join("");
 
-  if (pagePrev && pageNext && pageInfo) {
-    pagePrev.disabled = state.filters.page <= 1;
-    pageNext.disabled = state.filters.page >= pages;
-    pageInfo.textContent = `${state.filters.page} / ${pages}`;
-  }
+  const total = state.users.meta.total || 0;
+  const page = state.users.meta.page || 1;
+  const pageSize = state.users.meta.pageSize || state.filters.pageSize || 10;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+  if (pagePrev) pagePrev.disabled = page <= 1;
+  if (pageNext) pageNext.disabled = page >= totalPages;
+  if (pageInfo) pageInfo.textContent = `${Math.min(page, totalPages)} / ${totalPages}`;
 
   renderUsersCount();
   applyRBAC();

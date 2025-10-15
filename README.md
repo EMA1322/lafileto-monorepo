@@ -118,10 +118,48 @@ VITE_DATA_SOURCE=json   # client puede iniciar en JSON
 - Ver lineamientos en [`/docs/05-procesos/testing.md`](./docs/05-procesos/testing.md).  
 - Ejemplos típicos (si existen scripts):
   ```bash
-  pnpm -F backend test
-  pnpm -F client test
-  pnpm -F admin test
-  ```
+pnpm -F backend test
+pnpm -F client test
+pnpm -F admin test
+```
+
+---
+
+## Validación rápida (dev)
+
+**Backend**
+```bash
+pnpm -F backend prisma:generate
+pnpm -F backend prisma:migrate:deploy
+pnpm -F backend dev
+curl -i http://localhost:3000/health
+```
+
+**Admin**
+```bash
+pnpm -F admin dev
+# validar por proxy (autenticado desde Admin)
+http://localhost:5174/api/v1/users?page=1&pageSize=10
+http://localhost:5174/api/v1/roles
+http://localhost:5174/api/v1/modules
+http://localhost:5174/api/v1/roles/role-admin/permissions
+```
+
+**UI**
+- `/#/users`: columnas `Nombre completo`, `Email`, `Teléfono`, `Rol`, `Estado`. Soporta búsqueda y paginación.
+- Pestaña **Roles & Permisos** siempre disponible para `role-admin`; guardar actualiza la matriz `r/w/u/d`.
+
+**Compatibilidad**
+- Mantener login operativo, sin cambios de proxy ni `.env`.
+- `/_debug/ping` responde 200 detrás del proxy.
+
+**Calidad**
+```bash
+pnpm -r lint --if-present
+pnpm -r format --if-present
+```
+
+> Nota de esquema: se eliminaron los campos `failedLoginAttempts`, `lockUntil`, `createdAt`, `updatedAt`, `deletedAt` de las tablas administradas por Prisma (`User`, `Role`, `Module`, `RolePermission`, `Setting`).
 
 ---
 

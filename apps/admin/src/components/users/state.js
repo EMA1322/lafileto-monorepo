@@ -1,40 +1,37 @@
 import { showSnackbar } from "@/utils/snackbar.js";
-import { apiFetch, getDataSource } from "@/utils/api.js";
+import { apiFetch } from "@/utils/api.js";
 
 import { computeIsAdmin } from "./rbac.js";
 import { mapErrorToMessage } from "./helpers.js";
 
-export const DATA_SOURCE = getDataSource();
-export const RBAC_UI_OVERRIDES_ENABLED = DATA_SOURCE !== "api";
-
-export const USERS_JSON_URL = "/data/users.json";
-export const ROLES_JSON_URL = "/data/roles.json";
-export const RBAC_SEED_URL = "/data/rbac_permissions.json";
-
-export const LS_USERS_KEY = "admin.users.list";
-export const LS_ROLES_KEY = "admin.roles.list";
-export const LS_PERM_OVERRIDE_KEY = "rbac.permissions.override";
-
 export const state = {
-  users: [],
+  users: {
+    items: [],
+    meta: {
+      page: 1,
+      pageSize: 10,
+      total: 0
+    }
+  },
   roles: [],
+  modules: [],
   rbac: {
     moduleKey: "users",
     roleId: null,
-    isAdmin: false,
+    isAdmin: false
   },
   filters: {
     query: "",
     page: 1,
-    pageSize: 10,
+    pageSize: 10
   },
   ui: {
     activeTab: "users",
     loadingUsers: true,
     loadingRoles: true,
     errorUsers: null,
-    errorRoles: null,
-  },
+    errorRoles: null
+  }
 };
 
 export function snackInfo(message, code) {
@@ -53,19 +50,6 @@ export function snackErr(message, code = "INTERNAL_ERROR") {
   showSnackbar(message, { type: "error", code });
 }
 
-export function readLS(key, fallback) {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-export function writeLS(key, value) {
-  localStorage.setItem(key, JSON.stringify(value));
-}
-
 export function getCurrentRoleIdFromSession() {
   try {
     const s1 = sessionStorage.getItem("rbac.roleId");
@@ -76,10 +60,95 @@ export function getCurrentRoleIdFromSession() {
   return null;
 }
 
-export async function fetchJSON(url) {
-  const res = await fetch(`${url}?ts=${Date.now()}`, { cache: "no-store" });
-  if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
-  return res.json();
+function normalizeUsersResponse(data) {
+  if (!data || typeof data !== "object") {
+    return { items: [], meta: { page: 1, pageSize: state.filters.pageSize, total: 0 } };
+  }
+  const items = Array.isArray(data.items) ? data.items : [];
+  const meta = data.meta && typeof data.meta === "object" ? data.meta : {};
+  return {
+    items,
+    meta: {
+      page: Number(meta.page) || 1,
+      pageSize: Number(meta.pageSize) || state.filters.pageSize,
+      total: Number(meta.total) || items.length
+    }
+  };
+}
+
+export async function fetchUsers() {
+  state.ui.loadingUsers = true;
+  state.ui.errorUsers = null;
+
+  const params = {
+    page: state.filters.page,
+    pageSize: state.filters.pageSize
+  };
+  if (state.filters.query) params.search = state.filters.query;
+
+  const res = await apiFetch("/users", { params, showErrorToast: false });
+  const { items, meta } = normalizeUsersResponse(res?.data || {});
+
+  state.users.items = items.map((u) => ({
+    id: u.id,
+    fullName: u.fullName || "",
+    email: u.email || "",
+    phone: u.phone ?? null,
+    roleId: u.roleId || "",
+    status: u.status || "UNKNOWN"
+  }));
+  state.users.meta = {
+    page: meta.page,
+    pageSize: meta.pageSize,
+    total: meta.total
+  };
+  state.filters.page = meta.page;
+  state.filters.pageSize = meta.pageSize;
+  state.ui.loadingUsers = false;
+}
+
+export async function fetchRolesAndModules() {
+  state.ui.loadingRoles = true;
+  state.ui.errorRoles = null;
+
+  const [rolesRes, modulesRes] = await Promise.all([
+    apiFetch("/roles", { showErrorToast: false }),
+    apiFetch("/modules", { showErrorToast: false })
+  ]);
+
+  state.roles = Array.isArray(rolesRes?.data?.items) ? rolesRes.data.items.map((r) => ({
+    roleId: r.roleId || r.id || "",
+    name: r.name || r.roleId || ""
+  })) : [];
+
+  state.modules = Array.isArray(modulesRes?.data?.items) ? modulesRes.data.items.map((m) => ({
+    key: m.key || m.moduleKey || "",
+    name: m.name || (m.key || m.moduleKey || "")
+  })) : [];
+
+  state.ui.loadingRoles = false;
+}
+
+export async function fetchRolePermissions(roleId) {
+  const res = await apiFetch(`/roles/${encodeURIComponent(roleId)}/permissions`, {
+    showErrorToast: false
+  });
+  const perms = Array.isArray(res?.data?.permissions) ? res.data.permissions : [];
+  return perms.map((entry) => ({
+    moduleKey: entry.moduleKey,
+    r: !!entry.r,
+    w: !!entry.w,
+    u: !!entry.u,
+    d: !!entry.d
+  }));
+}
+
+export async function saveRolePermissions(roleId, permissions) {
+  return apiFetch(`/roles/${encodeURIComponent(roleId)}/permissions`, {
+    method: "PUT",
+    body: { permissions },
+    showErrorToast: false
+  });
 }
 
 export async function fetchData({
@@ -87,7 +156,7 @@ export async function fetchData({
   onRolesStatus,
   onUsersTable,
   onRolesView,
-  onUsersCount,
+  onUsersCount
 } = {}) {
   const notifyUsersStatus = onUsersStatus || (() => {});
   const notifyRolesStatus = onRolesStatus || (() => {});
@@ -103,105 +172,53 @@ export async function fetchData({
   notifyUsersStatus("Cargando usuarios…");
   notifyRolesStatus("Cargando roles…");
 
+  state.rbac.roleId = getCurrentRoleIdFromSession();
+  state.rbac.isAdmin = computeIsAdmin({ roleId: state.rbac.roleId });
+
   try {
-    const [jsonUsers, jsonRoles] = await Promise.all([
-      fetchJSON(USERS_JSON_URL).catch(() => []),
-      fetchJSON(ROLES_JSON_URL).catch(() => []),
-    ]);
-
-    const lsUsers = readLS(LS_USERS_KEY, null);
-    const lsRoles = readLS(LS_ROLES_KEY, null);
-
-    state.users = Array.isArray(lsUsers) ? lsUsers : Array.isArray(jsonUsers) ? jsonUsers : [];
-    state.roles = Array.isArray(lsRoles) ? lsRoles : Array.isArray(jsonRoles) ? jsonRoles : [];
-
-    state.rbac.roleId = getCurrentRoleIdFromSession();
-    state.rbac.isAdmin = computeIsAdmin({ roleId: state.rbac.roleId });
-
-    state.ui.loadingUsers = false;
-    state.ui.loadingRoles = false;
-
+    await fetchUsers();
     renderUsersTable();
-    renderRolesView();
     renderUsersCount();
+    notifyUsersStatus("");
   } catch (err) {
-    console.error(err);
-    state.ui.errorUsers = "No se pudieron cargar los usuarios.";
-    state.ui.errorRoles = "No se pudieron cargar los roles.";
     state.ui.loadingUsers = false;
-    state.ui.loadingRoles = false;
+    state.ui.errorUsers = "No se pudieron cargar los usuarios.";
     notifyUsersStatus(state.ui.errorUsers, "error");
+    snackErr(mapErrorToMessage(err, state.ui.errorUsers), err?.code);
+  }
+
+  try {
+    await fetchRolesAndModules();
+    renderRolesView();
+    notifyRolesStatus("");
+  } catch (err) {
+    state.ui.loadingRoles = false;
+    state.ui.errorRoles = "No se pudieron cargar los roles.";
     notifyRolesStatus(state.ui.errorRoles, "error");
-    snackErr("Error al cargar datos");
+    snackErr(mapErrorToMessage(err, state.ui.errorRoles), err?.code);
   }
 }
 
-export async function apiUsersList(params) {
-  const res = await apiFetch("/admin/users", { method: "GET", params, showErrorToast: false });
-  if (!res?.ok) throw res?.error || { code: "INTERNAL_ERROR", message: "No se pudo listar usuarios" };
-  return res;
-}
+export async function reloadUsers({ onUsersStatus, onUsersTable, onUsersCount } = {}) {
+  const notifyStatus = onUsersStatus || (() => {});
+  const renderTable = onUsersTable || (() => {});
+  const renderCount = onUsersCount || (() => {});
 
-export async function apiUsersCreate(body) {
-  const res = await apiFetch("/admin/users", { method: "POST", body, showErrorToast: false });
-  if (!res?.ok) throw res?.error || { code: "INTERNAL_ERROR", message: "No se pudo crear usuario" };
-  return res;
-}
+  state.ui.loadingUsers = true;
+  state.ui.errorUsers = null;
+  notifyStatus("Cargando usuarios…");
 
-export async function apiUsersUpdate(id, body) {
-  const res = await apiFetch(`/admin/users/${encodeURIComponent(id)}`, {
-    method: "PUT",
-    body,
-    showErrorToast: false
-  });
-  if (!res?.ok) throw res?.error || { code: "INTERNAL_ERROR", message: "No se pudo actualizar usuario" };
-  return res;
-}
-
-export async function apiUsersDelete(id) {
-  const res = await apiFetch(`/admin/users/${encodeURIComponent(id)}`, {
-    method: "DELETE",
-    showErrorToast: false
-  });
-  if (!res?.ok) throw res?.error || { code: "INTERNAL_ERROR", message: "No se pudo eliminar usuario" };
-  return res;
-}
-
-export async function apiRolesList() {
-  const res = await apiFetch("/admin/rbac/roles", { method: "GET", showErrorToast: false });
-  if (!res?.ok) throw res?.error || { code: "INTERNAL_ERROR", message: "No se pudo leer roles" };
-  return res;
-}
-
-export async function apiRolesUpdate(id, body) {
-  const res = await apiFetch(`/admin/rbac/roles/${encodeURIComponent(id)}`, {
-    method: "PUT",
-    body,
-    showErrorToast: false
-  });
-  if (!res?.ok) throw res?.error || { code: "INTERNAL_ERROR", message: "No se pudo actualizar rol" };
-  return res;
-}
-
-export async function apiPermsGet(roleId) {
-  const res = await apiFetch("/admin/rbac/permissions", {
-    method: "GET",
-    params: { roleId },
-    showErrorToast: false
-  });
-  if (!res?.ok) throw res?.error || { code: "INTERNAL_ERROR", message: "No se pudo leer permisos" };
-  return res;
-}
-
-export async function apiPermsPut(roleId, permMap) {
-  const res = await apiFetch("/admin/rbac/permissions", {
-    method: "PUT",
-    body: permMap,
-    params: { roleId },
-    showErrorToast: false
-  });
-  if (!res?.ok) throw res?.error || { code: "INTERNAL_ERROR", message: "No se pudieron guardar permisos" };
-  return res;
+  try {
+    await fetchUsers();
+    renderTable();
+    renderCount();
+    notifyStatus("");
+  } catch (err) {
+    state.ui.loadingUsers = false;
+    state.ui.errorUsers = "No se pudieron cargar los usuarios.";
+    notifyStatus(state.ui.errorUsers, "error");
+    snackErr(mapErrorToMessage(err, state.ui.errorUsers), err?.code);
+  }
 }
 
 export function handleStateError(err, fallback) {

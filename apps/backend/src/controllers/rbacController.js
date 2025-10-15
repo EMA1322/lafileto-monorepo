@@ -7,21 +7,7 @@ export const rbacController = {
   listRoles: async (_req, res, next) => {
     try {
       const roles = await rbacService.listRoles();
-      return res.json(ok(roles));
-    } catch (err) { next(err); }
-  },
-
-  createRole: async (req, res, next) => {
-    try {
-      const role = await rbacService.createRole(req.body);
-      return res.status(201).json(ok(role));
-    } catch (err) { next(err); }
-  },
-
-  updateRole: async (req, res, next) => {
-    try {
-      const role = await rbacService.updateRole(req.params.roleId, req.body);
-      return res.json(ok(role));
+      return res.json(ok({ items: roles }));
     } catch (err) { next(err); }
   },
 
@@ -29,7 +15,7 @@ export const rbacController = {
   listModules: async (_req, res, next) => {
     try {
       const modules = await rbacService.listModules();
-      return res.json(ok(modules));
+      return res.json(ok({ items: modules }));
     } catch (err) { next(err); }
   },
 
@@ -45,7 +31,7 @@ export const rbacController = {
     try {
       const out = await rbacService.savePermissions(
         req.params.roleId,
-        req.body,
+        req.body.permissions,
         req.user?.id || null
       );
       return res.json(ok(out));

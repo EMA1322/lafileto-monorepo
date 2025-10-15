@@ -81,7 +81,7 @@
         <input
           id="users-search"
           type="search"
-          placeholder="Buscar por nombre, apellido, email o rol"
+          placeholder="Buscar por nombre o email"
           autocomplete="off"
           inputmode="search"
           aria-label="Buscar usuarios"
@@ -91,7 +91,7 @@
       <!-- Acciones de lista -->
       <div class="users__actions">
         <!-- Botón "Nuevo usuario" (visible solo si RBAC → Write) -->
-        <button id="btn-user-new" class="btn" type="button" data-action="user-new">
+        <button id="btn-user-new" class="btn" type="button" data-action="user-new" hidden>
           + Nuevo usuario
         </button>
       </div>
@@ -111,13 +111,11 @@
         <caption class="sr-only">Listado de usuarios</caption>
         <thead class="users__thead">
           <tr>
-            <th scope="col">Nombre</th>
-            <th scope="col">Apellidos</th>
+            <th scope="col">Nombre completo</th>
             <th scope="col">Email</th>
             <th scope="col">Teléfono</th>
             <th scope="col">Rol</th>
             <th scope="col">Estado</th>
-            <th scope="col" class="users__th-actions">Acciones</th>
           </tr>
         </thead>
         <tbody id="users-tbody" class="users__tbody">

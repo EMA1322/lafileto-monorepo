@@ -5,33 +5,19 @@ import { rolePermissionRepository } from '../repositories/rolePermissionReposito
 import { auditService } from '../services/auditService.js'; // Auditoría deprecada: servicio convertido en no-op
 import { createError } from '../utils/errors.js';
 
-// Helper puro (testeable): convierte filas -> matriz { moduleKey: {r,w,u,d} }
-// src/services/rbacService.js
-// Helper puro (testeable)
-export function toPermissionMatrix(rows) {
-  const out = {};
-  for (const r of rows) {
-    out[r.moduleKey] = { r: !!r.r, w: !!r.w, u: !!r.u, d: !!r.d };
-  }
-  return out;
+function mapRowsToArray(rows) {
+  return rows.map((r) => ({
+    moduleKey: r.moduleKey,
+    r: !!r.r,
+    w: !!r.w,
+    u: !!r.u,
+    d: !!r.d
+  }));
 }
-
 
 export const rbacService = {
   // Roles
   listRoles: () => roleRepository.findAll(),
-
-  async createRole({ roleId, name }) {
-    const exists = await roleRepository.findById(roleId);
-    if (exists) throw createError('CONFLICT', 'roleId ya existe.');
-    return roleRepository.create({ roleId, name });
-  },
-
-  async updateRole(roleId, { name }) {
-    const role = await roleRepository.findById(roleId);
-    if (!role) throw createError('RESOURCE_NOT_FOUND', 'Rol no encontrado.');
-    return roleRepository.updateName(roleId, name);
-  },
 
   // Modules
   listModules: () => moduleRepository.findAll(),
@@ -41,35 +27,41 @@ export const rbacService = {
     const role = await roleRepository.findById(roleId);
     if (!role) throw createError('RESOURCE_NOT_FOUND', 'Rol no encontrado.');
     const rows = await rolePermissionRepository.findByRole(roleId);
-    return toPermissionMatrix(rows);
+    return { roleId, permissions: mapRowsToArray(rows) };
   },
 
-  async savePermissions(roleId, matrix, actorUserId) {
+  async savePermissions(roleId, permissions = [], actorUserId) {
     const role = await roleRepository.findById(roleId);
     if (!role) throw createError('RESOURCE_NOT_FOUND', 'Rol no encontrado.');
 
-    // Upsert por cada moduleKey recibido
-    const moduleKeys = Object.keys(matrix || {});
-    for (const mk of moduleKeys) {
-      const perms = {
-        r: !!matrix[mk].r,
-        w: !!matrix[mk].w,
-        u: !!matrix[mk].u,
-        d: !!matrix[mk].d
-      };
-      await rolePermissionRepository.upsertOne(roleId, mk, perms);
+    const normalized = Array.isArray(permissions)
+      ? permissions.map((entry) => ({
+          moduleKey: String(entry.moduleKey || '').trim(),
+          r: !!entry.r,
+          w: !!entry.w,
+          u: !!entry.u,
+          d: !!entry.d
+        })).filter((entry) => entry.moduleKey.length > 0)
+      : [];
+
+    if (normalized.length > 0) {
+      await rolePermissionRepository.upsertMany(roleId, normalized);
     }
 
-    // Auditoría deprecada: registramos evento inofensivo para compatibilidad
     await auditService.record({
       actorUserId: actorUserId || null,
       action: 'permission_change',
       entity: 'role_permissions',
       entityId: roleId,
       summary: `Actualización de permisos para rol ${roleId}`,
-      changedFields: matrix
-    }); // Auditoría deprecada: llamada sin efecto persistente
+      changedFields: normalized
+    });
 
-    return { updated: moduleKeys.length };
+    const refreshed = await rolePermissionRepository.findByRole(roleId);
+    return {
+      roleId,
+      updated: normalized.length,
+      permissions: mapRowsToArray(refreshed)
+    };
   }
 };

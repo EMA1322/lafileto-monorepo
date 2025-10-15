@@ -8,10 +8,26 @@ export const rolePermissionRepository = {
       orderBy: { moduleKey: 'asc' }
     }),
 
-  upsertOne: (roleId, moduleKey, perms) =>
-    prisma.rolePermission.upsert({
-      where: { roleId_moduleKey: { roleId, moduleKey } },
-      update: perms,
-      create: { roleId, moduleKey, ...perms }
-    })
+  upsertMany: (roleId, entries) => {
+    const ops = entries.map((entry) =>
+      prisma.rolePermission.upsert({
+        where: { roleId_moduleKey: { roleId, moduleKey: entry.moduleKey } },
+        update: {
+          r: entry.r,
+          w: entry.w,
+          u: entry.u,
+          d: entry.d
+        },
+        create: {
+          roleId,
+          moduleKey: entry.moduleKey,
+          r: entry.r,
+          w: entry.w,
+          u: entry.u,
+          d: entry.d
+        }
+      })
+    );
+    return prisma.$transaction(ops);
+  }
 };

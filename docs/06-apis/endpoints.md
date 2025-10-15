@@ -1,15 +1,15 @@
 ---
 status: Draft
 owner: Backend Lead + Front Leads
-last_update: 2025-10-09
+last_update: 2025-03-07
 scope: Tabla sincronizada con OpenAPI v1; filtros/paginación/orden/búsqueda consolidados; “Pendiente” donde falte implementar.
 ---
 
-> Fuente de verdad: `openapi.yaml`. Convenciones generales en [`api-guidelines.md`](./api-guidelines.md).  
-> **Auth**: JWT **solo Admin**. Rutas públicas marcadas como **(público)**.
+> Fuente de verdad: `openapi.yaml`. Convenciones generales en [`api-guidelines.md`](./api-guidelines.md).
+> **Auth**: JWT **solo Admin**. Rutas públicas marcadas como **(público)**. Algunas rutas exigen `role-admin`.
 
 ## Parámetros comunes
-- `page` (>=1), `pageSize` (1..100, **default 20**), `sort` (`field:asc|desc`[, ...]), `q` (texto).
+- `page` (>=1), `pageSize` (1..100, **default 10**), `sort` (`field:asc|desc`[, ...]), `q` (texto).
 - Filtros de **Products**: `categoryId`, `isOffer`.
 
 
@@ -27,24 +27,25 @@ scope: Tabla sincronizada con OpenAPI v1; filtros/paginación/orden/búsqueda co
 ## Users (Admin)
 | Método | Path | Auth | Query/Body | Notas | Estado |
 |---|---|---|---|---|---|
-| GET | `/users` | JWT | `page,pageSize,q,sort` | Paginado/orden/búsqueda | **I1 listo** |
-| POST | `/users` | JWT | `{ name,email,password,roleId }` | Email único | **I1 listo** |
-| GET | `/users/:id` | JWT | — | — | **I1 listo** |
-| PUT | `/users/:id` | JWT | `{ name?,email?,password?,roleId? }` | — | **I1 listo** |
-| DELETE | `/users/:id` | JWT | — | Idempotente | **I1 listo** |
+| GET | `/users` | JWT (`role-admin`) | `page,pageSize,search` | Orden `fullName ASC`, devuelve `{ items[{ id,fullName,email,phone?,roleId,status }], meta{ page,pageSize,total } }` | **I1 listo** |
+
+> `phone` puede venir como `null` si la columna no existe; la UI debe mostrar `-`.
 
 ## Roles (Admin)
 | Método | Path | Auth | Notas | Estado |
 |---|---|---|---|---|
-| GET | `/roles` | JWT | Catálogo para UI | **I1 listo** |
-| GET | `/roles/:id` | JWT | — | **I1 listo** |
+| GET | `/roles` | JWT (`role-admin`) | Catálogo para UI (`{ items[{ roleId,name }] }`) | **I1 listo** |
+
+## Modules (Admin)
+| Método | Path | Auth | Notas | Estado |
+|---|---|---|---|---|
+| GET | `/modules` | JWT (`role-admin`) | Lista `{ items[{ key,name }] }` para armar matriz de permisos | **I1 listo** |
 
 ## Permissions (Admin)
 | Método | Path | Auth | Body | Notas | Estado |
 |---|---|---|---|---|---|
-| GET | `/permissions` | JWT | — | Lista de acciones soportadas | **I1 listo** |
-| GET | `/roles/:id/permissions` | JWT | — | Permisos efectivos por rol | **I1 listo** |
-| PUT | `/roles/:id/permissions` | JWT | `{ permissions: Permission[] }` | Valida `moduleKey`/`action` | **I1 listo** |
+| GET | `/roles/:id/permissions` | JWT (`role-admin`) | — | Devuelve `{ roleId, permissions[{ moduleKey,r,w,u,d }] }` | **I1 listo** |
+| PUT | `/roles/:id/permissions` | JWT (`role-admin`) | `{ permissions:[{ moduleKey,r,w,u,d }] }` | Upsert por `moduleKey` dentro de transacción; entradas ausentes no se modifican | **I1 listo** |
 
 ## Categories (Catálogo)
 | Método | Path | Auth | Query/Body | Notas | Estado |

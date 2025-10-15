@@ -1,24 +1,25 @@
-import { state, snackWarn } from "../state.js";
+import { state, snackWarn, reloadUsers } from "../state.js";
 import { guardAction } from "../rbac.js";
 
-import {
-  openUserViewModal,
-  openUserFormModal,
-  openConfirmDeleteModal,
-  openRoleEditModal,
-  openPermissionsMatrixModal,
-} from "./modals.js";
-import { renderUsersTable } from "./usersTable.js";
+import { openPermissionsMatrixModal } from "./modals.js";
+import { renderUsersTable, renderUsersCount } from "./usersTable.js";
+import { renderUsersStatus, renderRolesStatus } from "./status.js";
 import { applyRBAC } from "./viewRBAC.js";
 import { els } from "./dom.js";
 import { switchTab } from "./tabs.js";
 
-function debounce(fn, wait = 250) {
+function debounce(fn, wait = 300) {
   let t;
   return (...args) => {
     clearTimeout(t);
     t = setTimeout(() => fn(...args), wait);
   };
+}
+
+function totalPages() {
+  const total = state.users.meta.total || 0;
+  const pageSize = state.users.meta.pageSize || state.filters.pageSize || 10;
+  return Math.max(1, Math.ceil(total / pageSize));
 }
 
 export function bindUI() {
@@ -30,21 +31,28 @@ export function bindUI() {
     tabRoles,
     search,
     pageSize,
-    btnNew,
     pagePrev,
     pageNext,
-    tbodyUsers,
-    tbodyRoles,
+    tbodyRoles
   } = els();
 
   tabUsers?.addEventListener("click", () => {
     switchTab("users");
     applyRBAC();
   });
+
   tabRoles?.addEventListener("click", () => {
     if (!state.rbac.isAdmin) return;
     switchTab("roles");
     applyRBAC();
+  });
+
+  const requestUsers = () => reloadUsers({
+    onUsersStatus: renderUsersStatus,
+    onUsersTable: renderUsersTable,
+    onUsersCount: renderUsersCount
+  }).catch((err) => {
+    console.error("[users] reload error", err);
   });
 
   search?.addEventListener(
@@ -52,52 +60,35 @@ export function bindUI() {
     debounce((e) => {
       state.filters.query = e.target.value || "";
       state.filters.page = 1;
-      renderUsersTable();
-    }, 250)
+      requestUsers();
+    })
   );
 
   pageSize?.addEventListener("change", (e) => {
-    state.filters.pageSize = Number(e.target.value) || 10;
+    const value = Number(e.target.value) || 10;
+    state.filters.pageSize = value;
     state.filters.page = 1;
-    renderUsersTable();
+    requestUsers();
   });
 
   pagePrev?.addEventListener("click", () => {
-    state.filters.page = Math.max(1, state.filters.page - 1);
-    renderUsersTable();
+    if (state.ui.loadingUsers) return;
+    const nextPage = Math.max(1, state.filters.page - 1);
+    if (nextPage === state.filters.page) return;
+    state.filters.page = nextPage;
+    requestUsers();
   });
+
   pageNext?.addEventListener("click", () => {
-    state.filters.page = state.filters.page + 1;
-    renderUsersTable();
+    if (state.ui.loadingUsers) return;
+    const limit = totalPages();
+    const nextPage = Math.min(limit, state.filters.page + 1);
+    if (nextPage === state.filters.page) return;
+    state.filters.page = nextPage;
+    requestUsers();
   });
 
-  btnNew?.addEventListener("click", () => {
-    if (!guardAction("write", { roleId: state.rbac.roleId, snackWarn })) return;
-    openUserFormModal();
-  });
-
-  tbodyUsers?.addEventListener("click", (ev) => {
-    const target = ev.target.closest("[data-action]");
-    if (!target) return;
-    const action = target.dataset.action;
-    const tr = target.closest("tr");
-    if (!tr) return;
-    const id = tr.dataset.id;
-    const user = state.users.find((u) => u.id === id);
-    if (!user) return;
-
-    if (action === "view") {
-      openUserViewModal(user);
-    } else if (action === "edit") {
-      if (!guardAction("update", { roleId: state.rbac.roleId, snackWarn })) return;
-      openUserFormModal(user);
-    } else if (action === "delete") {
-      if (!guardAction("delete", { roleId: state.rbac.roleId, snackWarn })) return;
-      openConfirmDeleteModal(user);
-    }
-  });
-
-  tbodyRoles?.addEventListener("click", (ev) => {
+  tbodyRoles?.addEventListener("click", async (ev) => {
     const btn = ev.target.closest("[data-action]");
     if (!btn) return;
     if (!state.rbac.isAdmin) return;
@@ -106,14 +97,19 @@ export function bindUI() {
     const roleId = tr?.dataset.roleId;
     if (!roleId) return;
 
-    const role = state.roles.find((r) => r.id === roleId);
+    const role = state.roles.find((r) => r.roleId === roleId || r.id === roleId);
     if (!role) return;
 
     const action = btn.dataset.action;
-    if (action === "role-edit") {
-      openRoleEditModal(role);
-    } else if (action === "role-perms") {
-      openPermissionsMatrixModal(role);
+    if (action === "role-perms") {
+      const canUpdate = guardAction("update", { roleId: state.rbac.roleId, snackWarn });
+      if (!canUpdate) return;
+      try {
+        await openPermissionsMatrixModal(role);
+      } catch (err) {
+        console.error("[users] openPermissionsMatrixModal failed", err);
+        renderRolesStatus("No se pudo abrir la matriz de permisos.", "error");
+      }
     }
   });
 }
