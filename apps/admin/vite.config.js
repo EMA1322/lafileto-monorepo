@@ -3,8 +3,7 @@ import path from 'path';
 import { visualizer } from 'rollup-plugin-visualizer';
 
 export default defineConfig(() => {
-  const shouldAnalyze =
-    Boolean(process.env.ANALYZE_BUNDLE) && process.env.ANALYZE_BUNDLE !== 'false';
+  const shouldAnalyze = Boolean(process.env.ANALYZE_BUNDLE) && process.env.ANALYZE_BUNDLE !== 'false';
 
   return {
     plugins: shouldAnalyze
@@ -33,7 +32,6 @@ export default defineConfig(() => {
           target: 'http://localhost:3000',
           changeOrigin: true,
           secure: false,
-          rewrite: (path) => path.replace(/^\/api/, ''),
         },
       },
       // HMR estable en LAN (opcional; si ves problemas de HMR):
