@@ -29,9 +29,14 @@ app.get('/health', (_req, res) => {
   res.json(ok({ status: 'up', ts: Date.now() }));
 });
 
-app.get('/_debug/ping', (_req, res) => {
-  res.json(ok({ pong: true, ts: Date.now() }));
-});
+// Handler reutilizable para el ping tanto directo como detrás del proxy de Vite.
+const debugPingHandler = (req, res) => {
+  res.json(ok({ pong: true, ts: Date.now(), requestId: req.id || req.requestId }));
+};
+
+app.get('/_debug/ping', debugPingHandler);
+// Alias requerido para que el proxy del Admin (`/api/*`) pueda alcanzar el ping sin reescritura adicional.
+app.get('/api/_debug/ping', debugPingHandler);
 
 app.use('/api/v1', router);
 

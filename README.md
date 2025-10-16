@@ -92,6 +92,17 @@ Los artefactos de las SPAs quedan en `apps/*/dist/` listos para servir (Nginx u 
 
 ---
 
+## Módulo Usuarios (Admin) — estado final
+
+- **Listado sin paginación**: muestra `Nombre completo`, `Email`, `Teléfono`, `Rol` y `Estado` de todos los usuarios disponibles en la API (`GET /api/v1/users?all=1`).
+- **Acciones rápidas por fila**: editar datos básicos (sin password), eliminar con reglas de seguridad (`SELF_DELETE_FORBIDDEN`, `LAST_ADMIN_FORBIDDEN`) y switch inline para `status` (ACTIVO/INACTIVO).
+- **Alta de usuarios**: modal con validaciones de negocio; el teléfono es obligatorio (7–20 caracteres, dígitos y símbolos comunes) y nunca se guarda vacío ni con el sentinel `0000000000`.
+- **Roles & Permisos**: CRUD completo de roles (`POST/PUT/DELETE /api/v1/roles`) y edición de la matriz `r/w/u/d` por módulo con persistencia transaccional.
+- **Notificaciones**: toasts coherentes para errores de backend (409, 422, 500) y feedback de guardado exitoso.
+- **Acceso restringido**: disponible solo para `role-admin`; otros roles son redirigidos según sus permisos efectivos.
+
+---
+
 ## Variables de entorno (resumen)
 
 Ver detalle en [`/docs/07-anexos/env.md`](./docs/07-anexos/env.md). Ejemplo **dev**:
@@ -176,9 +187,20 @@ pnpm -r format --if-present
 
 ---
 
+## Flujo de sesión y permisos (Admin)
+
+1. **Login** (`POST /api/v1/auth/login`) guarda el token JWT y dispara `GET /api/v1/auth/me` para hidratar la sesión.
+2. **Hidratación**: el backend responde `{ user, permissions }` donde las claves de módulo están en minúsculas; la SPA almacena ambos y marca la sesión como "hydrated".
+3. **Guard de rutas**: cada navegación espera a que la sesión esté hidratada y valida `moduleKey` (case-insensitive) antes de permitir acceso. Sin permiso de lectura, se redirige a `/#/not-authorized`.
+4. **Selección de home**: tras login se elige la primera ruta con permiso de lectura (ej. dashboard) o se cae en la pantalla de no autorizado.
+5. **Cerrar sesión**: `logout()` hace `POST /api/v1/auth/logout`, borra token + permisos (store y localStorage), limpia interceptores y redirige a `/#/login`.
+6. **401 automáticos**: cualquier respuesta `401` del backend dispara `logout()` para evitar estados inconsistentes.
+
+---
+
 ## Estándares y procesos
 
-- **Convenciones**: [`coding-standards.md`](./docs/05-procesos/coding-standards.md)  
+- **Convenciones**: [`coding-standards.md`](./docs/05-procesos/coding-standards.md)
 - **Flujo de trabajo**: [`procesos.md`](./docs/05-procesos/procesos.md)  
 - **Ramas/commits**: [`git-branching.md`](./docs/05-procesos/git-branching.md)  
 - **CI/CD**: [`ci-cd.md`](./docs/05-procesos/ci-cd.md)
