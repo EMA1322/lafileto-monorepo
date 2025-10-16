@@ -7,6 +7,8 @@ import {
   snackOk,
   snackErr,
   createUser,
+  updateUser,
+  deleteUser,
   createRole,
   updateRole,
   deleteRole,
@@ -15,7 +17,7 @@ import {
 } from "../state.js";
 import { escapeHTML, mapErrorToMessage } from "../helpers.js";
 import { applyRBAC } from "./viewRBAC.js";
-import { renderUsersTable, renderUsersCount } from "./usersTable.js";
+import { renderUsersTable } from "./usersTable.js";
 import { renderUsersStatus, renderRolesStatus } from "./status.js";
 import { renderRolesView } from "./roles.js";
 
@@ -31,8 +33,13 @@ function resetFormErrors(form) {
 }
 
 function setFieldError(form, field, message) {
-  const err = form.querySelector(`#err-${field}`);
-  const input = form.querySelector(`[name='${field}']`) || form.querySelector(`#${field}`);
+  const err =
+    form.querySelector(`#err-${field}`) || form.querySelector(`#err-edit-${field}`) || form.querySelector(`#err-${field}-field`);
+  const input =
+    form.querySelector(`[name='${field}']`) ||
+    form.querySelector(`#${field}`) ||
+    form.querySelector(`#user-edit-${field}`) ||
+    form.querySelector(`#${field}-field`);
   if (!err) return;
   if (message) {
     err.textContent = message;
@@ -126,14 +133,110 @@ export function openCreateUserModal() {
       closeModal();
       await reloadUsers({
         onUsersStatus: renderUsersStatus,
-        onUsersTable: renderUsersTable,
-        onUsersCount: renderUsersCount
+        onUsersTable: renderUsersTable
       });
     } catch (err) {
       applyServerErrors(form, err);
       snackErr(mapErrorToMessage(err, "No se pudo crear el usuario."), err?.code);
     } finally {
       btnSubmit.disabled = false;
+    }
+  });
+}
+
+export function openEditUserModal(user) {
+  const tpl = document.getElementById("tpl-user-edit-form");
+  if (!tpl) return;
+  if (!state.roles.length) {
+    snackErr("No hay roles disponibles. Creá un rol antes de editar usuarios.");
+    return;
+  }
+
+  openModal(tpl.innerHTML, "#user-edit-submit");
+  const modal = document.getElementById("modal-body");
+  if (!modal) return;
+
+  const form = modal.querySelector("#user-edit-form");
+  const btnSubmit = modal.querySelector("#user-edit-submit");
+  const inputName = form?.querySelector("#user-edit-fullName");
+  const inputPhone = form?.querySelector("#user-edit-phone");
+  const selectRole = form?.querySelector("#user-edit-roleId");
+  const selectStatus = form?.querySelector("#user-edit-status");
+
+  fillRolesOptions(selectRole);
+
+  if (inputName) inputName.value = user?.fullName || "";
+  if (inputPhone) inputPhone.value = user?.phone || "";
+  if (selectRole) selectRole.value = user?.roleId || "";
+  if (selectStatus) selectStatus.value = (user?.status || "ACTIVE").toUpperCase();
+
+  form?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!form) return;
+
+    resetFormErrors(form);
+
+    const formData = new FormData(form);
+    const fullName = String(formData.get("fullName") || "").trim();
+    const phone = String(formData.get("phone") || "").trim();
+    const roleId = String(formData.get("roleId") || "").trim().toLowerCase();
+    const status = String(formData.get("status") || "ACTIVE").toUpperCase();
+
+    let hasError = false;
+    if (fullName.length < 2) {
+      setFieldError(form, "fullName", "Ingrese un nombre válido (mínimo 2 caracteres).");
+      hasError = true;
+    }
+    if (!phone || !PHONE_CLIENT_REGEX.test(phone)) {
+      setFieldError(form, "phone", "Ingrese un teléfono válido (7-20 caracteres).");
+      hasError = true;
+    }
+    if (!roleId) {
+      setFieldError(form, "roleId", "Seleccione un rol válido.");
+      hasError = true;
+    }
+    if (hasError) return;
+
+    btnSubmit.disabled = true;
+    try {
+      await updateUser(user.id, { fullName, phone, roleId, status });
+      snackOk("Usuario actualizado correctamente.");
+      closeModal();
+      renderUsersTable();
+    } catch (err) {
+      applyServerErrors(form, err);
+      snackErr(mapErrorToMessage(err, "No se pudo actualizar el usuario."), err?.code);
+    } finally {
+      btnSubmit.disabled = false;
+    }
+  });
+}
+
+export function openDeleteUserModal(user) {
+  const tpl = document.getElementById("tpl-user-delete");
+  if (!tpl) return;
+
+  openModal(tpl.innerHTML, "#user-delete-confirm");
+  const modal = document.getElementById("modal-body");
+  if (!modal) return;
+
+  const msg = modal.querySelector("#user-delete-message");
+  if (msg) {
+    msg.textContent = `¿Seguro que querés eliminar a ${user.fullName || user.email}? Esta acción no se puede deshacer.`;
+  }
+
+  const btnDelete = modal.querySelector("#user-delete-confirm");
+  btnDelete?.addEventListener("click", async () => {
+    if (!btnDelete) return;
+    btnDelete.disabled = true;
+    try {
+      await deleteUser(user.id);
+      snackOk("Usuario eliminado correctamente.");
+      closeModal();
+      renderUsersTable();
+    } catch (err) {
+      snackErr(mapErrorToMessage(err, "No se pudo eliminar el usuario."), err?.code);
+      btnDelete.disabled = false;
     }
   });
 }

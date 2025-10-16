@@ -15,54 +15,42 @@ function formatStatus(status) {
   return `<span class="badge badge--muted">${escapeHTML(String(status || "Desconocido"))}</span>`;
 }
 
-export function renderUsersCount() {
-  const { countUsers } = els();
-  if (!countUsers) return;
-
-  const total = state.users.meta.total || 0;
-  const page = state.users.meta.page || 1;
-  const pageSize = state.users.meta.pageSize || state.filters.pageSize || 10;
-  const itemsOnPage = state.users.items.length;
-
-  if (total === 0 || itemsOnPage === 0) {
-    countUsers.textContent = "Mostrando 0 de 0 usuarios";
-    return;
-  }
-
-  const from = (page - 1) * pageSize + 1;
-  const to = from + itemsOnPage - 1;
-  countUsers.textContent = `Mostrando ${from}-${Math.min(to, total)} de ${total} usuarios`;
+function statusSwitchMarkup(user) {
+  const isActive = String(user.status).toUpperCase() === "ACTIVE";
+  const label = isActive ? "Activo" : "Inactivo";
+  const stateClass = isActive ? "is-active" : "is-inactive";
+  return `
+    <button
+      class="users__status-toggle ${stateClass}"
+      type="button"
+      data-action="user-toggle-status"
+      data-next-status="${isActive ? "INACTIVE" : "ACTIVE"}"
+      aria-pressed="${isActive}"
+      aria-label="Cambiar estado a ${isActive ? "Inactivo" : "Activo"}"
+    >${label}</button>
+  `;
 }
 
 export function renderUsersTable() {
-  const { tbodyUsers, pagePrev, pageNext, pageInfo } = els();
+  const { tbodyUsers } = els();
   if (!tbodyUsers) return;
 
   if (state.ui.loadingUsers) {
     renderUsersStatus("Cargando usuarios…");
     tbodyUsers.innerHTML = "";
-    if (pagePrev) pagePrev.disabled = true;
-    if (pageNext) pageNext.disabled = true;
-    if (pageInfo) pageInfo.textContent = "";
     return;
   }
 
   if (state.ui.errorUsers) {
     renderUsersStatus(state.ui.errorUsers, "error");
     tbodyUsers.innerHTML = "";
-    if (pagePrev) pagePrev.disabled = true;
-    if (pageNext) pageNext.disabled = true;
-    if (pageInfo) pageInfo.textContent = "";
     return;
   }
 
   if (!state.users.items.length) {
-    renderUsersStatus("No hay usuarios que coincidan con los filtros.");
+    renderUsersStatus("No hay usuarios cargados.");
     tbodyUsers.innerHTML = "";
-    if (pagePrev) pagePrev.disabled = true;
-    if (pageNext) pageNext.disabled = true;
-    if (pageInfo) pageInfo.textContent = "0 / 0";
-    renderUsersCount();
+    applyRBAC();
     return;
   }
 
@@ -72,27 +60,25 @@ export function renderUsersTable() {
     .map((user) => {
       const phone = user.phone && user.phone !== "0000000000" ? escapeHTML(user.phone) : "-";
       const roleId = escapeHTML(user.roleId || "");
+      const actions = `
+        <div class="users__row-actions" role="group" aria-label="Acciones">
+          <button class="btn btn-secondary" type="button" data-action="user-edit">Editar</button>
+          ${statusSwitchMarkup(user)}
+          <button class="btn btn-danger" type="button" data-action="user-delete">Eliminar</button>
+        </div>
+      `;
       return `
-        <tr data-id="${escapeHTML(String(user.id))}">
+        <tr data-id="${escapeHTML(String(user.id))}" data-role-id="${roleId}">
           <td>${escapeHTML(user.fullName || "")}</td>
           <td>${escapeHTML(user.email || "")}</td>
           <td>${phone}</td>
           <td>${roleId}</td>
           <td>${formatStatus(user.status)}</td>
+          <td>${actions}</td>
         </tr>
       `;
     })
     .join("");
 
-  const total = state.users.meta.total || 0;
-  const page = state.users.meta.page || 1;
-  const pageSize = state.users.meta.pageSize || state.filters.pageSize || 10;
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
-
-  if (pagePrev) pagePrev.disabled = page <= 1;
-  if (pageNext) pageNext.disabled = page >= totalPages;
-  if (pageInfo) pageInfo.textContent = `${Math.min(page, totalPages)} / ${totalPages}`;
-
-  renderUsersCount();
   applyRBAC();
 }

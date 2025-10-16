@@ -10,7 +10,7 @@
 //
 // Dependencias:
 //   - auth.js        → isAuthenticated(), logout()
-//   - rbac.js        → ensureRbacLoaded(), canRead(), clearRbac(), moduleKeyFromHash()
+//   - rbac.js        → ensureRbacLoaded(), canRead(), moduleKeyFromHash()
 //   - snackbar.js    → showSnackbar()
 //   - modals.js      → openModal(), closeModal()
 //
@@ -23,7 +23,6 @@ import { isAuthenticated, logout } from '@/utils/auth.js';
 import {
   ensureRbacLoaded,
   canRead,
-  clearRbac,
   moduleKeyFromHash
 } from '@/utils/rbac.js';
 import { showSnackbar } from '@/utils/snackbar.js';
@@ -216,13 +215,13 @@ function handleLogout() {
   if (confirmBtn) {
     const onConfirm = async () => {
       try {
+        confirmBtn.disabled = true;
         await logout();
-        clearRbac();
         closeModal();
-        location.hash = '#login';
         showSnackbar('Sesión cerrada correctamente', 'success', 2400);
       } catch {
         showSnackbar('No se pudo cerrar sesión', 'error', 3000);
+        confirmBtn.disabled = false;
       } finally {
         confirmBtn.removeEventListener('click', onConfirm);
       }

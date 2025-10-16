@@ -24,15 +24,36 @@ function compactPhone(phone) {
 }
 
 export const userService = {
-  async listUsers({ page, pageSize, search } = {}) {
+  async listUsers({ page, pageSize, search, all } = {}) {
+    const wantsAll = Boolean(all);
+    const normalizedSearch = typeof search === 'string' ? search.trim() : '';
+
+    if (wantsAll) {
+      const { items, total } = await userRepository.list({
+        page: DEFAULT_PAGE,
+        pageSize: MAX_PAGE_SIZE,
+        search: normalizedSearch ? normalizedSearch : undefined,
+        all: true
+      });
+
+      return {
+        items,
+        meta: {
+          page: 1,
+          pageSize: total || items.length || 0,
+          total
+        }
+      };
+    }
+
     const normalizedPage = normalizePage(page);
     const normalizedPageSize = normalizePageSize(pageSize);
-    const normalizedSearch = typeof search === 'string' ? search.trim() : '';
 
     const { items, total } = await userRepository.list({
       page: normalizedPage,
       pageSize: normalizedPageSize,
-      search: normalizedSearch ? normalizedSearch : undefined
+      search: normalizedSearch ? normalizedSearch : undefined,
+      all: false
     });
 
     return {
@@ -43,8 +64,7 @@ export const userService = {
         total
       }
     };
-  }
-,
+  },
   async createUser(payload) {
     const fullName = payload.fullName.trim();
     const email = payload.email.trim().toLowerCase();
@@ -90,5 +110,68 @@ export const userService = {
       roleId: created.roleId,
       status: created.status
     };
+  },
+
+  async updateUser(id, payload) {
+    const userId = Number(id);
+    if (!Number.isInteger(userId) || userId <= 0) {
+      throw createError('RESOURCE_NOT_FOUND', 'El usuario solicitado no existe.');
+    }
+
+    const existing = await userRepository.findById(userId);
+    if (!existing) {
+      throw createError('RESOURCE_NOT_FOUND', 'El usuario solicitado no existe.');
+    }
+
+    const phone = payload.phone.trim();
+    const phoneCompact = compactPhone(phone);
+    if (!phoneCompact || phoneCompact === '0000000000') {
+      throw createError('VALIDATION_ERROR', 'El teléfono es inválido.', {
+        fields: [{ path: 'phone', message: 'El teléfono no puede ser 0000000000.' }]
+      });
+    }
+
+    const role = await roleRepository.findById(payload.roleId);
+    if (!role) {
+      throw createError('RESOURCE_NOT_FOUND', 'El rol indicado no existe.', {
+        fields: [{ path: 'roleId', message: 'Seleccioná un rol válido.' }]
+      });
+    }
+
+    const updated = await userRepository.update(userId, {
+      fullName: payload.fullName.trim(),
+      phone,
+      roleId: payload.roleId,
+      status: payload.status
+    });
+
+    return updated;
+  },
+
+  async deleteUser(id, { currentUserId } = {}) {
+    const userId = Number(id);
+    if (!Number.isInteger(userId) || userId <= 0) {
+      throw createError('RESOURCE_NOT_FOUND', 'El usuario solicitado no existe.');
+    }
+
+    const existing = await userRepository.findById(userId);
+    if (!existing) {
+      throw createError('RESOURCE_NOT_FOUND', 'El usuario solicitado no existe.');
+    }
+
+    if (Number(currentUserId) === userId) {
+      throw createError('SELF_DELETE_FORBIDDEN', 'No podés eliminar tu propio usuario.');
+    }
+
+    if (existing.roleId === 'role-admin') {
+      const adminsLeft = await userRepository.countAdminsExcluding(userId);
+      if (adminsLeft === 0) {
+        throw createError('LAST_ADMIN_FORBIDDEN', 'No se puede eliminar el último administrador.');
+      }
+    }
+
+    await userRepository.deleteById(userId);
+
+    return { deleted: true };
   }
 };

@@ -12,3 +12,6 @@ authRoutes.post('/login', rateLimiterLogin, validator(loginSchema), authControll
 
 // GET /auth/me (requiere JWT)
 authRoutes.get('/me', authJWT(), authController.me);
+
+// POST /auth/logout (requiere JWT, sólo confirma salida)
+authRoutes.post('/logout', authJWT(), authController.logout);

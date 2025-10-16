@@ -49,28 +49,6 @@
     aria-labelledby="tab-users"
   >
     <header class="users__toolbar" aria-label="Herramientas de listado de usuarios">
-      <div class="users__page-size">
-        <label for="users-page-size">Mostrar</label>
-        <select id="users-page-size" name="pageSize">
-          <option value="10" selected>10</option>
-          <option value="25">25</option>
-          <option value="50">50</option>
-        </select>
-        <span>por página</span>
-      </div>
-
-      <div class="users__search">
-        <label for="users-search" class="sr-only">Buscar</label>
-        <input
-          id="users-search"
-          type="search"
-          placeholder="Buscar por nombre o email"
-          autocomplete="off"
-          inputmode="search"
-          aria-label="Buscar usuarios"
-        />
-      </div>
-
       <div class="users__actions">
         <button id="btn-user-new" class="btn" type="button" data-action="user-new" hidden>
           + Nuevo usuario
@@ -78,7 +56,6 @@
       </div>
     </header>
 
-    <div class="users__counter" aria-live="polite" id="users-count"></div>
     <div id="users-status" class="users__status" aria-live="polite"></div>
 
     <div class="users__table-wrap">
@@ -91,17 +68,12 @@
             <th scope="col">Teléfono</th>
             <th scope="col">Rol</th>
             <th scope="col">Estado</th>
+            <th scope="col" class="users__th-actions">Acciones</th>
           </tr>
         </thead>
         <tbody id="users-tbody" class="users__tbody"></tbody>
       </table>
     </div>
-
-    <nav id="users-pagination" class="users__pagination" aria-label="Paginación de usuarios">
-      <button class="users__page-btn" id="users-page-prev" type="button" data-page="prev" aria-label="Página anterior">Anterior</button>
-      <span class="users__page-info" id="users-page-info" aria-live="polite"></span>
-      <button class="users__page-btn" id="users-page-next" type="button" data-page="next" aria-label="Página siguiente">Siguiente</button>
-    </nav>
   </section>
 
   <section
@@ -198,6 +170,66 @@
       <button class="btn btn-secondary" type="button" data-close-modal>Cancelar</button>
     </div>
   </form>
+</template>
+
+<template id="tpl-user-edit-form">
+  <form id="user-edit-form" class="users__form" novalidate>
+    <fieldset class="users__form-grid">
+      <legend class="sr-only">Editar usuario</legend>
+
+      <div class="form__field">
+        <label for="user-edit-fullName">Nombre completo</label>
+        <input id="user-edit-fullName" name="fullName" type="text" required minlength="2" maxlength="120" autocomplete="off" />
+        <p id="err-edit-fullName" class="form__error" hidden>Ingrese un nombre válido (2-120 caracteres).</p>
+      </div>
+
+      <div class="form__field">
+        <label for="user-edit-phone">Teléfono</label>
+        <input
+          id="user-edit-phone"
+          name="phone"
+          type="tel"
+          required
+          pattern="^[0-9()+\s-]{7,20}$"
+          minlength="7"
+          maxlength="20"
+          placeholder="Ej: +54 11 2345-6789"
+          aria-describedby="hint-edit-phone err-edit-phone"
+        />
+        <small id="hint-edit-phone" class="form__hint">Solo números, espacios, +, - o (). 7 a 20 caracteres.</small>
+        <p id="err-edit-phone" class="form__error" hidden>Ingrese un teléfono válido (7-20 caracteres).</p>
+      </div>
+
+      <div class="form__field">
+        <label for="user-edit-roleId">Rol</label>
+        <select id="user-edit-roleId" name="roleId" required aria-describedby="err-edit-roleId"></select>
+        <p id="err-edit-roleId" class="form__error" hidden>Seleccione un rol válido.</p>
+      </div>
+
+      <div class="form__field">
+        <label for="user-edit-status">Estado</label>
+        <select id="user-edit-status" name="status" required>
+          <option value="ACTIVE">Activo</option>
+          <option value="INACTIVE">Inactivo</option>
+        </select>
+      </div>
+    </fieldset>
+
+    <div class="modal__actions">
+      <button id="user-edit-submit" class="btn" type="submit" data-action="user-edit-submit">Guardar</button>
+      <button class="btn btn-secondary" type="button" data-close-modal>Cancelar</button>
+    </div>
+  </form>
+</template>
+
+<template id="tpl-user-delete">
+  <div class="users__delete">
+    <p id="user-delete-message">¿Seguro que querés eliminar este usuario? Esta acción no se puede deshacer.</p>
+    <div class="modal__actions">
+      <button class="btn btn-secondary" type="button" data-close-modal>Cancelar</button>
+      <button id="user-delete-confirm" class="btn btn-danger" type="button">Eliminar</button>
+    </div>
+  </div>
 </template>
 
 <template id="tpl-role-form">

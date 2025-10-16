@@ -134,13 +134,19 @@ pnpm -F backend prisma:migrate:deploy
 pnpm -F backend dev
 curl -i http://localhost:3000/health
 curl -i http://localhost:3000/_debug/ping
+curl -s "http://localhost:3000/api/v1/users?all=1" -H "Authorization: Bearer <TOKEN>"
+curl -i -X PUT "http://localhost:3000/api/v1/users/<ID>" \
+  -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" \
+  -d '{"fullName":"Nombre Editado","phone":"1122334455","roleId":"role-admin","status":"ACTIVE"}'
+curl -i -X DELETE "http://localhost:3000/api/v1/users/<ID>" -H "Authorization: Bearer <TOKEN>"
+curl -i -X POST "http://localhost:3000/api/v1/auth/logout" -H "Authorization: Bearer <TOKEN>"
 ```
 
 **Admin**
 ```bash
 pnpm -F admin dev
 # validar por proxy (autenticado desde Admin)
-http://localhost:5174/api/v1/users?page=1&pageSize=10
+http://localhost:5174/api/v1/users?all=1
 http://localhost:5174/api/v1/roles
 http://localhost:5174/api/v1/modules
 http://localhost:5174/api/v1/roles/role-admin/permissions
@@ -148,9 +154,13 @@ curl -i http://localhost:5174/api/_debug/ping
 ```
 
 **UI**
-- `/#/users`: columnas `Nombre completo`, `Email`, `Teléfono`, `Rol`, `Estado`. Soporta búsqueda y paginación.
+- `/#/users`: lista completa (sin paginación) con columnas `Nombre completo`, `Email`, `Teléfono`, `Rol`, `Estado` y columna de acciones.
 - Crear usuario nuevo desde el modal: validar campos obligatorios (incluye teléfono 7-20 caracteres) y verificar que aparezca en la grilla.
+- Editar un usuario existente desde el botón **Editar** y actualizar `Teléfono`/`Rol`/`Estado`.
+- Cambiar el estado con el switch (Activo/Inactivo) y confirmar que persiste.
+- Eliminar un usuario desde el botón **Eliminar**; validar toasts para 409 `SELF_DELETE_FORBIDDEN` y `LAST_ADMIN_FORBIDDEN`.
 - Pestaña **Roles & Permisos** siempre disponible para `role-admin`; permite alta/edición/baja de roles y guardar matriz `r/w/u/d`.
+- Botón **Cerrar sesión** limpia token/estado y redirige a `#/login`; ante token vencido la app redirige automáticamente.
 
 **Compatibilidad**
 - Mantener login operativo, sin cambios de proxy ni `.env`.

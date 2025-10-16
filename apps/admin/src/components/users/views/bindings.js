@@ -1,31 +1,27 @@
-import { state, snackWarn, reloadUsers } from "../state.js";
+import {
+  state,
+  snackWarn,
+  snackErr,
+  snackOk,
+  toggleUserStatus,
+  findUserById
+} from "../state.js";
 import { guardAction } from "../rbac.js";
+import { mapErrorToMessage } from "../helpers.js";
 
 import {
   openPermissionsMatrixModal,
   openCreateUserModal,
+  openEditUserModal,
+  openDeleteUserModal,
   openRoleFormModal,
   openRoleDeleteModal
 } from "./modals.js";
-import { renderUsersTable, renderUsersCount } from "./usersTable.js";
+import { renderUsersTable } from "./usersTable.js";
 import { renderUsersStatus, renderRolesStatus } from "./status.js";
 import { applyRBAC } from "./viewRBAC.js";
 import { els } from "./dom.js";
 import { switchTab } from "./tabs.js";
-
-function debounce(fn, wait = 300) {
-  let t;
-  return (...args) => {
-    clearTimeout(t);
-    t = setTimeout(() => fn(...args), wait);
-  };
-}
-
-function totalPages() {
-  const total = state.users.meta.total || 0;
-  const pageSize = state.users.meta.pageSize || state.filters.pageSize || 10;
-  return Math.max(1, Math.ceil(total / pageSize));
-}
 
 export function bindUI() {
   const root = document.querySelector(".users");
@@ -34,11 +30,8 @@ export function bindUI() {
   const {
     tabUsers,
     tabRoles,
-    search,
-    pageSize,
-    pagePrev,
-    pageNext,
     tbodyRoles,
+    tbodyUsers,
     btnNew,
     btnRoleNew
   } = els();
@@ -66,47 +59,6 @@ export function bindUI() {
       return;
     }
     openRoleFormModal({ mode: "create" });
-  });
-
-  const requestUsers = () => reloadUsers({
-    onUsersStatus: renderUsersStatus,
-    onUsersTable: renderUsersTable,
-    onUsersCount: renderUsersCount
-  }).catch((err) => {
-    console.error("[users] reload error", err);
-  });
-
-  search?.addEventListener(
-    "input",
-    debounce((e) => {
-      state.filters.query = e.target.value || "";
-      state.filters.page = 1;
-      requestUsers();
-    })
-  );
-
-  pageSize?.addEventListener("change", (e) => {
-    const value = Number(e.target.value) || 10;
-    state.filters.pageSize = value;
-    state.filters.page = 1;
-    requestUsers();
-  });
-
-  pagePrev?.addEventListener("click", () => {
-    if (state.ui.loadingUsers) return;
-    const nextPage = Math.max(1, state.filters.page - 1);
-    if (nextPage === state.filters.page) return;
-    state.filters.page = nextPage;
-    requestUsers();
-  });
-
-  pageNext?.addEventListener("click", () => {
-    if (state.ui.loadingUsers) return;
-    const limit = totalPages();
-    const nextPage = Math.min(limit, state.filters.page + 1);
-    if (nextPage === state.filters.page) return;
-    state.filters.page = nextPage;
-    requestUsers();
   });
 
   tbodyRoles?.addEventListener("click", async (ev) => {
@@ -143,6 +95,59 @@ export function bindUI() {
       } catch (err) {
         console.error("[users] openPermissionsMatrixModal failed", err);
         renderRolesStatus("No se pudo abrir la matriz de permisos.", "error");
+      }
+    }
+  });
+
+  tbodyUsers?.addEventListener("click", async (ev) => {
+    const btn = ev.target.closest("[data-action]");
+    if (!btn) return;
+
+    const tr = btn.closest("tr[data-id]");
+    if (!tr) return;
+    const userId = tr.dataset.id;
+    if (!userId) return;
+
+    const action = btn.dataset.action;
+
+    if (action === "user-edit") {
+      const canUpdate = guardAction("update", { roleId: state.rbac.roleId, snackWarn });
+      if (!canUpdate) return;
+      const user = findUserById(userId);
+      if (!user) {
+        snackErr("No se encontró el usuario.");
+        return;
+      }
+      openEditUserModal(user);
+      return;
+    }
+
+    if (action === "user-delete") {
+      const canDelete = guardAction("delete", { roleId: state.rbac.roleId, snackWarn });
+      if (!canDelete) return;
+      const user = findUserById(userId);
+      if (!user) {
+        snackErr("No se encontró el usuario.");
+        return;
+      }
+      openDeleteUserModal(user);
+      return;
+    }
+
+    if (action === "user-toggle-status") {
+      const canUpdate = guardAction("update", { roleId: state.rbac.roleId, snackWarn });
+      if (!canUpdate) return;
+      const nextStatus = btn.dataset.nextStatus || "INACTIVE";
+      btn.disabled = true;
+      try {
+        await toggleUserStatus(userId, nextStatus);
+        snackOk("Estado actualizado correctamente.");
+        renderUsersTable();
+      } catch (err) {
+        snackErr(mapErrorToMessage(err, "No se pudo actualizar el estado."), err?.code);
+        console.error("[users] toggle status failed", err);
+      } finally {
+        btn.disabled = false;
       }
     }
   });

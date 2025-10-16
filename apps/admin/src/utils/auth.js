@@ -2,7 +2,7 @@
 // Comentarios en español; código en inglés.
 // Fuente única de verdad: API_BASE, token, apiFetch, login/logout, isAuthenticated.
 
-import { setServerSession } from './rbac.js';
+import { setServerSession, clearRbac } from './rbac.js';
 import { showSnackbar } from './snackbar.js';
 
 const IS_DEV = (() => {
@@ -37,6 +37,50 @@ const STATUS_TO_DEFAULT_CODE = {
   500: 'INTERNAL_ERROR',
   504: 'REQUEST_TIMEOUT'
 };
+
+let isLoggingOut = false;
+
+async function performLogoutRequest() {
+  const token = getToken();
+  if (!token) return;
+  const url = joinUrl(API_BASE, '/auth/logout');
+  try {
+    await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+  } catch (err) {
+    if (IS_DEV) {
+      console.warn('[auth] logout request failed', err);
+    }
+  }
+}
+
+async function clearAuthState({ redirect = true } = {}) {
+  try {
+    await setServerSession?.(null, null);
+  } catch { /* ignore */ }
+  try {
+    clearRbac?.();
+  } catch { /* ignore */ }
+  try {
+    localStorage.removeItem('user');
+  } catch { /* ignore */ }
+  try {
+    sessionStorage.removeItem('auth.roleId');
+  } catch { /* ignore */ }
+  clearToken();
+
+  if (redirect && typeof window !== 'undefined') {
+    const nextHash = '#login';
+    if (window.location.hash !== nextHash) {
+      window.location.hash = nextHash;
+    }
+  }
+}
 
 function normalizeMessage(value) {
   if (value == null) return '';
@@ -239,11 +283,17 @@ export async function apiFetch(path, options = {}) {
     err.payload = json;
     err.rawBody = text;
 
-    if (res.status === 401 || err.code === 'AUTH_REQUIRED' || err.code === 'AUTH_INVALID' || err.code === 'UNAUTHORIZED') {
-      clearToken();
+    const isUnauthorized =
+      res.status === 401 ||
+      err.code === 'AUTH_REQUIRED' ||
+      err.code === 'AUTH_INVALID' ||
+      err.code === 'UNAUTHORIZED';
+
+    if (isUnauthorized) {
+      await logout({ redirect: true, skipRequest: true });
     }
 
-    if (showErrorToast && (KNOWN_ERROR_STATUS.has(res.status) || ERROR_MESSAGES[err.code])) {
+    if (!isUnauthorized && showErrorToast && (KNOWN_ERROR_STATUS.has(res.status) || ERROR_MESSAGES[err.code])) {
       const toastMessage = resolveErrorMessage(res.status, err.code, errMessage, errorMessage);
       showSnackbar(toastMessage, { type: 'error', code: err.code });
     }
@@ -290,9 +340,21 @@ export async function login(email, password) {
   return data;
 }
 
-export function logout() {
-  clearToken();
-  localStorage.removeItem('user');
+export async function logout({ redirect = true, skipRequest = false } = {}) {
+  if (isLoggingOut) return;
+  isLoggingOut = true;
+  try {
+    if (!skipRequest) {
+      await performLogoutRequest();
+    }
+  } catch (err) {
+    if (IS_DEV) {
+      console.warn('[auth] logout flow error', err);
+    }
+  } finally {
+    await clearAuthState({ redirect });
+    isLoggingOut = false;
+  }
 }
 
 

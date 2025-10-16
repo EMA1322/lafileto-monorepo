@@ -1,12 +1,21 @@
 // Acceso a usuarios (Prisma directo)
 import { prisma } from '../config/prisma.js';
 
+const baseSelect = {
+  id: true,
+  fullName: true,
+  email: true,
+  phone: true,
+  roleId: true,
+  status: true
+};
+
 export const userRepository = {
   findByEmail: (email) => prisma.user.findUnique({ where: { email } }),
 
   findById: (id) => prisma.user.findUnique({ where: { id } }),
 
-  async list({ page, pageSize, search }) {
+  async list({ page, pageSize, search, all = false }) {
     const where = search
       ? {
           OR: [
@@ -16,6 +25,15 @@ export const userRepository = {
         }
       : undefined;
 
+    if (all) {
+      const items = await prisma.user.findMany({
+        where,
+        orderBy: { fullName: 'asc' },
+        select: baseSelect
+      });
+      return { items, total: items.length };
+    }
+
     const skip = (page - 1) * pageSize;
 
     const [items, total] = await Promise.all([
@@ -24,14 +42,7 @@ export const userRepository = {
         orderBy: { fullName: 'asc' },
         skip,
         take: pageSize,
-        select: {
-          id: true,
-          fullName: true,
-          email: true,
-          phone: true,
-          roleId: true,
-          status: true
-        }
+        select: baseSelect
       }),
       prisma.user.count({ where })
     ]);
@@ -40,6 +51,23 @@ export const userRepository = {
   },
 
   create: (payload) => prisma.user.create({ data: payload }),
+
+  update: (id, payload) =>
+    prisma.user.update({
+      where: { id },
+      data: payload,
+      select: baseSelect
+    }),
+
+  deleteById: (id) => prisma.user.delete({ where: { id } }),
+
+  countAdminsExcluding: (id) =>
+    prisma.user.count({
+      where: {
+        roleId: 'role-admin',
+        id: { not: id }
+      }
+    }),
 
   countByRoleId: (roleId) => prisma.user.count({ where: { roleId } })
 };

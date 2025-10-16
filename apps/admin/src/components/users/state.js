@@ -9,11 +9,7 @@ export const PHONE_REGEX = /^[0-9()+\s-]{7,20}$/;
 export const state = {
   users: {
     items: [],
-    meta: {
-      page: 1,
-      pageSize: 10,
-      total: 0
-    }
+    total: 0
   },
   roles: [],
   modules: [],
@@ -22,10 +18,8 @@ export const state = {
     roleId: null,
     isAdmin: false
   },
-  filters: {
-    query: "",
-    page: 1,
-    pageSize: 10
+  session: {
+    userId: null
   },
   ui: {
     activeTab: "users",
@@ -62,19 +56,25 @@ export function getCurrentRoleIdFromSession() {
   return null;
 }
 
+export function getCurrentUserIdFromSession() {
+  try {
+    const raw = localStorage.getItem("user");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed.id !== "undefined") return parsed.id;
+  } catch {}
+  return null;
+}
+
 function normalizeUsersResponse(data) {
   if (!data || typeof data !== "object") {
-    return { items: [], meta: { page: 1, pageSize: state.filters.pageSize, total: 0 } };
+    return { items: [], total: 0 };
   }
   const items = Array.isArray(data.items) ? data.items : [];
   const meta = data.meta && typeof data.meta === "object" ? data.meta : {};
   return {
     items,
-    meta: {
-      page: Number(meta.page) || 1,
-      pageSize: Number(meta.pageSize) || state.filters.pageSize,
-      total: Number(meta.total) || items.length
-    }
+    total: Number(meta.total) || items.length
   };
 }
 
@@ -82,34 +82,51 @@ export async function fetchUsers() {
   state.ui.loadingUsers = true;
   state.ui.errorUsers = null;
 
-  const params = {
-    page: state.filters.page,
-    pageSize: state.filters.pageSize
-  };
-  if (state.filters.query) params.search = state.filters.query;
+  const res = await apiFetch("/users", { params: { all: 1 }, showErrorToast: false });
+  const { items, total } = normalizeUsersResponse(res?.data || {});
 
-  const res = await apiFetch("/users", { params, showErrorToast: false });
-  const { items, meta } = normalizeUsersResponse(res?.data || {});
-
-  state.users.items = items.map((u) => {
-    const phone = typeof u.phone === "string" && u.phone !== "0000000000" ? u.phone : null;
-    return {
-      id: u.id,
-      fullName: u.fullName || "",
-      email: u.email || "",
-      phone,
-      roleId: u.roleId || "",
-      status: u.status || "UNKNOWN"
-    };
-  });
-  state.users.meta = {
-    page: meta.page,
-    pageSize: meta.pageSize,
-    total: meta.total
-  };
-  state.filters.page = meta.page;
-  state.filters.pageSize = meta.pageSize;
+  state.users.items = items.map(mapUserFromApi);
+  state.users.items.sort((a, b) => (a.fullName || "").localeCompare(b.fullName || ""));
+  state.users.total = total;
   state.ui.loadingUsers = false;
+}
+
+function mapUserFromApi(u) {
+  const phone = typeof u.phone === "string" && u.phone !== "0000000000" ? u.phone : null;
+  return {
+    id: u.id,
+    fullName: u.fullName || "",
+    email: u.email || "",
+    phone,
+    roleId: u.roleId || "",
+    status: u.status || "UNKNOWN"
+  };
+}
+
+function upsertUserInState(user) {
+  if (!user) return null;
+  const normalized = mapUserFromApi(user);
+  const idx = state.users.items.findIndex((item) => String(item.id) === String(normalized.id));
+  if (idx >= 0) {
+    state.users.items.splice(idx, 1, normalized);
+  } else {
+    state.users.items.push(normalized);
+  }
+  state.users.items.sort((a, b) => (a.fullName || "").localeCompare(b.fullName || ""));
+  state.users.total = Math.max(state.users.items.length, state.users.total || 0);
+  return normalized;
+}
+
+function removeUserFromState(userId) {
+  const idx = state.users.items.findIndex((item) => String(item.id) === String(userId));
+  if (idx >= 0) {
+    state.users.items.splice(idx, 1);
+    state.users.total = Math.max(0, (state.users.total || 0) - 1);
+  }
+}
+
+export function findUserById(userId) {
+  return state.users.items.find((item) => String(item.id) === String(userId)) || null;
 }
 
 export async function fetchRolesAndModules() {
@@ -143,6 +160,45 @@ export async function createUser(payload) {
     showErrorToast: false
   });
   return res?.data || null;
+}
+
+export async function updateUser(userId, payload) {
+  const res = await apiFetch(`/users/${encodeURIComponent(userId)}`, {
+    method: "PUT",
+    body: payload,
+    showErrorToast: false
+  });
+  return upsertUserInState(res?.data);
+}
+
+export async function deleteUser(userId) {
+  const res = await apiFetch(`/users/${encodeURIComponent(userId)}`, {
+    method: "DELETE",
+    showErrorToast: false
+  });
+  if (res?.ok) {
+    removeUserFromState(userId);
+  }
+  return res?.data || null;
+}
+
+export async function toggleUserStatus(userId, nextStatus) {
+  const user = findUserById(userId);
+  if (!user) {
+    throw Object.assign(new Error("Usuario no encontrado."), { code: "RESOURCE_NOT_FOUND" });
+  }
+  if (!user.phone) {
+    throw Object.assign(new Error("El teléfono es obligatorio para actualizar."), {
+      code: "VALIDATION_ERROR"
+    });
+  }
+
+  return updateUser(userId, {
+    fullName: user.fullName,
+    phone: user.phone,
+    roleId: user.roleId,
+    status: nextStatus
+  });
 }
 
 export function upsertRole(role) {
@@ -224,14 +280,12 @@ export async function fetchData({
   onUsersStatus,
   onRolesStatus,
   onUsersTable,
-  onRolesView,
-  onUsersCount
+  onRolesView
 } = {}) {
   const notifyUsersStatus = onUsersStatus || (() => {});
   const notifyRolesStatus = onRolesStatus || (() => {});
   const renderUsersTable = onUsersTable || (() => {});
   const renderRolesView = onRolesView || (() => {});
-  const renderUsersCount = onUsersCount || (() => {});
 
   state.ui.loadingUsers = true;
   state.ui.loadingRoles = true;
@@ -243,11 +297,11 @@ export async function fetchData({
 
   state.rbac.roleId = getCurrentRoleIdFromSession();
   state.rbac.isAdmin = computeIsAdmin({ roleId: state.rbac.roleId });
+  state.session.userId = getCurrentUserIdFromSession();
 
   try {
     await fetchUsers();
     renderUsersTable();
-    renderUsersCount();
     notifyUsersStatus("");
   } catch (err) {
     state.ui.loadingUsers = false;
@@ -268,10 +322,9 @@ export async function fetchData({
   }
 }
 
-export async function reloadUsers({ onUsersStatus, onUsersTable, onUsersCount } = {}) {
+export async function reloadUsers({ onUsersStatus, onUsersTable } = {}) {
   const notifyStatus = onUsersStatus || (() => {});
   const renderTable = onUsersTable || (() => {});
-  const renderCount = onUsersCount || (() => {});
 
   state.ui.loadingUsers = true;
   state.ui.errorUsers = null;
@@ -280,7 +333,6 @@ export async function reloadUsers({ onUsersStatus, onUsersTable, onUsersCount } 
   try {
     await fetchUsers();
     renderTable();
-    renderCount();
     notifyStatus("");
   } catch (err) {
     state.ui.loadingUsers = false;

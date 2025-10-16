@@ -70,5 +70,10 @@ export const authService = {
       },
       effectivePermissions
     };
+  },
+
+  async logout() {
+    // JWT es stateless → sólo confirmamos la intención en la respuesta.
+    return { loggedOut: true };
   }
 };

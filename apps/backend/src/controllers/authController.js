@@ -50,5 +50,15 @@ export const authController = {
     } catch (err) {
       return next(err);
     }
+  },
+
+  // POST /auth/logout
+  logout: async (req, res, next) => {
+    try {
+      const data = await authService.logout();
+      return res.json(ok(data));
+    } catch (err) {
+      return next(err);
+    }
   }
 };

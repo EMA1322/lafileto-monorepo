@@ -20,6 +20,8 @@ export const ErrorCodes = {
   CONFLICT:                   409,
   CATEGORY_REASSIGN_REQUIRED: 409,
   ROLE_IN_USE:                409,
+  SELF_DELETE_FORBIDDEN:      409,
+  LAST_ADMIN_FORBIDDEN:       409,
   // 422 → Validación semántica fallida.
   VALIDATION_ERROR:           422,
   // 429 → Rate limit superado o bloqueo temporal.

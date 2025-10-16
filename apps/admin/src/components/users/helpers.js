@@ -15,6 +15,8 @@ export function mapErrorToMessage(err, fallback = "Ocurrió un error.") {
   if (code === "RESOURCE_NOT_FOUND") return "El recurso no existe o fue eliminado.";
   if (code === "CONFLICT" || code === "RESOURCE_CONFLICT") return "Operación en conflicto. Revisá los datos.";
   if (code === "ROLE_IN_USE") return "No se puede eliminar: hay usuarios asignados a este rol.";
+  if (code === "SELF_DELETE_FORBIDDEN") return "No podés eliminar tu propio usuario.";
+  if (code === "LAST_ADMIN_FORBIDDEN") return "No se puede eliminar el último administrador.";
   if (code === "RATE_LIMITED") return "Demasiadas solicitudes. Probá en unos minutos.";
   return err?.message || fallback;
 }

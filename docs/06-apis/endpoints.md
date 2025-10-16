@@ -1,7 +1,7 @@
 ---
 status: Draft
 owner: Backend Lead + Front Leads
-last_update: 2025-03-12
+last_update: 2025-03-15
 scope: Tabla sincronizada con OpenAPI v1; filtros/paginación/orden/búsqueda consolidados; “Pendiente” donde falte implementar.
 ---
 
@@ -10,6 +10,7 @@ scope: Tabla sincronizada con OpenAPI v1; filtros/paginación/orden/búsqueda co
 
 ## Parámetros comunes
 - `page` (>=1), `pageSize` (1..100, **default 10**), `sort` (`field:asc|desc`[, ...]), `q` (texto).
+- `all=1` en `/users` devuelve todos los registros (sin paginar).
 - Filtros de **Products**: `categoryId`, `isOffer`.
 
 
@@ -24,12 +25,15 @@ scope: Tabla sincronizada con OpenAPI v1; filtros/paginación/orden/búsqueda co
 |---|---|---|---|---|---|
 | POST | `/auth/login` | — | `{ email, password }` | `{ token, user }` | 401, 422, 429 |
 | GET | `/auth/me` | JWT | — | `User` | 401 |
+| POST | `/auth/logout` | JWT | — | `{ loggedOut: true }` | 401 |
 
 ## Users (Admin)
 | Método | Path | Auth | Query/Body | Notas | Estado |
 |---|---|---|---|---|---|
-| GET | `/users` | JWT (`role-admin`) | `page,pageSize,search` | Orden `fullName ASC`, devuelve `{ items[{ id,fullName,email,phone,roleId,status }], meta{ page,pageSize,total } }` | **I1 listo** |
-| POST | `/users` | JWT (`role-admin`) | `{ fullName,email,phone,password,roleId,status }` | Alta de usuario; valida teléfono (`^[0-9()+\s-]{7,20}$`) y evita duplicados de email | **I1 listo** |
+| GET | `/users` | JWT (`role-admin`) | `page,pageSize,search,all=1` | `all=1` devuelve todo sin paginar; orden `fullName ASC`, envelope `{ items[{ id,fullName,email,phone,roleId,status }], meta{ page,pageSize,total } }` | **I2 listo** |
+| POST | `/users` | JWT (`role-admin`) | `{ fullName,email,phone,password,roleId,status }` | Alta de usuario; valida teléfono (`^[0-9()+\s-]{7,20}$`) y evita duplicados de email | **I2 listo** |
+| PUT | `/users/:id` | JWT (`role-admin`) | `{ fullName,phone,roleId,status }` | Actualiza datos (sin cambiar email/password); valida teléfono y existencia de rol | **I2 listo** |
+| DELETE | `/users/:id` | JWT (`role-admin`) | — | Borrado duro; bloquea auto-eliminación (`SELF_DELETE_FORBIDDEN`) y último admin (`LAST_ADMIN_FORBIDDEN`) | **I2 listo** |
 
 ## Roles (Admin)
 | Método | Path | Auth | Notas | Estado |
