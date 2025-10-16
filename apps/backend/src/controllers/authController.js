@@ -6,7 +6,8 @@ export const authController = {
   // POST /auth/login
   login: async (req, res, next) => {
     try {
-      const { email, password } = req.body;
+      const body = req.validated?.body ?? req.body ?? {};
+      const { email, password } = body;
       const isDev = process.env.NODE_ENV !== 'production';
       const startedAt = Date.now();
       const debugMeta = {
@@ -46,6 +47,16 @@ export const authController = {
   me: async (req, res, next) => {
     try {
       const data = await authService.me(req.user.id);
+      return res.json(ok(data));
+    } catch (err) {
+      return next(err);
+    }
+  },
+
+  // POST /auth/logout
+  logout: async (req, res, next) => {
+    try {
+      const data = await authService.logout();
       return res.json(ok(data));
     } catch (err) {
       return next(err);

@@ -32,6 +32,8 @@ export default defineConfig(() => {
           target: 'http://localhost:3000',
           changeOrigin: true,
           secure: false,
+          // Reescribimos el prefijo para alinear con las rutas del backend (evita 404 en /api/_debug/ping).
+          rewrite: (path) => path.replace(/^\/api/, ''),
         },
       },
       // HMR estable en LAN (opcional; si ves problemas de HMR):
