@@ -32,12 +32,11 @@ export default defineConfig(() => {
           target: 'http://localhost:3000',
           changeOrigin: true,
           secure: false,
-          // Reescribimos el prefijo para alinear con las rutas del backend (evita 404 en /api/_debug/ping).
-          rewrite: (path) => path.replace(/^\/api/, ''),
+
+          // Importante: no reescribimos el prefijo /api porque el backend expone /api/v1/*.
+
         },
       },
-      // HMR estable en LAN (opcional; si ves problemas de HMR):
-      // hmr: { host: '192.168.1.33', protocol: 'ws', port: 5174 },
     },
   };
 });
