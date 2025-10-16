@@ -18,7 +18,7 @@ export function renderRolesView() {
     tbodyRoles.innerHTML = "";
     return;
   }
-  if (state.roles.length === 0) {
+  if (!state.roles.length) {
     renderRolesStatus("No hay roles registrados.");
     tbodyRoles.innerHTML = "";
     return;
@@ -26,22 +26,21 @@ export function renderRolesView() {
 
   renderRolesStatus("");
   tbodyRoles.innerHTML = state.roles
-    .map((r) => {
-      const badge =
-        r.status === "active"
-          ? `<span class="badge badge--success">Activo</span>`
-          : `<span class="badge badge--muted">Inactivo</span>`;
+    .map((role) => {
+      const roleId = role.roleId || role.id || "";
+      const name = role.name || roleId;
+      const isProtected = roleId === "role-admin";
       return `
-      <tr data-role-id="${escapeHTML(r.id)}">
-        <td>${escapeHTML(r.name)}</td>
-        <td>${escapeHTML(r.description || "")}</td>
-        <td>${badge}</td>
-        <td class="users__row-actions">
-          <button class="btn btn-secondary" type="button" data-action="role-edit" title="Editar rol">Editar</button>
-          <button class="btn btn-secondary" type="button" data-action="role-perms" title="Permisos del rol">Permisos</button>
-        </td>
-      </tr>
-    `;
+        <tr data-role-id="${escapeHTML(roleId)}">
+          <td>${escapeHTML(roleId)}</td>
+          <td>${escapeHTML(name)}</td>
+          <td class="users__row-actions">
+            <button class="btn btn-secondary" type="button" data-action="role-edit">Editar</button>
+            <button class="btn btn-secondary" type="button" data-action="role-perms" title="Permisos del rol">Permisos</button>
+            <button class="btn btn-tertiary" type="button" data-action="role-delete" ${isProtected ? "disabled" : ""}>Eliminar</button>
+          </td>
+        </tr>
+      `;
     })
     .join("");
 }

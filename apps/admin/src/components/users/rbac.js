@@ -2,15 +2,7 @@ import * as rbacClient from "@/utils/rbac.js";
 
 export const MODULE_KEY = "users";
 export const MODULE_KEY_ALIAS = "user";
-export const ADMIN_ROLE_IDS = ["admin", "admin-supervisor"];
-export const MATRIX_MODULES = [
-  "admin-header",
-  "dashboard",
-  "products",
-  "categories",
-  "settings",
-  "users",
-];
+export const ADMIN_ROLE_IDS = ["role-admin"];
 
 export function computeIsAdmin({ roleId } = {}) {
   const rid = roleId ? String(roleId).toLowerCase() : "";
@@ -46,7 +38,7 @@ export function guardAction(
   } else if (action === "delete") {
     ok = (client.canDelete && client.canDelete(MODULE_KEY)) ||
       (client.canDelete && client.canDelete(MODULE_KEY_ALIAS));
-    if (String(roleId).toLowerCase() === "admin-supervisor") ok = false;
+    if (String(roleId).toLowerCase() === "role-supervisor") ok = false;
   }
 
   if (!ok) warn("No tenés permisos para esta acción.", "PERMISSION_DENIED");

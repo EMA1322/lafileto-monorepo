@@ -32,6 +32,7 @@ export default defineConfig(() => {
           target: 'http://localhost:3000',
           changeOrigin: true,
           secure: false,
+          // Importante: no reescribimos el prefijo /api porque el backend expone /api/v1/*.
         },
       },
       // HMR estable en LAN (opcional; si ves problemas de HMR):

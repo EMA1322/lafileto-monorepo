@@ -18,47 +18,38 @@ enum UserStatus {
 }
 // ── Models ──────────────────────────────────────────────────────────────────
 model User {
-  id                  Int        @id @default(autoincrement())
-  fullName            String     @db.VarChar(120)
-  email               String     @unique @db.VarChar(191)
-  passwordHash        String     @db.VarChar(255)
-  roleId              String
-  status              UserStatus @default(ACTIVE)
-  failedLoginAttempts Int        @default(0)
-  lockUntil           DateTime?  // fecha fin de bloqueo por intentos fallidos
-  createdAt           DateTime   @default(now())
-  updatedAt           DateTime   @updatedAt
-  deletedAt           DateTime?  // soft-delete
+  id           Int        @id @default(autoincrement())
+  fullName     String     @db.VarChar(120)
+  email        String     @unique @db.VarChar(191)
+  phone        String     @db.VarChar(32) @default("0000000000")
+  passwordHash String     @db.VarChar(255)
+  roleId       String
+  status       UserStatus @default(ACTIVE)
 
-  role     Role?      @relation(fields: [roleId], references: [roleId])
+  role Role? @relation(fields: [roleId], references: [roleId])
 
   @@index([roleId])
 }
 model Role {
-  roleId    String           @id @db.VarChar(50)  // ej.: "role-admin"
-  name      String           @db.VarChar(100)
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
+  roleId String @id @db.VarChar(50)  // ej.: "role-admin"
+  name   String @db.VarChar(100)
 
-  users          User[]
-  permissions    RolePermission[]
+  users       User[]
+  permissions RolePermission[]
 }
 model Module {
-  moduleKey String           @id @db.VarChar(50)  // ej.: "products"
-  name      String           @db.VarChar(100)
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
+  moduleKey String @id @db.VarChar(50)  // ej.: "products"
+  name      String @db.VarChar(100)
 
   rolePermissions RolePermission[]
 }
 model RolePermission {
   roleId    String
   moduleKey String
-  r         Boolean   @default(false) // read
-  w         Boolean   @default(false) // write (create)
-  u         Boolean   @default(false) // update
-  d         Boolean   @default(false) // delete
-  updatedAt DateTime  @updatedAt
+  r         Boolean @default(false) // read
+  w         Boolean @default(false) // write (create)
+  u         Boolean @default(false) // update
+  d         Boolean @default(false) // delete
 
   role   Role   @relation(fields: [roleId], references: [roleId])
   module Module @relation(fields: [moduleKey], references: [moduleKey])
@@ -67,7 +58,6 @@ model RolePermission {
   @@index([moduleKey])
 }
 model Setting {
-  key       String   @id @db.VarChar(64) // ej.: "isOpen", "whatsAppNumber"
-  value     Json?
-  updatedAt DateTime @updatedAt
+  key   String @id @db.VarChar(64) // ej.: "isOpen", "whatsAppNumber"
+  value Json?
 }

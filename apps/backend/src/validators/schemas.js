@@ -1,44 +1,169 @@
-// Zod schemas para I1
 import { z } from 'zod';
-
 
 export const loginSchema = z.object({
   email: z.string().email('Email inválido.'),
   password: z.string().min(1, 'La contraseña es obligatoria.')
 });
-export const roleCreateSchema = z.object({
-  roleId: z.string().min(3).max(50),
-  name: z.string().min(3).max(100)
-});
-export const roleUpdateSchema = z.object({
-  name: z.string().min(3).max(100)
-});
+
+const roleIdNormalizer = z
+  .string()
+  .min(3)
+  .max(50)
+  .transform((val) => String(val || '').trim().toLowerCase());
+
 export const roleIdParamSchema = z.object({
-  roleId: z.string().min(3).max(50)
+  roleId: roleIdNormalizer
 });
 
-
-// --- Esquema tolerante para matriz de permisos ---
-// Acepta objetos, convierte lo que venga (true/false, "true"/"false", 1/0, null/undefined)
-// a booleanos puros y rellena faltantes con false.
-// Rechaza únicamente el objeto vacío {}.
-export const permissionsMatrixSchemaLoose = z.any().transform((input) => {
-  const src = (input && typeof input === 'object') ? input : {};
-  const out = {};
-  for (const [mk, raw] of Object.entries(src)) {
-    const v = (raw && typeof raw === 'object') ? raw : {};
-    const toBool = (x) => {
-      if (x === true || x === 'true' || x === 1) return true;
-      return false;
-    };
-    out[mk] = {
-      r: toBool(v.r),
-      w: toBool(v.w),
-      u: toBool(v.u),
-      d: toBool(v.d)
-    };
+const boolish = z.any().transform((value) => {
+  if (value === true || value === 1 || value === '1') return true;
+  if (value === false || value === 0 || value === '0') return false;
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === 'true' || normalized === 'yes' || normalized === 'on') return true;
+    if (normalized === 'false' || normalized === 'no' || normalized === 'off') return false;
   }
-  return out;
-}).refine(obj => Object.keys(obj).length > 0, { message: 'Empty permissions matrix' });
+  return false;
+});
 
-// (Mantén también tu permissionsMatrixSchema “estricto” si lo quieres para otros usos)
+const permissionEntrySchema = z
+  .object({
+    moduleKey: z.string().trim().min(1, 'moduleKey requerido'),
+    r: boolish.optional().transform((val) => (val === undefined ? false : val)),
+    w: boolish.optional().transform((val) => (val === undefined ? false : val)),
+    u: boolish.optional().transform((val) => (val === undefined ? false : val)),
+    d: boolish.optional().transform((val) => (val === undefined ? false : val))
+  })
+  .transform((entry) => ({
+    moduleKey: entry.moduleKey,
+    r: entry.r,
+    w: entry.w,
+    u: entry.u,
+    d: entry.d
+  }));
+
+export const rolePermissionsUpdateSchema = z.object({
+  permissions: z.array(permissionEntrySchema).optional().transform((val) => val ?? [])
+});
+
+const PHONE_REGEX = /^[0-9()+\s-]{7,20}$/;
+
+const statusSchema = z
+  .string()
+  .transform((val) => String(val || '').trim().toUpperCase())
+  .refine((val) => val === 'ACTIVE' || val === 'INACTIVE', {
+    message: 'Estado inválido.'
+  });
+
+const userIdParam = z
+  .object({
+    id: z
+      .string()
+      .trim()
+      .regex(/^\d+$/, 'El identificador debe ser numérico.')
+      .transform((val) => Number.parseInt(val, 10))
+  })
+  .transform((data) => ({ id: data.id }));
+
+export const userIdParamSchema = userIdParam;
+
+export const userListQuerySchema = z.object({
+  page: z
+    .string()
+    .optional()
+    .transform((val) => (val ? Number.parseInt(val, 10) : undefined))
+    .refine((val) => val === undefined || (Number.isInteger(val) && val > 0), {
+      message: 'page debe ser un entero positivo.'
+    }),
+  pageSize: z
+    .string()
+    .optional()
+    .transform((val) => (val ? Number.parseInt(val, 10) : undefined))
+    .refine((val) => val === undefined || (Number.isInteger(val) && val > 0), {
+      message: 'pageSize debe ser un entero positivo.'
+    }),
+  search: z
+    .string()
+    .optional()
+    .transform((val) => (typeof val === 'string' ? val.trim() : undefined)),
+  all: z
+    .any()
+    .optional()
+    .transform((value) => {
+      if (value === undefined || value === null) return false;
+      return boolish.parse(value);
+    })
+});
+
+export const userCreateSchema = z.object({
+  fullName: z
+    .string()
+    .trim()
+    .min(2, 'El nombre completo debe tener al menos 2 caracteres.')
+    .max(120, 'El nombre completo es demasiado largo.'),
+  email: z
+    .string()
+    .trim()
+    .min(1, 'El email es obligatorio.')
+    .email('Email inválido.')
+    .transform((val) => val.toLowerCase()),
+  phone: z
+    .string()
+    .trim()
+    .min(1, 'El teléfono es obligatorio.')
+    .regex(PHONE_REGEX, 'Ingrese un teléfono válido (7-20 caracteres, solo dígitos y + () -).')
+    .transform((val) => val.replace(/\s+/g, ' ').trim()),
+  password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres.'),
+  roleId: z
+    .string()
+    .trim()
+    .min(3, 'El rol es obligatorio.')
+    .max(50, 'El rol es demasiado largo.')
+    .transform((val) => val.toLowerCase()),
+  status: statusSchema.optional().default('ACTIVE')
+});
+
+export const userUpdateSchema = z.object({
+  fullName: z
+    .string()
+    .trim()
+    .min(2, 'El nombre completo debe tener al menos 2 caracteres.')
+    .max(120, 'El nombre completo es demasiado largo.'),
+  phone: z
+    .string()
+    .trim()
+    .min(1, 'El teléfono es obligatorio.')
+    .regex(PHONE_REGEX, 'Ingrese un teléfono válido (7-20 caracteres, solo dígitos y + () -).')
+    .transform((val) => val.replace(/\s+/g, ' ').trim()),
+  roleId: z
+    .string()
+    .trim()
+    .min(3, 'El rol es obligatorio.')
+    .max(50, 'El rol es demasiado largo.')
+    .transform((val) => val.toLowerCase()),
+  status: statusSchema
+});
+
+export const roleCreateSchema = z.object({
+  roleId: z
+    .string()
+    .trim()
+    .min(3, 'El identificador del rol es muy corto.')
+    .max(50, 'El identificador del rol es muy largo.')
+    .regex(/^role-[a-z0-9-]+$/i, 'El identificador debe comenzar con role- y usar letras, números o guiones.')
+    .transform((val) => val.toLowerCase())
+    .optional(),
+  name: z
+    .string()
+    .trim()
+    .min(2, 'El nombre es obligatorio.')
+    .max(80, 'El nombre del rol es demasiado largo.')
+});
+
+export const roleUpdateSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(2, 'El nombre es obligatorio.')
+    .max(80, 'El nombre del rol es demasiado largo.')
+});

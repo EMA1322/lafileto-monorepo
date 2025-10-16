@@ -1,7 +1,9 @@
-// Router raíz v1: health y módulos reales (auth, rbac)
+// Router raíz v1: health y módulos reales (auth, users, roles, modules)
 import { Router } from "express";
 import { authRoutes } from "./auth.routes.js";
-import { rbacRoutes } from "./rbac.routes.js";
+import { usersRoutes } from "./users.routes.js";
+import { rolesRoutes } from "./roles.routes.js";
+import { modulesRoutes } from "./modules.routes.js";
 
 export const router = Router();
 
@@ -24,7 +26,9 @@ if (process.env.NODE_ENV !== "production") {
 
 // Routers reales bajo /api/v1
 router.use("/auth", authRoutes);
-router.use("/rbac", rbacRoutes);
+router.use("/users", usersRoutes);
+router.use("/roles", rolesRoutes);
+router.use("/modules", modulesRoutes);
 
 
 

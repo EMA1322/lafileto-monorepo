@@ -1,25 +1,27 @@
-import { state, snackWarn } from "../state.js";
+import {
+  state,
+  snackWarn,
+  snackErr,
+  snackOk,
+  toggleUserStatus,
+  findUserById
+} from "../state.js";
 import { guardAction } from "../rbac.js";
+import { mapErrorToMessage } from "../helpers.js";
 
 import {
-  openUserViewModal,
-  openUserFormModal,
-  openConfirmDeleteModal,
-  openRoleEditModal,
   openPermissionsMatrixModal,
+  openCreateUserModal,
+  openEditUserModal,
+  openDeleteUserModal,
+  openRoleFormModal,
+  openRoleDeleteModal
 } from "./modals.js";
 import { renderUsersTable } from "./usersTable.js";
+import { renderUsersStatus, renderRolesStatus } from "./status.js";
 import { applyRBAC } from "./viewRBAC.js";
 import { els } from "./dom.js";
 import { switchTab } from "./tabs.js";
-
-function debounce(fn, wait = 250) {
-  let t;
-  return (...args) => {
-    clearTimeout(t);
-    t = setTimeout(() => fn(...args), wait);
-  };
-}
 
 export function bindUI() {
   const root = document.querySelector(".users");
@@ -28,76 +30,38 @@ export function bindUI() {
   const {
     tabUsers,
     tabRoles,
-    search,
-    pageSize,
-    btnNew,
-    pagePrev,
-    pageNext,
-    tbodyUsers,
     tbodyRoles,
+    tbodyUsers,
+    btnNew,
+    btnRoleNew
   } = els();
 
   tabUsers?.addEventListener("click", () => {
     switchTab("users");
     applyRBAC();
   });
+
   tabRoles?.addEventListener("click", () => {
     if (!state.rbac.isAdmin) return;
     switchTab("roles");
     applyRBAC();
   });
 
-  search?.addEventListener(
-    "input",
-    debounce((e) => {
-      state.filters.query = e.target.value || "";
-      state.filters.page = 1;
-      renderUsersTable();
-    }, 250)
-  );
-
-  pageSize?.addEventListener("change", (e) => {
-    state.filters.pageSize = Number(e.target.value) || 10;
-    state.filters.page = 1;
-    renderUsersTable();
-  });
-
-  pagePrev?.addEventListener("click", () => {
-    state.filters.page = Math.max(1, state.filters.page - 1);
-    renderUsersTable();
-  });
-  pageNext?.addEventListener("click", () => {
-    state.filters.page = state.filters.page + 1;
-    renderUsersTable();
-  });
-
   btnNew?.addEventListener("click", () => {
-    if (!guardAction("write", { roleId: state.rbac.roleId, snackWarn })) return;
-    openUserFormModal();
+    const canWrite = guardAction("write", { roleId: state.rbac.roleId, snackWarn });
+    if (!canWrite) return;
+    openCreateUserModal();
   });
 
-  tbodyUsers?.addEventListener("click", (ev) => {
-    const target = ev.target.closest("[data-action]");
-    if (!target) return;
-    const action = target.dataset.action;
-    const tr = target.closest("tr");
-    if (!tr) return;
-    const id = tr.dataset.id;
-    const user = state.users.find((u) => u.id === id);
-    if (!user) return;
-
-    if (action === "view") {
-      openUserViewModal(user);
-    } else if (action === "edit") {
-      if (!guardAction("update", { roleId: state.rbac.roleId, snackWarn })) return;
-      openUserFormModal(user);
-    } else if (action === "delete") {
-      if (!guardAction("delete", { roleId: state.rbac.roleId, snackWarn })) return;
-      openConfirmDeleteModal(user);
+  btnRoleNew?.addEventListener("click", () => {
+    if (!state.rbac.isAdmin) {
+      snackWarn("Solo los administradores pueden crear roles.", "PERMISSION_DENIED");
+      return;
     }
+    openRoleFormModal({ mode: "create" });
   });
 
-  tbodyRoles?.addEventListener("click", (ev) => {
+  tbodyRoles?.addEventListener("click", async (ev) => {
     const btn = ev.target.closest("[data-action]");
     if (!btn) return;
     if (!state.rbac.isAdmin) return;
@@ -106,14 +70,85 @@ export function bindUI() {
     const roleId = tr?.dataset.roleId;
     if (!roleId) return;
 
-    const role = state.roles.find((r) => r.id === roleId);
+    const role = state.roles.find((r) => r.roleId === roleId || r.id === roleId);
     if (!role) return;
 
     const action = btn.dataset.action;
     if (action === "role-edit") {
-      openRoleEditModal(role);
-    } else if (action === "role-perms") {
-      openPermissionsMatrixModal(role);
+      if (!state.rbac.isAdmin) return;
+      openRoleFormModal({ mode: "edit", role });
+      return;
+    }
+
+    if (action === "role-delete") {
+      if (!state.rbac.isAdmin) return;
+      if (btn.disabled) return;
+      openRoleDeleteModal(role);
+      return;
+    }
+
+    if (action === "role-perms") {
+      const canUpdate = guardAction("update", { roleId: state.rbac.roleId, snackWarn });
+      if (!canUpdate) return;
+      try {
+        await openPermissionsMatrixModal(role);
+      } catch (err) {
+        console.error("[users] openPermissionsMatrixModal failed", err);
+        renderRolesStatus("No se pudo abrir la matriz de permisos.", "error");
+      }
+    }
+  });
+
+  tbodyUsers?.addEventListener("click", async (ev) => {
+    const btn = ev.target.closest("[data-action]");
+    if (!btn) return;
+
+    const tr = btn.closest("tr[data-id]");
+    if (!tr) return;
+    const userId = tr.dataset.id;
+    if (!userId) return;
+
+    const action = btn.dataset.action;
+
+    if (action === "user-edit") {
+      const canUpdate = guardAction("update", { roleId: state.rbac.roleId, snackWarn });
+      if (!canUpdate) return;
+      const user = findUserById(userId);
+      if (!user) {
+        snackErr("No se encontró el usuario.");
+        return;
+      }
+      openEditUserModal(user);
+      return;
+    }
+
+    if (action === "user-delete") {
+      const canDelete = guardAction("delete", { roleId: state.rbac.roleId, snackWarn });
+      if (!canDelete) return;
+      const user = findUserById(userId);
+      if (!user) {
+        snackErr("No se encontró el usuario.");
+        return;
+      }
+      openDeleteUserModal(user);
+      return;
+    }
+
+    if (action === "user-toggle-status") {
+      const canUpdate = guardAction("update", { roleId: state.rbac.roleId, snackWarn });
+      if (!canUpdate) return;
+      const nextStatus = btn.dataset.nextStatus || "INACTIVE";
+      btn.disabled = true;
+      try {
+        await toggleUserStatus(userId, nextStatus);
+        snackOk("Estado actualizado correctamente.");
+        renderUsersTable();
+      } catch (err) {
+        snackErr(mapErrorToMessage(err, "No se pudo actualizar el estado."), err?.code);
+        console.error("[users] toggle status failed", err);
+      } finally {
+        btn.disabled = false;
+      }
     }
   });
 }
