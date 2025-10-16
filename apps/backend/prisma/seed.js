@@ -44,12 +44,13 @@ async function upsertSetting(key, value) {
   });
 }
 
-async function upsertAdminUser({ email, fullName, password, roleId }) {
+async function upsertAdminUser({ email, fullName, password, roleId, phone }) {
   const passwordHash = bcrypt.hashSync(password, 10);
+  const normalizedPhone = typeof phone === 'string' && phone.trim() ? phone.trim() : '1100000000';
   await prisma.user.upsert({
     where: { email },
-    update: { fullName, passwordHash, roleId, status: 'ACTIVE' },
-    create: { fullName, email, passwordHash, roleId, status: 'ACTIVE' }
+    update: { fullName, passwordHash, roleId, status: 'ACTIVE', phone: normalizedPhone },
+    create: { fullName, email, passwordHash, roleId, status: 'ACTIVE', phone: normalizedPhone }
   });
 }
 
@@ -104,7 +105,8 @@ async function seedI1() {
     email:   process.env.ADMIN_EMAIL    || 'admin@lafileto.ar',
     fullName:process.env.ADMIN_FULLNAME || 'La Fileto Admin',
     password:process.env.ADMIN_PASSWORD || 'ChangeMe!2025',
-    roleId: 'role-admin'
+    roleId: 'role-admin',
+    phone:  process.env.ADMIN_PHONE     || '+54 11 2345-6789'
   });
 
   console.log('▶ Seeding settings…');

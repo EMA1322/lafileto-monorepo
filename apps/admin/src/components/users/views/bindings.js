@@ -1,7 +1,12 @@
 import { state, snackWarn, reloadUsers } from "../state.js";
 import { guardAction } from "../rbac.js";
 
-import { openPermissionsMatrixModal } from "./modals.js";
+import {
+  openPermissionsMatrixModal,
+  openCreateUserModal,
+  openRoleFormModal,
+  openRoleDeleteModal
+} from "./modals.js";
 import { renderUsersTable, renderUsersCount } from "./usersTable.js";
 import { renderUsersStatus, renderRolesStatus } from "./status.js";
 import { applyRBAC } from "./viewRBAC.js";
@@ -33,7 +38,9 @@ export function bindUI() {
     pageSize,
     pagePrev,
     pageNext,
-    tbodyRoles
+    tbodyRoles,
+    btnNew,
+    btnRoleNew
   } = els();
 
   tabUsers?.addEventListener("click", () => {
@@ -45,6 +52,20 @@ export function bindUI() {
     if (!state.rbac.isAdmin) return;
     switchTab("roles");
     applyRBAC();
+  });
+
+  btnNew?.addEventListener("click", () => {
+    const canWrite = guardAction("write", { roleId: state.rbac.roleId, snackWarn });
+    if (!canWrite) return;
+    openCreateUserModal();
+  });
+
+  btnRoleNew?.addEventListener("click", () => {
+    if (!state.rbac.isAdmin) {
+      snackWarn("Solo los administradores pueden crear roles.", "PERMISSION_DENIED");
+      return;
+    }
+    openRoleFormModal({ mode: "create" });
   });
 
   const requestUsers = () => reloadUsers({
@@ -101,6 +122,19 @@ export function bindUI() {
     if (!role) return;
 
     const action = btn.dataset.action;
+    if (action === "role-edit") {
+      if (!state.rbac.isAdmin) return;
+      openRoleFormModal({ mode: "edit", role });
+      return;
+    }
+
+    if (action === "role-delete") {
+      if (!state.rbac.isAdmin) return;
+      if (btn.disabled) return;
+      openRoleDeleteModal(role);
+      return;
+    }
+
     if (action === "role-perms") {
       const canUpdate = guardAction("update", { roleId: state.rbac.roleId, snackWarn });
       if (!canUpdate) return;

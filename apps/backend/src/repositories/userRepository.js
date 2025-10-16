@@ -1,19 +1,5 @@
-// Acceso a usuarios
-// - Maneja búsquedas/paginación y compatibilidad con columnas opcionales (phone)
-import { Prisma } from '@prisma/client';
+// Acceso a usuarios (Prisma directo)
 import { prisma } from '../config/prisma.js';
-
-let userMetaPromise = null;
-
-async function ensureUserMeta() {
-  if (!userMetaPromise) {
-    userMetaPromise = prisma.$queryRaw`SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
-      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'User' AND COLUMN_NAME = 'phone'`
-      .then(rows => ({ hasPhone: Array.isArray(rows) && rows.length > 0 }))
-      .catch(() => ({ hasPhone: false }));
-  }
-  return userMetaPromise;
-}
 
 export const userRepository = {
   findByEmail: (email) => prisma.user.findUnique({ where: { email } }),
@@ -32,7 +18,7 @@ export const userRepository = {
 
     const skip = (page - 1) * pageSize;
 
-    const [rows, total, meta] = await Promise.all([
+    const [items, total] = await Promise.all([
       prisma.user.findMany({
         where,
         orderBy: { fullName: 'asc' },
@@ -42,33 +28,18 @@ export const userRepository = {
           id: true,
           fullName: true,
           email: true,
+          phone: true,
           roleId: true,
           status: true
         }
       }),
-      prisma.user.count({ where }),
-      ensureUserMeta()
+      prisma.user.count({ where })
     ]);
 
-    let phoneById = null;
-    if (meta.hasPhone && rows.length > 0) {
-      const ids = rows.map((u) => u.id);
-      const phoneRows = await prisma.$queryRaw`SELECT id, phone FROM User WHERE id IN (${Prisma.join(ids)})`;
-      phoneById = new Map();
-      for (const r of phoneRows) {
-        phoneById.set(Number(r.id), r.phone ?? null);
-      }
-    }
-
-    const items = rows.map((user) => ({
-      id: user.id,
-      fullName: user.fullName,
-      email: user.email,
-      roleId: user.roleId,
-      status: user.status,
-      phone: phoneById ? phoneById.get(user.id) ?? null : null
-    }));
-
     return { items, total };
-  }
+  },
+
+  create: (payload) => prisma.user.create({ data: payload }),
+
+  countByRoleId: (roleId) => prisma.user.count({ where: { roleId } })
 };

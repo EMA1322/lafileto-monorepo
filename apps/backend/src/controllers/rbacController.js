@@ -11,6 +11,27 @@ export const rbacController = {
     } catch (err) { next(err); }
   },
 
+  createRole: async (req, res, next) => {
+    try {
+      const role = await rbacService.createRole(req.body);
+      return res.status(201).json(ok(role));
+    } catch (err) { next(err); }
+  },
+
+  updateRole: async (req, res, next) => {
+    try {
+      const role = await rbacService.updateRole(req.params.roleId, req.body);
+      return res.json(ok(role));
+    } catch (err) { next(err); }
+  },
+
+  deleteRole: async (req, res, next) => {
+    try {
+      const out = await rbacService.deleteRole(req.params.roleId);
+      return res.json(ok(out));
+    } catch (err) { next(err); }
+  },
+
   // Modules
   listModules: async (_req, res, next) => {
     try {

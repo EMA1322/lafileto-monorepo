@@ -5,6 +5,7 @@ import { userRepository } from '../repositories/userRepository.js';
 import { rolePermissionRepository } from '../repositories/rolePermissionRepository.js';
 import { signJwt } from '../utils/jwt.js';
 import { createError } from '../utils/errors.js';
+import { comparePassword } from '../utils/bcrypt.js';
 
 async function buildEffectivePermissions(roleId) {
   const rows = await rolePermissionRepository.findByRole(roleId);
@@ -15,21 +16,6 @@ async function buildEffectivePermissions(roleId) {
   return map;
 }
 
-let bcryptModulePromise;
-
-const getBcrypt = async () => {
-  if (!bcryptModulePromise) {
-    // Cargamos on-demand para poder arrojar un error claro si falta la dep.
-    bcryptModulePromise = import('bcryptjs')
-      .then(mod => mod.default || mod)
-      .catch(error => {
-        error.message = 'Missing dependency bcryptjs: run "pnpm install" in apps/backend.';
-        throw error;
-      });
-  }
-  return bcryptModulePromise;
-};
-
 export const authService = {
   async login(email, password) {
     const user = await userRepository.findByEmail(email);
@@ -38,8 +24,7 @@ export const authService = {
       throw createError('AUTH_INVALID', 'Credenciales inválidas.');
     }
 
-    const bcrypt = await getBcrypt();
-    const isOk = bcrypt.compareSync(password, user.passwordHash);
+    const isOk = await comparePassword(password, user.passwordHash);
     if (!isOk) {
       throw createError('AUTH_INVALID', 'Credenciales inválidas.');
     }

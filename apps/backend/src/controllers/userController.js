@@ -10,5 +10,14 @@ export const userController = {
     } catch (err) {
       next(err);
     }
+  },
+
+  create: async (req, res, next) => {
+    try {
+      const user = await userService.createUser(req.body);
+      return res.status(201).json(ok(user));
+    } catch (err) {
+      next(err);
+    }
   }
 };

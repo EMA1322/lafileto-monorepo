@@ -10,6 +10,7 @@ export function els() {
     pageSize: document.querySelector("#users-page-size"),
     search: document.querySelector("#users-search"),
     btnNew: document.querySelector("#btn-user-new"),
+    btnRoleNew: document.querySelector("#btn-role-new"),
     statusUsers: document.querySelector("#users-status"),
     statusRoles: document.querySelector("#roles-status"),
     tableUsers: document.querySelector("#users-table"),

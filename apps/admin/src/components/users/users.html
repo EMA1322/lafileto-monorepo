@@ -3,30 +3,19 @@
 <!--
   MÓDULO ADMIN: USERS (Usuarios + Roles & Permisos)
   -------------------------------------------------
-  - Estructura HTML (BEM) sin CSS/JS. El JS inyectará datos y gestionará eventos.
-  - Accesibilidad: tabs con roles ARIA, paneles con role="tabpanel", tabla semántica,
-    y región aria-live para mensajes de estado.
-  - RBAC (UI): la pestaña "Roles & Permisos" se ocultará por JS si el usuario no es Admin.
-  - Notas:
-    • Todo el texto visible en español.
-    • IDs/clases/atributos para JS en inglés.
+  - HTML base; JS agrega datos y eventos.
+  - Comentarios visibles en español.
+  - RBAC controla pestañas/botones desde JS.
 -->
-<!-- Code-splitting: CSS local del módulo Users -->
 <link rel="stylesheet" href="/src/styles/users.css" />
 
 <section class="users container" role="region" aria-labelledby="users-title">
-  <!-- Título principal de la vista -->
   <header class="users__header">
     <h1 id="users-title">Usuarios</h1>
-    <!-- Descripción breve (opcional) -->
     <p class="users__subtitle">Administra usuarios y permisos del sistema.</p>
   </header>
 
-  <!-- =========================
-       TABS: Usuarios | Roles & Permisos
-       ========================= -->
   <nav class="users__tabs" role="tablist" aria-label="Secciones de Usuarios">
-    <!-- Pestaña: Usuarios (activa por defecto) -->
     <button
       id="tab-users"
       class="users__tab is-active"
@@ -35,11 +24,10 @@
       aria-controls="panel-users"
       tabindex="0"
       data-tab="users"
-      type="button">
+      type="button"
+    >
       Usuarios
     </button>
-
-    <!-- Pestaña: Roles & Permisos (visible solo para Admin vía JS) -->
     <button
       id="tab-roles"
       class="users__tab"
@@ -48,23 +36,19 @@
       aria-controls="panel-roles"
       tabindex="-1"
       data-tab="roles"
-      type="button">
+      type="button"
+    >
       Roles &amp; Permisos
     </button>
   </nav>
 
-  <!-- =========================
-       PANEL: Usuarios
-       ========================= -->
   <section
     id="panel-users"
     class="users__panel is-active card"
     role="tabpanel"
     aria-labelledby="tab-users"
   >
-    <!-- Toolbar: tamaño de página, buscador y botón Nuevo -->
     <header class="users__toolbar" aria-label="Herramientas de listado de usuarios">
-      <!-- Select de cantidad por página -->
       <div class="users__page-size">
         <label for="users-page-size">Mostrar</label>
         <select id="users-page-size" name="pageSize">
@@ -75,7 +59,6 @@
         <span>por página</span>
       </div>
 
-      <!-- Buscador -->
       <div class="users__search">
         <label for="users-search" class="sr-only">Buscar</label>
         <input
@@ -88,24 +71,16 @@
         />
       </div>
 
-      <!-- Acciones de lista -->
       <div class="users__actions">
-        <!-- Botón "Nuevo usuario" (visible solo si RBAC → Write) -->
         <button id="btn-user-new" class="btn" type="button" data-action="user-new" hidden>
           + Nuevo usuario
         </button>
       </div>
     </header>
 
-    <!-- Contador de resultados -->
-    <div class="users__counter" aria-live="polite" id="users-count">
-      <!-- Ejemplo dinámico: “Mostrando 10 de 42 usuarios” -->
-    </div>
-
-    <!-- Estado de la vista: loading/empty/error/success (gestiona JS) -->
+    <div class="users__counter" aria-live="polite" id="users-count"></div>
     <div id="users-status" class="users__status" aria-live="polite"></div>
 
-    <!-- Tabla responsive de usuarios -->
     <div class="users__table-wrap">
       <table id="users-table" class="users__table" role="table">
         <caption class="sr-only">Listado de usuarios</caption>
@@ -118,24 +93,17 @@
             <th scope="col">Estado</th>
           </tr>
         </thead>
-        <tbody id="users-tbody" class="users__tbody">
-          <!-- Filas dinámicas inyectadas por JS -->
-        </tbody>
+        <tbody id="users-tbody" class="users__tbody"></tbody>
       </table>
     </div>
 
-    <!-- Paginación -->
     <nav id="users-pagination" class="users__pagination" aria-label="Paginación de usuarios">
-      <!-- JS inyecta los controles reales; se dejan marcadores básicos -->
       <button class="users__page-btn" id="users-page-prev" type="button" data-page="prev" aria-label="Página anterior">Anterior</button>
       <span class="users__page-info" id="users-page-info" aria-live="polite"></span>
       <button class="users__page-btn" id="users-page-next" type="button" data-page="next" aria-label="Página siguiente">Siguiente</button>
     </nav>
   </section>
 
-  <!-- =========================
-       PANEL: Roles & Permisos (solo Admin)
-       ========================= -->
   <section
     id="panel-roles"
     class="roles__panel card"
@@ -143,107 +111,88 @@
     aria-labelledby="tab-roles"
     hidden
   >
-    <!-- Estado de la vista de roles -->
-    <div id="roles-status" class="roles__status" aria-live="polite"></div>
+    <header class="roles__toolbar">
+      <div id="roles-status" class="roles__status" aria-live="polite"></div>
+      <div class="roles__actions">
+        <button id="btn-role-new" class="btn" type="button" data-action="role-new">
+          + Nuevo rol
+        </button>
+      </div>
+    </header>
 
-    <!-- Tabla de roles -->
     <div class="roles__table-wrap">
       <table id="roles-table" class="roles__table" role="table">
         <caption class="sr-only">Listado de roles</caption>
         <thead class="roles__thead">
           <tr>
             <th scope="col">Rol</th>
-            <th scope="col">Descripción</th>
-            <th scope="col">Estado</th>
-            <th scope="col" class="roles__th-actions">Acciones</th>
+            <th scope="col">Nombre visible</th>
+            <th scope="col">Acciones</th>
           </tr>
         </thead>
-        <tbody id="roles-tbody" class="roles__tbody">
-          <!-- Filas dinámicas: acciones por fila → Editar rol | Permisos -->
-        </tbody>
+        <tbody id="roles-tbody" class="roles__tbody"></tbody>
       </table>
     </div>
-
-    <!-- Nota de alcance v1 -->
-    <p class="roles__note">
-      <strong>Nota:</strong> Alta y baja de roles está deshabilitada en esta versión.
-    </p>
   </section>
 </section>
 
-<!-- =======================================================================
-     TEMPLATES (para inyectar en el modal global con utils/modals.js)
-     ======================================================================= -->
-
-<!-- ========== Template: User Form (Crear/Editar) ========== -->
+<!-- Templates -->
 <template id="tpl-user-form">
-  <!--
-    Formulario accesible (sin action): lo maneja JS.
-    Validaciones: email único, phone 8–12 dígitos, campos requeridos.
-  -->
   <form id="user-form" class="users__form" novalidate>
-    <!-- Campo oculto para ID (sólo en edición) -->
-    <input type="hidden" id="user-id" name="id" />
-
     <fieldset class="users__form-grid">
-      <legend class="sr-only">Datos del usuario</legend>
+      <legend class="sr-only">Crear usuario</legend>
 
-      <!-- Nombre -->
       <div class="form__field">
-        <label for="user-firstName">Nombre</label>
-        <input id="user-firstName" name="firstName" type="text" required autocomplete="off" />
-        <p id="err-firstName" class="form__error" hidden>Ingrese un nombre válido.</p>
+        <label for="user-fullName">Nombre completo</label>
+        <input id="user-fullName" name="fullName" type="text" required minlength="2" maxlength="120" autocomplete="off" />
+        <p id="err-fullName" class="form__error" hidden>Ingrese un nombre válido (2-120 caracteres).</p>
       </div>
 
-      <!-- Apellidos -->
-      <div class="form__field">
-        <label for="user-lastName">Apellidos</label>
-        <input id="user-lastName" name="lastName" type="text" required autocomplete="off" />
-        <p id="err-lastName" class="form__error" hidden>Ingrese apellidos válidos.</p>
-      </div>
-
-      <!-- Email -->
       <div class="form__field">
         <label for="user-email">Email</label>
         <input id="user-email" name="email" type="email" required autocomplete="off" aria-describedby="hint-email err-email" />
         <small id="hint-email" class="form__hint">Debe ser único en el sistema.</small>
-        <p id="err-email" class="form__error" hidden>Ingrese un email válido y no registrado.</p>
+        <p id="err-email" class="form__error" hidden>Ingrese un email válido que no esté registrado.</p>
       </div>
 
-      <!-- Teléfono -->
       <div class="form__field">
         <label for="user-phone">Teléfono</label>
-        <input id="user-phone" name="phone" type="tel" inputmode="numeric" pattern="[0-9]{8,12}" required aria-describedby="hint-phone err-phone" />
-        <small id="hint-phone" class="form__hint">Solo dígitos (8–12).</small>
-        <p id="err-phone" class="form__error" hidden>Ingrese un teléfono válido (8–12 dígitos).</p>
+        <input
+          id="user-phone"
+          name="phone"
+          type="tel"
+          required
+          pattern="^[0-9()+\s-]{7,20}$"
+          minlength="7"
+          maxlength="20"
+          placeholder="Ej: +54 11 2345-6789"
+          aria-describedby="hint-phone err-phone"
+        />
+        <small id="hint-phone" class="form__hint">Solo números, espacios, +, - o (). 7 a 20 caracteres.</small>
+        <p id="err-phone" class="form__error" hidden>Ingrese un teléfono válido (7-20 caracteres).</p>
       </div>
 
-      <!-- Rol -->
+      <div class="form__field">
+        <label for="user-password">Contraseña</label>
+        <input id="user-password" name="password" type="password" required minlength="8" autocomplete="new-password" />
+        <p id="err-password" class="form__error" hidden>La contraseña debe tener al menos 8 caracteres.</p>
+      </div>
+
       <div class="form__field">
         <label for="user-roleId">Rol</label>
-        <select id="user-roleId" name="roleId" required aria-describedby="err-roleId">
-          <!-- Opciones dinámicas cargadas por JS -->
-        </select>
-        <p id="err-roleId" class="form__error" hidden>Seleccione un rol.</p>
+        <select id="user-roleId" name="roleId" required aria-describedby="err-roleId"></select>
+        <p id="err-roleId" class="form__error" hidden>Seleccione un rol válido.</p>
       </div>
 
-      <!-- Estado -->
       <div class="form__field">
         <label for="user-status">Estado</label>
         <select id="user-status" name="status" required>
-          <option value="active">Activo</option>
-          <option value="inactive">Inactivo</option>
+          <option value="ACTIVE">Activo</option>
+          <option value="INACTIVE">Inactivo</option>
         </select>
-      </div>
-
-      <!-- Fecha de creación (solo lectura en edición) -->
-      <div class="form__field">
-        <label for="user-createdAt">Creado</label>
-        <input id="user-createdAt" name="createdAt" type="text" readonly />
       </div>
     </fieldset>
 
-    <!-- Botones de acción -->
     <div class="modal__actions">
       <button id="user-submit" class="btn" type="submit" data-action="user-submit">Guardar</button>
       <button class="btn btn-secondary" type="button" data-close-modal>Cancelar</button>
@@ -251,99 +200,43 @@
   </form>
 </template>
 
-<!-- ========== Template: User View (Solo lectura) ========== -->
-<template id="tpl-user-view">
-  <!-- Vista de detalle de usuario (read-only) -->
-  <section class="users__view">
-    <h3 class="users__view-title">Detalles del usuario</h3>
-    <dl class="users__view-grid">
-      <div>
-        <dt>Nombre</dt><dd id="vw-firstName"></dd>
-      </div>
-      <div>
-        <dt>Apellidos</dt><dd id="vw-lastName"></dd>
-      </div>
-      <div>
-        <dt>Email</dt><dd id="vw-email"></dd>
-      </div>
-      <div>
-        <dt>Teléfono</dt><dd id="vw-phone"></dd>
-      </div>
-      <div>
-        <dt>Rol</dt><dd id="vw-roleName"></dd>
-      </div>
-      <div>
-        <dt>Estado</dt><dd id="vw-statusBadge"></dd>
-      </div>
-      <div>
-        <dt>Creado</dt><dd id="vw-createdAt"></dd>
-      </div>
-    </dl>
-    <div class="modal__actions">
-      <button class="btn btn-secondary" type="button" data-close-modal>Cerrar</button>
-    </div>
-  </section>
-</template>
-
-<!-- ========== Template: Confirm Delete (Soft delete) ========== -->
-<template id="tpl-confirm-delete">
-  <!-- Confirmación de cambio de estado a "inactive" (soft delete) -->
-  <section class="confirm__wrap" role="document">
-    <h3 class="confirm__title">Confirmar eliminación</h3>
-    <p class="confirm__text">
-      Esta acción marcará al usuario como <strong>Inactivo</strong>. Podrá reactivarse luego.
-      ¿Desea continuar?
-    </p>
-    <div class="modal__actions">
-      <button id="btn-confirm-delete" class="btn" type="button" data-action="confirm-delete">Sí, confirmar</button>
-      <button class="btn btn-secondary" type="button" data-close-modal>No, cancelar</button>
-    </div>
-  </section>
-</template>
-
-<!-- ========== Template: Role Edit (Editar rol) ========== -->
-<template id="tpl-role-edit">
-  <!-- Edición básica de rol (v1 sin alta/baja) -->
+<template id="tpl-role-form">
   <form id="role-form" class="roles__form" novalidate>
     <fieldset class="roles__form-grid">
-      <legend class="sr-only">Editar rol</legend>
-
-      <input type="hidden" id="role-id" name="id" />
-
-      <div class="form__field">
-        <label for="role-name">Nombre del rol</label>
-        <input id="role-name" name="name" type="text" required />
-        <p id="err-role-name" class="form__error" hidden>Ingrese un nombre de rol válido.</p>
-      </div>
+      <legend class="sr-only">Formulario de rol</legend>
+      <input type="hidden" id="role-id" name="roleId" />
 
       <div class="form__field">
-        <label for="role-description">Descripción</label>
-        <textarea id="role-description" name="description" rows="3" maxlength="200"></textarea>
-      </div>
-
-      <div class="form__field">
-        <label for="role-status">Estado</label>
-        <select id="role-status" name="status" required>
-          <option value="active">Activo</option>
-          <option value="inactive">Inactivo</option>
-        </select>
+        <label for="role-name">Nombre visible</label>
+        <input id="role-name" name="name" type="text" required minlength="2" maxlength="80" />
+        <p id="err-role-name" class="form__error" hidden>Ingrese un nombre válido (2-80 caracteres).</p>
       </div>
     </fieldset>
 
     <div class="modal__actions">
-      <button id="role-submit" class="btn" type="submit" data-action="role-submit">Guardar</button>
+      <button id="role-submit" class="btn" type="submit">Guardar</button>
       <button class="btn btn-secondary" type="button" data-close-modal>Cancelar</button>
     </div>
   </form>
 </template>
 
-<!-- ========== Template: Permissions Matrix (R/W/U/D por módulo) ========== -->
+<template id="tpl-role-delete">
+  <section class="confirm__wrap" role="document">
+    <h3 class="confirm__title">Eliminar rol</h3>
+    <p class="confirm__text">¿Confirmás la eliminación del rol <strong id="role-del-name"></strong>?</p>
+    <p class="confirm__warning">Esta acción no se puede deshacer.</p>
+    <div class="modal__actions">
+      <button id="btn-role-delete" class="btn btn-danger" type="button">Eliminar</button>
+      <button class="btn btn-secondary" type="button" data-close-modal>Cancelar</button>
+    </div>
+  </section>
+</template>
+
 <template id="tpl-permissions-matrix">
-  <!-- Matriz de permisos por rol: módulos vs R/W/U/D -->
   <section class="perm__wrap" role="document" aria-describedby="perm-help">
     <h3 class="perm__title">Permisos del rol: <span id="perm-role-name"></span></h3>
     <p id="perm-help" class="perm__help">
-      Active o desactive permisos por módulo. Los cambios se aplicarán inmediatamente para el rol editado.
+      Activá o desactivá permisos por módulo. El cambio impacta inmediatamente en las sesiones del rol.
     </p>
 
     <div class="perm__table-wrap">
@@ -358,9 +251,7 @@
             <th scope="col" title="Eliminar (Delete)">D</th>
           </tr>
         </thead>
-        <tbody id="perm-tbody" class="perm__tbody">
-          <!-- Filas dinámicas (JS cargará módulos reales: admin-header, dashboard, products, categories, settings, users) -->
-        </tbody>
+        <tbody id="perm-tbody" class="perm__tbody"></tbody>
       </table>
     </div>
 

@@ -29,13 +29,15 @@ export function renderRolesView() {
     .map((role) => {
       const roleId = role.roleId || role.id || "";
       const name = role.name || roleId;
+      const isProtected = roleId === "role-admin";
       return `
         <tr data-role-id="${escapeHTML(roleId)}">
+          <td>${escapeHTML(roleId)}</td>
           <td>${escapeHTML(name)}</td>
-          <td>-</td>
-          <td><span class="badge badge--success">Activo</span></td>
           <td class="users__row-actions">
+            <button class="btn btn-secondary" type="button" data-action="role-edit">Editar</button>
             <button class="btn btn-secondary" type="button" data-action="role-perms" title="Permisos del rol">Permisos</button>
+            <button class="btn btn-tertiary" type="button" data-action="role-delete" ${isProtected ? "disabled" : ""}>Eliminar</button>
           </td>
         </tr>
       `;

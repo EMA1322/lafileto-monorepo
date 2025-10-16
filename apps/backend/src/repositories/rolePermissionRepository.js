@@ -29,5 +29,20 @@ export const rolePermissionRepository = {
       })
     );
     return prisma.$transaction(ops);
+  },
+
+  deleteByRole: (roleId) => prisma.rolePermission.deleteMany({ where: { roleId } }),
+
+  initializeForRole: (roleId, moduleKeys = []) => {
+    if (!moduleKeys.length) return Promise.resolve({ count: 0 });
+    const data = moduleKeys.map((moduleKey) => ({
+      roleId,
+      moduleKey,
+      r: false,
+      w: false,
+      u: false,
+      d: false
+    }));
+    return prisma.rolePermission.createMany({ data, skipDuplicates: true });
   }
 };

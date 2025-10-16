@@ -133,6 +133,7 @@ pnpm -F backend prisma:generate
 pnpm -F backend prisma:migrate:deploy
 pnpm -F backend dev
 curl -i http://localhost:3000/health
+curl -i http://localhost:3000/_debug/ping
 ```
 
 **Admin**
@@ -143,11 +144,13 @@ http://localhost:5174/api/v1/users?page=1&pageSize=10
 http://localhost:5174/api/v1/roles
 http://localhost:5174/api/v1/modules
 http://localhost:5174/api/v1/roles/role-admin/permissions
+curl -i http://localhost:5174/api/_debug/ping
 ```
 
 **UI**
 - `/#/users`: columnas `Nombre completo`, `Email`, `Teléfono`, `Rol`, `Estado`. Soporta búsqueda y paginación.
-- Pestaña **Roles & Permisos** siempre disponible para `role-admin`; guardar actualiza la matriz `r/w/u/d`.
+- Crear usuario nuevo desde el modal: validar campos obligatorios (incluye teléfono 7-20 caracteres) y verificar que aparezca en la grilla.
+- Pestaña **Roles & Permisos** siempre disponible para `role-admin`; permite alta/edición/baja de roles y guardar matriz `r/w/u/d`.
 
 **Compatibilidad**
 - Mantener login operativo, sin cambios de proxy ni `.env`.
@@ -159,7 +162,7 @@ pnpm -r lint --if-present
 pnpm -r format --if-present
 ```
 
-> Nota de esquema: se eliminaron los campos `failedLoginAttempts`, `lockUntil`, `createdAt`, `updatedAt`, `deletedAt` de las tablas administradas por Prisma (`User`, `Role`, `Module`, `RolePermission`, `Setting`).
+> Nota de esquema: se eliminaron los campos `failedLoginAttempts`, `lockUntil`, `createdAt`, `updatedAt`, `deletedAt` de las tablas administradas por Prisma (`User`, `Role`, `Module`, `RolePermission`, `Setting`). `User.phone` es obligatorio (`@default("0000000000")` solo para migrar registros existentes).
 
 ---
 

@@ -70,7 +70,7 @@ export function renderUsersTable() {
 
   tbodyUsers.innerHTML = state.users.items
     .map((user) => {
-      const phone = user.phone ? escapeHTML(user.phone) : "-";
+      const phone = user.phone && user.phone !== "0000000000" ? escapeHTML(user.phone) : "-";
       const roleId = escapeHTML(user.roleId || "");
       return `
         <tr data-id="${escapeHTML(String(user.id))}">

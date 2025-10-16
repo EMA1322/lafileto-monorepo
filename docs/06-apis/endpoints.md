@@ -1,7 +1,7 @@
 ---
 status: Draft
 owner: Backend Lead + Front Leads
-last_update: 2025-03-07
+last_update: 2025-03-12
 scope: Tabla sincronizada con OpenAPI v1; filtros/paginación/orden/búsqueda consolidados; “Pendiente” donde falte implementar.
 ---
 
@@ -17,6 +17,7 @@ scope: Tabla sincronizada con OpenAPI v1; filtros/paginación/orden/búsqueda co
 | Método | Path | Auth | 200 (data) | Notas |
 |---|---|---|---|---|
 | GET | `/health` | **(público)** | `{ ok:true, data:{ status, ts } }` | Endpoint de vida del servicio |
+| GET | `/_debug/ping` | **(público)** | `{ ok:true, data:{ pong, ts } }` | Ping sin auth para smoke tests |
 
 ## Auth
 | Método | Path | Auth | Body | 200 (data) | Errores |
@@ -27,14 +28,16 @@ scope: Tabla sincronizada con OpenAPI v1; filtros/paginación/orden/búsqueda co
 ## Users (Admin)
 | Método | Path | Auth | Query/Body | Notas | Estado |
 |---|---|---|---|---|---|
-| GET | `/users` | JWT (`role-admin`) | `page,pageSize,search` | Orden `fullName ASC`, devuelve `{ items[{ id,fullName,email,phone?,roleId,status }], meta{ page,pageSize,total } }` | **I1 listo** |
-
-> `phone` puede venir como `null` si la columna no existe; la UI debe mostrar `-`.
+| GET | `/users` | JWT (`role-admin`) | `page,pageSize,search` | Orden `fullName ASC`, devuelve `{ items[{ id,fullName,email,phone,roleId,status }], meta{ page,pageSize,total } }` | **I1 listo** |
+| POST | `/users` | JWT (`role-admin`) | `{ fullName,email,phone,password,roleId,status }` | Alta de usuario; valida teléfono (`^[0-9()+\s-]{7,20}$`) y evita duplicados de email | **I1 listo** |
 
 ## Roles (Admin)
 | Método | Path | Auth | Notas | Estado |
 |---|---|---|---|---|
 | GET | `/roles` | JWT (`role-admin`) | Catálogo para UI (`{ items[{ roleId,name }] }`) | **I1 listo** |
+| POST | `/roles` | JWT (`role-admin`) | `{ name, roleId? }` genera `role-<slug>` si no se envía `roleId`; inicializa permisos en `0` | **I1 listo** |
+| PUT | `/roles/:roleId` | JWT (`role-admin`) | Actualiza `name` | **I1 listo** |
+| DELETE | `/roles/:roleId` | JWT (`role-admin`) | No permite borrar `role-admin`; responde `ROLE_IN_USE` si hay usuarios asociados | **I1 listo** |
 
 ## Modules (Admin)
 | Método | Path | Auth | Notas | Estado |

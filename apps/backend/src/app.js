@@ -7,6 +7,7 @@ import { requestId } from './middlewares/requestId.js';
 import { requestTimeout } from './middlewares/requestTimeout.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { router } from './routes/index.js';
+import { ok } from './utils/envelope.js';
 
 const app = express();
 
@@ -23,6 +24,14 @@ app.use(corsMiddleware);
 app.options(/.*/, corsMiddleware);
 app.use(helmet());
 app.use(morgan('dev'));
+
+app.get('/health', (_req, res) => {
+  res.json(ok({ status: 'up', ts: Date.now() }));
+});
+
+app.get('/_debug/ping', (_req, res) => {
+  res.json(ok({ pong: true, ts: Date.now() }));
+});
 
 app.use('/api/v1', router);
 
