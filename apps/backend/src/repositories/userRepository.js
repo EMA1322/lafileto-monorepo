@@ -15,6 +15,12 @@ export const userRepository = {
 
   findById: (id) => prisma.user.findUnique({ where: { id } }),
 
+  findByIdForSession: (id) =>
+    prisma.user.findUnique({
+      where: { id },
+      select: baseSelect
+    }),
+
   async list({ page, pageSize, search, all = false }) {
     const where = search
       ? {

@@ -10,7 +10,12 @@ export {
   clearToken,
   isAuthenticated,
   login,
-  logout
+  logout,
+  fetchMe,
+  ensureAuthReady,
+  pickHomeRoute,
+  getPermissions,
+  getCurrentUser
 } from './auth.js';
 
 /**

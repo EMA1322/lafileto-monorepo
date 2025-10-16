@@ -28,6 +28,29 @@ let _seedCache = null; // cache del seed (una sola carga por sesión)
    Utilidades locales
    ========================= */
 
+function normalizeModuleKey(value) {
+  if (!value) return '';
+  return String(value).replace(/^#/, '').trim().toLowerCase();
+}
+
+function normalizeServerPerms(map) {
+  if (!map || typeof map !== 'object') return null;
+  const normalized = {};
+  for (const [key, value] of Object.entries(map)) {
+    if (!key) continue;
+    const mk = normalizeModuleKey(key);
+    if (!mk) continue;
+    const perms = value && typeof value === 'object' ? value : {};
+    normalized[mk] = {
+      r: !!perms.r,
+      w: !!perms.w,
+      u: !!perms.u,
+      d: !!perms.d,
+    };
+  }
+  return normalized;
+}
+
 /**
  * Carga permisos provenientes del backend y los persiste en sessionStorage.
  * - roleId: string del rol del usuario autenticado
@@ -35,16 +58,21 @@ let _seedCache = null; // cache del seed (una sola carga por sesión)
  */
 export async function setServerSession(roleId, effectivePermissions) {
   _roleId = roleId || null;
-  _permMap = effectivePermissions || null;
+  _permMap = normalizeServerPerms(effectivePermissions) || null;
 
   try {
     if (_roleId) sessionStorage.setItem(RBAC_ROLE_KEY, _roleId);
     else sessionStorage.removeItem(RBAC_ROLE_KEY);
 
-    if (_permMap) sessionStorage.setItem(RBAC_MAP_KEY, JSON.stringify(_permMap));
-    else sessionStorage.removeItem(RBAC_MAP_KEY);
+    if (_permMap) {
+      sessionStorage.setItem(RBAC_MAP_KEY, JSON.stringify(_permMap));
+      sessionStorage.setItem('effectivePermissions', JSON.stringify(_permMap));
+    } else {
+      sessionStorage.removeItem(RBAC_MAP_KEY);
+      sessionStorage.removeItem('effectivePermissions');
+    }
   } catch {
-    // Ignorar errores de storage (modo privado, quotas, etc.)
+    // Ignorar errores de storage (modo privado, cuotas, etc.)
   }
 }
 
@@ -69,8 +97,7 @@ function readLS(key, fallback) {
 
 /** Normaliza un hash tipo "#products" → "products" */
 export function moduleKeyFromHash(hash) {
-  if (!hash) return "";
-  return hash.replace(/^#/, "").trim().toLowerCase();
+  return normalizeModuleKey(hash);
 }
 
 /* =========================
@@ -166,7 +193,8 @@ export async function ensureRbacLoaded() {
       const cachedRole  = sessionStorage.getItem(RBAC_ROLE_KEY) || null;
       if (cachedPerms && cachedRole) {
         _roleId = cachedRole;
-        _permMap = safeParse(cachedPerms, null);
+        const parsed = safeParse(cachedPerms, null);
+        _permMap = normalizeServerPerms(parsed);
         if (_permMap) return; // ← permisos del servidor listos
       }
     } catch { /* ignore */ }
@@ -190,11 +218,12 @@ export async function ensureRbacLoaded() {
       Promise.resolve(readLS(LS_PERM_OVERRIDE_KEY, {})),
     ]);
 
-    _permMap = buildPermMapForRole(_roleId, seed, overrides);
+    _permMap = normalizeServerPerms(buildPermMapForRole(_roleId, seed, overrides)) || {};
 
     // Persistir en sesión para lecturas rápidas
     try {
       sessionStorage.setItem(RBAC_MAP_KEY, JSON.stringify(_permMap));
+      sessionStorage.setItem('effectivePermissions', JSON.stringify(_permMap));
     } catch { /* ignore */ }
   } catch (e) {
     console.warn("[rbac] ensureRbacLoaded failed", e);
@@ -225,6 +254,7 @@ export function clearRbac() {
   try {
     sessionStorage.removeItem(RBAC_ROLE_KEY);
     sessionStorage.removeItem(RBAC_MAP_KEY);
+    sessionStorage.removeItem('effectivePermissions');
   } catch { /* ignore */ }
 }
 
@@ -248,25 +278,34 @@ export function getPermMap() {
   if (_permMap) return _permMap;
   try {
     const raw = sessionStorage.getItem(RBAC_MAP_KEY);
-    return raw ? safeParse(raw, {}) : {};
+    if (!raw) return {};
+    _permMap = normalizeServerPerms(safeParse(raw, {})) || {};
+    return _permMap;
   } catch {
     return {};
   }
 }
 
+function resolvePermission(moduleKey) {
+  const key = normalizeModuleKey(moduleKey);
+  if (!key) return null;
+  const map = _permMap || getPermMap();
+  return map?.[key] || null;
+}
+
 export function canRead(moduleKey) {
-  const p = (_permMap || getPermMap())?.[moduleKey];
-  return Boolean(p && p.r);
+  const perm = resolvePermission(moduleKey);
+  return Boolean(perm && perm.r);
 }
 export function canWrite(moduleKey) {
-  const p = (_permMap || getPermMap())?.[moduleKey];
-  return Boolean(p && p.w);
+  const perm = resolvePermission(moduleKey);
+  return Boolean(perm && perm.w);
 }
 export function canUpdate(moduleKey) {
-  const p = (_permMap || getPermMap())?.[moduleKey];
-  return Boolean(p && p.u);
+  const perm = resolvePermission(moduleKey);
+  return Boolean(perm && perm.u);
 }
 export function canDelete(moduleKey) {
-  const p = (_permMap || getPermMap())?.[moduleKey];
-  return Boolean(p && p.d);
+  const perm = resolvePermission(moduleKey);
+  return Boolean(perm && perm.d);
 }

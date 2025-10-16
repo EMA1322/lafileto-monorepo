@@ -8,7 +8,7 @@
    - Toggle de contraseña accesible (aria-pressed/label/icon)
 ========================================================= */
 
-import { login as doLogin, isAuthenticated, apiFetch } from '@/utils/auth.js';
+import { login as doLogin, apiFetch } from '@/utils/auth.js';
 import { showSnackbar } from '@/utils/snackbar.js';
 
 const IS_DEV = (() => {
@@ -122,12 +122,6 @@ function attachDebugPing() {
 
 /** Punto de entrada invocado por el router */
 export function initLogin() {
-  // 1) Redirección si ya existe sesión (mejora UX)
-  if (isAuthenticated && isAuthenticated()) {
-    window.location.hash = '#dashboard';
-    return;
-  }
-
   const form = document.querySelector('.login__form');
   const emailInput = document.querySelector('#email');
   const passwordInput = document.querySelector('#password');
@@ -170,9 +164,10 @@ export function initLogin() {
     showSnackbar('Verificando…', { type: 'info' });
 
     try {
-      await doLogin(email, password); // → guarda token + effectivePermissions
+      const result = await doLogin(email, password); // → guarda token + permisos
       showSnackbar('¡Bienvenido!', { type: 'success' });
-      window.location.hash = '#dashboard';
+      const nextRoute = result?.nextRoute || '#dashboard';
+      window.location.hash = nextRoute;
     } catch (err) {
       // Mapear código → mensaje, limpiar password y enfocar
       const msg = getAuthErrorMessage(err);

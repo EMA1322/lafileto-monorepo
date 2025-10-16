@@ -7,13 +7,26 @@ import { signJwt } from '../utils/jwt.js';
 import { createError } from '../utils/errors.js';
 import { comparePassword } from '../utils/bcrypt.js';
 
-async function buildEffectivePermissions(roleId) {
-  const rows = await rolePermissionRepository.findByRole(roleId);
+// Normaliza los permisos convirtiendo las claves a minúsculas y con flags booleanos.
+function normalizePermissions(rows = []) {
   const map = Object.create(null);
-  for (const r of rows) {
-    map[r.moduleKey] = { r: !!r.r, w: !!r.w, u: !!r.u, d: !!r.d };
+  for (const row of rows) {
+    if (!row) continue;
+    const key = typeof row.moduleKey === 'string' ? row.moduleKey.toLowerCase() : '';
+    if (!key) continue;
+    map[key] = {
+      r: !!row.r,
+      w: !!row.w,
+      u: !!row.u,
+      d: !!row.d
+    };
   }
   return map;
+}
+
+async function buildEffectivePermissions(roleId) {
+  const rows = await rolePermissionRepository.findByRole(roleId);
+  return normalizePermissions(rows);
 }
 
 export const authService = {
@@ -47,27 +60,24 @@ export const authService = {
         id: user.id,
         fullName: user.fullName,
         email: user.email,
+        phone: user.phone,
         roleId: user.roleId,
         status: user.status
       },
+      permissions: effectivePermissions,
       effectivePermissions
     };
   },
 
   async me(userId) {
-    const user = await userRepository.findById(userId);
+    const user = await userRepository.findByIdForSession(userId);
     if (!user) {
       throw createError('AUTH_INVALID', 'Sesión inválida.');
     }
     const effectivePermissions = await buildEffectivePermissions(user.roleId);
     return {
-      user: {
-        id: user.id,
-        fullName: user.fullName,
-        email: user.email,
-        roleId: user.roleId,
-        status: user.status
-      },
+      user,
+      permissions: effectivePermissions,
       effectivePermissions
     };
   },

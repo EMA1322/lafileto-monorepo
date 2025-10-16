@@ -40,6 +40,53 @@ const STATUS_TO_DEFAULT_CODE = {
 
 let isLoggingOut = false;
 
+const authState = {
+  user: null,
+  roleId: null,
+  permissions: {},
+  hydrated: false,
+  hydratePromise: null
+};
+
+const HOME_ROUTE_FALLBACK = ['products', 'categories', 'users', 'settings', 'admin-header'];
+
+function resetAuthCache() {
+  authState.user = null;
+  authState.roleId = null;
+  authState.permissions = {};
+  authState.hydrated = false;
+  authState.hydratePromise = null;
+}
+
+function normalizePermissionMap(source) {
+  if (!source || typeof source !== 'object') return {};
+  const entries = Array.isArray(source)
+    ? source.map((entry) => [entry?.moduleKey, entry])
+    : Object.entries(source);
+  const map = {};
+  for (const [rawKey, value] of entries) {
+    if (!rawKey) continue;
+    const key = String(rawKey).trim().toLowerCase();
+    if (!key) continue;
+    const perms = value && typeof value === 'object' ? value : {};
+    map[key] = {
+      r: !!perms.r,
+      w: !!perms.w,
+      u: !!perms.u,
+      d: !!perms.d
+    };
+  }
+  return map;
+}
+
+export function getPermissions() {
+  return { ...authState.permissions };
+}
+
+export function getCurrentUser() {
+  return authState.user;
+}
+
 async function performLogoutRequest() {
   const token = getToken();
   if (!token) return;
@@ -60,6 +107,7 @@ async function performLogoutRequest() {
 }
 
 async function clearAuthState({ redirect = true } = {}) {
+  resetAuthCache();
   try {
     await setServerSession?.(null, null);
   } catch { /* ignore */ }
@@ -71,6 +119,9 @@ async function clearAuthState({ redirect = true } = {}) {
   } catch { /* ignore */ }
   try {
     sessionStorage.removeItem('auth.roleId');
+  } catch { /* ignore */ }
+  try {
+    sessionStorage.removeItem('effectivePermissions');
   } catch { /* ignore */ }
   clearToken();
 
@@ -319,25 +370,171 @@ export async function apiFetch(path, options = {}) {
   return json;
 }
 
-// Login/logout (sin cambios de comportamiento)
+export async function fetchMe({ force = false, silent = true } = {}) {
+  if (!isAuthenticated()) {
+    resetAuthCache();
+    return null;
+  }
+
+  if (authState.hydrated && !force) {
+    return {
+      user: authState.user,
+      permissions: { ...authState.permissions }
+    };
+  }
+
+  if (authState.hydratePromise && !force) {
+    return authState.hydratePromise;
+  }
+
+  const request = (async () => {
+    const response = await apiFetch('/auth/me', {
+      method: 'GET',
+      showErrorToast: !silent
+    });
+
+    const user = response?.data?.user || null;
+    const rawPerms =
+      response?.data?.permissions ||
+      response?.data?.effectivePermissions ||
+      {};
+    const permissions = normalizePermissionMap(rawPerms);
+
+    authState.user = user;
+    authState.roleId = user?.roleId || null;
+    authState.permissions = permissions;
+    authState.hydrated = true;
+
+    try {
+      if (user) localStorage.setItem('user', JSON.stringify(user));
+      else localStorage.removeItem('user');
+    } catch { /* ignore */ }
+
+    try {
+      if (authState.roleId) sessionStorage.setItem('auth.roleId', authState.roleId);
+      else sessionStorage.removeItem('auth.roleId');
+    } catch { /* ignore */ }
+
+    try {
+      sessionStorage.setItem('effectivePermissions', JSON.stringify(permissions));
+    } catch { /* ignore */ }
+
+    try {
+      await setServerSession?.(authState.roleId, permissions);
+    } catch { /* ignore */ }
+
+    return { user, permissions };
+  })()
+    .catch((error) => {
+      if (IS_DEV) {
+        console.warn('[auth] fetchMe failed', error);
+      }
+      resetAuthCache();
+      throw error;
+    })
+    .finally(() => {
+      authState.hydratePromise = null;
+    });
+
+  authState.hydratePromise = request;
+  return request;
+}
+
+export async function ensureAuthReady({ silent = true } = {}) {
+  if (!isAuthenticated()) {
+    resetAuthCache();
+    return false;
+  }
+
+  if (authState.hydrated) return true;
+
+  try {
+    await fetchMe({ force: false, silent });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function pickHomeRoute(permissions = null) {
+  const map = permissions && typeof permissions === 'object' && !Array.isArray(permissions)
+    ? permissions
+    : authState.permissions;
+
+  const hasRead = (key) => {
+    const normalized = typeof key === 'string' ? key.trim().toLowerCase() : '';
+    if (!normalized) return false;
+    const perms = map?.[normalized];
+    return !!(perms && perms.r);
+  };
+
+  if (hasRead('dashboard')) return '#dashboard';
+  for (const key of HOME_ROUTE_FALLBACK) {
+    if (hasRead(key)) return `#${key}`;
+  }
+  return '#not-authorized';
+}
+
 export async function login(email, password) {
+  resetAuthCache();
+
   const { data } = await apiFetch('/auth/login', {
     method: 'POST',
     body: JSON.stringify({ email, password }),
     showErrorToast: false
   });
 
+  if (!data?.token) {
+    throw Object.assign(new Error('No se pudo iniciar sesión.'), { code: 'AUTH_INVALID' });
+  }
+
   setToken(data.token);
 
-  // Opcional: almacenar usuario/permisos para RBAC UI
-  try {
-    if (typeof setServerSession === 'function' && data?.user) {
-      await setServerSession(data.user.roleId, data.user.effectivePermissions);
-    }
-    localStorage.setItem('user', JSON.stringify(data.user));
-  } catch { /* no-op */ }
+  const fallbackRoleId = data?.user?.roleId || null;
+  const fallbackPerms = normalizePermissionMap(
+    data?.permissions || data?.effectivePermissions || {}
+  );
 
-  return data;
+  authState.permissions = fallbackPerms;
+  authState.roleId = fallbackRoleId;
+
+  try {
+    if (data?.user) localStorage.setItem('user', JSON.stringify(data.user));
+    else localStorage.removeItem('user');
+  } catch { /* ignore */ }
+
+  try {
+    if (fallbackRoleId) sessionStorage.setItem('auth.roleId', fallbackRoleId);
+    else sessionStorage.removeItem('auth.roleId');
+  } catch { /* ignore */ }
+
+  if (Object.keys(fallbackPerms).length) {
+    try {
+      sessionStorage.setItem('effectivePermissions', JSON.stringify(fallbackPerms));
+    } catch { /* ignore */ }
+    try {
+      await setServerSession?.(fallbackRoleId, fallbackPerms);
+    } catch { /* ignore */ }
+  }
+
+  let meResult;
+  try {
+    meResult = await fetchMe({ force: true, silent: true });
+  } catch (err) {
+    await logout({ redirect: false, skipRequest: true });
+    throw err;
+  }
+
+  const permissions = meResult?.permissions || fallbackPerms;
+  const user = meResult?.user || data?.user || null;
+  const nextRoute = pickHomeRoute(permissions);
+
+  return {
+    token: data.token,
+    user,
+    permissions,
+    nextRoute
+  };
 }
 
 export async function logout({ redirect = true, skipRequest = false } = {}) {

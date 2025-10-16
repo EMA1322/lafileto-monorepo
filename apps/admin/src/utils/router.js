@@ -4,7 +4,12 @@
 // ================================
 
 import { renderView } from './renderView.js';
-import { isAuthenticated } from './auth.js';
+import {
+  isAuthenticated,
+  ensureAuthReady,
+  pickHomeRoute,
+  logout
+} from './auth.js';
 import { showSnackbar } from './snackbar.js';
 import {
   ensureRbacLoaded,
@@ -39,6 +44,13 @@ async function renderNoAccess() {
     } else {
       cta.href = '#login';
       cta.textContent = 'Volver al Inicio de sesión';
+      if (!cta.dataset.logoutBound) {
+        cta.dataset.logoutBound = 'true';
+        cta.addEventListener('click', async (event) => {
+          event.preventDefault();
+          await logout();
+        });
+      }
     }
   }
 }
@@ -70,19 +82,45 @@ async function router() {
   // Hash normalizado (sin '#', minúsculas)
   const raw = window.location.hash || '#login';
   const hash = raw.replace(/^#/, '').toLowerCase();
+  const isLoginRoute = hash === 'login';
+  const isNoAccessRoute = hash === 'not-authorized';
+
+  if (isLoginRoute && isAuthenticated()) {
+    const ready = await ensureAuthReady({ silent: true });
+    if (ready) {
+      const next = pickHomeRoute();
+      if (next && next !== '#login') {
+        window.location.hash = next;
+        return;
+      }
+    }
+  }
 
   // -------- Guard: autenticación
-  if (hash !== 'login' && !isAuthenticated()) {
+  if (!isLoginRoute && !isAuthenticated()) {
     window.location.hash = '#login';
     return;
   }
 
-  // -------- Guard: cargar RBAC (una vez por sesión)
-  await ensureRbacLoaded();
+  if (!isLoginRoute) {
+    const ready = await ensureAuthReady({ silent: true });
+    if (!ready) {
+      if (!isAuthenticated()) {
+        window.location.hash = '#login';
+      }
+      return;
+    }
+    await ensureRbacLoaded();
+  }
+
+  if (isNoAccessRoute) {
+    await renderNoAccess();
+    return;
+  }
 
   // -------- Guard: permiso de lectura (R)
   const moduleKey = moduleKeyFromHash(hash);
-  if (hash !== 'login' && !canRead(moduleKey)) {
+  if (!isLoginRoute && moduleKey && !canRead(moduleKey)) {
     await renderNoAccess();
     // Emite snackbar con código estandarizado (sin cambiar texto visible)
     showSnackbar('No autorizado', { type: 'warning', code: 'PERMISSION_DENIED' });

@@ -1,3 +1,4 @@
+import { fetchMe } from "@/utils/auth.js";
 import { openModal, closeModal } from "@/utils/modals.js";
 
 import {
@@ -387,17 +388,11 @@ export async function openPermissionsMatrixModal(role) {
 
       if (state.rbac.roleId && state.rbac.roleId === roleId) {
         try {
-          const map = {};
-          for (const entry of payload) {
-            map[entry.moduleKey] = {
-              r: !!entry.r,
-              w: !!entry.w,
-              u: !!entry.u,
-              d: !!entry.d
-            };
-          }
-          sessionStorage.setItem("rbac.permMap", JSON.stringify(map));
-        } catch {}
+          // Refresca la sesión del usuario actual para reflejar los nuevos permisos.
+          await fetchMe({ force: true, silent: true });
+        } catch (refreshError) {
+          console.warn("[users] refresh permissions after save failed", refreshError);
+        }
         applyRBAC();
         renderUsersTable();
       }
