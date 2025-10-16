@@ -13,21 +13,25 @@ export const rbacController = {
 
   createRole: async (req, res, next) => {
     try {
-      const role = await rbacService.createRole(req.body);
+      const body = req.validated?.body ?? req.body ?? {};
+      const role = await rbacService.createRole(body);
       return res.status(201).json(ok(role));
     } catch (err) { next(err); }
   },
 
   updateRole: async (req, res, next) => {
     try {
-      const role = await rbacService.updateRole(req.params.roleId, req.body);
+      const params = req.validated?.params ?? req.params ?? {};
+      const body = req.validated?.body ?? req.body ?? {};
+      const role = await rbacService.updateRole(params.roleId ?? req.params.roleId, body);
       return res.json(ok(role));
     } catch (err) { next(err); }
   },
 
   deleteRole: async (req, res, next) => {
     try {
-      const out = await rbacService.deleteRole(req.params.roleId);
+      const params = req.validated?.params ?? req.params ?? {};
+      const out = await rbacService.deleteRole(params.roleId ?? req.params.roleId);
       return res.json(ok(out));
     } catch (err) { next(err); }
   },
@@ -43,16 +47,19 @@ export const rbacController = {
   // Permissions
   getPermissions: async (req, res, next) => {
     try {
-      const matrix = await rbacService.getPermissions(req.params.roleId);
+      const params = req.validated?.params ?? req.params ?? {};
+      const matrix = await rbacService.getPermissions(params.roleId ?? req.params.roleId);
       return res.json(ok(matrix));
     } catch (err) { next(err); }
   },
 
   savePermissions: async (req, res, next) => {
     try {
+      const params = req.validated?.params ?? req.params ?? {};
+      const body = req.validated?.body ?? req.body ?? {};
       const out = await rbacService.savePermissions(
-        req.params.roleId,
-        req.body.permissions,
+        params.roleId ?? req.params.roleId,
+        body.permissions,
         req.user?.id || null
       );
       return res.json(ok(out));

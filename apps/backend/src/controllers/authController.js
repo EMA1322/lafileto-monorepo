@@ -6,7 +6,8 @@ export const authController = {
   // POST /auth/login
   login: async (req, res, next) => {
     try {
-      const { email, password } = req.body;
+      const body = req.validated?.body ?? req.body ?? {};
+      const { email, password } = body;
       const isDev = process.env.NODE_ENV !== 'production';
       const startedAt = Date.now();
       const debugMeta = {
