@@ -1,296 +1,106 @@
-
-<!-- /admin/src/components/users/users.html -->
-<!--
-  MÓDULO ADMIN: USERS (Usuarios + Roles & Permisos)
-  -------------------------------------------------
-  - HTML base; JS agrega datos y eventos.
-  - Comentarios visibles en español.
-  - RBAC controla pestañas/botones desde JS.
--->
-<link rel="stylesheet" href="/src/styles/users.css" />
-
-<section class="users container" role="region" aria-labelledby="users-title">
-  <header class="users__header">
-    <h1 id="users-title">Usuarios</h1>
-    <p class="users__subtitle">Administra usuarios y permisos del sistema.</p>
+<!-- Vista Users con UI kit -->
+<section class="stack stack--lg" data-view="users" aria-labelledby="users-title">
+  <header class="stack stack--tight">
+    <h1 id="users-title" class="heading heading--xl">Usuarios</h1>
+    <p class="text text--muted">Administrá altas, ediciones y permisos sin salir del panel.</p>
   </header>
 
-  <nav class="users__tabs" role="tablist" aria-label="Secciones de Usuarios">
-    <button
-      id="tab-users"
-      class="users__tab is-active"
-      role="tab"
-      aria-selected="true"
-      aria-controls="panel-users"
-      tabindex="0"
-      data-tab="users"
-      type="button"
-    >
-      Usuarios
-    </button>
-    <button
-      id="tab-roles"
-      class="users__tab"
-      role="tab"
-      aria-selected="false"
-      aria-controls="panel-roles"
-      tabindex="-1"
-      data-tab="roles"
-      type="button"
-    >
-      Roles &amp; Permisos
-    </button>
-  </nav>
+  <div class="tabs" data-users-tabs>
+    <div class="tabs__list" role="tablist" aria-label="Secciones de usuarios">
+      <button
+        class="tabs__trigger is-active"
+        type="button"
+        role="tab"
+        aria-selected="true"
+        data-tab="users"
+        id="tab-users"
+      >
+        Usuarios
+      </button>
+      <button
+        class="tabs__trigger"
+        type="button"
+        role="tab"
+        aria-selected="false"
+        data-tab="roles"
+        id="tab-roles"
+      >
+        Roles &amp; permisos
+      </button>
+    </div>
+  </div>
 
   <section
-    id="panel-users"
-    class="users__panel is-active card"
+    class="card stack stack--md"
     role="tabpanel"
+    id="panel-users"
     aria-labelledby="tab-users"
+    data-panel="users"
   >
-    <header class="users__toolbar" aria-label="Herramientas de listado de usuarios">
-      <div class="users__actions">
-        <button id="btn-user-new" class="btn" type="button" data-action="user-new" hidden>
-          <span class="icon icon--sm" data-icon="plus" aria-hidden="true"></span>
-          <span class="icon-label">Nuevo usuario</span>
+    <div class="row row--between row--center">
+      <div class="text text--muted" data-users-status aria-live="polite"></div>
+      <div class="row row--gap-sm">
+        <button class="btn btn--primary" type="button" data-action="user-new">Nuevo usuario</button>
+        <button class="btn btn--ghost" type="button" data-action="users-refresh" aria-label="Actualizar listado">
+          ↻
         </button>
       </div>
-    </header>
+    </div>
 
-    <div id="users-status" class="users__status" aria-live="polite"></div>
-
-    <div class="users__table-wrap">
-      <table id="users-table" class="users__table" role="table">
-        <caption class="sr-only">Listado de usuarios</caption>
-        <thead class="users__thead">
+    <div class="table-wrap" data-users-table-wrap>
+      <table class="table" data-users-table>
+        <thead>
           <tr>
-            <th scope="col">Nombre completo</th>
-            <th scope="col">Email</th>
-            <th scope="col">Teléfono</th>
-            <th scope="col">Rol</th>
-            <th scope="col">Estado</th>
-            <th scope="col" class="users__th-actions">Acciones</th>
+            <th scope="col" data-sort="fullName">Nombre</th>
+            <th scope="col" data-sort="email">Email</th>
+            <th scope="col" data-sort="phone">Teléfono</th>
+            <th scope="col" data-sort="roleId">Rol</th>
+            <th scope="col" data-sort="status">Estado</th>
+            <th scope="col" class="table__th-actions">Acciones</th>
           </tr>
         </thead>
-        <tbody id="users-tbody" class="users__tbody"></tbody>
+        <tbody data-users-tbody></tbody>
       </table>
+      <div class="table__empty" data-users-empty hidden>No hay usuarios cargados.</div>
     </div>
+
+    <footer class="table__footer row row--between row--center" data-users-pagination>
+      <span class="text text--muted" data-users-count></span>
+      <div class="row row--gap-sm">
+        <button class="btn btn--ghost btn--sm" type="button" data-page="prev">Anterior</button>
+        <span class="text" data-page-info>1 / 1</span>
+        <button class="btn btn--ghost btn--sm" type="button" data-page="next">Siguiente</button>
+      </div>
+    </footer>
   </section>
 
   <section
-    id="panel-roles"
-    class="roles__panel card"
+    class="card stack stack--md"
     role="tabpanel"
+    id="panel-roles"
     aria-labelledby="tab-roles"
+    data-panel="roles"
     hidden
   >
-    <header class="roles__toolbar">
-      <div id="roles-status" class="roles__status" aria-live="polite"></div>
-      <div class="roles__actions">
-        <button id="btn-role-new" class="btn" type="button" data-action="role-new">
-          + Nuevo rol
-        </button>
+    <div class="row row--between row--center">
+      <div class="text text--muted" data-roles-status aria-live="polite"></div>
+      <div class="row row--gap-sm">
+        <button class="btn btn--primary" type="button" data-action="role-new">Nuevo rol</button>
       </div>
-    </header>
+    </div>
 
-    <div class="roles__table-wrap">
-      <table id="roles-table" class="roles__table" role="table">
-        <caption class="sr-only">Listado de roles</caption>
-        <thead class="roles__thead">
+    <div class="table-wrap" data-roles-table-wrap>
+      <table class="table" data-roles-table>
+        <thead>
           <tr>
             <th scope="col">Rol</th>
             <th scope="col">Nombre visible</th>
-            <th scope="col">Acciones</th>
+            <th scope="col" class="table__th-actions">Acciones</th>
           </tr>
         </thead>
-        <tbody id="roles-tbody" class="roles__tbody"></tbody>
+        <tbody data-roles-tbody></tbody>
       </table>
+      <div class="table__empty" data-roles-empty hidden>No hay roles cargados.</div>
     </div>
   </section>
 </section>
-
-<!-- Templates -->
-<template id="tpl-user-form">
-  <form id="user-form" class="users__form" novalidate>
-    <fieldset class="users__form-grid">
-      <legend class="sr-only">Crear usuario</legend>
-
-      <div class="form__field">
-        <label for="user-fullName">Nombre completo</label>
-        <input id="user-fullName" name="fullName" type="text" required minlength="2" maxlength="120" autocomplete="off" />
-        <p id="err-fullName" class="form__error" hidden>Ingrese un nombre válido (2-120 caracteres).</p>
-      </div>
-
-      <div class="form__field">
-        <label for="user-email">Email</label>
-        <input id="user-email" name="email" type="email" required autocomplete="off" aria-describedby="hint-email err-email" />
-        <small id="hint-email" class="form__hint">Debe ser único en el sistema.</small>
-        <p id="err-email" class="form__error" hidden>Ingrese un email válido que no esté registrado.</p>
-      </div>
-
-      <div class="form__field">
-        <label for="user-phone">Teléfono</label>
-        <input
-          id="user-phone"
-          name="phone"
-          type="tel"
-          required
-          pattern="^[0-9()+\s-]{7,20}$"
-          minlength="7"
-          maxlength="20"
-          placeholder="Ej: +54 11 2345-6789"
-          aria-describedby="hint-phone err-phone"
-        />
-        <small id="hint-phone" class="form__hint">Solo números, espacios, +, - o (). 7 a 20 caracteres.</small>
-        <p id="err-phone" class="form__error" hidden>Ingrese un teléfono válido (7-20 caracteres).</p>
-      </div>
-
-      <div class="form__field">
-        <label for="user-password">Contraseña</label>
-        <input id="user-password" name="password" type="password" required minlength="8" autocomplete="new-password" />
-        <p id="err-password" class="form__error" hidden>La contraseña debe tener al menos 8 caracteres.</p>
-      </div>
-
-      <div class="form__field">
-        <label for="user-roleId">Rol</label>
-        <select id="user-roleId" name="roleId" required aria-describedby="err-roleId"></select>
-        <p id="err-roleId" class="form__error" hidden>Seleccione un rol válido.</p>
-      </div>
-
-      <div class="form__field">
-        <label for="user-status">Estado</label>
-        <select id="user-status" name="status" required>
-          <option value="ACTIVE">Activo</option>
-          <option value="INACTIVE">Inactivo</option>
-        </select>
-      </div>
-    </fieldset>
-
-    <div class="modal__actions">
-      <button id="user-submit" class="btn" type="submit" data-action="user-submit">Guardar</button>
-      <button class="btn btn-secondary" type="button" data-close-modal>Cancelar</button>
-    </div>
-  </form>
-</template>
-
-<template id="tpl-user-edit-form">
-  <form id="user-edit-form" class="users__form" novalidate>
-    <fieldset class="users__form-grid">
-      <legend class="sr-only">Editar usuario</legend>
-
-      <div class="form__field">
-        <label for="user-edit-fullName">Nombre completo</label>
-        <input id="user-edit-fullName" name="fullName" type="text" required minlength="2" maxlength="120" autocomplete="off" />
-        <p id="err-edit-fullName" class="form__error" hidden>Ingrese un nombre válido (2-120 caracteres).</p>
-      </div>
-
-      <div class="form__field">
-        <label for="user-edit-phone">Teléfono</label>
-        <input
-          id="user-edit-phone"
-          name="phone"
-          type="tel"
-          required
-          pattern="^[0-9()+\s-]{7,20}$"
-          minlength="7"
-          maxlength="20"
-          placeholder="Ej: +54 11 2345-6789"
-          aria-describedby="hint-edit-phone err-edit-phone"
-        />
-        <small id="hint-edit-phone" class="form__hint">Solo números, espacios, +, - o (). 7 a 20 caracteres.</small>
-        <p id="err-edit-phone" class="form__error" hidden>Ingrese un teléfono válido (7-20 caracteres).</p>
-      </div>
-
-      <div class="form__field">
-        <label for="user-edit-roleId">Rol</label>
-        <select id="user-edit-roleId" name="roleId" required aria-describedby="err-edit-roleId"></select>
-        <p id="err-edit-roleId" class="form__error" hidden>Seleccione un rol válido.</p>
-      </div>
-
-      <div class="form__field">
-        <label for="user-edit-status">Estado</label>
-        <select id="user-edit-status" name="status" required>
-          <option value="ACTIVE">Activo</option>
-          <option value="INACTIVE">Inactivo</option>
-        </select>
-      </div>
-    </fieldset>
-
-    <div class="modal__actions">
-      <button id="user-edit-submit" class="btn" type="submit" data-action="user-edit-submit">Guardar</button>
-      <button class="btn btn-secondary" type="button" data-close-modal>Cancelar</button>
-    </div>
-  </form>
-</template>
-
-<template id="tpl-user-delete">
-  <div class="users__delete">
-    <p id="user-delete-message">¿Seguro que querés eliminar este usuario? Esta acción no se puede deshacer.</p>
-    <div class="modal__actions">
-      <button class="btn btn-secondary" type="button" data-close-modal>Cancelar</button>
-      <button id="user-delete-confirm" class="btn btn-danger" type="button">Eliminar</button>
-    </div>
-  </div>
-</template>
-
-<template id="tpl-role-form">
-  <form id="role-form" class="roles__form" novalidate>
-    <fieldset class="roles__form-grid">
-      <legend class="sr-only">Formulario de rol</legend>
-      <input type="hidden" id="role-id" name="roleId" />
-
-      <div class="form__field">
-        <label for="role-name">Nombre visible</label>
-        <input id="role-name" name="name" type="text" required minlength="2" maxlength="80" />
-        <p id="err-role-name" class="form__error" hidden>Ingrese un nombre válido (2-80 caracteres).</p>
-      </div>
-    </fieldset>
-
-    <div class="modal__actions">
-      <button id="role-submit" class="btn" type="submit">Guardar</button>
-      <button class="btn btn-secondary" type="button" data-close-modal>Cancelar</button>
-    </div>
-  </form>
-</template>
-
-<template id="tpl-role-delete">
-  <section class="confirm__wrap" role="document">
-    <h3 class="confirm__title">Eliminar rol</h3>
-    <p class="confirm__text">¿Confirmás la eliminación del rol <strong id="role-del-name"></strong>?</p>
-    <p class="confirm__warning">Esta acción no se puede deshacer.</p>
-    <div class="modal__actions">
-      <button id="btn-role-delete" class="btn btn-danger" type="button">Eliminar</button>
-      <button class="btn btn-secondary" type="button" data-close-modal>Cancelar</button>
-    </div>
-  </section>
-</template>
-
-<template id="tpl-permissions-matrix">
-  <section class="perm__wrap" role="document" aria-describedby="perm-help">
-    <h3 class="perm__title">Permisos del rol: <span id="perm-role-name"></span></h3>
-    <p id="perm-help" class="perm__help">
-      Activá o desactivá permisos por módulo. El cambio impacta inmediatamente en las sesiones del rol.
-    </p>
-
-    <div class="perm__table-wrap">
-      <table class="perm__table" role="table">
-        <caption class="sr-only">Matriz de permisos por módulo</caption>
-        <thead class="perm__thead">
-          <tr>
-            <th scope="col">Módulo</th>
-            <th scope="col" title="Leer (Read)">R</th>
-            <th scope="col" title="Crear (Write)">W</th>
-            <th scope="col" title="Actualizar (Update)">U</th>
-            <th scope="col" title="Eliminar (Delete)">D</th>
-          </tr>
-        </thead>
-        <tbody id="perm-tbody" class="perm__tbody"></tbody>
-      </table>
-    </div>
-
-    <div class="modal__actions">
-      <button id="perm-submit" class="btn" type="button" data-action="perm-submit">Guardar</button>
-      <button class="btn btn-secondary" type="button" data-close-modal>Cancelar</button>
-    </div>
-  </section>
-</template>
