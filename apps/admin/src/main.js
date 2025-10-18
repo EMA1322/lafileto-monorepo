@@ -4,6 +4,9 @@
 
 // Estilos globales que deben estar SIEMPRE
 import 'normalize.css';
+import '@/styles/core/tokens.css';
+import '@/styles/core/base.css';
+import '@/styles/components/components.css';
 import '@/styles/global.css';
 import '@/styles/modals.css';
 

@@ -1,105 +1,328 @@
-/* ==========================================================================
-   COMPONENTS — patrones reutilizables
-   - Declaraciones mínimas y seguras; completá estilos sin romper vistas.
-   - Las vistas (módulos) sólo deberían hacer overrides de layout.
-   ========================================================================== */
+/* ========================================================================
+   COMPONENTS — patrones reutilizables del UI kit naranja
+   - Botones, formularios, tarjetas y utilidades visuales.
+   - Todas las clases usan tokens definidos en core/tokens.css.
+   ======================================================================== */
 @layer components {
-
   /* ==================== Buttons ==================== */
   .btn {
-    /* TODO: display:inline-flex; align-items:center; gap: var(--space-2); */
-    /* padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); */
-    /* background: var(--color-primary); color: var(--color-primary-contrast); */
-    /* border: 1px solid transparent; box-shadow: none; cursor: pointer; */
-    /* transition: background var(--dur-quick) var(--easing), box-shadow var(--dur-quick) var(--easing); */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: calc(var(--space-2) + 2px) var(--space-4);
+    border-radius: var(--radius-md);
+    border: 1px solid transparent;
+    background: var(--color-surface-2);
+    color: var(--color-text);
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    transition: transform var(--dur-quick) var(--easing),
+      box-shadow var(--dur-quick) var(--easing),
+      background var(--dur-quick) var(--easing),
+      border-color var(--dur-quick) var(--easing);
   }
+
+  .btn:hover:not([disabled]),
+  .btn:focus-visible:not([disabled]) {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .btn:active:not([disabled]) {
+    transform: translateY(0);
+  }
+
+  .btn[disabled] {
+    cursor: not-allowed;
+    opacity: 0.55;
+    box-shadow: none;
+  }
+
+  .btn--primary {
+    background: var(--brand-600);
+    color: #1c1300;
+  }
+
+  .btn--primary:hover:not([disabled]) {
+    background: var(--brand-700);
+  }
+
+  .btn--secondary {
+    background: var(--color-surface);
+    border-color: var(--color-border);
+    color: var(--color-text);
+  }
+
   .btn--ghost {
-    /* background: transparent; color: var(--text-color); border-color: var(--border-color); */
+    background: transparent;
+    border-color: var(--color-border);
+    color: var(--color-text-muted);
   }
-  .btn-secondary {
-    /* background: var(--surface-muted); color: var(--text-color); */
+
+  .btn--ghost:hover:not([disabled]) {
+    background: rgba(255, 255, 255, 0.05);
   }
-  .btn-danger {
-    /* background: var(--color-danger); color: var(--color-primary-contrast); */
+
+  .btn--success {
+    background: var(--success-600);
+    color: #04120a;
   }
-  .btn[disabled] { cursor: not-allowed; opacity: .6; }
+
+  .btn--danger {
+    background: var(--danger-600);
+    color: #fff7f7;
+  }
+
+  .btn--sm {
+    padding: var(--space-1) var(--space-3);
+    font-size: var(--fs-sm);
+    border-radius: var(--radius-sm);
+  }
+
+  .btn--lg {
+    padding: calc(var(--space-3) + 2px) var(--space-5);
+    font-size: var(--fs-lg);
+  }
 
   /* ==================== Badges ==================== */
   .badge {
-    /* display:inline-block; padding: 0 var(--space-2); border-radius: var(--radius-lg); font-size: var(--fs-sm); */
+    display: inline-flex;
+    align-items: center;
+    padding: 0 var(--space-2);
+    min-height: 1.75rem;
+    border-radius: var(--radius-round);
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--color-text);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
   }
-  .badge--success { /* background: color-mix(in oklab, var(--color-success) 20%, transparent); color: var(--color-success); */ }
-  .badge--muted   { /* background: var(--surface-muted); color: var(--text-color); */ }
-  .badge--warning { /* background: color-mix(in oklab, var(--color-warning) 20%, transparent); color: var(--color-warning); */ }
 
-  /* ==================== Cards ==================== */
+  .badge--success { background: rgba(22, 163, 74, 0.22); color: #acf2c3; }
+  .badge--info { background: rgba(8, 145, 178, 0.22); color: #99e6f5; }
+  .badge--warn { background: rgba(245, 158, 11, 0.22); color: #fde68a; }
+  .badge--muted { background: rgba(148, 163, 184, 0.2); color: var(--color-text-muted); }
+
+  /* ==================== Form controls ==================== */
+  .input,
+  .select,
+  .textarea {
+    width: 100%;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    background: var(--color-surface-2);
+    color: var(--color-text);
+    transition: border-color var(--dur-quick) var(--easing),
+      box-shadow var(--dur-quick) var(--easing),
+      background var(--dur-quick) var(--easing);
+  }
+
+  .input::placeholder,
+  .textarea::placeholder { color: var(--color-text-muted); }
+
+  .input:focus-visible,
+  .select:focus-visible,
+  .textarea:focus-visible {
+    border-color: var(--brand-600);
+    box-shadow: var(--focus-ring);
+    background: var(--color-surface);
+  }
+
+  .input[disabled],
+  .select[disabled],
+  .textarea[disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .form__message {
+    font-size: var(--fs-sm);
+    margin-top: var(--space-1);
+  }
+
+  .form__message--error { color: var(--danger-600); }
+  .form__message--success { color: var(--success-600); }
+
+  /* ==================== Card ==================== */
   .card {
-    /* background: var(--surface-card); border: 1px solid var(--border-color);
-       border-radius: var(--radius-lg); box-shadow: var(--shadow-soft);
-       padding: var(--space-4); */
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-soft);
+    padding: var(--space-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
   }
 
   /* ==================== Table ==================== */
-  .table {
-    /* width: 100%; border-collapse: separate; border-spacing: 0; */
-    /* background: var(--surface-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); */
-    /* overflow: hidden; */
-  }
-  .table thead th {
-    /* font-weight: 600; text-align: left; */
-    /* border-bottom: 1px solid var(--border-color); */
-  }
-  .table tbody td {
-    /* border-top: 1px solid var(--border-color); */
-  }
-  /* Contenedor scroll-x para mobile */
   .table-wrap {
-    /* overflow-x: auto; -webkit-overflow-scrolling: touch; */
+    overflow-x: auto;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
   }
 
-  /* ==================== Forms ==================== */
-  .form { /* display:grid; gap: var(--space-4); */ }
-  .form__field { /* display:grid; gap: var(--space-2); */ }
-  .form__label { /* color: var(--text-strong); font-weight: 600; */ }
-  .form__input,
-  .form select,
-  .form textarea {
-    /* background: var(--surface-card); color: var(--text-color);
-       border: 1px solid var(--border-color); border-radius: var(--radius-md);
-       padding: var(--space-2) var(--space-3); */
-  }
-  .form__error {
-    /* color: var(--color-danger); font-size: var(--fs-sm); */
+  .table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    min-width: 100%;
   }
 
-  /* ==================== Pager ==================== */
-  .pager {
-    /* display:flex; align-items:center; gap: var(--space-2); */
+  .table thead th {
+    position: sticky;
+    top: 0;
+    background: var(--color-surface-2);
+    color: var(--color-text-strong);
+    text-align: left;
+    font-size: var(--fs-sm);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: var(--space-3);
+    border-bottom: 1px solid var(--color-border);
   }
 
-  /* ==================== Modal (estructura genérica) ==================== */
-  .modal-overlay {
-    /* position: fixed; inset: 0; background: rgba(0,0,0,.45);
-       z-index: var(--z-overlay); display: grid; place-items: center; */
+  .table tbody td {
+    padding: var(--space-3);
+    border-bottom: 1px solid rgba(15, 23, 42, 0.35);
+    color: var(--color-text);
   }
+
+  .table tbody tr:last-child td { border-bottom: none; }
+
+  .table tbody tr:hover {
+    background: rgba(253, 195, 0, 0.07);
+  }
+
+  /* ==================== Switch ==================== */
+  .switch {
+    position: relative;
+    inline-size: 46px;
+    block-size: 26px;
+    border-radius: var(--radius-round);
+    border: 1px solid transparent;
+    background: rgba(148, 163, 184, 0.35);
+    display: inline-flex;
+    align-items: center;
+    padding: 3px;
+    transition: background var(--dur-quick) var(--easing),
+      border-color var(--dur-quick) var(--easing);
+  }
+
+  .switch__dot {
+    position: absolute;
+    inset-block: 3px;
+    inset-inline-start: 3px;
+    inline-size: 20px;
+    block-size: 20px;
+    border-radius: var(--radius-round);
+    background: var(--color-text);
+    transition: transform var(--dur-quick) var(--easing),
+      background var(--dur-quick) var(--easing);
+  }
+
+  .switch[aria-checked="true"] {
+    background: var(--brand-600);
+    border-color: transparent;
+  }
+
+  .switch[aria-checked="true"] .switch__dot {
+    transform: translateX(20px);
+    background: #1c1300;
+  }
+
+  .switch:focus-visible {
+    box-shadow: var(--focus-ring);
+  }
+
+  /* ==================== Modal ==================== */
   .modal {
-    /* background: var(--surface-card); color: var(--text-color);
-       border: 1px solid var(--border-color); border-radius: var(--radius-lg);
-       box-shadow: var(--shadow-lg); max-width: 640px; width: min(92vw, 640px);
-       z-index: var(--z-modal); */
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background: rgba(8, 11, 19, 0.7);
+    z-index: var(--z-overlay);
+    padding: var(--space-4);
+    overflow: auto;
   }
-  .modal--sm { /* max-width: 420px; */ }
-  .modal--lg { /* max-width: 920px; */ }
 
-  /* ==================== Snackbar (estructura) ==================== */
-  .snackbar {
-    /* position: fixed; left: 50%; transform: translateX(-50%);
-       bottom: var(--space-4); z-index: var(--z-snackbar);
-       background: var(--surface-card); border: 1px solid var(--border-color);
-       border-radius: var(--radius-md); padding: var(--space-3) var(--space-4);
-       box-shadow: var(--shadow-md); */
+  .modal__panel {
+    width: min(480px, 100%);
+    background: var(--color-surface-2);
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    box-shadow: var(--shadow-md);
+    padding: var(--space-5);
+    display: grid;
+    gap: var(--space-4);
+    position: relative;
+    z-index: var(--z-modal);
   }
-  .snackbar--success { /* border-color: color-mix(in oklab, var(--color-success) 40%, var(--border-color)); */ }
-  .snackbar--error   { /* border-color: color-mix(in oklab, var(--color-danger) 40%, var(--border-color)); */ }
-  .snackbar--warning { /* border-color: color-mix(in oklab, var(--color-warning) 40%, var(--border-color)); */ }
+
+  .modal__title {
+    font-size: var(--fs-lg);
+    font-weight: 700;
+    color: var(--color-text-strong);
+  }
+
+  .modal__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-3);
+  }
+
+  .modal__close {
+    position: absolute;
+    inset-inline-end: var(--space-4);
+    inset-block-start: var(--space-4);
+  }
+
+  /* ==================== Snackbar / Toast ==================== */
+  .toast-container {
+    position: fixed;
+    inset-inline-end: var(--space-5);
+    inset-block-end: var(--space-5);
+    display: grid;
+    gap: var(--space-3);
+    z-index: var(--z-snackbar);
+  }
+
+  .toast {
+    min-inline-size: 220px;
+    max-inline-size: 320px;
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-2);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--color-text);
+    box-shadow: var(--shadow-soft);
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity var(--dur-normal) var(--easing),
+      transform var(--dur-normal) var(--easing);
+  }
+
+  .toast--visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .toast--success { border-color: rgba(22, 163, 74, 0.45); }
+  .toast--error { border-color: rgba(220, 38, 38, 0.6); }
+  .toast--info { border-color: rgba(8, 145, 178, 0.5); }
+  .toast--warning { border-color: rgba(245, 158, 11, 0.55); }
+
+  /* ==================== Cards de utilidad ==================== */
+  .surface {
+    background: var(--color-surface-2);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    padding: var(--space-4);
+  }
 }

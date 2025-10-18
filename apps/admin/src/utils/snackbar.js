@@ -1,87 +1,107 @@
-// utils/snackbar.js — con cola (queue) y accesible
-let snackbarEl = null;
-let isShowing = false;
-let queue = [];
+// Snackbar helper minimalista para toasts globales.
+// - Crea un contenedor fijo en la esquina inferior derecha.
+// - Permite mostrar mensajes con variantes y autocierre configurable.
 
-/* Crea si no existe y devuelve el contenedor del snackbar */
+let toastContainer;
+const timerApi = typeof window !== 'undefined' ? window : {
+  setTimeout: () => 0,
+  clearTimeout: () => {},
+};
+
+// Crea el contenedor solo una vez.
 function ensureContainer() {
-  if (!snackbarEl) snackbarEl = document.getElementById("app-snackbar");
-  if (!snackbarEl) {
-    snackbarEl = document.createElement("div");
-    snackbarEl.id = "app-snackbar";
-    snackbarEl.setAttribute("role", "status");
-    snackbarEl.setAttribute("aria-live", "polite");
-    snackbarEl.setAttribute("aria-atomic", "true");
-    snackbarEl.hidden = true;
-    document.body.appendChild(snackbarEl);
-  }
+  if (toastContainer) return toastContainer;
+  if (typeof document === 'undefined') return null;
+  toastContainer = document.createElement('div');
+  toastContainer.className = 'toast-container';
+  toastContainer.setAttribute('aria-live', 'polite');
+  toastContainer.setAttribute('aria-atomic', 'false');
+  document.body.appendChild(toastContainer);
+  return toastContainer;
 }
 
-/* Setea clases por tipo (sin frameworks) */
-function setTypeClass(type) {
-  ensureContainer();
-  const valid = ["success", "error", "info", "warning"];
-  const t = String(type || "info");
-  snackbarEl.classList.remove("success", "error", "info", "warning", "show");
-  snackbarEl.classList.add(valid.includes(t) ? t : "info");
+// Normaliza la variante recibida a las clases soportadas.
+function normalizeType(type) {
+  const fallback = 'success';
+  if (!type) return fallback;
+  const normalized = String(type).toLowerCase();
+  const allowed = new Set(['success', 'error', 'info', 'warning']);
+  return allowed.has(normalized) ? normalized : fallback;
 }
 
-/* Procesa la cola (muestra 1 mensaje a la vez) */
-function processQueue() {
-  if (isShowing || queue.length === 0) return;
-  isShowing = true;
-
-  const { message, type, duration, code } = queue.shift();
-  ensureContainer();
-  setTypeClass(type);
-  snackbarEl.textContent = String(message);
-  if (code) {
-    // Guardamos el code en un data-attribute para posibles métricas/telemetría futuras
-    snackbarEl.dataset.code = String(code);
-  } else {
-    delete snackbarEl.dataset.code;
-  }
-  snackbarEl.hidden = false;
-
-  // fuerza animación confiable
-  requestAnimationFrame(() => {
-    snackbarEl.classList.add("show");
-  });
-
-  const ms = Math.min(Math.max(Number(duration) || 3000, 600), 10000);
-  setTimeout(() => {
-    snackbarEl.classList.remove("show", "success", "error", "info", "warning");
-    snackbarEl.hidden = true;
-    snackbarEl.textContent = "";
-    delete snackbarEl.dataset.code;
-    isShowing = false;
-    // Siguiente de la cola
-    processQueue();
-  }, ms);
+// Remueve la tarjeta con animación suave.
+function dismissToast(node) {
+  if (!node) return;
+  node.classList.remove('toast--visible');
+  const remove = () => {
+    node.removeEventListener('transitionend', remove);
+    node.remove();
+  };
+  node.addEventListener('transitionend', remove);
+  // Fallback por si la animación no dispara transitionend.
+  timerApi.setTimeout(() => {
+    node.removeEventListener('transitionend', remove);
+    if (node.isConnected) node.remove();
+  }, 400);
 }
 
 /**
- * API pública: encola un mensaje snack y activa el procesamiento.
- * Soporta firma clásica y firma con objeto de opciones:
- *   showSnackbar('Mensaje', 'warning', 3000)
- *   showSnackbar('Mensaje', { type:'warning', duration:3000, code:'PERMISSION_DENIED' })
- *
- * @param {string} message
- * @param {'success'|'error'|'info'|'warning'|object} [type='info'|options]
- * @param {number} [duration=3000]
+ * Muestra un toast con mensaje amigable.
+ * @param {{ message: string, type?: 'success'|'error'|'info'|'warning', timeout?: number }} options
+ * @returns {{ close: () => void }} manejador para cerrar manualmente.
  */
-export function showSnackbar(message, type = "info", duration = 3000) {
-  // Firma flexible con options object
-  if (type && typeof type === 'object') {
-    const { type: t = 'info', duration: d = 3000, code = undefined } = type;
-    queue.push({ message, type: t, duration: d, code });
-  } else {
-    queue.push({ message, type, duration, code: undefined });
+export function showToast(options = {}) {
+  const { message, type = 'success', timeout = 2500 } = options;
+  if (!message) {
+    console.warn('[toast] Mensaje vacío ignorado');
+    return { close: () => {} };
   }
-  processQueue();
+
+  const container = ensureContainer();
+  if (!container) {
+    return { close: () => {} };
+  }
+  const toast = document.createElement('div');
+  const variant = normalizeType(type);
+  toast.className = `toast toast--${variant}`;
+  toast.setAttribute('role', 'status');
+  toast.textContent = String(message);
+
+  container.appendChild(toast);
+  requestAnimationFrame(() => {
+    toast.classList.add('toast--visible');
+  });
+
+  const safeTimeout = Math.max(1000, Number(timeout) || 2500);
+  const timeoutId = timerApi.setTimeout(() => dismissToast(toast), safeTimeout);
+
+  const close = () => {
+    timerApi.clearTimeout(timeoutId);
+    dismissToast(toast);
+  };
+
+  // Hover pausa la salida para facilitar la lectura.
+  toast.addEventListener('mouseenter', () => timerApi.clearTimeout(timeoutId));
+  toast.addEventListener('mouseleave', () => {
+    if (toast.isConnected) {
+      timerApi.setTimeout(() => dismissToast(toast), 800);
+    }
+  });
+
+  return { close };
 }
 
-/* (Opcional) limpiar cola rápidamente */
-export function clearSnackQueue() {
-  queue = [];
+// Alias retrocompatible con el helper existente en la app.
+export function showSnackbar(message, type = 'info', duration = 3000) {
+  if (type && typeof type === 'object') {
+    const { type: variant = 'info', duration: customDuration = 3000 } = type;
+    return showToast({ message, type: variant, timeout: customDuration });
+  }
+  return showToast({ message, type, timeout: duration });
+}
+
+// Permite limpiar el contenedor completo (p.ej. en tests o logout).
+export function clearToasts() {
+  if (!toastContainer) return;
+  toastContainer.querySelectorAll('.toast').forEach((node) => dismissToast(node));
 }

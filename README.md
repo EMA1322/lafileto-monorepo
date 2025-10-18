@@ -103,6 +103,14 @@ Los artefactos de las SPAs quedan en `apps/*/dist/` listos para servir (Nginx u 
 
 ---
 
+## UI Kit naranja (Admin)
+
+- Tokens y estilos base disponibles en [`apps/admin/src/styles/core`](./apps/admin/src/styles/core).
+- Componentes reutilizables documentados en [`docs/07-anexos/ui-kit.md`](./docs/07-anexos/ui-kit.md).
+- Helpers de UI (`showToast`, `openModal`) listos en [`apps/admin/src/utils`](./apps/admin/src/utils) para integrarlos en futuras pantallas.
+
+---
+
 ## Variables de entorno (resumen)
 
 Ver detalle en [`/docs/07-anexos/env.md`](./docs/07-anexos/env.md). Ejemplo **dev**:
