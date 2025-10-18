@@ -76,48 +76,25 @@
 .roles__panel[hidden] { display: none !important; }
 
 /* =========================
-   Toolbar (page size, search, actions)
+   Toolbar (acciones principales)
    ========================= */
 .users__toolbar {
-  display: grid;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
   gap: var(--spacing-3);
 }
 
-.users__page-size,
-.users__search,
 .users__actions {
   display: flex;
   align-items: center;
   gap: var(--spacing-2);
 }
 
-.users__page-size select,
-.users__search input[type="search"] {
-  height: 2.25rem;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  background: var(--surface-card);
-  padding: 0 var(--spacing-3);
-  transition: border-color 180ms ease, box-shadow 180ms ease;
-}
-.users__search input[type="search"] { width: 100%; }
-.users__page-size select:focus,
-.users__search input[type="search"]:focus {
-  outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 20%, transparent);
-}
-
 /* “Nuevo usuario” hereda .btn global; refuerzo sutil */
 #btn-user-new.btn {
   background: var(--primary-color);
   color: #fff;
-}
-
-/* Contador de resultados y estados */
-.users__counter {
-  color: var(--text-muted);
-  font-size: 0.9rem;
 }
 
 .users__status {
@@ -179,6 +156,43 @@
   font-size: 0.85rem;
 }
 
+.users__status-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 4.5rem;
+  height: 2rem;
+  padding: 0 var(--spacing-3);
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  background: var(--surface-card);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 180ms ease, border-color 180ms ease, color 180ms ease;
+}
+
+.users__status-toggle.is-active {
+  color: var(--success-color);
+  border-color: color-mix(in srgb, var(--success-color) 60%, white);
+  background: color-mix(in srgb, var(--success-color) 18%, white);
+}
+
+.users__status-toggle.is-inactive {
+  color: var(--text-muted);
+  border-color: color-mix(in srgb, var(--border-color) 60%, white);
+  background: color-mix(in srgb, var(--text-muted) 8%, white);
+}
+
+.users__status-toggle:hover:not(:disabled) {
+  border-color: var(--primary-color);
+}
+
+.users__status-toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Badges de estado */
 .badge {
   display: inline-flex;
@@ -200,32 +214,6 @@
   background: color-mix(in srgb, var(--text-muted) 12%, white);
   border: 1px solid color-mix(in srgb, var(--text-muted) 35%, white);
 }
-
-/* =========================
-   Paginación
-   ========================= */
-.users__pagination {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-3);
-  padding-top: var(--spacing-3);
-}
-
-.users__page-btn {
-  height: 2.1rem;
-  padding: 0 var(--spacing-3);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  background: var(--surface-card);
-  color: var(--text-color);
-  cursor: pointer;
-  transition: background 180ms ease, border-color 180ms ease;
-}
-.users__page-btn:hover { background: color-mix(in srgb, var(--secondary-color) 85%, white); }
-.users__page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-.users__page-info { color: var(--text-muted); font-size: 0.9rem; }
 
 /* =========================
    Formularios (UserForm / RoleForm)

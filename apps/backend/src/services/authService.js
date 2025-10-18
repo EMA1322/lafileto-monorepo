@@ -1,83 +1,46 @@
 // Servicio de autenticación: login + me
-// - Implementa lockout por intentos fallidos
 // - Construye effectivePermissions desde DB
 
 import { userRepository } from '../repositories/userRepository.js';
 import { rolePermissionRepository } from '../repositories/rolePermissionRepository.js';
 import { signJwt } from '../utils/jwt.js';
 import { createError } from '../utils/errors.js';
+import { comparePassword } from '../utils/bcrypt.js';
 
-// Reglas de lockout (puedes ajustar aquí)
-const MAX_FAILED = 10;           // intentos fallidos
-const LOCK_MS    = 15 * 60 * 1000; // 15 minutos
-
-// Helper puro (testeable): calcula nuevo estado de lock/contador
-export function calculateLockState(user, isPasswordOk, now = Date.now()) {
-  if (isPasswordOk) return { reset: true, lockUntil: null, bump: false };
-
-  const failed = (user.failedLoginAttempts || 0) + 1;
-  const shouldLock = failed >= MAX_FAILED;
-  return {
-    reset: false,
-    bump: true,
-    lockUntil: shouldLock ? new Date(now + LOCK_MS) : null,
-    failed
-  };
-}
-
-async function buildEffectivePermissions(roleId) {
-  const rows = await rolePermissionRepository.findByRole(roleId);
+// Normaliza los permisos convirtiendo las claves a minúsculas y con flags booleanos.
+function normalizePermissions(rows = []) {
   const map = Object.create(null);
-  for (const r of rows) {
-    map[r.moduleKey] = { r: !!r.r, w: !!r.w, u: !!r.u, d: !!r.d };
+  for (const row of rows) {
+    if (!row) continue;
+    const key = typeof row.moduleKey === 'string' ? row.moduleKey.toLowerCase() : '';
+    if (!key) continue;
+    map[key] = {
+      r: !!row.r,
+      w: !!row.w,
+      u: !!row.u,
+      d: !!row.d
+    };
   }
   return map;
 }
 
-let bcryptModulePromise;
-
-const getBcrypt = async () => {
-  if (!bcryptModulePromise) {
-    // Cargamos on-demand para poder arrojar un error claro si falta la dep.
-    bcryptModulePromise = import('bcryptjs')
-      .then(mod => mod.default || mod)
-      .catch(error => {
-        error.message = 'Missing dependency bcryptjs: run "pnpm install" in apps/backend.';
-        throw error;
-      });
-  }
-  return bcryptModulePromise;
-};
+async function buildEffectivePermissions(roleId) {
+  const rows = await rolePermissionRepository.findByRole(roleId);
+  return normalizePermissions(rows);
+}
 
 export const authService = {
   async login(email, password) {
     const user = await userRepository.findByEmail(email);
     // No exponemos si existe/no existe (security by design)
-    if (!user || user.status !== 'ACTIVE' || user.deletedAt) {
+    if (!user || user.status !== 'ACTIVE') {
       throw createError('AUTH_INVALID', 'Credenciales inválidas.');
     }
 
-    // ¿Cuenta bloqueada temporalmente?
-    if (user.lockUntil && user.lockUntil.getTime() > Date.now()) {
-      const mins = Math.ceil((user.lockUntil.getTime() - Date.now()) / 60000);
-      throw createError('RATE_LIMITED', `Cuenta bloqueada por intentos fallidos. Intenta en ${mins} min.`);
-    }
-
-    const bcrypt = await getBcrypt();
-    const isOk = bcrypt.compareSync(password, user.passwordHash);
-    const lockState = calculateLockState(user, isOk);
-
+    const isOk = await comparePassword(password, user.passwordHash);
     if (!isOk) {
-      await userRepository.bumpFailedAttempt(user.id, lockState.lockUntil);
-      // Si justo lo bloqueamos, informamos con RATE_LIMITED; si no, AUTH_INVALID.
-      if (lockState.lockUntil) {
-        throw createError('RATE_LIMITED', 'Cuenta bloqueada temporalmente por intentos fallidos.');
-      }
       throw createError('AUTH_INVALID', 'Credenciales inválidas.');
     }
-
-    // Reset contador/lock en éxito
-    await userRepository.resetLoginState(user.id);
 
     // Permisos efectivos
     const effectivePermissions = await buildEffectivePermissions(user.roleId);
@@ -97,28 +60,30 @@ export const authService = {
         id: user.id,
         fullName: user.fullName,
         email: user.email,
+        phone: user.phone,
         roleId: user.roleId,
         status: user.status
       },
+      permissions: effectivePermissions,
       effectivePermissions
     };
   },
 
   async me(userId) {
-    const user = await userRepository.findById(userId);
-    if (!user || user.deletedAt) {
+    const user = await userRepository.findByIdForSession(userId);
+    if (!user) {
       throw createError('AUTH_INVALID', 'Sesión inválida.');
     }
     const effectivePermissions = await buildEffectivePermissions(user.roleId);
     return {
-      user: {
-        id: user.id,
-        fullName: user.fullName,
-        email: user.email,
-        roleId: user.roleId,
-        status: user.status
-      },
+      user,
+      permissions: effectivePermissions,
       effectivePermissions
     };
+  },
+
+  async logout() {
+    // JWT es stateless → sólo confirmamos la intención en la respuesta.
+    return { loggedOut: true };
   }
 };

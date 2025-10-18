@@ -6,5 +6,6 @@ export const roleRepository = {
   findById: (roleId) => prisma.role.findUnique({ where: { roleId } }),
   create: (payload) => prisma.role.create({ data: payload }),
   updateName: (roleId, name) =>
-    prisma.role.update({ where: { roleId }, data: { name } })
+    prisma.role.update({ where: { roleId }, data: { name } }),
+  delete: (roleId) => prisma.role.delete({ where: { roleId } })
 };

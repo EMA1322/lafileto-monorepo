@@ -1,254 +1,324 @@
+import { fetchMe } from "@/utils/auth.js";
 import { openModal, closeModal } from "@/utils/modals.js";
 
 import {
   state,
-  DATA_SOURCE,
-  LS_USERS_KEY,
-  LS_ROLES_KEY,
-  LS_PERM_OVERRIDE_KEY,
-  RBAC_SEED_URL,
-  readLS,
-  writeLS,
-  snackInfo,
+  fetchRolePermissions,
+  saveRolePermissions,
   snackOk,
-  snackWarn,
   snackErr,
-  apiUsersCreate,
-  apiUsersUpdate,
-  apiUsersDelete,
-  apiRolesUpdate,
-  apiPermsGet,
-  apiPermsPut,
-  fetchJSON,
+  createUser,
+  updateUser,
+  deleteUser,
+  createRole,
+  updateRole,
+  deleteRole,
+  reloadUsers,
+  PHONE_REGEX
 } from "../state.js";
-import { MATRIX_MODULES, computeIsAdmin } from "../rbac.js";
-import {
-  buildRolePermsMap,
-  escapeHTML,
-  formatDateDDMMYYYY,
-  generateId,
-  mapErrorToMessage,
-  norm,
-} from "../helpers.js";
+import { escapeHTML, mapErrorToMessage } from "../helpers.js";
 import { applyRBAC } from "./viewRBAC.js";
 import { renderUsersTable } from "./usersTable.js";
+import { renderUsersStatus, renderRolesStatus } from "./status.js";
 import { renderRolesView } from "./roles.js";
 
-export function openUserViewModal(user) {
-  const tpl = document.getElementById("tpl-user-view");
-  if (!tpl) return;
-  openModal(tpl.innerHTML, "#modal-close");
-  const modal = document.getElementById("modal-body");
-  if (!modal) return;
-  modal.querySelector("#vw-firstName").textContent = user.firstName || "";
-  modal.querySelector("#vw-lastName").textContent = user.lastName || "";
-  modal.querySelector("#vw-email").textContent = user.email || "";
-  modal.querySelector("#vw-phone").textContent = user.phone || "";
-  const roleName = state.roles.find((r) => r.id === user.roleId)?.name || "";
-  modal.querySelector("#vw-roleName").textContent = roleName;
-  modal.querySelector("#vw-statusBadge").innerHTML =
-    user.status === "active"
-      ? `<span class="badge badge--success">Activo</span>`
-      : `<span class="badge badge--muted">Inactivo</span>`;
-  modal.querySelector("#vw-createdAt").textContent = formatDateDDMMYYYY(user.createdAt);
-}
+const PHONE_CLIENT_REGEX = PHONE_REGEX;
 
-export function openUserFormModal(user) {
-  const isEdit = !!user;
-  const tpl = document.getElementById("tpl-user-form");
-  if (!tpl) return;
-
-  openModal(tpl.innerHTML, "#user-firstName");
-  const modal = document.getElementById("modal-body");
-  if (!modal) return;
-
-  const selRole = modal.querySelector("#user-roleId");
-  selRole.innerHTML = state.roles
-    .map((r) => `<option value="${escapeHTML(r.id)}">${escapeHTML(r.name)}</option>`)
-    .join("");
-
-  if (isEdit) {
-    modal.querySelector("#user-id").value = user.id;
-    modal.querySelector("#user-firstName").value = user.firstName || "";
-    modal.querySelector("#user-lastName").value = user.lastName || "";
-    modal.querySelector("#user-email").value = user.email || "";
-    modal.querySelector("#user-phone").value = user.phone || "";
-    selRole.value = user.roleId || "";
-    modal.querySelector("#user-status").value = user.status || "active";
-    modal.querySelector("#user-createdAt").value = formatDateDDMMYYYY(user.createdAt);
-  } else {
-    modal.querySelector("#user-createdAt").value = formatDateDDMMYYYY(new Date().toISOString());
-  }
-
-  const form = modal.querySelector("#user-form");
-  const btnSubmit = modal.querySelector("#user-submit");
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    if (btnSubmit.disabled) return;
-
-    const formData = new FormData(form);
-    const payload = {
-      id: formData.get("id") || generateId("u"),
-      firstName: String(formData.get("firstName") || "").trim(),
-      lastName: String(formData.get("lastName") || "").trim(),
-      email: String(formData.get("email") || "").trim().toLowerCase(),
-      phone: String(formData.get("phone") || "").trim(),
-      roleId: String(formData.get("roleId") || "").trim(),
-      status: String(formData.get("status") || "active"),
-      createdAt: isEdit ? user.createdAt : new Date().toISOString(),
-    };
-
-    const setErr = (id, show) => {
-      const el = modal.querySelector(`#${id}`);
-      if (el) el.hidden = !show;
-    };
-    setErr("err-firstName", !payload.firstName);
-    setErr("err-lastName", !payload.lastName);
-
-    const emailValid = /\S+@\S+\.\S+/.test(payload.email);
-    const emailTaken = state.users.some((u) => u.email === payload.email && u.id !== payload.id);
-    setErr("err-email", !emailValid || emailTaken);
-
-    const phoneValid = /^[0-9]{8,12}$/.test(payload.phone);
-    setErr("err-phone", !phoneValid);
-
-    setErr("err-roleId", !payload.roleId);
-
-    const invalid =
-      !payload.firstName ||
-      !payload.lastName ||
-      !emailValid ||
-      emailTaken ||
-      !phoneValid ||
-      !payload.roleId;
-
-    if (invalid) {
-      snackWarn("Revisá los campos del formulario.", "VALIDATION_ERROR");
-      return;
-    }
-
-    btnSubmit.disabled = true;
-    try {
-      if (DATA_SOURCE === "api") {
-        if (isEdit) {
-          await apiUsersUpdate(payload.id, payload);
-          snackOk("Usuario actualizado");
-        } else {
-          await apiUsersCreate(payload);
-          snackOk("Usuario creado");
-        }
-      } else {
-        if (isEdit) {
-          const idx = state.users.findIndex((u) => u.id === payload.id);
-          if (idx !== -1) state.users[idx] = payload;
-        } else {
-          state.users.push(payload);
-        }
-        writeLS(LS_USERS_KEY, state.users);
-        snackInfo("Demo JSON: cambios no persistidos");
-      }
-      renderUsersTable();
-      closeModal();
-    } catch (err) {
-      snackErr(mapErrorToMessage(err, "Error al guardar el usuario."), err?.code);
-    } finally {
-      btnSubmit.disabled = false;
-    }
+function resetFormErrors(form) {
+  form.querySelectorAll(".form__error").forEach((el) => {
+    el.hidden = true;
+  });
+  form.querySelectorAll("[aria-invalid='true']").forEach((el) => {
+    el.removeAttribute("aria-invalid");
   });
 }
 
-export function openConfirmDeleteModal(user) {
-  if (isOnlyActiveAdmin(user)) {
-    snackWarn("No se puede inactivar al único Administrador activo.");
+function setFieldError(form, field, message) {
+  const err =
+    form.querySelector(`#err-${field}`) || form.querySelector(`#err-edit-${field}`) || form.querySelector(`#err-${field}-field`);
+  const input =
+    form.querySelector(`[name='${field}']`) ||
+    form.querySelector(`#${field}`) ||
+    form.querySelector(`#user-edit-${field}`) ||
+    form.querySelector(`#${field}-field`);
+  if (!err) return;
+  if (message) {
+    err.textContent = message;
+    err.hidden = false;
+    input?.setAttribute("aria-invalid", "true");
+  } else {
+    err.hidden = true;
+    input?.removeAttribute("aria-invalid");
+  }
+}
+
+function applyServerErrors(form, error) {
+  const fields = error?.details?.fields;
+  if (!Array.isArray(fields)) return;
+  fields.forEach((entry) => {
+    const rawKey = String(entry?.path || "").split(".")[0];
+    const key = rawKey === "name" ? "role-name" : rawKey;
+    if (!key) return;
+    setFieldError(form, key, entry?.message || "Dato inválido.");
+  });
+}
+
+function fillRolesOptions(select) {
+  if (!select) return;
+  const options = state.roles.map((role) => {
+    const roleId = role.roleId || role.id;
+    const label = role.name || roleId;
+    return `<option value="${escapeHTML(roleId)}">${escapeHTML(label)}</option>`;
+  });
+  select.innerHTML = options.join("");
+}
+
+export function openCreateUserModal() {
+  const tpl = document.getElementById("tpl-user-form");
+  if (!tpl) return;
+  if (!state.roles.length) {
+    snackErr("No hay roles disponibles. Creá un rol antes de dar de alta usuarios.");
     return;
   }
 
-  const tpl = document.getElementById("tpl-confirm-delete");
-  if (!tpl) return;
-
-  openModal(tpl.innerHTML, "#btn-confirm-delete");
+  openModal(tpl.innerHTML, "#user-submit");
   const modal = document.getElementById("modal-body");
-  const btn = modal.querySelector("#btn-confirm-delete");
-  btn.addEventListener("click", async () => {
+  if (!modal) return;
+
+  const form = modal.querySelector("#user-form");
+  const btnSubmit = modal.querySelector("#user-submit");
+  const selectRole = form?.querySelector("#user-roleId");
+  fillRolesOptions(selectRole);
+
+  form?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!form) return;
+
+    resetFormErrors(form);
+
+    const formData = new FormData(form);
+    const fullName = String(formData.get("fullName") || "").trim();
+    const email = String(formData.get("email") || "").trim().toLowerCase();
+    const phone = String(formData.get("phone") || "").trim();
+    const password = String(formData.get("password") || "").trim();
+    const roleId = String(formData.get("roleId") || "").trim().toLowerCase();
+    const status = String(formData.get("status") || "ACTIVE").toUpperCase();
+
+    let hasError = false;
+    if (fullName.length < 2) {
+      setFieldError(form, "fullName", "Ingrese un nombre válido (mínimo 2 caracteres).");
+      hasError = true;
+    }
+    if (!email || !email.includes("@")) {
+      setFieldError(form, "email", "Ingrese un email válido.");
+      hasError = true;
+    }
+    if (!phone || !PHONE_CLIENT_REGEX.test(phone)) {
+      setFieldError(form, "phone", "Ingrese un teléfono válido (7-20 caracteres).");
+      hasError = true;
+    }
+    if (password.length < 8) {
+      setFieldError(form, "password", "La contraseña debe tener al menos 8 caracteres.");
+      hasError = true;
+    }
+    if (!roleId) {
+      setFieldError(form, "roleId", "Seleccione un rol válido.");
+      hasError = true;
+    }
+    if (hasError) return;
+
+    btnSubmit.disabled = true;
     try {
-      if (DATA_SOURCE === "api") {
-        await apiUsersDelete(user.id);
-        snackOk("Usuario inactivado");
-      } else {
-        const idx = state.users.findIndex((u) => u.id === user.id);
-        if (idx !== -1) state.users[idx] = { ...state.users[idx], status: "inactive" };
-        writeLS(LS_USERS_KEY, state.users);
-        snackInfo("Demo JSON: cambios no persistidos");
-      }
-      renderUsersTable();
+      await createUser({ fullName, email, phone, password, roleId, status });
+      snackOk("Usuario creado correctamente.");
       closeModal();
+      await reloadUsers({
+        onUsersStatus: renderUsersStatus,
+        onUsersTable: renderUsersTable
+      });
     } catch (err) {
-      snackErr(mapErrorToMessage(err, "No se pudo inactivar el usuario."), err?.code);
+      applyServerErrors(form, err);
+      snackErr(mapErrorToMessage(err, "No se pudo crear el usuario."), err?.code);
+    } finally {
+      btnSubmit.disabled = false;
     }
   });
 }
 
-function isOnlyActiveAdmin(user) {
-  const adminRole = state.roles.find((r) => norm(r.name) === "administrador");
-  if (!adminRole) return false;
-  const isUserAdmin = user.roleId === adminRole.id;
-  if (!isUserAdmin) return false;
-  const activeAdmins = state.users.filter((u) => u.roleId === adminRole.id && u.status === "active");
-  return activeAdmins.length <= 1;
+export function openEditUserModal(user) {
+  const tpl = document.getElementById("tpl-user-edit-form");
+  if (!tpl) return;
+  if (!state.roles.length) {
+    snackErr("No hay roles disponibles. Creá un rol antes de editar usuarios.");
+    return;
+  }
+
+  openModal(tpl.innerHTML, "#user-edit-submit");
+  const modal = document.getElementById("modal-body");
+  if (!modal) return;
+
+  const form = modal.querySelector("#user-edit-form");
+  const btnSubmit = modal.querySelector("#user-edit-submit");
+  const inputName = form?.querySelector("#user-edit-fullName");
+  const inputPhone = form?.querySelector("#user-edit-phone");
+  const selectRole = form?.querySelector("#user-edit-roleId");
+  const selectStatus = form?.querySelector("#user-edit-status");
+
+  fillRolesOptions(selectRole);
+
+  if (inputName) inputName.value = user?.fullName || "";
+  if (inputPhone) inputPhone.value = user?.phone || "";
+  if (selectRole) selectRole.value = user?.roleId || "";
+  if (selectStatus) selectStatus.value = (user?.status || "ACTIVE").toUpperCase();
+
+  form?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!form) return;
+
+    resetFormErrors(form);
+
+    const formData = new FormData(form);
+    const fullName = String(formData.get("fullName") || "").trim();
+    const phone = String(formData.get("phone") || "").trim();
+    const roleId = String(formData.get("roleId") || "").trim().toLowerCase();
+    const status = String(formData.get("status") || "ACTIVE").toUpperCase();
+
+    let hasError = false;
+    if (fullName.length < 2) {
+      setFieldError(form, "fullName", "Ingrese un nombre válido (mínimo 2 caracteres).");
+      hasError = true;
+    }
+    if (!phone || !PHONE_CLIENT_REGEX.test(phone)) {
+      setFieldError(form, "phone", "Ingrese un teléfono válido (7-20 caracteres).");
+      hasError = true;
+    }
+    if (!roleId) {
+      setFieldError(form, "roleId", "Seleccione un rol válido.");
+      hasError = true;
+    }
+    if (hasError) return;
+
+    btnSubmit.disabled = true;
+    try {
+      await updateUser(user.id, { fullName, phone, roleId, status });
+      snackOk("Usuario actualizado correctamente.");
+      closeModal();
+      renderUsersTable();
+    } catch (err) {
+      applyServerErrors(form, err);
+      snackErr(mapErrorToMessage(err, "No se pudo actualizar el usuario."), err?.code);
+    } finally {
+      btnSubmit.disabled = false;
+    }
+  });
 }
 
-export function openRoleEditModal(role) {
-  const tpl = document.getElementById("tpl-role-edit");
+export function openDeleteUserModal(user) {
+  const tpl = document.getElementById("tpl-user-delete");
   if (!tpl) return;
 
-  openModal(tpl.innerHTML, "#role-name");
+  openModal(tpl.innerHTML, "#user-delete-confirm");
   const modal = document.getElementById("modal-body");
+  if (!modal) return;
 
-  modal.querySelector("#role-id").value = role.id;
-  modal.querySelector("#role-name").value = role.name || "";
-  modal.querySelector("#role-description").value = role.description || "";
-  modal.querySelector("#role-status").value = role.status || "active";
+  const msg = modal.querySelector("#user-delete-message");
+  if (msg) {
+    msg.textContent = `¿Seguro que querés eliminar a ${user.fullName || user.email}? Esta acción no se puede deshacer.`;
+  }
+
+  const btnDelete = modal.querySelector("#user-delete-confirm");
+  btnDelete?.addEventListener("click", async () => {
+    if (!btnDelete) return;
+    btnDelete.disabled = true;
+    try {
+      await deleteUser(user.id);
+      snackOk("Usuario eliminado correctamente.");
+      closeModal();
+      renderUsersTable();
+    } catch (err) {
+      snackErr(mapErrorToMessage(err, "No se pudo eliminar el usuario."), err?.code);
+      btnDelete.disabled = false;
+    }
+  });
+}
+
+export function openRoleFormModal({ mode = "create", role } = {}) {
+  const tpl = document.getElementById("tpl-role-form");
+  if (!tpl) return;
+  openModal(tpl.innerHTML, "#role-submit");
+  const modal = document.getElementById("modal-body");
+  if (!modal) return;
 
   const form = modal.querySelector("#role-form");
-  const btnSubmit = modal.querySelector("#role-submit");
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    if (btnSubmit.disabled) return;
+  const inputName = form?.querySelector("#role-name");
+  const hiddenId = form?.querySelector("#role-id");
+  const btnSubmit = form?.querySelector("#role-submit");
 
-    const fd = new FormData(form);
-    const payload = {
-      id: fd.get("id"),
-      name: String(fd.get("name") || "").trim(),
-      description: String(fd.get("description") || "").trim(),
-      status: String(fd.get("status") || "active"),
-    };
+  if (mode === "edit" && role) {
+    const roleId = role.roleId || role.id;
+    hiddenId.value = roleId;
+    inputName.value = role.name || roleId;
+    if (btnSubmit) btnSubmit.textContent = "Guardar";
+  } else if (btnSubmit) {
+    btnSubmit.textContent = "Crear";
+  }
 
-    const errName = modal.querySelector("#err-role-name");
-    if (errName) errName.hidden = !!payload.name;
-    if (!payload.name) {
-      snackWarn("Ingresá un nombre de rol válido.", "VALIDATION_ERROR");
+  form?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!form) return;
+
+    resetFormErrors(form);
+
+    const name = String(inputName?.value || "").trim();
+    if (name.length < 2) {
+      setFieldError(form, "role-name", "Ingrese un nombre válido (mínimo 2 caracteres).");
       return;
     }
 
     btnSubmit.disabled = true;
     try {
-      if (DATA_SOURCE === "api") {
-        await apiRolesUpdate(payload.id, payload);
-        snackOk("Rol actualizado");
+      if (mode === "edit" && hiddenId?.value) {
+        await updateRole(hiddenId.value, { name });
+        snackOk("Rol actualizado correctamente.");
       } else {
-        const idx = state.roles.findIndex((r) => r.id === payload.id);
-        if (idx !== -1) {
-          state.roles[idx] = payload;
-          writeLS(LS_ROLES_KEY, state.roles);
-        }
-        snackInfo("Demo JSON: cambios no persistidos");
+        await createRole({ name });
+        snackOk("Rol creado correctamente.");
       }
+      renderRolesStatus("");
       renderRolesView();
+      applyRBAC();
       closeModal();
     } catch (err) {
-      snackErr(mapErrorToMessage(err, "Error al guardar el rol."), err?.code);
+      applyServerErrors(form, err);
+      snackErr(mapErrorToMessage(err, "No se pudo guardar el rol."), err?.code);
     } finally {
       btnSubmit.disabled = false;
+    }
+  });
+}
+
+export function openRoleDeleteModal(role) {
+  const tpl = document.getElementById("tpl-role-delete");
+  if (!tpl) return;
+  const roleId = role.roleId || role.id;
+  openModal(tpl.innerHTML, "#btn-role-delete");
+  const modal = document.getElementById("modal-body");
+  if (!modal) return;
+
+  modal.querySelector("#role-del-name").textContent = role.name || roleId;
+  const btnDelete = modal.querySelector("#btn-role-delete");
+  btnDelete?.addEventListener("click", async () => {
+    btnDelete.disabled = true;
+    try {
+      await deleteRole(roleId);
+      snackOk("Rol eliminado correctamente.");
+      renderRolesStatus("");
+      renderRolesView();
+      applyRBAC();
+      closeModal();
+    } catch (err) {
+      snackErr(mapErrorToMessage(err, "No se pudo eliminar el rol."), err?.code);
+      btnDelete.disabled = false;
     }
   });
 }
@@ -257,86 +327,72 @@ export async function openPermissionsMatrixModal(role) {
   const tpl = document.getElementById("tpl-permissions-matrix");
   if (!tpl) return;
 
-  let baseForRole = {};
-  let overrideForRole = {};
-
+  const roleId = role.roleId || role.id;
+  let permissions = [];
   try {
-    if (DATA_SOURCE === "api") {
-      const res = await apiPermsGet(role.id);
-      baseForRole = res?.data || {};
-    } else {
-      const [seed, overrides] = await Promise.all([
-        fetchJSON(RBAC_SEED_URL).catch(() => null),
-        Promise.resolve(readLS(LS_PERM_OVERRIDE_KEY, {})),
-      ]);
-      const baseMapByRole = buildRolePermsMap(seed);
-      baseForRole = baseMapByRole[role.id] || {};
-      overrideForRole = overrides[role.id] || {};
-    }
+    permissions = await fetchRolePermissions(roleId);
   } catch (err) {
-    snackErr(mapErrorToMessage(err, "No se pudieron cargar permisos."), err?.code);
-    return;
+    snackErr(mapErrorToMessage(err, "No se pudieron cargar los permisos."), err?.code);
+    throw err;
   }
 
-  const matrix = {};
-  MATRIX_MODULES.forEach((mod) => {
-    const base = baseForRole[mod] || {};
-    const ov = overrideForRole[mod] || {};
-    matrix[mod] = {
-      r: ov.r ?? !!base.r,
-      w: ov.w ?? !!base.w,
-      u: ov.u ?? !!base.u,
-      d: ov.d ?? !!base.d,
-    };
-  });
+  const modules = state.modules.length
+    ? state.modules
+    : [{ key: "users", name: "Usuarios" }];
+
+  const permissionsByModule = new Map();
+  permissions.forEach((p) => permissionsByModule.set(p.moduleKey, p));
 
   openModal(tpl.innerHTML, "#perm-submit");
   const modal = document.getElementById("modal-body");
-  modal.querySelector("#perm-role-name").textContent = role.name;
+  if (!modal) return;
+
+  modal.querySelector("#perm-role-name").textContent = role.name || roleId;
 
   const tbody = modal.querySelector("#perm-tbody");
-  tbody.innerHTML = MATRIX_MODULES.map((mod) => {
-    const m = matrix[mod];
-    return `
-      <tr data-module="${escapeHTML(mod)}">
-        <td>${escapeHTML(mod)}</td>
-        <td><input type="checkbox" data-perm="r" ${m.r ? "checked" : ""} /></td>
-        <td><input type="checkbox" data-perm="w" ${m.w ? "checked" : ""} /></td>
-        <td><input type="checkbox" data-perm="u" ${m.u ? "checked" : ""} /></td>
-        <td><input type="checkbox" data-perm="d" ${m.d ? "checked" : ""} /></td>
-      </tr>
-    `;
-  }).join("");
+  tbody.innerHTML = modules
+    .map((mod) => {
+      const mk = mod.key || mod.moduleKey;
+      const current = permissionsByModule.get(mk) || {};
+      return `
+        <tr data-module="${escapeHTML(mk)}">
+          <td>${escapeHTML(mod.name || mk)}</td>
+          <td><input type="checkbox" data-perm="r" ${current.r ? "checked" : ""} /></td>
+          <td><input type="checkbox" data-perm="w" ${current.w ? "checked" : ""} /></td>
+          <td><input type="checkbox" data-perm="u" ${current.u ? "checked" : ""} /></td>
+          <td><input type="checkbox" data-perm="d" ${current.d ? "checked" : ""} /></td>
+        </tr>
+      `;
+    })
+    .join("");
 
   const btnSave = modal.querySelector("#perm-submit");
-  btnSave.addEventListener("click", async () => {
-    const permMap = {};
-    document.querySelectorAll("#perm-tbody tr").forEach((tr) => {
-      const mod = tr.dataset.module;
-      permMap[mod] = {
+  btnSave?.addEventListener("click", async () => {
+    const payload = [];
+    modal.querySelectorAll("#perm-tbody tr").forEach((tr) => {
+      const mk = tr.dataset.module;
+      if (!mk) return;
+      payload.push({
+        moduleKey: mk,
         r: tr.querySelector('[data-perm="r"]').checked,
         w: tr.querySelector('[data-perm="w"]').checked,
         u: tr.querySelector('[data-perm="u"]').checked,
-        d: tr.querySelector('[data-perm="d"]').checked,
-      };
+        d: tr.querySelector('[data-perm="d"]').checked
+      });
     });
 
+    btnSave.disabled = true;
     try {
-      if (DATA_SOURCE === "api") {
-        await apiPermsPut(role.id, permMap);
-        snackOk("Permisos guardados");
-      } else {
-        const current = readLS(LS_PERM_OVERRIDE_KEY, {});
-        current[role.id] = permMap;
-        writeLS(LS_PERM_OVERRIDE_KEY, current);
-        snackOk("Permisos actualizados (demo local)");
-      }
+      await saveRolePermissions(roleId, payload);
+      snackOk("Permisos guardados");
 
-      if (state.rbac.roleId && state.rbac.roleId === role.id) {
+      if (state.rbac.roleId && state.rbac.roleId === roleId) {
         try {
-          sessionStorage.setItem("rbac.permMap", JSON.stringify(permMap));
-        } catch {}
-        state.rbac.isAdmin = computeIsAdmin({ roleId: state.rbac.roleId });
+          // Refresca la sesión del usuario actual para reflejar los nuevos permisos.
+          await fetchMe({ force: true, silent: true });
+        } catch (refreshError) {
+          console.warn("[users] refresh permissions after save failed", refreshError);
+        }
         applyRBAC();
         renderUsersTable();
       }
@@ -344,6 +400,8 @@ export async function openPermissionsMatrixModal(role) {
       closeModal();
     } catch (err) {
       snackErr(mapErrorToMessage(err, "No se pudieron guardar los permisos."), err?.code);
+    } finally {
+      btnSave.disabled = false;
     }
   });
 }
