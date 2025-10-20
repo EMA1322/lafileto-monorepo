@@ -1,4 +1,5 @@
 import * as rbacClient from "@/utils/rbac.js";
+import { mountIcons } from "@/utils/icons.js";
 
 import { fetchData } from "./state.js";
 import { renderUsersStatus, renderRolesStatus } from "./views/status.js";
@@ -14,6 +15,8 @@ export async function initUsers(attempt = 0) {
     console.warn("[users] Container not found.");
     return;
   }
+
+  mountIcons(container);
 
   if (rbacClient.ensureRbacLoaded) {
     await rbacClient.ensureRbacLoaded();

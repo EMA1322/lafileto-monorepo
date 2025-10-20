@@ -6,6 +6,7 @@
 import 'normalize.css';
 import '@/styles/core/tokens.css';
 import '@/styles/core/base.css';
+import '@/styles/core/icons.css';
 import '@/styles/components/components.css';
 import '@/styles/global.css';
 import '@/styles/modals.css';

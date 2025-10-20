@@ -22,6 +22,25 @@ Variables principales:
 - Focus visible consistente usando `--focus-ring`.
 - Helper `.sr-only` para contenido accesible.
 
+## Iconos (`styles/core/icons.css` + `utils/icons.js`)
+
+- Tokens de tamaño `--icon-size-xs|sm|md|lg|xl` disponibles globalmente.
+- Clases `.icon` + modificadores `.icon--sm`, etc. para SVG inline (heredan color actual).
+- Helper `icon(name, { size })` devuelve markup `<svg>` listo para interpolar.
+- `withIcon(name, label, opts)` compone icono + texto, ideal para botones.
+- `mountIcons(root?)` reemplaza `<span data-icon="plus">` por SVG real en contenido estático.
+
+```html
+<button class="btn">
+  <span class="icon icon--sm" data-icon="plus" aria-hidden="true"></span>
+  <span class="icon-label">Nuevo usuario</span>
+</button>
+<script type="module">
+  import { mountIcons } from '@/utils/icons.js';
+  mountIcons(document);
+</script>
+```
+
 ## Componentes (`styles/components/components.css`)
 
 ### Botones
