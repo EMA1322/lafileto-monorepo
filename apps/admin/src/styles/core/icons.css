@@ -1,0 +1,31 @@
+/* ========================================================================
+   ICONS — sistema de íconos SVG reutilizable para Admin
+   - Define tamaños basados en tokens y helpers para iconografía inline.
+   ======================================================================== */
+@layer base {
+  .icon {
+    display: inline-block;
+    width: var(--icon-size-md);
+    height: var(--icon-size-md);
+    vertical-align: middle;
+    line-height: 1;
+    color: inherit;
+    fill: currentColor;
+    stroke: currentColor;
+  }
+
+  .icon--xs { width: var(--icon-size-xs); height: var(--icon-size-xs); }
+  .icon--sm { width: var(--icon-size-sm); height: var(--icon-size-sm); }
+  .icon--md { width: var(--icon-size-md); height: var(--icon-size-md); }
+  .icon--lg { width: var(--icon-size-lg); height: var(--icon-size-lg); }
+  .icon--xl { width: var(--icon-size-xl); height: var(--icon-size-xl); }
+
+  .icon-label {
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+  .icon + .icon-label {
+    margin-inline-start: var(--space-2, 0.5rem);
+  }
+}

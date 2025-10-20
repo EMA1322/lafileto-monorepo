@@ -9,6 +9,17 @@
  * - Comentarios en ESPAÑOL.
  */
 
+import { icon } from './icons.js';
+
+function escapeLabel(value = '') {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 /** Inyecta una sola vez los estilos del loader (si no existen). */
 export function ensureUiLoaderStyles() {
   if (document.getElementById('ui-loader-styles')) return;
@@ -65,4 +76,12 @@ export function uiNotFound(hash) {
       <a href="#dashboard" style="text-decoration:underline;">Volver al panel</a>
     </section>
   `;
+}
+
+/** Composición rápida de ícono + label accesible. */
+export function withIcon(name, label, opts) {
+  const svg = icon(name, opts);
+  const safeLabel = escapeLabel(label);
+  if (!svg) return safeLabel;
+  return `${svg}<span class="icon-label">${safeLabel}</span>`;
 }
