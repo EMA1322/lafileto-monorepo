@@ -553,6 +553,3 @@ export async function logout({ redirect = true, skipRequest = false } = {}) {
     isLoggingOut = false;
   }
 }
-
-
-

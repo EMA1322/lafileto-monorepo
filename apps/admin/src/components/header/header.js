@@ -19,7 +19,7 @@
 //
 // ========================================================
 
-import { isAuthenticated, logout } from '@/utils/auth.js';
+import { logout } from '@/utils/auth.js';
 import {
   ensureRbacLoaded,
   canRead,
@@ -237,13 +237,6 @@ function onNavClick(e) {
   if (window.matchMedia('(max-width: 767.98px)').matches) setDrawer(false);
 }
 
-// Limpieza de listeners (reinyección)
-function cleanupListeners() {
-  state.cleanupFns.forEach((fn) => { try { fn(); } catch {} });
-  state.cleanupFns = [];
-  state.bound = false;
-}
-
 // ------------------------------
 // API pública de inicialización
 // ------------------------------
@@ -304,7 +297,3 @@ export async function initAdminHeader() {
     state.bound = true;
   }
 }
-
-
-
-

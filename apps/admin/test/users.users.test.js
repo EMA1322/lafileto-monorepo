@@ -22,7 +22,7 @@ describe('admin users module', () => {
   beforeEach(async () => {
     document.body.innerHTML = '';
 
-    const stateModule = await import('../src/components/users/state.js');
+    const stateModule = await import('../src/components/users/users.state.js');
     state = stateModule.state;
     state.users = [];
     state.roles = [];
@@ -36,8 +36,8 @@ describe('admin users module', () => {
     state.rbac.roleId = null;
     state.rbac.isAdmin = true;
 
-    ({ renderUsersTable } = await import('../src/components/users/views/usersTable.js'));
-    ({ applyRBAC } = await import('../src/components/users/views/viewRBAC.js'));
+    ({ renderUsersTable } = await import('../src/components/users/users.render.table.js'));
+    ({ applyRBAC } = await import('../src/components/users/viewRBAC.js'));
     ({ buildRolePermsMap } = await import('../src/components/users/helpers.js'));
   });
 

@@ -476,4 +476,3 @@ export async function initProducts() {
   applyRbacVisibility(document); // oculta/inhabilita acciones según permisos
   await reload();
 }
-

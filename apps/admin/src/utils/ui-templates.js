@@ -1,7 +1,7 @@
 const LOADER_STYLE_ID = 'ui-loader-styles';
 let loaderStylesInjected = false;
 
-function escapeHtml(value = '') {
+export function escapeHtml(value = '') {
   return String(value)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -60,7 +60,7 @@ export function ensureUiLoaderStyles() {
   loaderStylesInjected = true;
 }
 
-export function uiLoader(label = 'Cargando…') {
+export const uiLoader = (label = 'Cargando…') => {
   const safeLabel = escapeHtml(label);
   return `
     <div class="ui-loader" aria-busy="true" aria-live="polite">
@@ -68,13 +68,13 @@ export function uiLoader(label = 'Cargando…') {
       <span class="ui-loader__text">${safeLabel}</span>
     </div>
   `;
-}
+};
 
-export function uiNotFound(message = 'Sin resultados') {
+export const uiNotFound = (message = 'Sin resultados') => {
   const safeMessage = escapeHtml(message);
   return `
     <div class="ui-empty" role="status" aria-live="polite">
       <p>${safeMessage}</p>
     </div>
   `;
-}
+};
