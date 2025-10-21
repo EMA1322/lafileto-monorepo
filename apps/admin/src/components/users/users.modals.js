@@ -1,5 +1,5 @@
-import { fetchMe } from "../../../utils/auth.js";
-import { openModal, closeModal } from "../../../utils/modals.js";
+import { fetchMe } from '@/utils/auth.js';
+import { openModal, closeModal } from '@/utils/modals.js';
 
 import {
   state,
@@ -14,15 +14,19 @@ import {
   updateRole,
   deleteRole,
   reloadUsers,
-  PHONE_REGEX
-} from "../state.js";
-import { escapeHTML, mapErrorToMessage } from "../helpers.js";
-import { applyRBAC } from "../viewRBAC.js";
-import { renderUsersTable } from "./usersTable.js";
-import { renderUsersStatus, renderRolesStatus } from "./status.js";
-import { renderRolesView } from "./roles.js";
+  PHONE_REGEX,
+} from './users.state.js';
+import { escapeHTML, mapErrorToMessage } from './users.helpers.js';
+import { applyRBAC } from '@/utils/rbac.js';
+import renderUsersTable from './users.render.table.js';
+import renderRolesView from './users.render.roles.js';
+import { renderUsersStatus, renderRolesStatus } from './users.render.status.js';
 
 const PHONE_CLIENT_REGEX = PHONE_REGEX;
+
+function getUsersContainer() {
+  return document.querySelector('.users');
+}
 
 function resetFormErrors(form) {
   form.querySelectorAll(".form__error").forEach((el) => {
@@ -136,6 +140,7 @@ export function openCreateUserModal() {
         onUsersStatus: renderUsersStatus,
         onUsersTable: renderUsersTable
       });
+      applyRBAC(getUsersContainer());
     } catch (err) {
       applyServerErrors(form, err);
       snackErr(mapErrorToMessage(err, "No se pudo crear el usuario."), err?.code);
@@ -284,9 +289,9 @@ export function openRoleFormModal({ mode = "create", role } = {}) {
         await createRole({ name });
         snackOk("Rol creado correctamente.");
       }
-      renderRolesStatus("");
+      renderRolesStatus("", "info", getUsersContainer());
       renderRolesView();
-      applyRBAC();
+      applyRBAC(getUsersContainer());
       closeModal();
     } catch (err) {
       applyServerErrors(form, err);
@@ -312,9 +317,9 @@ export function openRoleDeleteModal(role) {
     try {
       await deleteRole(roleId);
       snackOk("Rol eliminado correctamente.");
-      renderRolesStatus("");
+      renderRolesStatus("", "info", getUsersContainer());
       renderRolesView();
-      applyRBAC();
+      applyRBAC(getUsersContainer());
       closeModal();
     } catch (err) {
       snackErr(mapErrorToMessage(err, "No se pudo eliminar el rol."), err?.code);
@@ -393,7 +398,7 @@ export async function openPermissionsMatrixModal(role) {
         } catch (refreshError) {
           console.warn("[users] refresh permissions after save failed", refreshError);
         }
-        applyRBAC();
+        applyRBAC(getUsersContainer());
         renderUsersTable();
       }
 

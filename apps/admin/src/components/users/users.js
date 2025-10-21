@@ -1,14 +1,21 @@
-import * as rbacClient from '../../utils/rbac.js';
-import mountIcons from '../../utils/icons.js';
-import { showToast } from '../../utils/snackbar.js';
-import { createButtonTemplate } from '../../utils/ui-templates.js';
+import { ensureRbacLoaded, applyRBAC } from '@/utils/rbac.js';
+import { mountIcons } from '@/utils/icons.js';
+import { showToast } from '@/utils/snackbar.js';
 
-import { fetchData } from './state.js';
-import { renderUsersStatus, renderRolesStatus } from './views/status.js';
-import { renderUsersTable } from './views/usersTable.js';
-import { renderRolesView } from './views/roles.js';
-import { applyRBAC } from '../viewRBAC.js';
-import { bindUI } from './views/bindings.js';
+import {
+  createButtonTemplate,
+  MODULE_KEY,
+  MODULE_KEY_ALIAS,
+  ADMIN_ROLE_IDS,
+} from './users.helpers.js';
+import { state, fetchData } from './users.state.js';
+import {
+  renderUsersTable,
+  renderRolesView,
+  renderUsersStatus,
+  renderRolesStatus,
+  renderBindings,
+} from './users.views.js';
 
 function setupToolbarButtons(container) {
   const btnUserNew = container.querySelector('#btn-user-new');
@@ -49,9 +56,11 @@ export async function initUsers(attempt = 0) {
   setupToolbarButtons(container);
   mountIcons(container);
 
-  if (typeof rbacClient.ensureRbacLoaded === 'function') {
-    await rbacClient.ensureRbacLoaded();
-  }
+  await ensureRbacLoaded();
+
+  container.dataset.rbacModule = MODULE_KEY;
+  container.dataset.rbacAlias = MODULE_KEY_ALIAS;
+  container.dataset.rbacAdminRoles = ADMIN_ROLE_IDS.join(',');
 
   await fetchData({
     onUsersStatus: renderUsersStatus,
@@ -60,6 +69,15 @@ export async function initUsers(attempt = 0) {
     onRolesView: renderRolesView,
   });
 
-  bindUI();
-  applyRBAC();
+  container.dataset.rbacModule = MODULE_KEY;
+  container.dataset.rbacAlias = MODULE_KEY_ALIAS;
+  container.dataset.rbacRoleId = state.rbac.roleId ? String(state.rbac.roleId) : '';
+  container.dataset.rbacIsAdmin = state.rbac.isAdmin ? 'true' : 'false';
+  container.dataset.rbacAdminRoles = ADMIN_ROLE_IDS.join(',');
+  container.dataset.rbacUserId = state.session.userId != null ? String(state.session.userId) : '';
+  container.dataset.rbacActiveTab = state.ui.activeTab;
+
+  renderBindings(container);
+  applyRBAC(container);
+  mountIcons(container);
 }
