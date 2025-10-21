@@ -19,17 +19,8 @@
 //
 // ========================================================
 
-<<<<<<< HEAD
 import { logout } from '@/utils/auth.js';
-import {
-  ensureRbacLoaded,
-  canRead,
-  moduleKeyFromHash
-} from '@/utils/rbac.js';
-=======
-import { isAuthenticated, logout } from '@/utils/auth.js';
 import { ensureRbacLoaded, canRead, moduleKeyFromHash } from '@/utils/rbac.js';
->>>>>>> f2712 (chore(admin/users): lint fixes + build check + (optional) remove legacy /views)
 import { showSnackbar } from '@/utils/snackbar.js';
 import { openModal, closeModal } from '@/utils/modals.js';
 
@@ -257,20 +248,6 @@ function onNavClick(e) {
   if (window.matchMedia('(max-width: 767.98px)').matches) setDrawer(false);
 }
 
-<<<<<<< HEAD
-=======
-// Limpieza de listeners (reinyección)
-function cleanupListeners() {
-  state.cleanupFns.forEach((fn) => {
-    try {
-      fn();
-    } catch {}
-  });
-  state.cleanupFns = [];
-  state.bound = false;
-}
-
->>>>>>> f2712 (chore(admin/users): lint fixes + build check + (optional) remove legacy /views)
 // ------------------------------
 // API pública de inicialización
 // ------------------------------
