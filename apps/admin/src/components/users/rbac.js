@@ -1,4 +1,4 @@
-import * as rbacClient from "@/utils/rbac.js";
+import * as rbacClient from "../../utils/rbac.js";
 
 export const MODULE_KEY = "users";
 export const MODULE_KEY_ALIAS = "user";

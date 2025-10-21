@@ -1,8 +1,8 @@
-import { state } from "../state.js";
-import * as rbacClient from "@/utils/rbac.js";
-import { MODULE_KEY, MODULE_KEY_ALIAS } from "../rbac.js";
-import { els } from "./dom.js";
-import { switchTab } from "./tabs.js";
+import { state } from "./state.js";
+import * as rbacClient from "../../utils/rbac.js";
+import { MODULE_KEY, MODULE_KEY_ALIAS } from "./rbac.js";
+import { els } from "./views/dom.js";
+import { switchTab } from "./views/tabs.js";
 
 function canWriteUsers() {
   const fn = typeof rbacClient.canWrite === "function" ? rbacClient.canWrite : null;
