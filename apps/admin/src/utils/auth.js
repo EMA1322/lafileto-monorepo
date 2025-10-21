@@ -25,7 +25,7 @@ const ERROR_MESSAGES = {
   TOO_MANY_REQUESTS: 'Demasiadas solicitudes. Esperá un momento y reintentá.',
   REQUEST_TIMEOUT: 'La petición tardó demasiado. Verificá tu conexión.',
   INTERNAL_ERROR: 'Ocurrió un error interno. Intentá más tarde.',
-  NETWORK_ERROR: 'No se pudo conectar con el servidor. Revisá tu red.'
+  NETWORK_ERROR: 'No se pudo conectar con el servidor. Revisá tu red.',
 };
 
 const STATUS_TO_DEFAULT_CODE = {
@@ -35,7 +35,7 @@ const STATUS_TO_DEFAULT_CODE = {
   422: 'VALIDATION_ERROR',
   429: 'RATE_LIMITED',
   500: 'INTERNAL_ERROR',
-  504: 'REQUEST_TIMEOUT'
+  504: 'REQUEST_TIMEOUT',
 };
 
 let isLoggingOut = false;
@@ -45,7 +45,7 @@ const authState = {
   roleId: null,
   permissions: {},
   hydrated: false,
-  hydratePromise: null
+  hydratePromise: null,
 };
 
 const HOME_ROUTE_FALLBACK = ['products', 'categories', 'users', 'settings', 'admin-header'];
@@ -73,7 +73,7 @@ function normalizePermissionMap(source) {
       r: !!perms.r,
       w: !!perms.w,
       u: !!perms.u,
-      d: !!perms.d
+      d: !!perms.d,
     };
   }
   return map;
@@ -96,8 +96,8 @@ async function performLogoutRequest() {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
+        'Content-Type': 'application/json',
+      },
     });
   } catch (err) {
     if (IS_DEV) {
@@ -110,19 +110,29 @@ async function clearAuthState({ redirect = true } = {}) {
   resetAuthCache();
   try {
     await setServerSession?.(null, null);
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   try {
     clearRbac?.();
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   try {
     localStorage.removeItem('user');
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   try {
     sessionStorage.removeItem('auth.roleId');
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   try {
     sessionStorage.removeItem('effectivePermissions');
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   clearToken();
 
   if (redirect && typeof window !== 'undefined') {
@@ -181,17 +191,29 @@ export const API_BASE = (() => {
   const resolved = normalizeBase(fromStorage || fromEnv || '');
   if (IS_DEV) {
     // Log de diagnóstico para confirmar que Vite proxy apunta al backend correcto.
-    console.debug('[auth] API_BASE resolved', { base: resolved, fromStorage: !!fromStorage, fromEnv: !!fromEnv });
+    console.debug('[auth] API_BASE resolved', {
+      base: resolved,
+      fromStorage: !!fromStorage,
+      fromEnv: !!fromEnv,
+    });
   }
   return resolved;
 })();
 
 const TOKEN_KEY = 'auth_token';
 
-export function getToken() { return localStorage.getItem(TOKEN_KEY) || ''; }
-export function setToken(token) { token ? localStorage.setItem(TOKEN_KEY, token) : localStorage.removeItem(TOKEN_KEY); }
-export function clearToken() { localStorage.removeItem(TOKEN_KEY); }
-export function isAuthenticated() { return !!getToken(); }
+export function getToken() {
+  return localStorage.getItem(TOKEN_KEY) || '';
+}
+export function setToken(token) {
+  token ? localStorage.setItem(TOKEN_KEY, token) : localStorage.removeItem(TOKEN_KEY);
+}
+export function clearToken() {
+  localStorage.removeItem(TOKEN_KEY);
+}
+export function isAuthenticated() {
+  return !!getToken();
+}
 
 function joinUrl(base, path) {
   const p = path.startsWith('/') ? path : `/${path}`;
@@ -205,13 +227,7 @@ function joinUrl(base, path) {
  * - Limpia el token ante 401/403 expirados y muestra mensajes legibles.
  */
 export async function apiFetch(path, options = {}) {
-  const {
-    params,
-    showErrorToast = true,
-    errorMessage,
-    body,
-    ...restOptions
-  } = options;
+  const { params, showErrorToast = true, errorMessage, body, ...restOptions } = options;
 
   let url = joinUrl(API_BASE, path);
 
@@ -269,7 +285,7 @@ export async function apiFetch(path, options = {}) {
       url,
       hasBody,
       params: params ? Object.keys(params) : [],
-      hasAuth: !!token
+      hasAuth: !!token,
     });
   }
 
@@ -280,9 +296,10 @@ export async function apiFetch(path, options = {}) {
       : { ...restOptions, method, headers };
     res = await fetch(url, fetchOptions);
   } catch (networkError) {
-    const err = networkError instanceof Error
-      ? networkError
-      : new Error(String(networkError || 'Network error'));
+    const err =
+      networkError instanceof Error
+        ? networkError
+        : new Error(String(networkError || 'Network error'));
     err.code = err.code || 'NETWORK_ERROR';
 
     if (showErrorToast) {
@@ -316,7 +333,7 @@ export async function apiFetch(path, options = {}) {
     method,
     url,
     status: res.status,
-    durationMs: Math.round(endedAt - startedAt)
+    durationMs: Math.round(endedAt - startedAt),
   };
 
   if (!res.ok || json?.ok === false) {
@@ -344,7 +361,11 @@ export async function apiFetch(path, options = {}) {
       await logout({ redirect: true, skipRequest: true });
     }
 
-    if (!isUnauthorized && showErrorToast && (KNOWN_ERROR_STATUS.has(res.status) || ERROR_MESSAGES[err.code])) {
+    if (
+      !isUnauthorized &&
+      showErrorToast &&
+      (KNOWN_ERROR_STATUS.has(res.status) || ERROR_MESSAGES[err.code])
+    ) {
       const toastMessage = resolveErrorMessage(res.status, err.code, errMessage, errorMessage);
       showSnackbar(toastMessage, { type: 'error', code: err.code });
     }
@@ -379,7 +400,7 @@ export async function fetchMe({ force = false, silent = true } = {}) {
   if (authState.hydrated && !force) {
     return {
       user: authState.user,
-      permissions: { ...authState.permissions }
+      permissions: { ...authState.permissions },
     };
   }
 
@@ -390,14 +411,11 @@ export async function fetchMe({ force = false, silent = true } = {}) {
   const request = (async () => {
     const response = await apiFetch('/auth/me', {
       method: 'GET',
-      showErrorToast: !silent
+      showErrorToast: !silent,
     });
 
     const user = response?.data?.user || null;
-    const rawPerms =
-      response?.data?.permissions ||
-      response?.data?.effectivePermissions ||
-      {};
+    const rawPerms = response?.data?.permissions || response?.data?.effectivePermissions || {};
     const permissions = normalizePermissionMap(rawPerms);
 
     authState.user = user;
@@ -408,20 +426,28 @@ export async function fetchMe({ force = false, silent = true } = {}) {
     try {
       if (user) localStorage.setItem('user', JSON.stringify(user));
       else localStorage.removeItem('user');
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
 
     try {
       if (authState.roleId) sessionStorage.setItem('auth.roleId', authState.roleId);
       else sessionStorage.removeItem('auth.roleId');
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
 
     try {
       sessionStorage.setItem('effectivePermissions', JSON.stringify(permissions));
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
 
     try {
       await setServerSession?.(authState.roleId, permissions);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
 
     return { user, permissions };
   })()
@@ -457,9 +483,10 @@ export async function ensureAuthReady({ silent = true } = {}) {
 }
 
 export function pickHomeRoute(permissions = null) {
-  const map = permissions && typeof permissions === 'object' && !Array.isArray(permissions)
-    ? permissions
-    : authState.permissions;
+  const map =
+    permissions && typeof permissions === 'object' && !Array.isArray(permissions)
+      ? permissions
+      : authState.permissions;
 
   const hasRead = (key) => {
     const normalized = typeof key === 'string' ? key.trim().toLowerCase() : '';
@@ -481,7 +508,7 @@ export async function login(email, password) {
   const { data } = await apiFetch('/auth/login', {
     method: 'POST',
     body: JSON.stringify({ email, password }),
-    showErrorToast: false
+    showErrorToast: false,
   });
 
   if (!data?.token) {
@@ -492,7 +519,7 @@ export async function login(email, password) {
 
   const fallbackRoleId = data?.user?.roleId || null;
   const fallbackPerms = normalizePermissionMap(
-    data?.permissions || data?.effectivePermissions || {}
+    data?.permissions || data?.effectivePermissions || {},
   );
 
   authState.permissions = fallbackPerms;
@@ -501,20 +528,28 @@ export async function login(email, password) {
   try {
     if (data?.user) localStorage.setItem('user', JSON.stringify(data.user));
     else localStorage.removeItem('user');
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 
   try {
     if (fallbackRoleId) sessionStorage.setItem('auth.roleId', fallbackRoleId);
     else sessionStorage.removeItem('auth.roleId');
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 
   if (Object.keys(fallbackPerms).length) {
     try {
       sessionStorage.setItem('effectivePermissions', JSON.stringify(fallbackPerms));
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     try {
       await setServerSession?.(fallbackRoleId, fallbackPerms);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }
 
   let meResult;
@@ -533,7 +568,7 @@ export async function login(email, password) {
     token: data.token,
     user,
     permissions,
-    nextRoute
+    nextRoute,
   };
 }
 

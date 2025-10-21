@@ -22,7 +22,7 @@ import { safeText } from '../../utils/helpers.js';
 // ---------------------------------------------
 const MODULE = {
   firstRender: true, // Para enfocar el título tras la primera carga
-  cache: null        // Guarda la última respuesta válida del JSON
+  cache: null, // Guarda la última respuesta válida del JSON
 };
 
 // ---------------------------------------------
@@ -30,17 +30,34 @@ const MODULE = {
 // ---------------------------------------------
 /** Acciones rápidas base (se filtran por RBAC y rutas existentes) */
 const QUICK_ACTIONS = [
-  { label: 'Ver productos',     icon: 'box',  link: '#products',   module: 'products',   perm: 'read'  },
-  { label: 'Nuevo producto',    icon: 'plus', link: '#products',   module: 'products',   perm: 'write' },
-  { label: 'Ver categorías',    icon: 'tags', link: '#categories', module: 'categories', perm: 'read'  },
-  { label: 'Nueva categoría',   icon: 'plus', link: '#categories', module: 'categories', perm: 'write' },
-  { label: 'Ir a configuración',icon: 'gear', link: '#settings',   module: 'settings',   perm: 'read'  } // oculto si ruta no existe
+  { label: 'Ver productos', icon: 'box', link: '#products', module: 'products', perm: 'read' },
+  { label: 'Nuevo producto', icon: 'plus', link: '#products', module: 'products', perm: 'write' },
+  {
+    label: 'Ver categorías',
+    icon: 'tags',
+    link: '#categories',
+    module: 'categories',
+    perm: 'read',
+  },
+  {
+    label: 'Nueva categoría',
+    icon: 'plus',
+    link: '#categories',
+    module: 'categories',
+    perm: 'write',
+  },
+  {
+    label: 'Ir a configuración',
+    icon: 'gear',
+    link: '#settings',
+    module: 'settings',
+    perm: 'read',
+  }, // oculto si ruta no existe
 ];
 
 /** Rutas conocidas por el router actual (para ocultar #settings mientras no exista) */
 const KNOWN_ROUTES = new Set(['#login', '#dashboard', '#products', '#categories']);
 // Cuando implementes settings, agregá '#settings' aquí o expórtalo desde el router.
-
 
 // ===================================================================
 // API PÚBLICA
@@ -73,8 +90,6 @@ export async function initDashboard() {
   // 4) Cargar/recargar datos del tablero
   await reload();
 }
-
-
 
 // ===================================================================
 // Carga de datos + estados (loading/empty/error)
@@ -121,7 +136,7 @@ async function loadDashboardData() {
   return {
     businessName: safeText(json?.businessName || ''),
     isOpen,
-    kpis: { products, categories, onSale } // Auditoría eliminada: sin colección de actividad
+    kpis: { products, categories, onSale }, // Auditoría eliminada: sin colección de actividad
   };
 }
 
@@ -129,7 +144,6 @@ function toNumberNonNegative(n) {
   const v = Number(n);
   return Number.isFinite(v) && v >= 0 ? v : 0;
 }
-
 
 // ===================================================================
 // Render
@@ -147,12 +161,12 @@ function renderKpis(kpis, isOpen) {
     products: document.getElementById('kpi-products-count'),
     categories: document.getElementById('kpi-categories-count'),
     onSale: document.getElementById('kpi-onsale-count'),
-    state: document.getElementById('kpi-isopen-badge')
+    state: document.getElementById('kpi-isopen-badge'),
   };
 
-  if (ids.products)  ids.products.textContent  = kpis.products;
-  if (ids.categories)ids.categories.textContent= kpis.categories;
-  if (ids.onSale)    ids.onSale.textContent    = kpis.onSale;
+  if (ids.products) ids.products.textContent = kpis.products;
+  if (ids.categories) ids.categories.textContent = kpis.categories;
+  if (ids.onSale) ids.onSale.textContent = kpis.onSale;
 
   if (ids.state) {
     const state = isOpen === true ? 'open' : isOpen === false ? 'closed' : 'unknown';
@@ -171,14 +185,19 @@ function renderQuickActions() {
   wrap.innerHTML = '';
 
   // Filtrado por RBAC y existencia de ruta
-  const actions = QUICK_ACTIONS.filter(a => {
+  const actions = QUICK_ACTIONS.filter((a) => {
     if (!routeExists(a.link)) return false;
     switch (a.perm) {
-      case 'read':   return canRead(a.module);
-      case 'write':  return canWrite(a.module);
-      case 'update': return canUpdate(a.module);
-      case 'delete': return canDelete(a.module);
-      default:       return false;
+      case 'read':
+        return canRead(a.module);
+      case 'write':
+        return canWrite(a.module);
+      case 'update':
+        return canUpdate(a.module);
+      case 'delete':
+        return canDelete(a.module);
+      default:
+        return false;
     }
   });
 
@@ -190,7 +209,7 @@ function renderQuickActions() {
   }
 
   const frag = document.createDocumentFragment();
-  actions.forEach(a => {
+  actions.forEach((a) => {
     const btn = document.createElement('button');
     btn.className = 'dashboard__quick-btn';
     btn.type = 'button';
@@ -215,33 +234,36 @@ function renderQuickActions() {
 function mountBindings(root) {
   // Delegación de TODOS los controles del módulo en un solo listener.
   // Ventajas: sin duplicados, y se destruye junto con el root al cambiar de vista.
-  root.addEventListener('click', async (ev) => {
-    const t = ev.target instanceof Element ? ev.target : null;
-    if (!t) return;
+  root.addEventListener(
+    'click',
+    async (ev) => {
+      const t = ev.target instanceof Element ? ev.target : null;
+      if (!t) return;
 
-    // 1) Botón: Actualizar
-    if (t.closest('#dashboard-refresh')) {
-      await reload();
-      // Opcional: si snackbar no existe en este build, el operador ?. evita errores.
-      showSnackbar?.('Dashboard actualizado', 'success', 1800);
-      return;
-    }
+      // 1) Botón: Actualizar
+      if (t.closest('#dashboard-refresh')) {
+        await reload();
+        // Opcional: si snackbar no existe en este build, el operador ?. evita errores.
+        showSnackbar?.('Dashboard actualizado', 'success', 1800);
+        return;
+      }
 
-    // 2) Botón: Reintentar (estado de error)
-    if (t.closest('#dashboard-retry')) {
-      reload();
-      return;
-    }
+      // 2) Botón: Reintentar (estado de error)
+      if (t.closest('#dashboard-retry')) {
+        reload();
+        return;
+      }
 
-    // 3) Quick Actions (SPA navigation por data-link)
-    const qaBtn = t.closest('.dashboard__quick-btn');
-    if (qaBtn?.dataset.link) {
-      window.location.hash = qaBtn.dataset.link;
-      return;
-    }
-  }, { passive: true });
+      // 3) Quick Actions (SPA navigation por data-link)
+      const qaBtn = t.closest('.dashboard__quick-btn');
+      if (qaBtn?.dataset.link) {
+        window.location.hash = qaBtn.dataset.link;
+        return;
+      }
+    },
+    { passive: true },
+  );
 }
-
 
 /** Muestra/oculta estado de carga; actualiza región aria-live. */
 function setLoading(flag, message = '') {
@@ -282,7 +304,7 @@ function checkEmptyState(data) {
   const root = getRoot();
   if (!root) return;
 
-  const noKpis = (data.kpis.products + data.kpis.categories + data.kpis.onSale) === 0;
+  const noKpis = data.kpis.products + data.kpis.categories + data.kpis.onSale === 0;
   root.classList.toggle('is-empty', noKpis); // Auditoría eliminada: estado vacío depende solo de KPIs
 }
 
