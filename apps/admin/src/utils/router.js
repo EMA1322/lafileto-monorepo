@@ -131,7 +131,10 @@ async function router() {
   const path = routes[hash];
   if (!path) {
     const app = document.getElementById('app');
-    if (app) app.innerHTML = uiNotFound(hash);
+    if (app) {
+      const message = hash ? `La ruta #${hash} no existe.` : undefined;
+      app.innerHTML = uiNotFound(message);
+    }
     return;
   }
 

@@ -172,3 +172,5 @@ export function mountIcons(root = document) {
     el.replaceWith(svgEl);
   });
 }
+
+export default mountIcons;

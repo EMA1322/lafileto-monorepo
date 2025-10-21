@@ -3,7 +3,9 @@ import { escapeHTML } from "../helpers.js";
 
 import { renderUsersStatus } from "./status.js";
 import { els } from "./dom.js";
-import { applyRBAC } from "./viewRBAC.js";
+import { applyRBAC } from "../viewRBAC.js";
+import mountIcons from "../../../utils/icons.js";
+import { createButtonTemplate } from "../../../utils/ui-templates.js";
 
 function formatStatus(status) {
   if (String(status).toUpperCase() === "ACTIVE") {
@@ -35,22 +37,29 @@ export function renderUsersTable() {
   const { tbodyUsers } = els();
   if (!tbodyUsers) return;
 
+  const decorateTable = () => {
+    applyRBAC();
+    mountIcons(tbodyUsers);
+  };
+
   if (state.ui.loadingUsers) {
     renderUsersStatus("Cargando usuarios…");
     tbodyUsers.innerHTML = "";
+    decorateTable();
     return;
   }
 
   if (state.ui.errorUsers) {
     renderUsersStatus(state.ui.errorUsers, "error");
     tbodyUsers.innerHTML = "";
+    decorateTable();
     return;
   }
 
   if (!state.users.items.length) {
     renderUsersStatus("No hay usuarios cargados.");
     tbodyUsers.innerHTML = "";
-    applyRBAC();
+    decorateTable();
     return;
   }
 
@@ -62,9 +71,13 @@ export function renderUsersTable() {
       const roleId = escapeHTML(user.roleId || "");
       const actions = `
         <div class="users__row-actions" role="group" aria-label="Acciones">
-          <button class="btn btn-secondary" type="button" data-action="user-edit">Editar</button>
+          <button class="btn btn-secondary" type="button" data-action="user-edit">
+            ${createButtonTemplate({ label: "Editar", iconName: "edit", iconSize: "sm" })}
+          </button>
           ${statusSwitchMarkup(user)}
-          <button class="btn btn-danger" type="button" data-action="user-delete">Eliminar</button>
+          <button class="btn btn-danger" type="button" data-action="user-delete">
+            ${createButtonTemplate({ label: "Eliminar", iconName: "trash", iconSize: "sm" })}
+          </button>
         </div>
       `;
       return `
@@ -80,5 +93,5 @@ export function renderUsersTable() {
     })
     .join("");
 
-  applyRBAC();
+  decorateTable();
 }

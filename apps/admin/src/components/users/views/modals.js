@@ -1,5 +1,5 @@
-import { fetchMe } from "@/utils/auth.js";
-import { openModal, closeModal } from "@/utils/modals.js";
+import { fetchMe } from "../../../utils/auth.js";
+import { openModal, closeModal } from "../../../utils/modals.js";
 
 import {
   state,
@@ -17,7 +17,7 @@ import {
   PHONE_REGEX
 } from "../state.js";
 import { escapeHTML, mapErrorToMessage } from "../helpers.js";
-import { applyRBAC } from "./viewRBAC.js";
+import { applyRBAC } from "../viewRBAC.js";
 import { renderUsersTable } from "./usersTable.js";
 import { renderUsersStatus, renderRolesStatus } from "./status.js";
 import { renderRolesView } from "./roles.js";

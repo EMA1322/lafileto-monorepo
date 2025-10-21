@@ -1,5 +1,5 @@
-import { showSnackbar } from "@/utils/snackbar.js";
-import { apiFetch } from "@/utils/api.js";
+import { showSnackbar } from "../../utils/snackbar.js";
+import { apiFetch } from "../../utils/api.js";
 
 import { computeIsAdmin } from "./rbac.js";
 import { mapErrorToMessage } from "./helpers.js";

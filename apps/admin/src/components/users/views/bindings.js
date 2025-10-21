@@ -19,7 +19,7 @@ import {
 } from "./modals.js";
 import { renderUsersTable } from "./usersTable.js";
 import { renderUsersStatus, renderRolesStatus } from "./status.js";
-import { applyRBAC } from "./viewRBAC.js";
+import { applyRBAC } from "../viewRBAC.js";
 import { els } from "./dom.js";
 import { switchTab } from "./tabs.js";
 

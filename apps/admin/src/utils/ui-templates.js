@@ -1,17 +1,12 @@
 /**
- * /admin/src/utils/ui-templates.js
- *
- * Mini utilidades de UI reutilizables (sin dependencias de frameworks).
- * Objetivo: centralizar plantillas pequeñas sin cambiar el comportamiento actual.
- *
- * Convenciones:
- * - Nombres de funciones/variables en INGLÉS.
- * - Comentarios en ESPAÑOL.
+ * Utilidades mínimas de UI reutilizables (sin dependencias externas).
  */
 
-import { icon } from './icons.js';
+import { ensureUiLoaderStyles, uiLoader, uiNotFound } from './renderView.js';
 
-function escapeLabel(value = '') {
+const VALID_ICON_SIZES = new Set(['xs', 'sm', 'md', 'lg', 'xl']);
+
+function escapeHtml(value = '') {
   return String(value)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -20,68 +15,43 @@ function escapeLabel(value = '') {
     .replace(/'/g, '&#39;');
 }
 
-/** Inyecta una sola vez los estilos del loader (si no existen). */
-export function ensureUiLoaderStyles() {
-  if (document.getElementById('ui-loader-styles')) return;
-
-  const css = `
-  .ui-loader {
-    display: grid;
-    place-items: center;
-    gap: .75rem;
-    padding: 2rem;
-    min-height: 180px;
-    text-align: center;
-  }
-  .ui-loader__spinner {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    border: 3px solid rgba(0,0,0,.15);
-    border-top-color: rgba(0,0,0,.6);
-    animation: ui-spin 1s linear infinite;
-    display: inline-block;
-  }
-  .ui-loader__text {
-    font-size: .95rem;
-    color: #333;
-  }
-  @keyframes ui-spin {
-    to { transform: rotate(360deg); }
-  }`;
-
-  const style = document.createElement('style');
-  style.id = 'ui-loader-styles';
-  style.textContent = css;
-  document.head.appendChild(style);
+function normalizeSize(size) {
+  return VALID_ICON_SIZES.has(size) ? size : 'sm';
 }
 
-/** Devuelve el markup del loader accesible (misma intención visual que el existente). */
-export function uiLoader() {
-  return `
-    <div class="ui-loader" aria-busy="true" aria-live="polite">
-      <span class="ui-loader__spinner" aria-hidden="true"></span>
-      <span class="ui-loader__text">Cargando…</span>
-    </div>
-  `;
+/**
+ * Devuelve el contenido interno de un botón con ícono opcional.
+ * @param {object} options
+ * @param {string} [options.label] Texto visible del botón.
+ * @param {string} [options.iconName] Nombre del ícono (usa data-icon para mountIcons).
+ * @param {('xs'|'sm'|'md'|'lg'|'xl')} [options.iconSize='sm'] Tamaño visual del ícono.
+ * @param {string} [options.iconTitle] Texto accesible para el ícono.
+ * @param {string} [options.labelClass='icon-label'] Clase usada para el span del label.
+ * @param {string} [options.srLabel] Texto solo para lectores de pantalla.
+ * @param {boolean} [options.showLabel=true] Permite ocultar el label visible.
+ * @returns {string} Markup listo para inyectar en innerHTML.
+ */
+export function createButtonTemplate({
+  label = '',
+  iconName,
+  iconSize = 'sm',
+  iconTitle,
+  labelClass = 'icon-label',
+  srLabel,
+  showLabel = true,
+} = {}) {
+  const normalizedSize = normalizeSize(iconSize);
+  const hasIcon = Boolean(iconName);
+  const iconTitleAttr = iconTitle ? ` data-icon-title="${escapeHtml(iconTitle)}"` : '';
+  const iconMarkup = hasIcon
+    ? `<span class="icon icon--${normalizedSize}" data-icon="${escapeHtml(iconName)}"${iconTitleAttr} aria-hidden="true"></span>`
+    : '';
+  const visibleLabel = showLabel && label
+    ? `<span class="${labelClass}">${escapeHtml(label)}</span>`
+    : '';
+  const srOnly = srLabel ? `<span class="sr-only">${escapeHtml(srLabel)}</span>` : '';
+
+  return `${iconMarkup}${visibleLabel}${srOnly}`.trim();
 }
 
-/** Plantilla 404 unificada (se usa desde el router). */
-export function uiNotFound(hash) {
-  const safe = String(hash || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  return `
-    <section style="text-align:center; padding:2rem;">
-      <h2>404 | Página no encontrada</h2>
-      <p>La ruta <strong>#${safe}</strong> no existe.</p>
-      <a href="#dashboard" style="text-decoration:underline;">Volver al panel</a>
-    </section>
-  `;
-}
-
-/** Composición rápida de ícono + label accesible. */
-export function withIcon(name, label, opts) {
-  const svg = icon(name, opts);
-  const safeLabel = escapeLabel(label);
-  if (!svg) return safeLabel;
-  return `${svg}<span class="icon-label">${safeLabel}</span>`;
-}
+export { ensureUiLoaderStyles, uiLoader, uiNotFound };
