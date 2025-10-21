@@ -1,5 +1,5 @@
-import * as rbacClient from "@/utils/rbac.js";
-import { mountIcons } from "@/utils/icons.js";
+import * as rbacClient from "../../utils/rbac.js";
+import mountIcons from "../../utils/icons.js";
 
 import { fetchData } from "./state.js";
 import { renderUsersStatus, renderRolesStatus } from "./views/status.js";
@@ -18,7 +18,7 @@ export async function initUsers(attempt = 0) {
 
   mountIcons(container);
 
-  if (rbacClient.ensureRbacLoaded) {
+  if (typeof rbacClient.ensureRbacLoaded === "function") {
     await rbacClient.ensureRbacLoaded();
   }
 
@@ -26,10 +26,12 @@ export async function initUsers(attempt = 0) {
     onUsersStatus: renderUsersStatus,
     onRolesStatus: renderRolesStatus,
     onUsersTable: renderUsersTable,
-    onRolesView: renderRolesView,
+    onRolesView: (...args) => {
+      renderRolesView(...args);
+      applyRBAC();
+    },
   });
 
   bindUI();
   applyRBAC();
-  renderUsersTable();
 }

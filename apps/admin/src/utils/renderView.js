@@ -3,7 +3,51 @@
 // Renderiza vistas dinámicamente dentro del SPA
 // ================================
 
-import { ensureUiLoaderStyles, uiLoader } from './ui-templates.js';
+const LOADER_STYLE_ID = 'ui-loader-styles';
+
+function ensureUiLoaderStyles() {
+  if (document.getElementById(LOADER_STYLE_ID)) return;
+
+  const css = `
+  .ui-loader {
+    display: grid;
+    place-items: center;
+    gap: .75rem;
+    padding: 2rem;
+    min-height: 180px;
+    text-align: center;
+  }
+  .ui-loader__spinner {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 3px solid rgba(0,0,0,.15);
+    border-top-color: rgba(0,0,0,.6);
+    animation: ui-spin 1s linear infinite;
+    display: inline-block;
+  }
+  .ui-loader__text {
+    font-size: .95rem;
+    color: #333;
+  }
+  @keyframes ui-spin {
+    to { transform: rotate(360deg); }
+  }`;
+
+  const style = document.createElement('style');
+  style.id = LOADER_STYLE_ID;
+  style.textContent = css;
+  document.head.appendChild(style);
+}
+
+function uiLoader() {
+  return `
+    <div class="ui-loader" aria-busy="true" aria-live="polite">
+      <span class="ui-loader__spinner" aria-hidden="true"></span>
+      <span class="ui-loader__text">Cargando…</span>
+    </div>
+  `;
+}
 
 /**
  * Renderiza el contenido HTML en el contenedor principal (#app)

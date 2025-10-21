@@ -3,6 +3,7 @@ import { escapeHTML } from "../helpers.js";
 
 import { renderRolesStatus } from "./status.js";
 import { els } from "./dom.js";
+import { applyRBAC } from "./viewRBAC.js";
 
 export function renderRolesView() {
   const { tbodyRoles } = els();
@@ -43,4 +44,6 @@ export function renderRolesView() {
       `;
     })
     .join("");
+
+  applyRBAC();
 }

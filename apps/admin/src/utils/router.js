@@ -16,7 +16,6 @@ import {
   moduleKeyFromHash, // convención única de moduleKey (UI ↔ RBAC ↔ API)
   canRead
 } from './rbac.js';
-import { uiNotFound } from './ui-templates.js';
 
 // Rutas centralizadas (mantener en sync con /src/components/*)
 const routes = {
@@ -27,6 +26,19 @@ const routes = {
   users: '/src/components/users/users.html',
   settings: '/src/components/settings/settings.html', // si no existe, el 404 se encargará
 };
+
+function renderNotFound(hash) {
+  const safe = String(hash || '')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  return `
+    <section style="text-align:center; padding:2rem;">
+      <h2>404 | Página no encontrada</h2>
+      <p>La ruta <strong>#${safe}</strong> no existe.</p>
+      <a href="#dashboard" style="text-decoration:underline;">Volver al panel</a>
+    </section>
+  `;
+}
 
 /** Scrollea arriba en cada navegación (mejora UX) */
 function scrollToTop() {
@@ -131,7 +143,7 @@ async function router() {
   const path = routes[hash];
   if (!path) {
     const app = document.getElementById('app');
-    if (app) app.innerHTML = uiNotFound(hash);
+    if (app) app.innerHTML = renderNotFound(hash);
     return;
   }
 
