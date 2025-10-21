@@ -173,4 +173,4 @@ export function mountIcons(root = document) {
   });
 }
 
-export default mountIcons;
+export default icon;

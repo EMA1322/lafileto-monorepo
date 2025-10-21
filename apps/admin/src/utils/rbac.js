@@ -309,3 +309,203 @@ export function canDelete(moduleKey) {
   const perm = resolvePermission(moduleKey);
   return Boolean(perm && perm.d);
 }
+
+function normalizeDatasetValue(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function shouldHideElement(el) {
+  return el.hasAttribute('data-rbac-hide');
+}
+
+function toggleElementVisibility(el, allowed) {
+  if (shouldHideElement(el)) {
+    if (allowed) el.removeAttribute('hidden');
+    else el.setAttribute('hidden', 'true');
+  }
+
+  if ('disabled' in el) {
+    if (!allowed) {
+      el.disabled = true;
+    } else if (!el.hasAttribute('data-rbac-persist-disabled')) {
+      el.disabled = false;
+    }
+  }
+
+  if (!allowed) {
+    el.setAttribute('aria-disabled', 'true');
+  } else {
+    el.removeAttribute('aria-disabled');
+  }
+}
+
+export function applyRBAC(root) {
+  const base = root instanceof Element ? (root.classList.contains('users') ? root : root.closest('.users')) : document.querySelector('.users');
+  if (!base) return;
+
+  const moduleKey = normalizeDatasetValue(base.dataset.rbacModule) || 'users';
+  const alias = normalizeDatasetValue(base.dataset.rbacAlias);
+  const keys = alias && alias !== moduleKey ? [moduleKey, alias] : [moduleKey];
+
+  const hasPermission = (checker) => keys.some((key) => key && typeof checker === 'function' && checker(key));
+
+  const perms = {
+    read: hasPermission(canRead),
+    write: hasPermission(canWrite),
+    update: hasPermission(canUpdate),
+    delete: hasPermission(canDelete),
+  };
+
+  let roleId = normalizeDatasetValue(base.dataset.rbacRoleId);
+  if (!roleId) {
+    try {
+      const storedRole = sessionStorage.getItem('rbac.roleId');
+      if (storedRole) roleId = normalizeDatasetValue(storedRole);
+    } catch {
+      /* ignore */
+    }
+  }
+  const datasetIsAdmin = base.dataset.rbacIsAdmin === 'true';
+  const adminRoles = (base.dataset.rbacAdminRoles || '')
+    .split(',')
+    .map((entry) => normalizeDatasetValue(entry))
+    .filter(Boolean);
+  if (!adminRoles.length) adminRoles.push('role-admin');
+
+  let isAdmin = datasetIsAdmin || (roleId && adminRoles.includes(roleId));
+  if (!isAdmin) {
+    try {
+      const raw = sessionStorage.getItem('effectivePermissions');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        const fullAccess = Object.values(parsed || {}).every((perm) => perm && perm.r && perm.w && perm.u && perm.d);
+        if (fullAccess) isAdmin = true;
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+
+  const tabUsers = base.querySelector('#tab-users');
+  const tabRoles = base.querySelector('#tab-roles');
+  const panelUsers = base.querySelector('#panel-users');
+  const panelRoles = base.querySelector('#panel-roles');
+
+  const activeTab = base.dataset.rbacActiveTab || 'users';
+
+  if (!isAdmin) {
+    if (tabRoles) {
+      tabRoles.setAttribute('hidden', 'true');
+      tabRoles.classList.remove('is-active');
+      tabRoles.setAttribute('aria-selected', 'false');
+      tabRoles.tabIndex = -1;
+    }
+    if (panelRoles) {
+      panelRoles.setAttribute('hidden', 'true');
+      panelRoles.classList.remove('is-active');
+    }
+
+    if (tabUsers) {
+      tabUsers.classList.add('is-active');
+      tabUsers.setAttribute('aria-selected', 'true');
+      tabUsers.tabIndex = 0;
+      tabUsers.removeAttribute('hidden');
+    }
+    if (panelUsers) {
+      panelUsers.classList.add('is-active');
+      panelUsers.removeAttribute('hidden');
+    }
+
+    if (base.dataset.rbacActiveTab !== 'users') {
+      base.dataset.rbacActiveTab = 'users';
+      base.dispatchEvent(new CustomEvent('users:tab-enforce', { detail: { tab: 'users' } }));
+    }
+  } else {
+    if (tabRoles) {
+      tabRoles.removeAttribute('hidden');
+      tabRoles.setAttribute('aria-selected', activeTab === 'roles' ? 'true' : 'false');
+      tabRoles.tabIndex = activeTab === 'roles' ? 0 : -1;
+    }
+    if (tabUsers) {
+      tabUsers.setAttribute('aria-selected', activeTab === 'users' ? 'true' : 'false');
+      tabUsers.tabIndex = activeTab === 'users' ? 0 : -1;
+    }
+
+    if (activeTab === 'roles') {
+      tabRoles?.classList.add('is-active');
+      tabUsers?.classList.remove('is-active');
+      panelRoles?.removeAttribute('hidden');
+      panelRoles?.classList.add('is-active');
+      panelUsers?.setAttribute('hidden', 'true');
+      panelUsers?.classList.remove('is-active');
+    } else {
+      tabUsers?.classList.add('is-active');
+      tabRoles?.classList.remove('is-active');
+      panelUsers?.removeAttribute('hidden');
+      panelUsers?.classList.add('is-active');
+      panelRoles?.setAttribute('hidden', 'true');
+      panelRoles?.classList.remove('is-active');
+    }
+  }
+
+  const currentUserId = (base.dataset.rbacUserId || '').trim();
+
+  const elements = new Set([
+    ...base.querySelectorAll('[data-rbac-action]'),
+    ...base.querySelectorAll('[data-rbac-role]'),
+  ]);
+
+  elements.forEach((el) => {
+    const requiredRoles = (el.dataset.rbacRole || '')
+      .split(',')
+      .map((entry) => normalizeDatasetValue(entry))
+      .filter(Boolean);
+
+    const allowedByRole =
+      !requiredRoles.length ||
+      requiredRoles.some((role) => {
+        if (role === 'admin') return isAdmin;
+        if (!role) return true;
+        return role === roleId;
+      });
+
+    const action = normalizeDatasetValue(el.dataset.rbacAction);
+    let allowedByAction = true;
+    if (action === 'read') allowedByAction = perms.read;
+    else if (action === 'write') allowedByAction = perms.write;
+    else if (action === 'update') allowedByAction = perms.update;
+    else if (action === 'delete') allowedByAction = perms.delete;
+
+    let allowed = allowedByRole && allowedByAction;
+
+    if (action === 'delete') {
+      const row = el.closest('tr[data-id]');
+      const targetId = row?.dataset.id ? String(row.dataset.id).trim() : '';
+      if (currentUserId && targetId && currentUserId === targetId) {
+        allowed = false;
+        el.setAttribute('title', 'No podés eliminar tu propio usuario.');
+      } else if (!allowed) {
+        el.setAttribute('title', 'No tenés permisos para eliminar usuarios.');
+      } else {
+        el.removeAttribute('title');
+      }
+    }
+
+    toggleElementVisibility(el, allowed);
+
+    if (action === 'update') {
+      if (!allowed) {
+        el.setAttribute('aria-disabled', 'true');
+      } else {
+        el.removeAttribute('aria-disabled');
+      }
+    }
+  });
+
+  // Quita aria-disabled residual en filas permitidas
+  base.querySelectorAll('[data-action="user-toggle-status"]').forEach((btn) => {
+    if (!btn.hasAttribute('data-rbac-action')) {
+      btn.removeAttribute('aria-disabled');
+    }
+  });
+}
