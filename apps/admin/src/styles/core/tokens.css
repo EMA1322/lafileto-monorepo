@@ -1,3 +1,8 @@
+/* ==========================================================================
+   tokens.css — Variables de diseño del Admin
+   Qué define: paleta, tipografías, espaciados, radios, sombras, z-index.
+   Uso: SOLO variables CSS en :root; sin reglas de estilo. Cargar primero.
+   ========================================================================== */
 /* ========================================================================
    TOKENS — design system naranja divertido
    - Variables globales para tema oscuro amigable.
@@ -86,5 +91,26 @@
     --bp-sm: 36rem;   /* 576px */
     --bp-md: 56rem;   /* 896px */
     --bp-lg: 75rem;   /* 1200px */
+
+    /* ---- Aliases para capas superiores ---- */
+    --c-primary: var(--primary-color, var(--brand-600));
+    --c-primary-strong: var(--brand-700);
+    --c-success: var(--success-color, var(--success-600));
+    --c-danger: var(--danger-color, var(--danger-600));
+    --c-info: var(--info-600);
+    --c-warning: var(--warning-600);
+    --c-muted: var(--color-text-muted);
+    --c-fg: var(--color-text);
+    --c-fg-strong: var(--color-text-strong);
+    --c-bg: var(--color-bg);
+    --c-surface: var(--color-surface);
+    --c-surface-alt: var(--color-surface-2);
+    --c-border: var(--color-border);
+
+    --radius: var(--radius-md);
+    --radius-rounded: var(--radius-round);
+    --shadow: var(--shadow-soft);
+    --shadow-lg-alt: var(--shadow-md);
+    --focus-ring-strong: var(--focus-ring);
   }
 }

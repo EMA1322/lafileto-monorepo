@@ -2,7 +2,7 @@
 // main.js – ADMIN PANEL (code-splitting activado)
 // ================================
 
-// Estilos globales que deben estar SIEMPRE
+// Estilos globales SIEMPRE presentes
 import 'normalize.css';
 import './styles/core/tokens.css';
 import './styles/core/base.css';
