@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Admin / Categories — integrado con variables de global.css
+   Admin / Categories — integrado con tokens del core
    - BEM + mobile-first + accesible
    - No modifica IDs/clases usados por categories.js
    ========================================================================== */
@@ -16,7 +16,7 @@
   clip: rect(0 0 0 0);
 }
 
-/* Tokens locales (usando fallbacks a global.css) */
+/* Tokens locales (usando fallbacks al core de tokens) */
 :root {
   --c-bg: var(--bg-color, #fafafa);
   --c-card: var(--surface-card, #fff);
