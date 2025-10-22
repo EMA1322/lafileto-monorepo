@@ -4,11 +4,11 @@
   Estilos del módulo Products (ADMIN)
   - BEM con prefijo .products
   - Mobile-first, accesible, sin frameworks
-  - Reutiliza tokens de global.css con fallbacks seguros
+  - Reutiliza tokens del core con fallbacks seguros
 */
 
 /* =========================================================
-   Variables de apoyo (fallbacks por si faltan en global.css)
+   Variables de apoyo (fallbacks por si faltan en tokens globales)
    ========================================================= */
 :root {
   --products-color-text: var(--text-color, #1f2937);

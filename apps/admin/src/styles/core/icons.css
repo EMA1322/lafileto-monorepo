@@ -1,42 +1,11 @@
 /* ==========================================================================
-   icons.css — Mapa de íconos SVG reutilizable
-   Uso: clase .i con modificadores (.i-edit, .i-delete, etc.). Depende de tokens.
+   icons.css — Utilidades de íconos (basadas en currentColor)
+   - Mantener este archivo ligero. Solo helpers de tamaño/alineación.
    ========================================================================== */
-/* ========================================================================
-   ICONS — sistema de íconos SVG reutilizable para Admin
-   - Define tamaños basados en tokens y helpers para iconografía inline.
-   ======================================================================== */
+
 @layer base {
-  .icon,
-  .i {
-    display: inline-block;
-    width: var(--icon-size-md);
-    height: var(--icon-size-md);
-    vertical-align: middle;
-    line-height: 1;
-    color: inherit;
-    fill: currentColor;
-    stroke: currentColor;
-  }
-
-  .icon--xs,
-  .i--xs { width: var(--icon-size-xs); height: var(--icon-size-xs); }
-  .icon--sm,
-  .i--sm { width: var(--icon-size-sm); height: var(--icon-size-sm); }
-  .icon--md,
-  .i--md { width: var(--icon-size-md); height: var(--icon-size-md); }
-  .icon--lg,
-  .i--lg { width: var(--icon-size-lg); height: var(--icon-size-lg); }
-  .icon--xl,
-  .i--xl { width: var(--icon-size-xl); height: var(--icon-size-xl); }
-
-  .icon-label {
-    display: inline-block;
-    vertical-align: middle;
-  }
-
-  .icon + .icon-label,
-  .i + .icon-label {
-    margin-inline-start: var(--space-2, 0.5rem);
-  }
+  .icon { display: inline-block; width: 1em; height: 1em; vertical-align: -0.125em; fill: currentColor; }
+  .icon--sm { font-size: .875rem; }
+  .icon--md { font-size: 1rem; }
+  .icon--lg { font-size: 1.25rem; }
 }

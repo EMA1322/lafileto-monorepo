@@ -1,7 +1,7 @@
 /* ===========================================================
    MÓDULO: ADMIN HEADER (Mobile-first, BEM, accesible)
    Estilos para barra superior + drawer lateral responsive.
-   Usa variables definidas en /styles/global.css
+   Usa variables definidas en /styles/core/tokens.css
    =========================================================== */
 
 /* ---------- Accesibilidad: Skip link (visible al enfocar) ---------- */
@@ -37,7 +37,7 @@
   border-bottom: 1px solid var(--border-color);
 }
 .header__container {
-  /* .container viene en global.css (ancho máx) */
+  /* .container definido en base.css (ancho máx) */
   display: flex;
   align-items: center;
   justify-content: space-between;

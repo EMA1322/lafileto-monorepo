@@ -8,7 +8,7 @@ import './styles/core/tokens.css';
 import './styles/core/base.css';
 import './styles/core/icons.css';
 import './styles/components/components.css';
-import './styles/global.css';
+// import './styles/global.css'; // REMOVIDO: migrado a tokens/base/components
 import './styles/modals.css';
 
 // A partir de ahora, cada módulo carga SU CSS:

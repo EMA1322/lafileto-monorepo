@@ -2,7 +2,7 @@
    MÓDULO: Dashboard (ADMIN)
    Archivo: /src/styles/dashboard.css
    Mobile-first, BEM, accesible, sin frameworks.
-   Usa variables definidas en global.css
+   Usa variables definidas en core/tokens.css
    ========================================================= */
 
 /* ------------------------------
