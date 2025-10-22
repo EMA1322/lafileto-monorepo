@@ -1,9 +1,14 @@
+/* ==========================================================================
+   icons.css — Mapa de íconos SVG reutilizable
+   Uso: clase .i con modificadores (.i-edit, .i-delete, etc.). Depende de tokens.
+   ========================================================================== */
 /* ========================================================================
    ICONS — sistema de íconos SVG reutilizable para Admin
    - Define tamaños basados en tokens y helpers para iconografía inline.
    ======================================================================== */
 @layer base {
-  .icon {
+  .icon,
+  .i {
     display: inline-block;
     width: var(--icon-size-md);
     height: var(--icon-size-md);
@@ -14,18 +19,24 @@
     stroke: currentColor;
   }
 
-  .icon--xs { width: var(--icon-size-xs); height: var(--icon-size-xs); }
-  .icon--sm { width: var(--icon-size-sm); height: var(--icon-size-sm); }
-  .icon--md { width: var(--icon-size-md); height: var(--icon-size-md); }
-  .icon--lg { width: var(--icon-size-lg); height: var(--icon-size-lg); }
-  .icon--xl { width: var(--icon-size-xl); height: var(--icon-size-xl); }
+  .icon--xs,
+  .i--xs { width: var(--icon-size-xs); height: var(--icon-size-xs); }
+  .icon--sm,
+  .i--sm { width: var(--icon-size-sm); height: var(--icon-size-sm); }
+  .icon--md,
+  .i--md { width: var(--icon-size-md); height: var(--icon-size-md); }
+  .icon--lg,
+  .i--lg { width: var(--icon-size-lg); height: var(--icon-size-lg); }
+  .icon--xl,
+  .i--xl { width: var(--icon-size-xl); height: var(--icon-size-xl); }
 
   .icon-label {
     display: inline-block;
     vertical-align: middle;
   }
 
-  .icon + .icon-label {
+  .icon + .icon-label,
+  .i + .icon-label {
     margin-inline-start: var(--space-2, 0.5rem);
   }
 }

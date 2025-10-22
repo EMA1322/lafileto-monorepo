@@ -1,3 +1,9 @@
+/* ==========================================================================
+   components.css — Biblioteca de componentes UI
+   Propósito: botones, badges, cards, tablas, formularios, modales “core”.
+   Regla de oro: estilos genéricos; NADA específico de un módulo.
+   Depende de: tokens.css, base.css
+   ========================================================================== */
 /* ========================================================================
    COMPONENTS — patrones reutilizables del UI kit naranja
    - Botones, formularios, tarjetas y utilidades visuales.
@@ -6,105 +12,147 @@
 @layer components {
   /* ==================== Buttons ==================== */
   .btn {
-    display: inline-flex;
+    --btn-bg: var(--btn-bg, var(--c-primary, var(--primary-color, #0d6efd)));
+    --btn-color: var(--btn-color, #fff);
+    --btn-border: var(--btn-border, transparent);
+    --btn-shadow: var(--btn-shadow, var(--shadow, 0 2px 6px rgba(0, 0, 0, 0.08)));
+    display: inline-grid;
+    grid-auto-flow: column;
     align-items: center;
     justify-content: center;
-    gap: var(--space-2);
-    padding: calc(var(--space-2) + 2px) var(--space-4);
-    border-radius: var(--radius-md);
-    border: 1px solid transparent;
-    background: var(--color-surface-2);
-    color: var(--color-text);
+    gap: var(--space-2, 0.5rem);
+    padding: 0.5rem 0.9rem;
+    border-radius: var(--radius, var(--radius-md));
+    border: 1px solid var(--btn-border);
+    box-shadow: var(--btn-shadow);
     font-weight: 600;
-    letter-spacing: 0.01em;
+    line-height: 1;
     cursor: pointer;
-    transition: transform var(--dur-quick) var(--easing),
-      box-shadow var(--dur-quick) var(--easing),
-      background var(--dur-quick) var(--easing),
-      border-color var(--dur-quick) var(--easing);
+    background: var(--btn-bg);
+    color: var(--btn-color);
+    transition: transform var(--dur-quick, 150ms) var(--easing, ease),
+      box-shadow var(--dur-quick, 150ms) var(--easing, ease),
+      background-color var(--dur-quick, 150ms) var(--easing, ease),
+      border-color var(--dur-quick, 150ms) var(--easing, ease);
   }
 
-  .btn:hover:not([disabled]),
-  .btn:focus-visible:not([disabled]) {
+  .btn:hover:not(:disabled),
+  .btn:focus-visible:not(:disabled) {
     transform: translateY(-1px);
-    box-shadow: var(--shadow-soft);
+    box-shadow: var(--shadow-hover, var(--shadow-lg-alt, 0 6px 20px rgba(0, 0, 0, 0.12)));
   }
 
-  .btn:active:not([disabled]) {
+  .btn:active:not(:disabled) {
     transform: translateY(0);
   }
 
+  .btn:disabled,
   .btn[disabled] {
+    opacity: 0.6;
     cursor: not-allowed;
-    opacity: 0.55;
     box-shadow: none;
   }
 
+  .btn-primary,
   .btn--primary {
-    background: var(--brand-600);
-    color: #1c1300;
+    --btn-bg: var(--c-primary, var(--primary-color, #0d6efd));
+    --btn-color: #fff;
   }
 
-  .btn--primary:hover:not([disabled]) {
-    background: var(--brand-700);
-  }
-
+  .btn-secondary,
   .btn--secondary {
-    background: var(--color-surface);
-    border-color: var(--color-border);
-    color: var(--color-text);
+    --btn-bg: var(--c-surface, #ffffff);
+    --btn-color: var(--c-fg, var(--text-color, #1f2937));
+    --btn-border: var(--c-border, #d1d5db);
   }
 
+  .btn-ghost,
   .btn--ghost {
-    background: transparent;
-    border-color: var(--color-border);
-    color: var(--color-text-muted);
+    --btn-bg: transparent;
+    --btn-color: var(--c-fg, var(--text-color, #1f2937));
+    --btn-border: var(--c-border, #d1d5db);
+    --btn-shadow: none;
   }
 
-  .btn--ghost:hover:not([disabled]) {
-    background: rgba(255, 255, 255, 0.05);
+  .btn-ghost:hover:not(:disabled),
+  .btn--ghost:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--c-border, #d1d5db) 12%, transparent);
   }
 
+  .btn-success,
   .btn--success {
-    background: var(--success-600);
-    color: #04120a;
+    --btn-bg: var(--c-success, #198754);
+    --btn-color: #fff;
   }
 
+  .btn-danger,
   .btn--danger {
-    background: var(--danger-600);
-    color: #fff7f7;
+    --btn-bg: var(--c-danger, #dc3545);
+    --btn-color: #fff;
   }
 
   .btn--sm {
-    padding: var(--space-1) var(--space-3);
-    font-size: var(--fs-sm);
-    border-radius: var(--radius-sm);
+    padding: var(--space-1, 0.25rem) var(--space-3, 0.75rem);
+    font-size: var(--fs-sm, 0.875rem);
+    border-radius: var(--radius-sm, 0.375rem);
   }
 
   .btn--lg {
-    padding: calc(var(--space-3) + 2px) var(--space-5);
-    font-size: var(--fs-lg);
+    padding: 0.75rem var(--space-5, 1.25rem);
+    font-size: var(--fs-lg, 1.125rem);
   }
 
   /* ==================== Badges ==================== */
   .badge {
     display: inline-flex;
     align-items: center;
-    padding: 0 var(--space-2);
-    min-height: 1.75rem;
-    border-radius: var(--radius-round);
-    background: rgba(255, 255, 255, 0.06);
-    color: var(--color-text);
-    font-size: var(--fs-sm);
+    gap: 0.35rem;
+    padding: 0.25rem 0.65rem;
+    border-radius: var(--radius-pill, var(--radius-rounded));
+    border: 1px solid color-mix(in srgb, var(--c-border, #e5e7eb) 55%, transparent);
+    background: color-mix(in srgb, var(--c-surface, #ffffff) 96%, transparent);
+    color: var(--c-fg, var(--text-color, #1f2937));
+    font-size: var(--fs-sm, 0.875rem);
     font-weight: 600;
-    letter-spacing: 0.03em;
-    text-transform: uppercase;
+    line-height: 1;
   }
 
-  .badge--success { background: rgba(22, 163, 74, 0.22); color: #acf2c3; }
-  .badge--info { background: rgba(8, 145, 178, 0.22); color: #99e6f5; }
-  .badge--warn { background: rgba(245, 158, 11, 0.22); color: #fde68a; }
-  .badge--muted { background: rgba(148, 163, 184, 0.2); color: var(--color-text-muted); }
+  .badge-success,
+  .badge--success,
+  .badge.active {
+    background: color-mix(in srgb, var(--c-success, #198754) 18%, #ffffff);
+    border-color: color-mix(in srgb, var(--c-success, #198754) 45%, #ffffff);
+    color: color-mix(in srgb, var(--c-success, #198754) 80%, #021);
+  }
+
+  .badge-danger,
+  .badge--danger {
+    background: color-mix(in srgb, var(--c-danger, #dc3545) 18%, #fff5f5);
+    border-color: color-mix(in srgb, var(--c-danger, #dc3545) 45%, #fff);
+    color: color-mix(in srgb, var(--c-danger, #dc3545) 78%, #210);
+  }
+
+  .badge-muted,
+  .badge--muted,
+  .badge.inactive {
+    background: color-mix(in srgb, var(--c-muted, #6b7280) 12%, #ffffff);
+    border-color: color-mix(in srgb, var(--c-muted, #6b7280) 35%, #ffffff);
+    color: color-mix(in srgb, var(--c-muted, #6b7280) 75%, #111);
+  }
+
+  .badge-info,
+  .badge--info {
+    background: color-mix(in srgb, var(--c-info, #0ea5e9) 18%, #ffffff);
+    border-color: color-mix(in srgb, var(--c-info, #0ea5e9) 45%, #ffffff);
+    color: color-mix(in srgb, var(--c-info, #0ea5e9) 80%, #022);
+  }
+
+  .badge-warning,
+  .badge--warn {
+    background: color-mix(in srgb, var(--c-warning, #f59e0b) 18%, #ffffff);
+    border-color: color-mix(in srgb, var(--c-warning, #f59e0b) 45%, #ffffff);
+    color: color-mix(in srgb, var(--c-warning, #f59e0b) 80%, #221);
+  }
 
   /* ==================== Form controls ==================== */
   .input,
@@ -149,11 +197,11 @@
 
   /* ==================== Card ==================== */
   .card {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-soft);
-    padding: var(--space-5);
+    background: var(--c-surface, var(--color-surface));
+    border: 1px solid var(--c-border, var(--color-border));
+    border-radius: var(--radius-lg, var(--radius-md));
+    box-shadow: var(--shadow, var(--shadow-soft));
+    padding: var(--space-5, 1.25rem);
     display: flex;
     flex-direction: column;
     gap: var(--space-3);
@@ -162,41 +210,86 @@
   /* ==================== Table ==================== */
   .table-wrap {
     overflow-x: auto;
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--color-border);
-    background: var(--color-surface);
+    border-radius: var(--radius-lg, 1rem);
+    border: 1px solid var(--c-border, var(--color-border));
+    background: var(--c-surface, var(--color-surface));
   }
 
   .table {
     width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
     min-width: 100%;
+    border-collapse: collapse;
+    background: inherit;
   }
 
-  .table thead th {
+  .table th,
+  .table td {
+    padding: var(--space-3, 0.75rem);
+    border-bottom: 1px solid color-mix(in srgb, var(--c-border, #e5e7eb) 65%, transparent);
+    text-align: left;
+  }
+
+  .table th {
+    font-weight: 600;
+    color: color-mix(in srgb, var(--c-muted, #6b7280) 90%, #000);
+    background: var(--c-surface-alt, color-mix(in srgb, var(--c-border, #e5e7eb) 18%, #ffffff));
+    text-transform: uppercase;
+    font-size: var(--fs-sm, 0.875rem);
+    letter-spacing: 0.02em;
     position: sticky;
     top: 0;
-    background: var(--color-surface-2);
-    color: var(--color-text-strong);
-    text-align: left;
-    font-size: var(--fs-sm);
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    padding: var(--space-3);
-    border-bottom: 1px solid var(--color-border);
+    z-index: 1;
   }
 
   .table tbody td {
-    padding: var(--space-3);
-    border-bottom: 1px solid rgba(15, 23, 42, 0.35);
-    color: var(--color-text);
+    color: var(--c-fg, var(--color-text));
+    vertical-align: middle;
   }
 
   .table tbody tr:last-child td { border-bottom: none; }
 
   .table tbody tr:hover {
-    background: rgba(253, 195, 0, 0.07);
+    background: color-mix(in srgb, var(--c-primary, #0d6efd) 8%, transparent);
+  }
+
+  /* ==================== Helpers ==================== */
+  .ui-loader {
+    display: grid;
+    place-items: center;
+    gap: 0.75rem;
+    padding: 2rem;
+    min-height: 180px;
+    text-align: center;
+  }
+
+  .ui-loader__spinner {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 3px solid rgba(0, 0, 0, 0.15);
+    border-top-color: rgba(0, 0, 0, 0.6);
+    animation: ui-spin 1s linear infinite;
+    display: inline-block;
+  }
+
+  @keyframes ui-spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .ui-loader__text {
+    font-size: 0.95rem;
+    color: color-mix(in srgb, var(--c-fg, #1f2937) 80%, #333);
+  }
+
+  .ui-empty {
+    padding: 2rem;
+    text-align: center;
+    color: #555;
+    font-size: 1rem;
+  }
+
+  .ui-empty p {
+    margin: 0;
   }
 
   /* ==================== Switch ==================== */

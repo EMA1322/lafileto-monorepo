@@ -1,3 +1,8 @@
+/* ==========================================================================
+   base.css — Reset + elementos HTML base
+   Objetivo: apariencia consistente y accesible en elementos semánticos.
+   No poner estilos de componentes aquí. Depende de: tokens.css
+   ========================================================================== */
 /* ========================================================================
    BASE — reset ligero y fundamentos para el tema oscuro naranja
    - Define tipografía, colores y helpers de layout reutilizables.

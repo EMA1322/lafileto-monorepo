@@ -69,20 +69,25 @@
   color: var(--c-text);
 }
 
-.btn {
-  border: 1px solid var(--c-border);
-  background: var(--c-card);
+.categories .btn {
+  --btn-border: var(--c-border);
+  --btn-bg: var(--c-card);
+  --btn-color: var(--c-text);
+  --shadow-hover: var(--c-shadow);
   border-radius: 999px;
   padding: .55rem .9rem;
-  cursor: pointer;
   font-weight: 600;
 }
-.btn:hover { box-shadow: var(--c-shadow); }
-.btn--ghost { background: transparent; }
 
-.btn[disabled] {
+.categories .btn-ghost,
+.categories .btn--ghost {
+  --btn-bg: transparent;
+  --btn-shadow: none;
+}
+
+.categories .btn:disabled,
+.categories .btn[disabled] {
   opacity: 0.45;
-  cursor: not-allowed;
 }
 
 /* Tabla */
@@ -124,26 +129,7 @@
 }
 
 /* Badges de estado */
-.badge {
-  display: inline-flex;
-  gap: 6px;
-  align-items: center;
-  padding: 4px 10px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  border-radius: 999px;
-  border: 1px solid transparent;
-}
-.badge.active {
-  background: color-mix(in srgb, var(--c-success) 12%, #fff);
-  border-color: rgba(25, 135, 84, 0.3);
-  color: var(--c-success);
-}
-.badge.inactive {
-  background: var(--c-muted-surface);
-  border-color: var(--c-border);
-  color: var(--c-text-muted);
-}
+/* badges ahora usan componentes.css */
 
 /* Footer / paginación */
 .categories__footer {
