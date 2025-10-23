@@ -57,11 +57,36 @@ scope: Tabla sincronizada con OpenAPI v1; filtros/paginación/orden/búsqueda co
 ## Categories (Catálogo)
 | Método | Path | Auth | Query/Body | Notas | Estado |
 |---|---|---|---|---|---|
-| GET | `/categories` | **(público)** | `page,pageSize,q,sort` | Listado público | **Pendiente (I2)** |
-| POST | `/categories` | JWT | `{ name, description? }` | Admin protegido | **Pendiente (I2)** |
-| GET | `/categories/:id` | **(público)** | — | — | **Pendiente (I2)** |
-| PUT | `/categories/:id` | JWT | `{ name?, description? }` | — | **Pendiente (I2)** |
-| DELETE | `/categories/:id` | JWT | — | Idempotente | **Pendiente (I2)** |
+| GET | `/categories` | **(público)** | `page,pageSize,search,all,orderBy?,orderDir?` | Devuelve solo `active=true`; envelope `{ items[{ id,name,imageUrl,active }], meta }`; `orderBy=name|createdAt` | **I2 listo** |
+| POST | `/categories` | JWT (`rbac:categories.w`) | `{ name, imageUrl? }` | 201; nombre único (`CATEGORY_NAME_CONFLICT`), `imageUrl` absoluta opcional | **I2 listo** |
+| PATCH | `/categories/:id` | JWT (`rbac:categories.u`) | `{ name?, imageUrl?, active? }` | Cambia nombre/imagen/estado; 404 `CATEGORY_NOT_FOUND`; valida duplicados | **I2 listo** |
+| DELETE | `/categories/:id` | JWT (`rbac:categories.d`) | — | Borrado duro; responde `{ deleted: true }` | **I2 listo** |
+
+#### Smokes (API v1)
+
+```bash
+# listado público
+curl -s -H "Accept: application/json" http://localhost:3000/api/v1/categories
+
+# crear (JWT con permiso write en moduleKey=categories)
+curl -s -X POST -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $ADMIN_JWT" \
+  -d '{"name":"Carnes","imageUrl":"https://cdn.example.com/categories/carnes.webp"}' \
+  http://localhost:3000/api/v1/categories
+
+# toggle active (permiso update)
+curl -s -X PATCH -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $ADMIN_JWT" \
+  -d '{"active":false}' \
+  http://localhost:3000/api/v1/categories/<id>
+
+# eliminar (permiso delete)
+curl -s -X DELETE -H "Authorization: Bearer $ADMIN_JWT" \
+  http://localhost:3000/api/v1/categories/<id>
+
+# Proxy Vite (dev)
+curl -s -H "Accept: application/json" http://localhost:5174/api/v1/categories
+```
 
 ## Products (Catálogo)
 | Método | Path | Auth | Query/Body | Notas | Estado |

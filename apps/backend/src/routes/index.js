@@ -4,6 +4,7 @@ import { authRoutes } from "./auth.routes.js";
 import { usersRoutes } from "./users.routes.js";
 import { rolesRoutes } from "./roles.routes.js";
 import { modulesRoutes } from "./modules.routes.js";
+import { categoriesRoutes } from "./categories.routes.js";
 
 export const router = Router();
 
@@ -29,7 +30,4 @@ router.use("/auth", authRoutes);
 router.use("/users", usersRoutes);
 router.use("/roles", rolesRoutes);
 router.use("/modules", modulesRoutes);
-
-
-
-
+router.use("/categories", categoriesRoutes);

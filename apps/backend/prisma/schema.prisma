@@ -61,3 +61,14 @@ model Setting {
   key   String @id @db.VarChar(64) // ej.: "isOpen", "whatsAppNumber"
   value Json?
 }
+
+model Category {
+  id        String   @id @default(cuid()) @db.VarChar(191)
+  name      String   @unique @db.VarChar(50)
+  imageUrl  String?  @db.VarChar(2048)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([active])
+}

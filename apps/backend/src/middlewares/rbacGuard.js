@@ -4,7 +4,14 @@ import { prisma } from '../config/prisma.js';
 import { createError } from '../utils/errors.js';
 
 // action: 'r' | 'w' | 'u' | 'd'
-export function rbacGuard(moduleKey, action = 'r') {
+export function rbacGuard(moduleKey, action = 'r', options = {}) {
+  const deniedCode = typeof options.errorCode === 'string' && options.errorCode.trim().length > 0
+    ? options.errorCode.trim()
+    : 'PERMISSION_DENIED';
+  const deniedMessage = typeof options.errorMessage === 'string' && options.errorMessage.trim().length > 0
+    ? options.errorMessage.trim()
+    : 'No tienes permiso para esta acción.';
+
   return async (req, _res, next) => {
     if (!req.user) {
       return next(createError('AUTH_REQUIRED', 'Se requiere sesión para esta ruta.'));
@@ -28,7 +35,7 @@ export function rbacGuard(moduleKey, action = 'r') {
 
       const allowed = !!rp?.[action];
       if (!allowed) {
-        return next(createError('PERMISSION_DENIED', 'No tienes permiso para esta acción.'));
+        return next(createError(deniedCode, deniedMessage));
       }
       return next();
     } catch (err) {
