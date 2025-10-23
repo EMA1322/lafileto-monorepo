@@ -1,5 +1,5 @@
 // Acceso a categorías (Prisma directo)
-import { prisma } from '../../config/prisma.js';
+import { prisma } from '../config/prisma.js';
 
 const baseSelect = {
   id: true,

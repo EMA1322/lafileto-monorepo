@@ -1,7 +1,7 @@
 // Servicio de categorías: listados y mutaciones con reglas básicas
 import { Prisma } from '@prisma/client';
-import { categoryRepository } from './category.repository.js';
-import { createError } from '../../utils/errors.js';
+import { categoryRepository } from '../repositories/categoryRepository.js';
+import { createError } from '../utils/errors.js';
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_PAGE_SIZE = 10;

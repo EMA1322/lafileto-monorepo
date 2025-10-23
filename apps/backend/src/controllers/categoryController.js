@@ -1,6 +1,6 @@
 // Controlador de categorías
-import { categoryService } from './category.service.js';
-import { ok } from '../../utils/envelope.js';
+import { categoryService } from '../services/categoryService.js';
+import { ok } from '../utils/envelope.js';
 
 export const categoryController = {
   list: async (req, res, next) => {
