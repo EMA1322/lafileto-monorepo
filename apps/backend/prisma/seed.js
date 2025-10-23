@@ -36,6 +36,18 @@ async function upsertPermission(roleId, moduleKey, flags) {
   });
 }
 
+const RBAC_MODULES = [
+  { key: 'admin-header', name: 'Header Admin' },
+  { key: 'dashboard', name: 'Dashboard', supervisorFlags: { r: true, w: false, u: false, d: false } },
+  { key: 'products', name: 'Productos', supervisorFlags: { r: true, w: true, u: true, d: false } },
+  { key: 'categories', name: 'Categorías', supervisorFlags: { r: true, w: true, u: true, d: false } },
+  { key: 'settings', name: 'Configuración' },
+  { key: 'users', name: 'Usuarios / Roles & Permisos' }
+];
+
+const ADMIN_FULL_ACCESS = { r: true, w: true, u: true, d: true };
+const NO_ACCESS = { r: false, w: false, u: false, d: false };
+
 async function upsertSetting(key, value) {
   await prisma.setting.upsert({
     where: { key },
@@ -74,30 +86,19 @@ async function seedI1() {
   await upsertRole('role-supervisor', 'Supervisor');
 
   console.log('▶ Seeding modules…');
-  const modules = [
-    ['admin-header', 'Header Admin'],
-    ['dashboard',    'Dashboard'],
-    ['products',     'Productos'],
-    ['categories',   'Categorías'],
-    ['settings',     'Configuración'],
-    ['users',        'Usuarios / Roles & Permisos'],
-  ];
-  for (const [key, name] of modules) await upsertModule(key, name);
+  for (const mod of RBAC_MODULES) {
+    await upsertModule(mod.key, mod.name);
+  }
 
   console.log('▶ Seeding permissions (Admin)…');
-  for (const [key] of modules) {
-    await upsertPermission('role-admin', key, { r: true, w: true, u: true, d: true });
+  for (const mod of RBAC_MODULES) {
+    await upsertPermission('role-admin', mod.key, ADMIN_FULL_ACCESS);
   }
 
   console.log('▶ Seeding permissions (Supervisor)…');
-  const sup = (mk) => {
-    if (mk === 'dashboard')  return { r: true,  w: false, u: false, d: false };
-    if (mk === 'products')   return { r: true,  w: true,  u: true,  d: false };
-    if (mk === 'categories') return { r: true,  w: true,  u: true,  d: false };
-    return { r: false, w: false, u: false, d: false };
-  };
-  for (const [key] of modules) {
-    await upsertPermission('role-supervisor', key, sup(key));
+  for (const mod of RBAC_MODULES) {
+    const flags = mod.supervisorFlags || NO_ACCESS;
+    await upsertPermission('role-supervisor', mod.key, flags);
   }
 
   console.log('▶ Seeding admin user…');
@@ -127,9 +128,31 @@ async function seedI2() {
   try {
     await prisma.category.createMany({
       data: [
-        { name: 'Comidas',  status: 'active'   },
-        { name: 'Bebidas',  status: 'active'   },
-        { name: 'Postres',  status: 'inactive' }
+        {
+          name: 'Carnes',
+          imageUrl: 'https://cdn.example.com/categories/carnes.webp',
+          active: true
+        },
+        {
+          name: 'Pastas',
+          imageUrl: 'https://cdn.example.com/categories/pastas.webp',
+          active: true
+        },
+        {
+          name: 'Pizzas',
+          imageUrl: 'https://cdn.example.com/categories/pizzas.webp',
+          active: true
+        },
+        {
+          name: 'Bebidas',
+          imageUrl: 'https://cdn.example.com/categories/bebidas.webp',
+          active: true
+        },
+        {
+          name: 'Ensaladas',
+          imageUrl: 'https://cdn.example.com/categories/ensaladas.webp',
+          active: true
+        }
       ],
       skipDuplicates: true
     });

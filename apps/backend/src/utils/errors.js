@@ -10,15 +10,18 @@ export const ErrorCodes = {
   AUTH_INVALID:               401,
   // 403 → Usuario autenticado pero sin permisos suficientes.
   PERMISSION_DENIED:          403,
+  RBAC_FORBIDDEN:             403,
   // 404 → Recurso inexistente o ID inválido.
   NOT_FOUND:                  404,
   RESOURCE_NOT_FOUND:         404,
+  CATEGORY_NOT_FOUND:         404,
   // 408/504 → Request excedió el tiempo máximo permitido.
   REQUEST_TIMEOUT:            408,
   GATEWAY_TIMEOUT:            504,
   // 409 → Conflictos de negocio (duplicados, dependencias, etc.).
   CONFLICT:                   409,
   CATEGORY_REASSIGN_REQUIRED: 409,
+  CATEGORY_NAME_CONFLICT:     409,
   ROLE_IN_USE:                409,
   SELF_DELETE_FORBIDDEN:      409,
   LAST_ADMIN_FORBIDDEN:       409,
