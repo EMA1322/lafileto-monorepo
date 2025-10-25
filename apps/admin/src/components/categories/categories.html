@@ -1,114 +1,164 @@
-<!-- Admin / Categories (fragmento inyectado en #app) -->
-<!-- Code-splitting: CSS del módulo se carga aquí -->
+<!-- Admin / Categories view -->
+<!-- CSS del módulo cargado vía code-splitting -->
 <link rel="stylesheet" href="/src/styles/categories.css" />
 
-<section id="categories-view" class="categories" aria-labelledby="categories-title">
-  <!-- Header -->
+<section
+  id="categories-view"
+  class="categories"
+  data-module="categories"
+  aria-labelledby="categories-title"
+  role="region"
+>
   <header class="categories__header">
-    <h2 id="categories-title" class="categories__title">Categorías</h2>
+    <div class="categories__heading">
+      <h2 id="categories-title" class="categories__title">Categorías</h2>
+      <p class="categories__subtitle">Organizá y administrá las categorías del catálogo.</p>
+    </div>
 
-    <!-- Toolbar: búsqueda, estado, orden y acciones -->
-    <div class="categories__toolbar" role="region" aria-label="Búsqueda y filtros">
-      <!-- Buscar por nombre -->
-      <div class="categories__tool">
-        <label for="filter-q" class="visually-hidden">Buscar</label>
+    <div class="categories__toolbar" role="group" aria-label="Búsqueda y filtros de categorías">
+      <div class="categories__control categories__control--search">
+        <label for="categories-search" class="sr-only">Buscar por nombre</label>
         <input
-          id="filter-q"
+          id="categories-search"
           class="categories__search"
           type="search"
+          name="search"
           placeholder="Buscar por nombre…"
           autocomplete="off"
           inputmode="search"
         />
       </div>
 
-      <!-- Estado: todas / activas / inactivas -->
-      <div class="categories__tool">
-        <label for="filter-status" class="visually-hidden">Estado</label>
-        <select id="filter-status" class="categories__select" aria-label="Estado">
+      <div class="categories__control">
+        <label for="categories-filter-active" class="sr-only">Filtrar por estado</label>
+        <select id="categories-filter-active" class="categories__select" name="filter-active">
           <option value="all" selected>Todas</option>
           <option value="active">Activas</option>
           <option value="inactive">Inactivas</option>
         </select>
       </div>
 
-      <!-- Dirección de orden: asc / desc (por nombre) -->
-      <div class="categories__tool categories__tool--order">
-        <label for="filter-dir" class="visually-hidden">Orden</label>
-        <select id="filter-dir" class="categories__select" aria-label="Orden">
-          <option value="asc" selected>Ascendente</option>
-          <option value="desc">Descendente</option>
+      <div class="categories__control categories__control--order">
+        <label for="categories-order" class="sr-only">Ordenar por nombre</label>
+        <select id="categories-order" class="categories__select" name="order">
+          <option value="asc" selected>Nombre ascendente</option>
+          <option value="desc">Nombre descendente</option>
         </select>
       </div>
 
-      <!-- Acciones -->
-      <div class="categories__tool categories__tool--cta">
-        <button id="btn-refresh" class="btn btn--ghost" type="button" title="Refrescar">
-          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M20 12a8 8 0 10-2.34 5.66" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
-            <path d="M20 4v6h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
-          </svg>
-          Refrescar
+      <div class="categories__control categories__control--actions">
+        <button id="categories-refresh" class="btn btn--ghost" type="button">
+          Recargar
         </button>
-        <button id="btn-create" class="btn" type="button" data-requires="write">+ Nuevo</button>
+        <button
+          id="categories-create"
+          class="btn"
+          type="button"
+          data-action="category-create"
+          data-rbac-action="write"
+          data-rbac-hide
+          hidden
+        >
+          + Nueva
+        </button>
       </div>
     </div>
   </header>
 
-  <!-- Tabla -->
+  <div id="categories-status" class="categories__status" aria-live="polite"></div>
+
   <div class="categories__tableWrap">
-    <table class="categories__table">
+    <table id="categories-table" class="categories__table" role="table">
+      <caption class="sr-only">Listado de categorías</caption>
       <thead>
         <tr>
+          <th scope="col">ID</th>
           <th scope="col">Nombre</th>
+          <th scope="col">Imagen</th>
+          <th scope="col">#Productos</th>
           <th scope="col">Estado</th>
-          <th scope="col">Productos</th>
-          <th scope="col" class="col-actions">Acciones</th>
+          <th scope="col" class="categories__th-actions">Acciones</th>
         </tr>
       </thead>
-      <tbody id="cat-tbody">
-        <!-- rows dinámicas -->
-      </tbody>
+      <tbody id="categories-tbody" class="categories__tbody"></tbody>
     </table>
   </div>
 
-  <!-- Empty -->
-  <p class="empty" id="cat-empty" hidden>No hay categorías para mostrar.</p>
+  <p id="categories-empty" class="categories__empty" hidden>No hay categorías para mostrar.</p>
 
-  <!-- Footer / Meta + Pager -->
-  <footer class="categories__footer" aria-label="Paginación">
-    <div id="cat-meta" class="categories__summary">—</div>
+  <footer class="categories__footer" aria-label="Paginación de categorías">
+    <div id="categories-summary" class="categories__summary">—</div>
     <div class="categories__pager">
-      <button id="btn-prev" class="btn btn--ghost" type="button" title="Página anterior">◀</button>
-      <span id="cat-page" class="categories__page">1 / 1</span>
-      <button id="btn-next" class="btn btn--ghost" type="button" title="Página siguiente">▶</button>
+      <button id="categories-page-prev" class="btn btn--ghost" type="button" aria-label="Página anterior">◀</button>
+      <span id="categories-page-indicator" class="categories__page">1 / 1</span>
+      <button id="categories-page-next" class="btn btn--ghost" type="button" aria-label="Página siguiente">▶</button>
     </div>
   </footer>
 
-  <!-- Dialog nativo: Crear/Editar -->
-  <dialog id="cat-dialog" class="categories__dialog" aria-labelledby="cat-dialog-title">
-    <form id="cat-form" method="dialog" class="categories__form">
-      <header class="categories__dialogHeader">
-        <h3 id="cat-dialog-title" class="categories__dialogTitle">Nueva categoría</h3>
+  <!-- Templates para modales -->
+  <template id="tpl-category-form">
+    <div class="categories__modal">
+      <header class="categories__modalHeader">
+        <h3 id="category-modal-title" class="categories__modalTitle">Nueva categoría</h3>
       </header>
+      <form id="category-form" class="categories__form" novalidate>
+        <fieldset class="categories__formFields">
+          <legend class="sr-only">Formulario de categoría</legend>
 
-      <div class="categories__field">
-        <label for="cat-name" class="categories__label">Nombre</label>
-        <input id="cat-name" class="categories__input" type="text" required placeholder="Ej: Pizzas" />
+          <div class="categories__formField">
+            <label for="category-name">Nombre</label>
+            <input
+              id="category-name"
+              name="name"
+              class="form-control"
+              type="text"
+              required
+              minlength="2"
+              maxlength="80"
+              autocomplete="off"
+              placeholder="Ej: Pizzas"
+              aria-describedby="category-name-error"
+            />
+            <p id="category-name-error" class="form-error" hidden>Ingresá un nombre válido (2-80 caracteres).</p>
+          </div>
+
+          <div class="categories__formField">
+            <label for="category-imageUrl">Imagen (URL)</label>
+            <input
+              id="category-imageUrl"
+              name="imageUrl"
+              class="form-control"
+              type="url"
+              inputmode="url"
+              autocomplete="off"
+              placeholder="https://ejemplo.com/imagen.jpg"
+              aria-describedby="category-imageUrl-hint category-imageUrl-error"
+            />
+            <small id="category-imageUrl-hint" class="form-hint">Opcional. Debe ser una URL accesible con https://.</small>
+            <p id="category-imageUrl-error" class="form-error" hidden>Ingresá una URL válida (https://…)</p>
+          </div>
+        </fieldset>
+
+        <footer class="categories__formActions">
+          <button type="button" class="btn btn--outline" data-close-modal>Cancelar</button>
+          <button id="category-submit" type="submit" class="btn btn--primary">Guardar</button>
+        </footer>
+      </form>
+    </div>
+  </template>
+
+  <template id="tpl-category-delete">
+    <div class="categories__modal">
+      <header class="categories__modalHeader">
+        <h3 id="category-delete-title" class="categories__modalTitle">Eliminar categoría</h3>
+      </header>
+      <div class="categories__modalBody">
+        <p id="category-delete-message"></p>
       </div>
-
-      <div class="categories__field">
-        <label for="cat-status-input" class="categories__label">Estado</label>
-        <select id="cat-status-input" class="categories__input">
-          <option value="active" selected>Activa</option>
-          <option value="inactive">Inactiva</option>
-        </select>
-      </div>
-
-      <footer class="categories__dialogFooter">
-        <button id="cat-cancel" type="button" class="btn btn-secondary">Cancelar</button>
-        <button id="cat-save"   type="submit"  class="btn">Guardar</button>
+      <footer class="categories__formActions">
+        <button type="button" class="btn btn--outline" data-close-modal>Cancelar</button>
+        <button id="category-confirm-delete" type="button" class="btn btn--primary">Eliminar</button>
       </footer>
-    </form>
-  </dialog>
+    </div>
+  </template>
 </section>

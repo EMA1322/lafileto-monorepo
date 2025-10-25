@@ -21,13 +21,14 @@ export {
 /**
  * DATA_SOURCE (R-3):
  * Permite migrar módulo por módulo de /public/data/*.json → API real.
- * Prioridad: localStorage('DATA_SOURCE') > VITE_DATA_SOURCE > 'json'
+ * Prioridad: localStorage('DATA_SOURCE') > VITE_DATA_SOURCE > 'api'
  * Valores esperados: 'json' | 'api'
  */
 export const DATA_SOURCE = (() => {
   const ls = (typeof localStorage !== 'undefined' && localStorage.getItem('DATA_SOURCE')) || '';
   const env = (typeof import.meta !== 'undefined' ? import.meta.env?.VITE_DATA_SOURCE : '') || '';
-  return (ls || env || 'json').toLowerCase() === 'api' ? 'api' : 'json';
+  const resolved = (ls || env || 'api').toLowerCase();
+  return resolved === 'json' ? 'json' : 'api';
 })();
 
 /** Getter simple para usar en módulos sin importar detalles de resolución. */
