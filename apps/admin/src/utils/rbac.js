@@ -16,9 +16,9 @@
 /* =========================
    Storage keys & in-memory cache
    ========================= */
-const RBAC_ROLE_KEY = "rbac.roleId";
-const RBAC_MAP_KEY  = "rbac.permMap";
-const LS_PERM_OVERRIDE_KEY = "rbac.permissions.override";
+const RBAC_ROLE_KEY = 'rbac.roleId';
+const RBAC_MAP_KEY = 'rbac.permMap';
+const LS_PERM_OVERRIDE_KEY = 'rbac.permissions.override';
 
 let _roleId = null;
 let _permMap = null;
@@ -107,8 +107,8 @@ export function moduleKeyFromHash(hash) {
 /** Carga única del seed (cacheado en memoria) */
 async function ensureSeedLoaded() {
   if (_seedCache) return _seedCache;
-  const res = await fetch("/data/rbac_permissions.json", { cache: "no-store" });
-  if (!res.ok) throw new Error("RBAC seed not available");
+  const res = await fetch('/data/rbac_permissions.json', { cache: 'no-store' });
+  if (!res.ok) throw new Error('RBAC seed not available');
   _seedCache = await res.json();
   return _seedCache;
 }
@@ -135,10 +135,10 @@ function normalizeSeedToMap(seed) {
   }
 
   // Forma A (objeto por rol)
-  if (typeof rp === "object") {
+  if (typeof rp === 'object') {
     for (const [roleId, mods] of Object.entries(rp)) {
       out[roleId] ||= {};
-      if (!mods || typeof mods !== "object") continue;
+      if (!mods || typeof mods !== 'object') continue;
       for (const [mod, p] of Object.entries(mods)) {
         out[roleId][mod] = { r: !!p.r, w: !!p.w, u: !!p.u, d: !!p.d };
       }
@@ -155,11 +155,7 @@ function buildPermMapForRole(roleId, seed, overrides) {
   const ov = (overrides && overrides[roleId]) || {};
 
   // Unión de módulos: los del seed + los del override + (opcional) seed.modules
-  const union = new Set([
-    ...(seed?.modules || []),
-    ...Object.keys(base),
-    ...Object.keys(ov),
-  ]);
+  const union = new Set([...(seed?.modules || []), ...Object.keys(base), ...Object.keys(ov)]);
 
   const out = {};
   for (const mod of union) {
@@ -190,14 +186,16 @@ export async function ensureRbacLoaded() {
     // 0) Fast path: si ya hay permMap en session (cargado vía setServerSession), usarlo.
     try {
       const cachedPerms = sessionStorage.getItem(RBAC_MAP_KEY);
-      const cachedRole  = sessionStorage.getItem(RBAC_ROLE_KEY) || null;
+      const cachedRole = sessionStorage.getItem(RBAC_ROLE_KEY) || null;
       if (cachedPerms && cachedRole) {
         _roleId = cachedRole;
         const parsed = safeParse(cachedPerms, null);
         _permMap = normalizeServerPerms(parsed);
         if (_permMap) return; // ← permisos del servidor listos
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
 
     // 1) Obtener roleId desde sessionStorage (si no hay, no hay permisos)
     try {
@@ -224,9 +222,11 @@ export async function ensureRbacLoaded() {
     try {
       sessionStorage.setItem(RBAC_MAP_KEY, JSON.stringify(_permMap));
       sessionStorage.setItem('effectivePermissions', JSON.stringify(_permMap));
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   } catch (e) {
-    console.warn("[rbac] ensureRbacLoaded failed", e);
+    console.warn('[rbac] ensureRbacLoaded failed', e);
     _permMap = null;
   }
 }
@@ -240,7 +240,9 @@ export async function setRoleId(roleId) {
   try {
     if (_roleId) sessionStorage.setItem(RBAC_ROLE_KEY, _roleId);
     else sessionStorage.removeItem(RBAC_ROLE_KEY);
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   await ensureRbacLoaded();
 }
 
@@ -255,7 +257,9 @@ export function clearRbac() {
     sessionStorage.removeItem(RBAC_ROLE_KEY);
     sessionStorage.removeItem(RBAC_MAP_KEY);
     sessionStorage.removeItem('effectivePermissions');
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 }
 
 /* =========================
@@ -311,7 +315,9 @@ export function canDelete(moduleKey) {
 }
 
 function normalizeDatasetValue(value) {
-  return String(value || '').trim().toLowerCase();
+  return String(value || '')
+    .trim()
+    .toLowerCase();
 }
 
 function shouldHideElement(el) {
@@ -340,14 +346,37 @@ function toggleElementVisibility(el, allowed) {
 }
 
 export function applyRBAC(root) {
-  const base = root instanceof Element ? (root.classList.contains('users') ? root : root.closest('.users')) : document.querySelector('.users');
+  let base = null;
+
+  if (root instanceof Element) {
+    if (root.matches('[data-rbac-module]')) {
+      base = root;
+    } else {
+      base = root.closest('[data-rbac-module]') || root.closest('.users');
+    }
+  } else if (typeof root === 'string' && root) {
+    const node = document.querySelector(root);
+    if (node) {
+      if (node.matches('[data-rbac-module]')) {
+        base = node;
+      } else {
+        base = node.closest('[data-rbac-module]') || node.closest('.users');
+      }
+    }
+  }
+
+  if (!base) {
+    base = document.querySelector('[data-rbac-module]') || document.querySelector('.users');
+  }
+
   if (!base) return;
 
   const moduleKey = normalizeDatasetValue(base.dataset.rbacModule) || 'users';
   const alias = normalizeDatasetValue(base.dataset.rbacAlias);
   const keys = alias && alias !== moduleKey ? [moduleKey, alias] : [moduleKey];
 
-  const hasPermission = (checker) => keys.some((key) => key && typeof checker === 'function' && checker(key));
+  const hasPermission = (checker) =>
+    keys.some((key) => key && typeof checker === 'function' && checker(key));
 
   const perms = {
     read: hasPermission(canRead),
@@ -378,7 +407,9 @@ export function applyRBAC(root) {
       const raw = sessionStorage.getItem('effectivePermissions');
       if (raw) {
         const parsed = JSON.parse(raw);
-        const fullAccess = Object.values(parsed || {}).every((perm) => perm && perm.r && perm.w && perm.u && perm.d);
+        const fullAccess = Object.values(parsed || {}).every(
+          (perm) => perm && perm.r && perm.w && perm.u && perm.d,
+        );
         if (fullAccess) isAdmin = true;
       }
     } catch {

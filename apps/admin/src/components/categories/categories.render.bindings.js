@@ -1,4 +1,4 @@
-// Admin / Categories event bindings
+// Admin / Categories — event bindings
 // Comentarios en español, código en inglés.
 
 import {
@@ -11,19 +11,24 @@ import {
   toggleCategoryActive,
   findCategoryById,
 } from './categories.state.js';
+
 import { renderCategoriesTable } from './categories.render.table.js';
 import {
   openCreateCategoryModal,
   openEditCategoryModal,
   openDeleteCategoryModal,
 } from './categories.modals.js';
+
 import { mapErrorToMessage } from './categories.helpers.js';
 import { showToast } from '@/utils/snackbar.js';
 
+/** Debounce util sin dependencias. */
 function debounce(fn, wait = 300) {
   const timer = typeof window !== 'undefined' ? window : globalThis;
-  const schedule = typeof timer.setTimeout === 'function' ? timer.setTimeout.bind(timer) : setTimeout;
-  const cancel = typeof timer.clearTimeout === 'function' ? timer.clearTimeout.bind(timer) : clearTimeout;
+  const schedule =
+    typeof timer.setTimeout === 'function' ? timer.setTimeout.bind(timer) : setTimeout;
+  const cancel =
+    typeof timer.clearTimeout === 'function' ? timer.clearTimeout.bind(timer) : clearTimeout;
   let timeoutId;
   return (...args) => {
     cancel(timeoutId);
@@ -33,131 +38,122 @@ function debounce(fn, wait = 300) {
   };
 }
 
+/** Refresca desde la API y vuelve a renderizar con fallback a snapshot. */
 async function refreshAndRender(container) {
   try {
     const snapshot = await fetchCategories();
     renderCategoriesTable(snapshot, container);
-  } catch {
+  } catch (err) {
+    // Fallback: render último snapshot y notificar el error.
     renderCategoriesTable(getSnapshot(), container);
+    showToast(mapErrorToMessage(err));
+    // Log útil para depurar sin romper UX.
+    console.warn('[categories] refresh failed', err);
   }
 }
 
-export function bindCategoriesBindings(root = document.querySelector('#categories-view')) {
-  const container = root instanceof Element ? root : document.querySelector('#categories-view');
-  if (!container) return;
-  if (container.dataset.bindingsBound === 'true') return;
-
-  container.dataset.bindingsBound = 'true';
-
-  const searchInput = container.querySelector('#categories-search');
-  if (searchInput) {
-    const handleSearch = debounce(async (value) => {
-      setSearch(value);
-      renderCategoriesTable(getSnapshot(), container);
+/** Enlaza todos los eventos de la vista de categorías. */
+export function bindCategoriesBindings(container) {
+  // --- Búsqueda por nombre ---
+  const inputSearch = container.querySelector('[data-search], input[type="search"]');
+  if (inputSearch) {
+    const onSearch = debounce(async (ev) => {
+      setSearch(ev.target.value || '');
       await refreshAndRender(container);
-    }, 300);
-    searchInput.addEventListener('input', (event) => {
-      handleSearch(event.target.value || '');
-    });
+    }, 350);
+    inputSearch.addEventListener('input', onSearch);
   }
 
-  const filterSelect = container.querySelector('#categories-filter-active');
-  if (filterSelect) {
-    filterSelect.addEventListener('change', (event) => {
-      setFilterActive(event.target.value);
-      renderCategoriesTable(getSnapshot(), container);
-    });
-  }
-
-  const orderSelect = container.querySelector('#categories-order');
-  if (orderSelect) {
-    orderSelect.addEventListener('change', async (event) => {
-      setOrder(event.target.value);
-      renderCategoriesTable(getSnapshot(), container);
+  // --- Filtro de estado (todas/activas/inactivas) ---
+  const selStatus = container.querySelector('[data-filter-status], select[name="status"]');
+  if (selStatus) {
+    selStatus.addEventListener('change', async (ev) => {
+      setFilterActive(ev.target.value || 'all');
       await refreshAndRender(container);
     });
   }
 
-  const btnRefresh = container.querySelector('#categories-refresh');
-  if (btnRefresh) {
-    btnRefresh.addEventListener('click', async () => {
+  // --- Orden (asc/desc por nombre) ---
+  const selOrder = container.querySelector('[data-order], select[name="order"]');
+  if (selOrder) {
+    selOrder.addEventListener('change', async (ev) => {
+      // Normalizamos a 'asc' | 'desc'
+      const next = String(ev.target.value || 'asc').toLowerCase() === 'desc' ? 'desc' : 'asc';
+      setOrder(next);
       await refreshAndRender(container);
     });
   }
 
-  const btnCreate = container.querySelector('#categories-create');
-  if (btnCreate) {
-    btnCreate.addEventListener('click', () => {
-      openCreateCategoryModal();
-    });
-  }
-
-  const btnPrev = container.querySelector('#categories-page-prev');
+  // --- Paginación (prev/next) ---
+  const btnPrev = container.querySelector('[data-page-prev], [data-action="page-prev"]');
+  const btnNext = container.querySelector('[data-page-next], [data-action="page-next"]');
   if (btnPrev) {
     btnPrev.addEventListener('click', async () => {
-      const snapshot = getSnapshot();
-      const current = Number(snapshot.filters?.page) || 1;
-      if (current <= 1) return;
-      setPage(current - 1);
-      renderCategoriesTable(getSnapshot(), container);
+      setPage(getSnapshot().meta.page - 1);
       await refreshAndRender(container);
     });
   }
-
-  const btnNext = container.querySelector('#categories-page-next');
   if (btnNext) {
     btnNext.addEventListener('click', async () => {
-      const snapshot = getSnapshot();
-      const current = Number(snapshot.filters?.page) || 1;
-      const totalPages = Math.max(1, Number(snapshot.meta?.pageCount) || 1);
-      if (current >= totalPages) return;
-      setPage(current + 1);
-      renderCategoriesTable(getSnapshot(), container);
+      setPage(getSnapshot().meta.page + 1);
       await refreshAndRender(container);
     });
   }
 
-  const tbody = container.querySelector('#categories-tbody');
-  if (tbody) {
-    tbody.addEventListener('click', (event) => {
-      const button = event.target.closest('[data-action]');
-      if (!button) return;
-      const action = button.dataset.action;
-      const row = button.closest('tr[data-id]');
-      const categoryId = row?.dataset.id;
-      if (!categoryId) return;
-
-      if (action === 'category-edit') {
-        openEditCategoryModal(categoryId);
-        return;
-      }
-
-      if (action === 'category-delete') {
-        openDeleteCategoryModal(categoryId);
-        return;
-      }
-
-      if (action === 'category-toggle') {
-        const nextAttr = String(button.dataset.nextActive || '').toLowerCase();
-        const nextActive = nextAttr === 'true';
-        button.disabled = true;
-        try {
-          await toggleCategoryActive(categoryId, nextActive);
-          const updated = findCategoryById(categoryId);
-          const suffix = updated?.name ? `: ${updated.name}` : '';
-          const successMessage = nextActive
-            ? `Categoría activada${suffix}.`
-            : `Categoría desactivada${suffix}.`;
-          showToast({ message: successMessage, type: 'success', timeout: 2600 });
-        } catch (err) {
-          const base = mapErrorToMessage(err, 'No se pudo actualizar el estado.');
-          const code = err?.code ? ` (${err.code})` : '';
-          showToast({ message: `${base}${code}`, type: 'error', timeout: 4000 });
-        } finally {
-          button.disabled = false;
-        }
-        return;
-      }
+  // --- Recargar manual ---
+  const btnReload = container.querySelector('[data-reload], [data-action="reload"], #btn-reload');
+  if (btnReload) {
+    btnReload.addEventListener('click', async () => {
+      await refreshAndRender(container);
     });
   }
+
+  // --- Nuevo / Editar / Eliminar (modales) ---
+  const btnNew = container.querySelector('[data-action="create"], [data-rbac-w]');
+  if (btnNew) {
+    btnNew.addEventListener('click', async () => {
+      const created = await openCreateCategoryModal();
+      if (created) await refreshAndRender(container);
+    });
+  }
+
+  // Delegación de eventos para filas de la tabla
+  container.addEventListener('click', async (ev) => {
+    const t = ev.target.closest('[data-action]');
+    if (!t) return;
+
+    // Editar
+    if (t.dataset.action === 'edit' && t.dataset.id) {
+      const category = findCategoryById(t.dataset.id);
+      const updated = await openEditCategoryModal(category);
+      if (updated) await refreshAndRender(container);
+      return;
+    }
+
+    // Eliminar
+    if (t.dataset.action === 'delete' && t.dataset.id) {
+      const category = findCategoryById(t.dataset.id);
+      const removed = await openDeleteCategoryModal(category);
+      if (removed) await refreshAndRender(container);
+      return;
+    }
+
+    // Toggle activo/inactivo (optimista)
+    if (t.dataset.action === 'toggle' && t.dataset.id) {
+      try {
+        const category = findCategoryById(t.dataset.id);
+        const next = !category?.active;
+        await toggleCategoryActive(t.dataset.id, next);
+        renderCategoriesTable(getSnapshot(), container);
+      } catch (err) {
+        renderCategoriesTable(getSnapshot(), container);
+        showToast(mapErrorToMessage(err));
+      }
+    }
+  });
+}
+
+/** Helper público para que el *entrypoint* pueda refrescar. */
+export async function fetchAndRender(container) {
+  await refreshAndRender(container);
 }

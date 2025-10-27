@@ -1,8 +1,8 @@
-// Admin / Categories state & data layer
+// Admin / Categories — state & data layer
 // Comentarios en español, código en inglés.
 
 import { apiFetch } from '@/utils/api.js';
-import { showToast } from '@/utils/snackbar.js';
+import { showToast } from '@/utils/snackbar.js'; // usado sólo en errores no recuperables
 
 import {
   MODULE_KEY,
@@ -14,352 +14,151 @@ import {
   normalizeOrder,
 } from './categories.helpers.js';
 
+// Suscriptores (render) para cambios de estado.
 const subscribers = new Set();
 
+/** Estado reactivo simple (sin framework). */
 export const state = {
   items: [],
-  meta: {
-    total: 0,
-    page: 1,
-    pageSize: DEFAULT_PAGE_SIZE,
-    pageCount: 1,
-  },
-  filters: {
-    search: '',
-    filterActive: 'all',
-    order: 'asc',
-    page: 1,
-    pageSize: DEFAULT_PAGE_SIZE,
-  },
-  loading: false,
-  error: null,
+  meta: { page: 1, pageSize: DEFAULT_PAGE_SIZE, total: 0 },
+
+  // Filtros/orden/paginación
+  q: '',
+  status: 'all', // 'all' | 'active' | 'inactive'
+  orderBy: 'name',
+  orderDir: 'asc', // 'asc' | 'desc'
 };
 
-function notify() {
-  const snapshot = getSnapshot();
-  subscribers.forEach((listener) => {
-    try {
-      listener(snapshot);
-    } catch (err) {
-      console.error('[categories] subscriber failed', err);
-    }
-  });
+export function subscribe(cb) {
+  subscribers.add(cb);
+  return () => subscribers.delete(cb);
 }
 
-/** Devuelve un snapshot inmutable del estado. */
+function notify(container) {
+  for (const cb of subscribers) cb(getSnapshot(), container);
+}
+
+/** Devuelve una copia inmutable del estado para render. */
 export function getSnapshot() {
-  const items = Array.isArray(state.items) ? state.items.slice() : [];
-  const viewItems = filterItemsByActive(items, state.filters.filterActive);
-  const meta = {
-    total: Number(state.meta.total) || 0,
-    page: Number(state.meta.page) || 1,
-    pageSize: Number(state.meta.pageSize) || DEFAULT_PAGE_SIZE,
-    pageCount: Number(state.meta.pageCount) || 1,
-  };
   return {
-    items,
-    viewItems,
-    meta,
-    filters: { ...state.filters },
-    loading: state.loading,
-    error: state.error,
+    items: [...state.items],
+    meta: { ...state.meta },
+    q: state.q,
+    status: state.status,
+    orderBy: state.orderBy,
+    orderDir: state.orderDir,
   };
 }
 
-/** Permite reaccionar a cambios del estado local. */
-export function subscribe(listener) {
-  if (typeof listener !== 'function') return () => {};
-  subscribers.add(listener);
-  return () => {
-    subscribers.delete(listener);
-  };
+/** Normalizadores/Setters */
+export function setSearch(v) {
+  state.q = String(v ?? '').trim();
+}
+export function setFilterActive(v) {
+  state.status = normalizeFilterActive(v);
+}
+export function setOrder(dir) {
+  state.orderDir = normalizeOrder(dir);
+}
+export function setPage(p) {
+  const n = Number(p || 1);
+  state.meta.page = n < 1 ? 1 : n;
 }
 
-function setLoading(flag) {
-  state.loading = !!flag;
+/** Construye los query params actuales. */
+function buildQuery() {
+  const params = new URLSearchParams();
+  if (state.q) params.set('q', state.q);
+  if (state.status && state.status !== 'all') params.set('status', state.status);
+  if (state.orderBy) params.set('orderBy', state.orderBy);
+  if (state.orderDir) params.set('orderDir', state.orderDir);
+  params.set('page', String(state.meta.page));
+  params.set('pageSize', String(state.meta.pageSize));
+  return params.toString();
 }
 
-function setError(err) {
-  state.error = err || null;
-}
+/** Carga categorías desde la API y actualiza el estado. */
+export async function fetchCategories(options = {}) {
+  const { silentToast = false } = options;
+  const qs = buildQuery();
+  const url = `/api/v1/categories?${qs}`;
 
-function setItems(items, meta) {
-  state.items = Array.isArray(items) ? items : [];
-  sortItems();
+  const response = await apiFetch(url, { method: 'GET' });
+  if (!response?.ok) {
+    if (!silentToast) showToast(mapErrorToMessage(response?.error));
+    throw response?.error || new Error('Request failed');
+  }
+
+  // El backend retorna { ok:true, data:{ items, meta } }
+  const payload = response.data || {};
+  const itemsRaw = payload.items || payload.data || [];
+  const metaRaw = payload.meta || {};
+
+  // Mapeo plano a view-model
+  const mapped = Array.isArray(itemsRaw) ? itemsRaw.map(mapCategoryFromApi) : [];
+  state.items = filterItemsByActive(mapped, state.status);
   state.meta = {
-    total: Number(meta?.total) || state.items.length,
-    page: Number(meta?.page) || state.filters.page,
-    pageSize: Number(meta?.pageSize) || state.filters.pageSize,
-    pageCount: Math.max(1, Number(meta?.pageCount) || Math.ceil((Number(meta?.total) || state.items.length || 1) / (Number(meta?.pageSize) || state.filters.pageSize || DEFAULT_PAGE_SIZE))),
+    page: Number(metaRaw.page ?? 1),
+    pageSize: Number(metaRaw.pageSize ?? DEFAULT_PAGE_SIZE),
+    total: Number(metaRaw.total ?? mapped.length),
   };
-  state.filters.page = state.meta.page;
+
+  return getSnapshot();
 }
 
-function sortItems() {
-  if (!Array.isArray(state.items)) return;
-  const direction = state.filters.order === 'desc' ? -1 : 1;
-  state.items.sort((a, b) => {
-    const nameA = (a?.name || '').toLocaleLowerCase();
-    const nameB = (b?.name || '').toLocaleLowerCase();
-    return nameA.localeCompare(nameB, 'es', { sensitivity: 'base' }) * direction;
-  });
+/** Busca una categoría en memoria por id. */
+export function findCategoryById(id) {
+  return state.items.find((it) => it.id === id) || null;
 }
 
-function upsertCategoryInState(category) {
-  if (!category || typeof category !== 'object') return null;
-  if (!category.id) return null;
+/** Inserta/actualiza un item en el estado de forma inmutable. */
+function upsertCategoryInState(entity) {
+  const idx = state.items.findIndex((c) => c.id === entity.id);
+  if (idx === -1) state.items = [entity, ...state.items];
+  else
+    state.items = [
+      ...state.items.slice(0, idx),
+      { ...state.items[idx], ...entity },
+      ...state.items.slice(idx + 1),
+    ];
+}
 
-  const normalized = mapCategoryFromApi(category);
-  if (!normalized) return null;
-
-  const index = state.items.findIndex((item) => String(item.id) === String(normalized.id));
-  if (index >= 0) {
-    state.items.splice(index, 1, normalized);
-  } else {
-    state.items.push(normalized);
-    state.meta.total = (Number(state.meta.total) || 0) + 1;
+/**
+ * Toggle activo/inactivo — optimista.
+ * Si la API falla, se revierte el cambio y se propaga el error.
+ */
+export async function toggleCategoryActive(categoryId, nextActive) {
+  const category = findCategoryById(categoryId);
+  if (!category) {
+    const err = new Error('Categoría no encontrada.');
+    err.code = 'RESOURCE_NOT_FOUND';
+    throw err;
   }
 
-  sortItems();
-
-  const estimatedTotal = Math.max(state.items.length, Number(state.meta.total) || 0);
-  const pageSize = Number(state.filters.pageSize) || DEFAULT_PAGE_SIZE;
-  state.meta.pageCount = Math.max(1, Math.ceil(estimatedTotal / pageSize));
-  state.meta.pageSize = pageSize;
-  state.meta.page = Number(state.filters.page) || 1;
-
-  notify();
-  return normalized;
-}
-
-function removeCategoryFromState(categoryId) {
-  const index = state.items.findIndex((item) => String(item.id) === String(categoryId));
-  if (index === -1) return false;
-
-  state.items.splice(index, 1);
-  state.meta.total = Math.max(0, (Number(state.meta.total) || 0) - 1);
-  const estimatedTotal = Math.max(state.items.length, Number(state.meta.total) || 0);
-  const pageSize = Number(state.filters.pageSize) || DEFAULT_PAGE_SIZE;
-  const pageCount = Math.max(1, Math.ceil(Math.max(1, estimatedTotal) / pageSize));
-  state.meta.pageCount = pageCount;
-  if (state.filters.page > pageCount) {
-    state.filters.page = pageCount;
-  }
-  state.meta.page = state.filters.page;
-
-  notify();
-  return true;
-}
-
-/** Construye los parámetros de consulta para la API real. */
-function buildQueryParams() {
-  const params = {
-    page: state.filters.page,
-    pageSize: state.filters.pageSize,
-    order: state.filters.order,
-  };
-  if (state.filters.search) {
-    params.search = state.filters.search;
-  }
-  return params;
-}
-
-/** Carga categorías desde la API. */
-export async function fetchCategories({ silentToast = false } = {}) {
-  setLoading(true);
-  setError(null);
-  notify();
+  // Optimista
+  const previous = { ...category };
+  upsertCategoryInState({ ...category, active: !!nextActive });
 
   try {
-    const params = buildQueryParams();
-    const response = await apiFetch('/api/v1/categories', {
-      method: 'GET',
-      params,
+    const response = await apiFetch(`/api/v1/categories/${encodeURIComponent(categoryId)}`, {
+      method: 'PATCH',
+      body: { active: !!nextActive },
       showErrorToast: false,
     });
 
     if (!response?.ok) {
-      throw response?.error || { code: 'UNKNOWN', message: 'No se pudo cargar el listado.' };
+      // Revertir si falla
+      upsertCategoryInState(previous);
+      throw response?.error || new Error('Update failed');
     }
 
-    const data = response.data || {};
-    const meta = data.meta || response.meta || {};
-    const items = Array.isArray(data.items) ? data.items : [];
-    const mapped = items.map(mapCategoryFromApi).filter(Boolean);
-
-    setItems(mapped, {
-      total: meta.total ?? meta.count ?? mapped.length,
-      page: meta.page ?? params.page,
-      pageSize: meta.pageSize ?? params.pageSize,
-      pageCount: meta.pageCount,
-    });
-    setLoading(false);
-    notify();
-    return getSnapshot();
+    // Confirmar con data real si viene del servidor
+    const raw = response.data?.item ?? response.data;
+    const fresh = raw ? mapCategoryFromApi(raw) : { ...previous, active: !!nextActive };
+    upsertCategoryInState(fresh);
+    return fresh;
   } catch (err) {
-    console.error('[categories] fetchCategories failed', err);
-    setItems([], { total: 0, page: state.filters.page, pageSize: state.filters.pageSize, pageCount: 1 });
-    setLoading(false);
-    setError(err);
-    notify();
-    if (!silentToast) {
-      showToast({ message: mapErrorToMessage(err, 'No se pudo cargar el listado.'), type: 'error', code: err?.code });
-    }
+    upsertCategoryInState(previous);
     throw err;
   }
-}
-
-/** Normaliza el término de búsqueda y actualiza filtros. */
-export function setSearch(search) {
-  state.filters.search = String(search || '').trim();
-  state.filters.page = 1;
-  notify();
-}
-
-export function setFilterActive(filter) {
-  state.filters.filterActive = normalizeFilterActive(filter);
-  state.filters.page = 1;
-  notify();
-}
-
-export function setOrder(order) {
-  state.filters.order = normalizeOrder(order);
-  state.filters.page = 1;
-  notify();
-}
-
-export function setPage(page) {
-  const pageNumber = Math.max(1, Number(page) || 1);
-  state.filters.page = pageNumber;
-  notify();
-}
-
-export function setPageSize(pageSize) {
-  const size = Math.max(1, Number(pageSize) || DEFAULT_PAGE_SIZE);
-  state.filters.pageSize = size;
-  state.meta.pageSize = size;
-  state.filters.page = 1;
-  notify();
-}
-
-export function getModuleKey() {
-  return MODULE_KEY;
-}
-
-export function findCategoryById(categoryId) {
-  if (!categoryId) return null;
-  return state.items.find((item) => String(item.id) === String(categoryId)) || null;
-}
-
-export async function createCategory(payload) {
-  const body = {
-    name: String(payload?.name || '').trim(),
-  };
-  if (payload?.imageUrl) {
-    body.imageUrl = String(payload.imageUrl).trim();
-  }
-
-  const response = await apiFetch('/api/v1/categories', {
-    method: 'POST',
-    body,
-    showErrorToast: false,
-  });
-
-  if (!response?.ok) {
-    throw response?.error || { code: 'UNKNOWN', message: 'No se pudo crear la categoría.' };
-  }
-
-  const raw = response.data?.item ?? response.data?.category ?? response.data ?? null;
-  const created = upsertCategoryInState(raw || body);
-
-  try {
-    await fetchCategories({ silentToast: true });
-  } catch (err) {
-    console.warn('[categories] refresh after create failed', err);
-  }
-
-  return created;
-}
-
-export async function updateCategory(categoryId, payload) {
-  const id = encodeURIComponent(categoryId);
-  const body = {};
-  if (typeof payload?.name !== 'undefined') {
-    body.name = String(payload.name || '').trim();
-  }
-  if (typeof payload?.imageUrl !== 'undefined') {
-    body.imageUrl = payload.imageUrl ? String(payload.imageUrl).trim() : '';
-  }
-
-  const response = await apiFetch(`/api/v1/categories/${id}`, {
-    method: 'PATCH',
-    body,
-    showErrorToast: false,
-  });
-
-  if (!response?.ok) {
-    throw response?.error || { code: 'UNKNOWN', message: 'No se pudo actualizar la categoría.' };
-  }
-
-  const raw = response.data?.item ?? response.data?.category ?? response.data ?? { id: categoryId, ...payload };
-  const updated = upsertCategoryInState({ id: categoryId, ...raw });
-
-  try {
-    await fetchCategories({ silentToast: true });
-  } catch (err) {
-    console.warn('[categories] refresh after update failed', err);
-  }
-
-  return updated;
-}
-
-export async function deleteCategory(categoryId) {
-  const id = encodeURIComponent(categoryId);
-  const response = await apiFetch(`/api/v1/categories/${id}`, {
-    method: 'DELETE',
-    showErrorToast: false,
-  });
-
-  if (!response?.ok) {
-    throw response?.error || { code: 'UNKNOWN', message: 'No se pudo eliminar la categoría.' };
-  }
-
-  removeCategoryFromState(categoryId);
-
-  try {
-    await fetchCategories({ silentToast: true });
-  } catch (err) {
-    console.warn('[categories] refresh after delete failed', err);
-  }
-
-  return true;
-}
-
-export async function toggleCategoryActive(categoryId, nextActive) {
-  const category = findCategoryById(categoryId);
-  if (!category) {
-    throw Object.assign(new Error('Categoría no encontrada.'), {
-      code: 'RESOURCE_NOT_FOUND',
-    });
-  }
-
-  const desiredState = typeof nextActive === 'boolean' ? nextActive : !category.active;
-  const previous = { ...category };
-
-  upsertCategoryInState({ ...category, active: desiredState });
-
-  const response = await apiFetch(`/api/v1/categories/${encodeURIComponent(categoryId)}`, {
-    method: 'PATCH',
-    body: { active: desiredState },
-    showErrorToast: false,
-  });
-
-  if (!response?.ok) {
-    upsertCategoryInState(previous);
-    throw response?.error || { code: 'UNKNOWN', message: 'No se pudo actualizar el estado.' };
-  }
-
-  const raw = response.data?.item ?? response.data?.category ?? response.data ?? { id: categoryId, active: desiredState };
-  upsertCategoryInState({ id: categoryId, ...raw });
-  return findCategoryById(categoryId);
 }
