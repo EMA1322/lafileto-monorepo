@@ -48,9 +48,6 @@ export function attachCategoriesBindings(
 ) {
   const container = root instanceof Element ? root : document.querySelector('#categories-view');
   if (!container) return;
-  if (container.dataset.bindingsBound === 'true') return;
-
-  container.dataset.bindingsBound = 'true';
 
   const handleRefresh = async () => {
     if (typeof options.onRefresh === 'function') {

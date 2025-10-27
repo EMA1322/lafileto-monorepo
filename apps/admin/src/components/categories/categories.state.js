@@ -172,7 +172,7 @@ export async function fetchCategories({ silentToast = false } = {}) {
 
   try {
     const params = buildQueryParams();
-    const response = await apiFetch('/api/v1/categories', {
+    const response = await apiFetch('/categories', {
       method: 'GET',
       params,
       showErrorToast: false,
@@ -259,7 +259,7 @@ export async function createCategory(payload) {
     body.imageUrl = String(payload.imageUrl).trim();
   }
 
-  const response = await apiFetch('/api/v1/categories', {
+  const response = await apiFetch('/categories', {
     method: 'POST',
     body,
     showErrorToast: false,
@@ -291,7 +291,7 @@ export async function updateCategory(categoryId, payload) {
     body.imageUrl = payload.imageUrl ? String(payload.imageUrl).trim() : '';
   }
 
-  const response = await apiFetch(`/api/v1/categories/${id}`, {
+  const response = await apiFetch(`/categories/${id}`, {
     method: 'PATCH',
     body,
     showErrorToast: false,
@@ -315,7 +315,7 @@ export async function updateCategory(categoryId, payload) {
 
 export async function deleteCategory(categoryId) {
   const id = encodeURIComponent(categoryId);
-  const response = await apiFetch(`/api/v1/categories/${id}`, {
+  const response = await apiFetch(`/categories/${id}`, {
     method: 'DELETE',
     showErrorToast: false,
   });
@@ -348,7 +348,7 @@ export async function toggleCategoryActive(categoryId, nextActive) {
 
   upsertCategoryInState({ ...category, active: desiredState });
 
-  const response = await apiFetch(`/api/v1/categories/${encodeURIComponent(categoryId)}`, {
+  const response = await apiFetch(`/categories/${encodeURIComponent(categoryId)}`, {
     method: 'PATCH',
     body: { active: desiredState },
     showErrorToast: false,
