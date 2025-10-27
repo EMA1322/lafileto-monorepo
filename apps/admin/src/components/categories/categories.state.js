@@ -1,47 +1,42 @@
-// Admin / Categories — state & data layer
+// Admin / Categories — reactive state + API
 // Comentarios en español, código en inglés.
 
 import { apiFetch } from '@/utils/api.js';
-import { showToast } from '@/utils/snackbar.js'; // usado sólo en errores no recuperables
-
 import {
   MODULE_KEY,
   DEFAULT_PAGE_SIZE,
-  filterItemsByActive,
-  mapCategoryFromApi,
-  mapErrorToMessage,
   normalizeFilterActive,
   normalizeOrder,
+  mapCategoryFromApi,
 } from './categories.helpers.js';
 
-// Suscriptores (render) para cambios de estado.
-const subscribers = new Set();
-
-/** Estado reactivo simple (sin framework). */
+/** Estado global (sin framework) */
 export const state = {
   items: [],
   meta: { page: 1, pageSize: DEFAULT_PAGE_SIZE, total: 0 },
-
-  // Filtros/orden/paginación
   q: '',
   status: 'all', // 'all' | 'active' | 'inactive'
   orderBy: 'name',
   orderDir: 'asc', // 'asc' | 'desc'
 };
 
+const subscribers = new Set();
+
+/** Suscripción simple para render reactivo */
 export function subscribe(cb) {
   subscribers.add(cb);
   return () => subscribers.delete(cb);
 }
 
+/** Notifica a los suscriptores con el snapshot actual */
 function notify(container) {
   for (const cb of subscribers) cb(getSnapshot(), container);
 }
 
-/** Devuelve una copia inmutable del estado para render. */
+/** Copia inmutable del estado (para render) */
 export function getSnapshot() {
   return {
-    items: [...state.items],
+    items: state.items.slice(),
     meta: { ...state.meta },
     q: state.q,
     status: state.status,
@@ -50,7 +45,7 @@ export function getSnapshot() {
   };
 }
 
-/** Normalizadores/Setters */
+/** Mutadores de filtros/paginación */
 export function setSearch(v) {
   state.q = String(v ?? '').trim();
 }
@@ -60,105 +55,117 @@ export function setFilterActive(v) {
 export function setOrder(dir) {
   state.orderDir = normalizeOrder(dir);
 }
-export function setPage(p) {
-  const n = Number(p || 1);
-  state.meta.page = n < 1 ? 1 : n;
+export function setPage(n) {
+  const p = Number(n || 1);
+  state.meta.page = p < 1 ? 1 : p;
 }
 
-/** Construye los query params actuales. */
+/** Construye querystring desde el estado */
 function buildQuery() {
   const params = new URLSearchParams();
   if (state.q) params.set('q', state.q);
   if (state.status && state.status !== 'all') params.set('status', state.status);
-  if (state.orderBy) params.set('orderBy', state.orderBy);
-  if (state.orderDir) params.set('orderDir', state.orderDir);
+  params.set('orderBy', state.orderBy);
+  params.set('orderDir', state.orderDir);
   params.set('page', String(state.meta.page));
   params.set('pageSize', String(state.meta.pageSize));
-  return params.toString();
+  return params;
 }
 
-/** Carga categorías desde la API y actualiza el estado. */
-export async function fetchCategories(options = {}) {
-  const { silentToast = false } = options;
-  const qs = buildQuery();
-  const url = `/api/v1/categories?${qs}`;
+/** Carga categorías desde la API y actualiza el estado */
+export async function fetchCategories({ silentToast = false } = {}) {
+  const qs = buildQuery().toString();
+  const response = await apiFetch(`/api/v1/categories?${qs}`, {
+    method: 'GET',
+    showErrorToast: !silentToast,
+  });
 
-  const response = await apiFetch(url, { method: 'GET' });
-  if (!response?.ok) {
-    if (!silentToast) showToast(mapErrorToMessage(response?.error));
-    throw response?.error || new Error('Request failed');
-  }
+  if (!response?.ok) return getSnapshot();
 
-  // El backend retorna { ok:true, data:{ items, meta } }
-  const payload = response.data || {};
-  const itemsRaw = payload.items || payload.data || [];
-  const metaRaw = payload.meta || {};
+  const list = Array.isArray(response.data?.items)
+    ? response.data.items.map(mapCategoryFromApi)
+    : [];
+  const meta = response.data?.meta ?? response.meta ?? {};
 
-  // Mapeo plano a view-model
-  const mapped = Array.isArray(itemsRaw) ? itemsRaw.map(mapCategoryFromApi) : [];
-  state.items = filterItemsByActive(mapped, state.status);
+  state.items = list;
   state.meta = {
-    page: Number(metaRaw.page ?? 1),
-    pageSize: Number(metaRaw.pageSize ?? DEFAULT_PAGE_SIZE),
-    total: Number(metaRaw.total ?? mapped.length),
+    page: Number(meta.page ?? 1),
+    pageSize: Number(meta.pageSize ?? DEFAULT_PAGE_SIZE),
+    total: Number(meta.total ?? list.length),
   };
 
+  notify();
   return getSnapshot();
 }
 
-/** Busca una categoría en memoria por id. */
+/** Utilidades de búsqueda/actualización en memoria */
 export function findCategoryById(id) {
-  return state.items.find((it) => it.id === id) || null;
+  return state.items.find((c) => c.id === id) ?? null;
 }
 
-/** Inserta/actualiza un item en el estado de forma inmutable. */
-function upsertCategoryInState(entity) {
-  const idx = state.items.findIndex((c) => c.id === entity.id);
-  if (idx === -1) state.items = [entity, ...state.items];
-  else
-    state.items = [
-      ...state.items.slice(0, idx),
-      { ...state.items[idx], ...entity },
-      ...state.items.slice(idx + 1),
-    ];
+function upsertCategoryInState(raw) {
+  const cat = mapCategoryFromApi(raw);
+  const idx = state.items.findIndex((c) => c.id === cat.id);
+  if (idx === -1) state.items.unshift(cat);
+  else state.items[idx] = { ...state.items[idx], ...cat };
+  notify();
+  return cat;
 }
 
-/**
- * Toggle activo/inactivo — optimista.
- * Si la API falla, se revierte el cambio y se propaga el error.
- */
+/** CRUD */
+export async function createCategory(payload) {
+  const res = await apiFetch(`/api/v1/categories`, { method: 'POST', body: payload });
+  if (!res?.ok) throw new Error(res?.error?.message || 'No se pudo crear la categoría.');
+  return upsertCategoryInState(res.data?.item ?? res.data);
+}
+
+export async function updateCategory(id, payload) {
+  const res = await apiFetch(`/api/v1/categories/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    body: payload,
+  });
+  if (!res?.ok) throw new Error(res?.error?.message || 'No se pudo actualizar la categoría.');
+  return upsertCategoryInState(res.data?.item ?? res.data);
+}
+
+export async function deleteCategoryById(id) {
+  const res = await apiFetch(`/api/v1/categories/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+  });
+  if (!res?.ok) throw new Error(res?.error?.message || 'No se pudo eliminar la categoría.');
+  state.items = state.items.filter((c) => c.id !== id);
+  state.meta.total = Math.max(0, state.meta.total - 1);
+  notify();
+  return true;
+}
+
+/** Toggle activo con actualización optimista + rollback */
 export async function toggleCategoryActive(categoryId, nextActive) {
   const category = findCategoryById(categoryId);
   if (!category) {
-    const err = new Error('Categoría no encontrada.');
-    err.code = 'RESOURCE_NOT_FOUND';
-    throw err;
+    throw Object.assign(new Error('Categoría no encontrada.'), { code: 'RESOURCE_NOT_FOUND' });
   }
+
+  const desired = typeof nextActive === 'boolean' ? nextActive : !category.active;
+  const previous = { ...category };
 
   // Optimista
-  const previous = { ...category };
-  upsertCategoryInState({ ...category, active: !!nextActive });
+  upsertCategoryInState({ ...category, active: desired });
 
-  try {
-    const response = await apiFetch(`/api/v1/categories/${encodeURIComponent(categoryId)}`, {
-      method: 'PATCH',
-      body: { active: !!nextActive },
-      showErrorToast: false,
-    });
+  const res = await apiFetch(`/api/v1/categories/${encodeURIComponent(categoryId)}`, {
+    method: 'PATCH',
+    body: { active: desired },
+    showErrorToast: false,
+  });
 
-    if (!response?.ok) {
-      // Revertir si falla
-      upsertCategoryInState(previous);
-      throw response?.error || new Error('Update failed');
-    }
-
-    // Confirmar con data real si viene del servidor
-    const raw = response.data?.item ?? response.data;
-    const fresh = raw ? mapCategoryFromApi(raw) : { ...previous, active: !!nextActive };
-    upsertCategoryInState(fresh);
-    return fresh;
-  } catch (err) {
+  if (!res?.ok) {
+    // Rollback
     upsertCategoryInState(previous);
-    throw err;
+    const msg = res?.error?.message || 'No se pudo actualizar el estado.';
+    throw Object.assign(new Error(msg), { code: res?.error?.code || 'UPDATE_FAILED' });
   }
+
+  const raw = res.data?.item ?? res.data;
+  upsertCategoryInState(raw);
+  return findCategoryById(categoryId);
 }
