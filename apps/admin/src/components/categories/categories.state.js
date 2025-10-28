@@ -75,17 +75,15 @@ function buildQuery() {
 /** Carga categorías desde la API y actualiza el estado */
 export async function fetchCategories({ silentToast = false } = {}) {
   const qs = buildQuery().toString();
-  const response = await apiFetch(`/api/v1/categories?${qs}`, {
+  const res = await apiFetch(`/api/v1/categories?${qs}`, {
     method: 'GET',
     showErrorToast: !silentToast,
   });
 
-  if (!response?.ok) return getSnapshot();
+  if (!res?.ok) return getSnapshot();
 
-  const list = Array.isArray(response.data?.items)
-    ? response.data.items.map(mapCategoryFromApi)
-    : [];
-  const meta = response.data?.meta ?? response.meta ?? {};
+  const list = Array.isArray(res.data?.items) ? res.data.items.map(mapCategoryFromApi) : [];
+  const meta = res.data?.meta ?? res.meta ?? {};
 
   state.items = list;
   state.meta = {
@@ -98,45 +96,66 @@ export async function fetchCategories({ silentToast = false } = {}) {
   return getSnapshot();
 }
 
-/** Utilidades de búsqueda/actualización en memoria */
+// ---------- Helpers de estado ----------
 export function findCategoryById(id) {
-  return state.items.find((c) => c.id === id) ?? null;
+  return state.items.find((c) => String(c.id) === String(id)) ?? null;
 }
 
-function upsertCategoryInState(raw) {
-  const cat = mapCategoryFromApi(raw);
-  const idx = state.items.findIndex((c) => c.id === cat.id);
-  if (idx === -1) state.items.unshift(cat);
-  else state.items[idx] = { ...state.items[idx], ...cat };
-  notify();
-  return cat;
+function upsertCategoryInState(cat) {
+  const id = String(cat.id);
+  const idx = state.items.findIndex((c) => String(c.id) === id);
+  if (idx === -1) {
+    state.items.unshift(cat);
+    if (typeof state.meta.total === 'number') state.meta.total += 1;
+  } else {
+    state.items[idx] = cat;
+  }
 }
 
-/** CRUD */
+// ---------- CRUD ----------
 export async function createCategory(payload) {
-  const res = await apiFetch(`/api/v1/categories`, { method: 'POST', body: payload });
-  if (!res?.ok) throw new Error(res?.error?.message || 'No se pudo crear la categoría.');
-  return upsertCategoryInState(res.data?.item ?? res.data);
+  const res = await apiFetch('/api/v1/categories', {
+    method: 'POST',
+    body: payload,
+    showErrorToast: true,
+  });
+  if (!res.ok) throw res.error ?? new Error('No se pudo crear la categoría');
+  const created = mapCategoryFromApi(res.data);
+  upsertCategoryInState(created);
+  notify();
+  return created;
 }
 
 export async function updateCategory(id, payload) {
   const res = await apiFetch(`/api/v1/categories/${encodeURIComponent(id)}`, {
     method: 'PATCH',
     body: payload,
+    showErrorToast: true,
   });
-  if (!res?.ok) throw new Error(res?.error?.message || 'No se pudo actualizar la categoría.');
-  return upsertCategoryInState(res.data?.item ?? res.data);
+  if (!res.ok) throw res.error ?? new Error('No se pudo actualizar la categoría');
+  const updated = mapCategoryFromApi(res.data);
+  upsertCategoryInState(updated);
+  notify();
+  return updated;
 }
 
 export async function deleteCategoryById(id) {
   const res = await apiFetch(`/api/v1/categories/${encodeURIComponent(id)}`, {
     method: 'DELETE',
   });
-  if (!res?.ok) throw new Error(res?.error?.message || 'No se pudo eliminar la categoría.');
-  state.items = state.items.filter((c) => c.id !== id);
-  state.meta.total = Math.max(0, state.meta.total - 1);
+  if (!res?.ok) {
+    const msg = res?.error?.message || 'No se pudo eliminar la categoría.';
+    throw new Error(msg);
+  }
+  state.items = state.items.filter((c) => String(c.id) !== String(id));
+  state.meta.total = Math.max(0, (state.meta.total ?? 0) - 1);
   notify();
   return true;
+}
+
+// Alias para compatibilidad con imports existentes (CI fallaba por este nombre)
+export async function deleteCategory(id) {
+  return deleteCategoryById(id);
 }
 
 /** Toggle activo con actualización optimista + rollback */
@@ -166,6 +185,8 @@ export async function toggleCategoryActive(categoryId, nextActive) {
   }
 
   const raw = res.data?.item ?? res.data;
-  upsertCategoryInState(raw);
+  // Si la API ya devuelve la entidad normalizada, se podría mapear:
+  const normalized = mapCategoryFromApi(raw);
+  upsertCategoryInState(normalized);
   return findCategoryById(categoryId);
 }

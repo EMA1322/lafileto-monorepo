@@ -40,7 +40,7 @@ async function refreshAndRender(container) {
   try {
     const snapshot = await fetchCategories();
     renderCategoriesTable(snapshot, container);
-  } catch (err) {
+  } catch {
     renderCategoriesTable(getSnapshot(), container);
   }
 }
@@ -86,7 +86,7 @@ export function bindCategoriesBindings(container) {
 
   // Botón Recargar
   const $reload = container.querySelector('[data-role="reload"]');
-  if ($reload) $reload.addEventListener('click', () => refreshAndRender(container));
+  if ($reload) $reload.addEventListener('click', () => void refreshAndRender(container));
 
   // Delegación de acciones en la tabla
   container.addEventListener('click', async (ev) => {
@@ -106,10 +106,20 @@ export function bindCategoriesBindings(container) {
         const removed = await openDeleteCategoryModal(cat);
         if (removed) await refreshAndRender(container);
       } else if (action === 'toggle') {
+        // Optimista con fallback visual
         const cat = findCategoryById(id);
         const next = !cat?.active;
-        await toggleCategoryActive(id, next); // optimista
-        renderCategoriesTable(getSnapshot(), container);
+        try {
+          await toggleCategoryActive(id, next);
+          renderCategoriesTable(getSnapshot(), container);
+        } catch (err) {
+          // Si falla, re-render con snapshot actual + toast
+          renderCategoriesTable(getSnapshot(), container);
+          showToast({ message: mapErrorToMessage(err) });
+        }
+      } else if (action === 'create') {
+        const created = await openCreateCategoryModal();
+        if (created) await refreshAndRender(container);
       }
     } catch (err) {
       showToast({ message: mapErrorToMessage(err) });
@@ -131,5 +141,5 @@ export function bindCategoriesBindings(container) {
   subscribe((snapshot, el = container) => renderCategoriesTable(snapshot, el));
 
   // Carga inicial
-  refreshAndRender(container);
+  void refreshAndRender(container);
 }
