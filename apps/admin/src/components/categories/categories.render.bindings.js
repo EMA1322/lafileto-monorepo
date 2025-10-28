@@ -1,5 +1,5 @@
-// Admin / Categories event bindings
-// Comentarios en español, código en inglés.
+// // Admin / Categorías — event bindings
+// // Comentarios en español, código en inglés.
 
 import {
   fetchCategories,
@@ -10,7 +10,6 @@ import {
   setSearch,
   toggleCategoryActive,
   findCategoryById,
-  subscribe,
 } from './categories.state.js';
 import { renderCategoriesTable } from './categories.render.table.js';
 import {
@@ -21,7 +20,7 @@ import {
 import { mapErrorToMessage } from './categories.helpers.js';
 import { showToast } from '@/utils/snackbar.js';
 
-/** Debounce util sin dependencias */
+/** Debounce util sin dependencias. */
 function debounce(fn, wait = 300) {
   const timer = typeof window !== 'undefined' ? window : globalThis;
   const schedule =
@@ -49,97 +48,88 @@ async function refreshAndRender(container) {
 export function bindCategoriesBindings(container) {
   if (!container) return;
 
-  // Búsqueda
+  // --- Búsqueda
   const $search =
     container.querySelector('[data-role="search"]') ||
     container.querySelector('input[type="search"]');
   if ($search) {
-    $search.addEventListener(
-      'input',
-      debounce(async (ev) => {
-        setSearch(ev.target.value || '');
-        setPage(1);
-        await refreshAndRender(container);
-      }, 300),
-    );
-  }
-
-  // Filtro de estado
-  const $status = container.querySelector('[data-role="status"]');
-  if ($status) {
-    $status.addEventListener('change', async (ev) => {
-      setFilterActive(ev.target.value);
-      setPage(1);
+    const onSearch = debounce(async () => {
+      setSearch($search.value);
       await refreshAndRender(container);
-    });
+    }, 300);
+    $search.addEventListener('input', onSearch);
   }
 
-  // Orden
-  const $order = container.querySelector('[data-role="order"]');
-  if ($order) {
-    $order.addEventListener('change', async (ev) => {
-      setOrder(ev.target.value);
-      setPage(1);
+  // --- Filtros
+  container.addEventListener('change', async (ev) => {
+    const el = ev.target;
+    if (!el || !el.dataset) return;
+
+    // filtro activo
+    if (el.matches('[data-filter="active"]')) {
+      setFilterActive(el.value);
       await refreshAndRender(container);
-    });
-  }
+      return;
+    }
 
-  // Botón Recargar
-  const $reload = container.querySelector('[data-role="reload"]');
-  if ($reload) $reload.addEventListener('click', () => void refreshAndRender(container));
+    // orden
+    if (el.matches('[data-order]')) {
+      setOrder(el.value);
+      await refreshAndRender(container);
+      return;
+    }
+  });
 
-  // Delegación de acciones en la tabla
+  // --- Paginación
   container.addEventListener('click', async (ev) => {
-    const $btn = ev.target.closest('[data-action]');
-    if (!$btn) return;
+    const btn = ev.target.closest('[data-page]');
+    if (!btn) return;
+    const page = Number(btn.dataset.page || 1);
+    if (Number.isFinite(page)) {
+      setPage(page);
+      await refreshAndRender(container);
+    }
+  });
 
-    const action = $btn.dataset.action;
-    const id = $btn.dataset.id;
+  // --- Delegación de eventos por filas de la tabla
+  container.addEventListener('click', async (ev) => {
+    const t = ev.target.closest('[data-action]');
+    if (!t) return;
 
-    try {
-      if (action === 'edit') {
-        const cat = findCategoryById(id);
-        const updated = await openEditCategoryModal(cat);
-        if (updated) await refreshAndRender(container);
-      } else if (action === 'delete') {
-        const cat = findCategoryById(id);
-        const removed = await openDeleteCategoryModal(cat);
-        if (removed) await refreshAndRender(container);
-      } else if (action === 'toggle') {
-        // Optimista con fallback visual
-        const cat = findCategoryById(id);
-        const next = !cat?.active;
-        try {
-          await toggleCategoryActive(id, next);
-          renderCategoriesTable(getSnapshot(), container);
-        } catch (err) {
-          // Si falla, re-render con snapshot actual + toast
-          renderCategoriesTable(getSnapshot(), container);
-          showToast({ message: mapErrorToMessage(err) });
-        }
-      } else if (action === 'create') {
-        const created = await openCreateCategoryModal();
-        if (created) await refreshAndRender(container);
+    // Editar
+    if (t.dataset.action === 'edit' && t.dataset.id) {
+      const category = findCategoryById(t.dataset.id);
+      const updated = await openEditCategoryModal(category);
+      if (updated) await refreshAndRender(container);
+      return;
+    }
+
+    // Eliminar
+    if (t.dataset.action === 'delete' && t.dataset.id) {
+      const category = findCategoryById(t.dataset.id);
+      const removed = await openDeleteCategoryModal(category);
+      if (removed) await refreshAndRender(container);
+      return;
+    }
+
+    // Toggle activo/inactivo (optimista con fallback)
+    if (t.dataset.action === 'toggle' && t.dataset.id) {
+      try {
+        const snapshotBefore = getSnapshot();
+        const category = findCategoryById(t.dataset.id);
+        const next = !category?.active;
+        await toggleCategoryActive(t.dataset.id, next, { silentToast: true });
+        renderCategoriesTable(getSnapshot(), container);
+      } catch (err) {
+        // Re-render fallback + toast
+        renderCategoriesTable(getSnapshot(), container);
+        showToast(mapErrorToMessage(err));
       }
-    } catch (err) {
-      showToast({ message: mapErrorToMessage(err) });
     }
   });
 
-  // Paginación (si existiera paginador con data-page)
-  container.addEventListener('click', async (ev) => {
-    const $p = ev.target.closest('[data-page]');
-    if (!$p) return;
-    const n = Number($p.dataset.page);
-    if (Number.isFinite(n)) {
-      setPage(n);
-      await refreshAndRender(container);
-    }
-  });
-
-  // Suscripción para renders reactivos
-  subscribe((snapshot, el = container) => renderCategoriesTable(snapshot, el));
-
-  // Carga inicial
-  void refreshAndRender(container);
+  // --- Helper público para que el *entrypoint* pueda refrescar. */
+  container.fetchAndRender = async () => {
+    await refreshAndRender(container);
+  };
 }
