@@ -1,24 +1,5 @@
-// Validadores Zod para categorías
+// Zod validators for categories module
 import { z } from 'zod';
-
-function toBooleanish(value) {
-  if (value === true || value === 1 || value === '1') return true;
-  if (value === false || value === 0 || value === '0') return false;
-  if (typeof value === 'string') {
-    const normalized = value.trim().toLowerCase();
-    if (['true', 'yes', 'on'].includes(normalized)) return true;
-    if (['false', 'no', 'off'].includes(normalized)) return false;
-  }
-  return value;
-}
-
-const boolishOptional = z.preprocess(
-  (value) => {
-    if (value === undefined || value === null) return undefined;
-    return toBooleanish(value);
-  },
-  z.boolean().optional()
-);
 
 const nonEmptyString = z
   .string({ required_error: 'El nombre es obligatorio.' })
@@ -54,45 +35,55 @@ const optionalImageUrl = z.preprocess(
   z.union([absoluteUrl, z.null()]).optional()
 );
 
-function normalizeSearch(value) {
+function positiveIntParam(fieldName) {
+  return z
+    .preprocess((value) => {
+      if (value === undefined || value === null || value === '') return undefined;
+      if (typeof value === 'number') return value;
+      return Number.parseInt(String(value), 10);
+    }, z.number().int().positive().optional())
+    .refine((val) => val === undefined || (Number.isInteger(val) && val > 0), {
+      message: `${fieldName} debe ser un entero positivo.`
+    });
+}
+
+function normalizeQuery(value) {
   if (typeof value !== 'string') return undefined;
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : undefined;
 }
 
+function normalizeStatus(value) {
+  if (typeof value !== 'string') return 'active';
+  const normalized = value.trim().toLowerCase();
+  if (normalized === 'inactive') return 'inactive';
+  if (normalized === 'all') return 'all';
+  return 'active';
+}
+
 function normalizeOrderBy(value) {
-  if (!value) return 'name';
-  const normalized = String(value).trim().toLowerCase();
+  if (typeof value !== 'string') return 'name';
+  const normalized = value.trim().toLowerCase();
   if (normalized === 'createdat' || normalized === 'created_at') return 'createdAt';
+  if (normalized === 'name') return 'name';
   return 'name';
 }
 
 function normalizeOrderDir(value) {
-  if (!value) return 'asc';
-  const normalized = String(value).trim().toLowerCase();
+  if (typeof value !== 'string') return 'asc';
+  const normalized = value.trim().toLowerCase();
   return normalized === 'desc' ? 'desc' : 'asc';
 }
 
 export const categoryListQuerySchema = z.object({
-  page: z
+  q: z
     .string()
     .optional()
-    .transform((val) => (val ? Number.parseInt(val, 10) : undefined))
-    .refine((val) => val === undefined || (Number.isInteger(val) && val > 0), {
-      message: 'page debe ser un entero positivo.'
-    }),
-  pageSize: z
+    .transform(normalizeQuery),
+  status: z
     .string()
     .optional()
-    .transform((val) => (val ? Number.parseInt(val, 10) : undefined))
-    .refine((val) => val === undefined || (Number.isInteger(val) && val > 0), {
-      message: 'pageSize debe ser un entero positivo.'
-    }),
-  search: z
-    .string()
-    .optional()
-    .transform(normalizeSearch),
-  all: boolishOptional.transform((val) => val ?? false),
+    .transform(normalizeStatus),
   orderBy: z
     .string()
     .optional()
@@ -100,7 +91,9 @@ export const categoryListQuerySchema = z.object({
   orderDir: z
     .string()
     .optional()
-    .transform(normalizeOrderDir)
+    .transform(normalizeOrderDir),
+  page: positiveIntParam('page'),
+  pageSize: positiveIntParam('pageSize')
 });
 
 export const categoryCreateSchema = z.object({
@@ -110,8 +103,16 @@ export const categoryCreateSchema = z.object({
 
 export const categoryUpdateSchema = z.object({
   name: nonEmptyString.optional(),
-  imageUrl: optionalImageUrl,
-  active: boolishOptional
+  imageUrl: optionalImageUrl
+});
+
+export const categoryToggleSchema = z.object({
+  active: z
+    .preprocess((value) => {
+      if (value === 'true' || value === '1') return true;
+      if (value === 'false' || value === '0') return false;
+      return value;
+    }, z.boolean({ required_error: 'active es requerido.' }))
 });
 
 export const categoryIdParamSchema = z.object({

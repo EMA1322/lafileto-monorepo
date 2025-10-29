@@ -1,4 +1,4 @@
-// Servicio de categorías: listados y mutaciones con reglas básicas
+// Category service: handles listing, retrieval and mutations with business rules
 import { Prisma } from '@prisma/client';
 import { categoryRepository } from '../repositories/categoryRepository.js';
 import { createError } from '../utils/errors.js';
@@ -18,16 +18,30 @@ function normalizePageSize(value) {
   return Math.min(n, MAX_PAGE_SIZE);
 }
 
+function normalizeQuery(value) {
+  if (typeof value !== 'string') return undefined;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
+function normalizeStatus(value) {
+  if (typeof value !== 'string') return 'active';
+  const normalized = value.trim().toLowerCase();
+  if (normalized === 'inactive') return 'inactive';
+  if (normalized === 'all') return 'all';
+  return 'active';
+}
+
 function normalizeOrderBy(value) {
   if (typeof value === 'string') {
     const normalized = value.trim().toLowerCase();
-    if (normalized === 'createdat') return 'createdAt';
+    if (normalized === 'createdat' || normalized === 'created_at') return 'createdAt';
     if (normalized === 'name') return 'name';
   }
   return 'name';
 }
 
-function normalizeOrderDirection(value) {
+function normalizeOrderDir(value) {
   if (typeof value === 'string') {
     const normalized = value.trim().toLowerCase();
     if (normalized === 'desc') return 'desc';
@@ -61,43 +75,21 @@ function isUniqueConstraintError(err) {
 }
 
 export const categoryService = {
-  async listCategories({ page, pageSize, search, all, orderBy, orderDirection } = {}) {
-    const wantsAll = Boolean(all);
-    const normalizedSearch = typeof search === 'string' ? search.trim() : '';
+  async listCategories({ q, status, orderBy, orderDir, page, pageSize } = {}) {
+    const normalizedQuery = normalizeQuery(q);
+    const normalizedStatus = normalizeStatus(status);
     const orderField = normalizeOrderBy(orderBy);
-    const direction = normalizeOrderDirection(orderDirection);
-
-    if (wantsAll) {
-      const { items, total } = await categoryRepository.list({
-        page: DEFAULT_PAGE,
-        pageSize: MAX_PAGE_SIZE,
-        search: normalizedSearch ? normalizedSearch : undefined,
-        all: true,
-        orderBy: orderField,
-        orderDirection: direction
-      });
-
-      const sanitized = items.map(sanitizeCategory);
-      return {
-        items: sanitized,
-        meta: {
-          page: 1,
-          pageSize: total || sanitized.length || 0,
-          total
-        }
-      };
-    }
-
+    const direction = normalizeOrderDir(orderDir);
     const normalizedPage = normalizePage(page);
     const normalizedPageSize = normalizePageSize(pageSize);
 
-    const { items, total } = await categoryRepository.list({
-      page: normalizedPage,
-      pageSize: normalizedPageSize,
-      search: normalizedSearch ? normalizedSearch : undefined,
-      all: false,
+    const { items, total } = await categoryRepository.listCategories({
+      q: normalizedQuery,
+      status: normalizedStatus,
       orderBy: orderField,
-      orderDirection: direction
+      orderDir: direction,
+      page: normalizedPage,
+      pageSize: normalizedPageSize
     });
 
     return {
@@ -110,6 +102,20 @@ export const categoryService = {
     };
   },
 
+  async getCategoryById(id) {
+    const categoryId = normalizeId(id);
+    if (!categoryId) {
+      throw createError('CATEGORY_NOT_FOUND', 'La categoría indicada no existe.');
+    }
+
+    const category = await categoryRepository.getCategoryById(categoryId);
+    if (!category) {
+      throw createError('CATEGORY_NOT_FOUND', 'La categoría indicada no existe.');
+    }
+
+    return sanitizeCategory(category);
+  },
+
   async createCategory(payload) {
     const name = typeof payload.name === 'string' ? payload.name.trim() : '';
     if (!name) {
@@ -120,7 +126,7 @@ export const categoryService = {
 
     const normalizedImageUrl = normalizeImageUrl(payload.imageUrl);
 
-    const existing = await categoryRepository.findByName(name);
+    const existing = await categoryRepository.getCategoryByName(name);
     if (existing) {
       throw createError('CATEGORY_NAME_CONFLICT', 'Ya existe una categoría con ese nombre.', {
         fields: [{ path: 'name', message: 'El nombre ya se encuentra en uso.' }]
@@ -128,7 +134,7 @@ export const categoryService = {
     }
 
     try {
-      const created = await categoryRepository.create({
+      const created = await categoryRepository.createCategory({
         name,
         imageUrl: normalizedImageUrl,
         active: true
@@ -150,7 +156,7 @@ export const categoryService = {
       throw createError('CATEGORY_NOT_FOUND', 'La categoría indicada no existe.');
     }
 
-    const existing = await categoryRepository.findById(categoryId);
+    const existing = await categoryRepository.getCategoryById(categoryId);
     if (!existing) {
       throw createError('CATEGORY_NOT_FOUND', 'La categoría indicada no existe.');
     }
@@ -165,7 +171,7 @@ export const categoryService = {
         });
       }
       if (name !== existing.name) {
-        const byName = await categoryRepository.findByName(name);
+        const byName = await categoryRepository.getCategoryByName(name);
         if (byName && byName.id !== categoryId) {
           throw createError('CATEGORY_NAME_CONFLICT', 'Ya existe una categoría con ese nombre.', {
             fields: [{ path: 'name', message: 'El nombre ya se encuentra en uso.' }]
@@ -179,16 +185,12 @@ export const categoryService = {
       data.imageUrl = normalizeImageUrl(payload.imageUrl);
     }
 
-    if (payload.active !== undefined) {
-      data.active = Boolean(payload.active);
-    }
-
     if (Object.keys(data).length === 0) {
       return sanitizeCategory(existing);
     }
 
     try {
-      const updated = await categoryRepository.update(categoryId, data);
+      const updated = await categoryRepository.updateCategory(categoryId, data);
       return sanitizeCategory(updated);
     } catch (err) {
       if (isUniqueConstraintError(err)) {
@@ -200,18 +202,38 @@ export const categoryService = {
     }
   },
 
-  async deleteCategory(id) {
+  async toggleCategoryActive(id, active) {
     const categoryId = normalizeId(id);
     if (!categoryId) {
       throw createError('CATEGORY_NOT_FOUND', 'La categoría indicada no existe.');
     }
 
-    const existing = await categoryRepository.findById(categoryId);
+    const existing = await categoryRepository.getCategoryById(categoryId);
     if (!existing) {
       throw createError('CATEGORY_NOT_FOUND', 'La categoría indicada no existe.');
     }
 
-    await categoryRepository.deleteById(categoryId);
+    const shouldActivate = Boolean(active);
+    if (existing.active === shouldActivate) {
+      return sanitizeCategory(existing);
+    }
+
+    const updated = await categoryRepository.toggleCategoryActive(categoryId, shouldActivate);
+    return sanitizeCategory(updated);
+  },
+
+  async removeCategory(id) {
+    const categoryId = normalizeId(id);
+    if (!categoryId) {
+      throw createError('CATEGORY_NOT_FOUND', 'La categoría indicada no existe.');
+    }
+
+    const existing = await categoryRepository.getCategoryById(categoryId);
+    if (!existing) {
+      throw createError('CATEGORY_NOT_FOUND', 'La categoría indicada no existe.');
+    }
+
+    await categoryRepository.removeCategory(categoryId);
     return { deleted: true };
   }
 };

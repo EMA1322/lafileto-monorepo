@@ -1,4 +1,4 @@
-// Acceso a categorías (Prisma directo)
+// Category repository: thin Prisma wrapper
 import { prisma } from '../config/prisma.js';
 
 const baseSelect = {
@@ -10,50 +10,48 @@ const baseSelect = {
   updatedAt: true
 };
 
-function buildOrder(orderBy = 'name', orderDirection = 'asc') {
+function buildOrder(orderBy = 'name', orderDir = 'asc') {
   const allowedFields = new Set(['name', 'createdAt']);
   const field = allowedFields.has(orderBy) ? orderBy : 'name';
-  const direction = orderDirection === 'desc' ? 'desc' : 'asc';
+  const direction = orderDir === 'desc' ? 'desc' : 'asc';
   return { [field]: direction };
 }
 
+function buildWhere({ q, status }) {
+  const where = {};
+
+  if (status === 'active') {
+    where.active = true;
+  } else if (status === 'inactive') {
+    where.active = false;
+  }
+
+  if (q) {
+    where.name = {
+      contains: q,
+      mode: 'insensitive'
+    };
+  }
+
+  return where;
+}
+
 export const categoryRepository = {
-  findById: (id) =>
+  getCategoryById: (id) =>
     prisma.category.findUnique({
       where: { id },
       select: baseSelect
     }),
 
-  findByName: (name) =>
+  getCategoryByName: (name) =>
     prisma.category.findUnique({
       where: { name },
       select: baseSelect
     }),
 
-  async list({ page, pageSize, search, all = false, orderBy, orderDirection }) {
-    const where = {
-      active: true,
-      ...(search
-        ? {
-            name: {
-              contains: search,
-              mode: 'insensitive'
-            }
-          }
-        : undefined)
-    };
-
-    const order = buildOrder(orderBy, orderDirection);
-
-    if (all) {
-      const items = await prisma.category.findMany({
-        where,
-        orderBy: order,
-        select: baseSelect
-      });
-      return { items, total: items.length };
-    }
-
+  async listCategories({ q, status, orderBy, orderDir, page, pageSize }) {
+    const where = buildWhere({ q, status });
+    const order = buildOrder(orderBy, orderDir);
     const skip = (page - 1) * pageSize;
 
     const [items, total] = await Promise.all([
@@ -70,18 +68,25 @@ export const categoryRepository = {
     return { items, total };
   },
 
-  create: (data) =>
+  createCategory: (data) =>
     prisma.category.create({
       data,
       select: baseSelect
     }),
 
-  update: (id, data) =>
+  updateCategory: (id, data) =>
     prisma.category.update({
       where: { id },
       data,
       select: baseSelect
     }),
 
-  deleteById: (id) => prisma.category.delete({ where: { id } })
+  toggleCategoryActive: (id, active) =>
+    prisma.category.update({
+      where: { id },
+      data: { active },
+      select: baseSelect
+    }),
+
+  removeCategory: (id) => prisma.category.delete({ where: { id } })
 };

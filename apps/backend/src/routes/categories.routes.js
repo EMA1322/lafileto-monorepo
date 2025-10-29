@@ -1,10 +1,11 @@
-// Router de categorías (/api/v1/categories)
+// Category router (/api/v1/categories)
 import { Router } from 'express';
 import { categoryController } from '../controllers/categoryController.js';
 import {
   categoryCreateSchema,
   categoryIdParamSchema,
   categoryListQuerySchema,
+  categoryToggleSchema,
   categoryUpdateSchema
 } from '../validators/categoryValidators.js';
 import { validator } from '../middlewares/validator.js';
@@ -13,7 +14,21 @@ import { rbacGuard } from '../middlewares/rbacGuard.js';
 
 export const categoriesRoutes = Router();
 
-categoriesRoutes.get('/', validator(categoryListQuerySchema, 'query'), categoryController.list);
+categoriesRoutes.get(
+  '/',
+  authJWT(),
+  rbacGuard('categories', 'r', { errorCode: 'RBAC_FORBIDDEN' }),
+  validator(categoryListQuerySchema, 'query'),
+  categoryController.list
+);
+
+categoriesRoutes.get(
+  '/:id',
+  authJWT(),
+  rbacGuard('categories', 'r', { errorCode: 'RBAC_FORBIDDEN' }),
+  validator(categoryIdParamSchema, 'params'),
+  categoryController.show
+);
 
 categoriesRoutes.post(
   '/',
@@ -23,13 +38,22 @@ categoriesRoutes.post(
   categoryController.create
 );
 
-categoriesRoutes.patch(
+categoriesRoutes.put(
   '/:id',
   authJWT(),
   rbacGuard('categories', 'u', { errorCode: 'RBAC_FORBIDDEN' }),
   validator(categoryIdParamSchema, 'params'),
   validator(categoryUpdateSchema),
   categoryController.update
+);
+
+categoriesRoutes.patch(
+  '/:id',
+  authJWT(),
+  rbacGuard('categories', 'u', { errorCode: 'RBAC_FORBIDDEN' }),
+  validator(categoryIdParamSchema, 'params'),
+  validator(categoryToggleSchema),
+  categoryController.toggle
 );
 
 categoriesRoutes.delete(
