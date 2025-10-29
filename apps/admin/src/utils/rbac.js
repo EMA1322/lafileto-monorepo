@@ -348,25 +348,26 @@ function toggleElementVisibility(el, allowed) {
 export function applyRBAC(root) {
   let base = null;
 
-  if (root instanceof Element) {
-    if (root.matches('[data-rbac-module]')) {
-      base = root;
-    } else {
-      base = root.closest('[data-rbac-module]') || root.closest('.users');
+  const resolveBase = (node) => {
+    if (!node) return null;
+    if (node instanceof Element) {
+      if (node.matches('[data-rbac-module]')) return node;
+      return node.closest('[data-rbac-module]');
     }
+    return null;
+  };
+
+  if (root instanceof Element) {
+    base = resolveBase(root);
+  } else if (root && typeof root.querySelector === 'function') {
+    base = root.querySelector('[data-rbac-module]');
   } else if (typeof root === 'string' && root) {
     const node = document.querySelector(root);
-    if (node) {
-      if (node.matches('[data-rbac-module]')) {
-        base = node;
-      } else {
-        base = node.closest('[data-rbac-module]') || node.closest('.users');
-      }
-    }
+    base = resolveBase(node);
   }
 
-  if (!base) {
-    base = document.querySelector('[data-rbac-module]') || document.querySelector('.users');
+  if (!base && typeof document !== 'undefined') {
+    base = document.querySelector('[data-rbac-module]');
   }
 
   if (!base) return;

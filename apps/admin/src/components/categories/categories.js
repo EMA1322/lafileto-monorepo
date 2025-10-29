@@ -3,16 +3,8 @@
 
 import { ensureRbacLoaded, applyRBAC } from '@/utils/rbac.js';
 
-import {
-  MODULE_KEY,
-  MODULE_KEY_ALIAS,
-} from './categories.helpers.js';
-import {
-  fetchCategories,
-  getModuleKey,
-  getSnapshot,
-  subscribe,
-} from './categories.state.js';
+import { MODULE_KEY, MODULE_KEY_ALIAS } from './categories.helpers.js';
+import { fetchCategories, getModuleKey, getSnapshot, subscribe } from './categories.state.js';
 import { renderCategoriesTable } from './categories.render.table.js';
 import { bindCategoriesBindings } from './categories.render.bindings.js';
 
@@ -59,8 +51,7 @@ export async function initCategories(attempt = 0) {
   bindCategoriesBindings(container);
 
   try {
-    const snapshot = await fetchCategories();
-    renderCategoriesTable(snapshot, container);
+    await fetchCategories();
   } catch {
     renderCategoriesTable(getSnapshot(), container);
   }

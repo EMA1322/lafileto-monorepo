@@ -37,8 +37,7 @@ function debounce(fn, wait = 300) {
 /** Refresca desde la API y vuelve a renderizar con fallback a snapshot */
 async function refreshAndRender(container) {
   try {
-    const snapshot = await fetchCategories();
-    renderCategoriesTable(snapshot, container);
+    await fetchCategories();
   } catch {
     renderCategoriesTable(getSnapshot(), container);
   }
@@ -95,6 +94,20 @@ export function bindCategoriesBindings(container) {
   container.addEventListener('click', async (ev) => {
     const t = ev.target.closest('[data-action]');
     if (!t) return;
+
+    // Crear nueva categor��a
+    if (t.dataset.action === 'new') {
+      const created = await openCreateCategoryModal();
+      if (created) {
+        try {
+          await fetchCategories({ silentToast: true });
+          renderCategoriesTable(getSnapshot(), container);
+        } catch {
+          renderCategoriesTable(getSnapshot(), container);
+        }
+      }
+      return;
+    }
 
     // Editar
     if (t.dataset.action === 'edit' && t.dataset.id) {

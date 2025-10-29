@@ -80,25 +80,61 @@ function buildQuery() {
 /** GET categorías y actualiza estado. */
 export async function fetchCategories({ silentToast = false } = {}) {
   const params = buildQuery();
+  params.set('_', Date.now().toString(36));
+
   const res = await apiFetch(`/api/v1/categories?${params.toString()}`, {
     showErrorToast: !silentToast,
   });
 
-  const list = Array.isArray(res?.data?.items)
-    ? res.data.items
-    : Array.isArray(res?.data)
-      ? res.data
-      : [];
-  const items = list.map(mapCategoryFromApi);
+  const raw = res?.data?.items ?? res?.items ?? res?.data ?? [];
+  const list = Array.isArray(raw) ? raw : null;
+  const items = list ? list.map(mapCategoryFromApi) : state.items.slice();
 
-  const meta = (res?.data && res.data.meta) || {
-    page: state.meta.page,
-    pageSize: state.meta.pageSize,
-    total: items.length,
+  const prevItems = state.items;
+  const prevMeta = state.meta;
+  const apiMeta = (res?.data && res.data.meta) || res?.meta;
+
+  const pickNumber = (value) => {
+    const num = Number(value);
+    return Number.isFinite(num) ? num : null;
   };
 
+  const nextMeta = { ...prevMeta };
+  let metaTotal = null;
+  if (apiMeta && typeof apiMeta === 'object') {
+    const metaPage = pickNumber(apiMeta.page);
+    const metaPageSize = pickNumber(apiMeta.pageSize);
+    metaTotal = pickNumber(apiMeta.total);
+
+    if (metaPage !== null) nextMeta.page = metaPage;
+    if (metaPageSize !== null) nextMeta.pageSize = metaPageSize;
+    if (metaTotal !== null) nextMeta.total = metaTotal;
+  }
+  if (metaTotal === null) {
+    if (list) {
+      nextMeta.total = items.length;
+    } else if (!Number.isFinite(nextMeta.total)) {
+      nextMeta.total = prevMeta.total;
+    }
+  }
+  if (!Number.isFinite(nextMeta.total)) {
+    nextMeta.total = items.length;
+  }
+
+  const prevIds = prevItems.map((it) => String(it.id));
+  const nextIds = items.map((it) => String(it.id));
+  const itemsChanged =
+    prevIds.length !== nextIds.length || prevIds.some((id, idx) => id !== nextIds[idx]);
+  const metaChanged =
+    prevMeta.page !== nextMeta.page ||
+    prevMeta.pageSize !== nextMeta.pageSize ||
+    prevMeta.total !== nextMeta.total;
+  const changed = itemsChanged || metaChanged;
+
   state.items = items;
-  state.meta = { ...state.meta, ...meta };
+  state.meta = nextMeta;
+
+  if (changed) notify();
 
   return getSnapshot();
 }
@@ -111,7 +147,7 @@ export function findCategoryById(id) {
 
 /** Crea categoría y refresca estado en memoria. */
 export async function createCategory(payload) {
-  const res = await apiFetch('/api/v1/categories', {
+  const res = await apiFetch('/categories', {
     method: 'POST',
     body: payload,
     showErrorToast: true,
@@ -127,7 +163,7 @@ export async function createCategory(payload) {
 
 /** Actualiza categoría y sincroniza estado. */
 export async function updateCategory(id, payload) {
-  const res = await apiFetch(`/api/v1/categories/${encodeURIComponent(id)}`, {
+  const res = await apiFetch(`/categories/${encodeURIComponent(id)}`, {
     method: 'PATCH',
     body: payload,
     showErrorToast: true,
@@ -145,7 +181,7 @@ export async function updateCategory(id, payload) {
 
 /** Elimina categoría y sincroniza estado. */
 export async function deleteCategory(id) {
-  await apiFetch(`/api/v1/categories/${encodeURIComponent(id)}`, {
+  await apiFetch(`/categories/${encodeURIComponent(id)}`, {
     method: 'DELETE',
     showErrorToast: true,
     showSuccessToast: true,
@@ -173,7 +209,7 @@ export async function toggleCategoryActive(categoryId, nextActive, { silentToast
   notify();
 
   try {
-    const res = await apiFetch(`/api/v1/categories/${encodeURIComponent(categoryId)}`, {
+    const res = await apiFetch(`/categories/${encodeURIComponent(categoryId)}`, {
       method: 'PATCH',
       body: { active: Boolean(nextActive) },
       showErrorToast: !silentToast,
