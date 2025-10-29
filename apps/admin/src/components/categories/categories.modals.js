@@ -9,19 +9,47 @@ import {
   updateCategory,
   deleteCategory,
   findCategoryById,
-  getSnapshot,
 } from './categories.state.js';
 import { escapeHTML, mapErrorToMessage } from './categories.helpers.js';
-import { renderCategoriesTable } from './categories.render.table.js';
+function modalResultPromise(setup) {
+  return new Promise((resolve) => {
+    const modalRoot = document.getElementById('global-modal');
+    let resolved = false;
+    let observer = null;
+    let ignoreMutations = true;
 
-function getCategoriesContainer() {
-  return document.querySelector('#categories-view');
-}
+    const finish = (value) => {
+      if (resolved) return;
+      resolved = true;
+      if (observer) observer.disconnect();
+      resolve(Boolean(value));
+    };
 
-function renderSnapshot() {
-  const container = getCategoriesContainer();
-  if (!container) return;
-  renderCategoriesTable(getSnapshot(), container);
+    if (modalRoot instanceof HTMLElement) {
+      observer = new MutationObserver(() => {
+        if (ignoreMutations) return;
+        const hidden =
+          modalRoot.classList.contains('hidden') ||
+          modalRoot.getAttribute('aria-hidden') === 'true';
+        if (hidden) finish(false);
+      });
+      observer.observe(modalRoot, { attributes: true, attributeFilter: ['class', 'aria-hidden'] });
+      const schedule =
+        typeof queueMicrotask === 'function'
+          ? queueMicrotask
+          : (cb) => Promise.resolve().then(cb);
+      schedule(() => {
+        ignoreMutations = false;
+      });
+    }
+
+    try {
+      setup(finish);
+    } catch (err) {
+      finish(false);
+      throw err;
+    }
+  });
 }
 
 function setInputError(form, fieldId, message) {
@@ -93,163 +121,178 @@ function applyServerFieldErrors(form, error) {
 
 export function openCreateCategoryModal() {
   const template = document.getElementById('tpl-category-form');
-  if (!template) return;
+  if (!template) return Promise.resolve(false);
 
-  openModal(template.innerHTML, '#category-name');
+  return modalResultPromise((resolveResult) => {
+    openModal(template.innerHTML, '#category-name');
 
-  const modal = document.getElementById('modal-body');
-  if (!modal) return;
-
-  const form = modal.querySelector('#category-form');
-  const title = modal.querySelector('#category-modal-title');
-  const submit = modal.querySelector('#category-submit');
-
-  if (title) title.textContent = 'Nueva categoría';
-  if (submit) submit.textContent = 'Crear';
-
-  form?.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    if (!form || !submit) return;
-
-    resetFormErrors(form);
-
-    const formData = new FormData(form);
-    const name = String(formData.get('name') || '').trim();
-    const imageValue = String(formData.get('imageUrl') || '').trim();
-
-    if (name.length < 2) {
-      setInputError(form, 'category-name', 'Ingresá un nombre válido (2-80 caracteres).');
-      form.querySelector('#category-name')?.focus();
+    const modal = document.getElementById('modal-body');
+    if (!modal) {
+      resolveResult(false);
       return;
     }
 
-    let imageUrl = '';
-    if (imageValue) {
-      try {
-        imageUrl = normalizeImageUrl(imageValue);
-      } catch (err) {
-        setInputError(form, 'category-imageUrl', err.message);
-        form.querySelector('#category-imageUrl')?.focus();
+    const form = modal.querySelector('#category-form');
+    const title = modal.querySelector('#category-modal-title');
+    const submit = modal.querySelector('#category-submit');
+
+    if (title) title.textContent = 'Nueva categoría';
+    if (submit) submit.textContent = 'Crear';
+
+    form?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!form || !submit) return;
+
+      resetFormErrors(form);
+
+      const formData = new FormData(form);
+      const name = String(formData.get('name') || '').trim();
+      const imageValue = String(formData.get('imageUrl') || '').trim();
+
+      if (name.length < 2) {
+        setInputError(form, 'category-name', 'Ingresá un nombre válido (2-80 caracteres).');
+        form.querySelector('#category-name')?.focus();
         return;
       }
-    }
 
-    submit.disabled = true;
-    try {
-      await createCategory({ name, imageUrl });
-      toastSuccess('Categoría creada correctamente.');
-      closeModal();
-      renderSnapshot();
-    } catch (err) {
-      applyServerFieldErrors(form, err);
-      toastError(err, 'No se pudo crear la categoría.');
-    } finally {
-      submit.disabled = false;
-    }
+      let imageUrl = '';
+      if (imageValue) {
+        try {
+          imageUrl = normalizeImageUrl(imageValue);
+        } catch (err) {
+          setInputError(form, 'category-imageUrl', err.message);
+          form.querySelector('#category-imageUrl')?.focus();
+          return;
+        }
+      }
+
+      submit.disabled = true;
+      try {
+        await createCategory({ name, imageUrl });
+        toastSuccess('Categoría creada correctamente.');
+        resolveResult(true);
+        closeModal();
+      } catch (err) {
+        applyServerFieldErrors(form, err);
+        toastError(err, 'No se pudo crear la categoría.');
+      } finally {
+        submit.disabled = false;
+      }
+    });
   });
 }
 
 export function openEditCategoryModal(categoryId) {
+  const template = document.getElementById('tpl-category-form');
+  if (!template) return Promise.resolve(false);
+
   const category = findCategoryById(categoryId);
   if (!category) {
     toastError({ code: 'RESOURCE_NOT_FOUND', message: 'Categoría no encontrada.' }, 'No se encontró la categoría.');
-    return;
+    return Promise.resolve(false);
   }
 
-  const template = document.getElementById('tpl-category-form');
-  if (!template) return;
+  return modalResultPromise((resolveResult) => {
+    openModal(template.innerHTML, '#category-name');
 
-  openModal(template.innerHTML, '#category-name');
-
-  const modal = document.getElementById('modal-body');
-  if (!modal) return;
-
-  const form = modal.querySelector('#category-form');
-  const title = modal.querySelector('#category-modal-title');
-  const submit = modal.querySelector('#category-submit');
-  const inputName = modal.querySelector('#category-name');
-  const inputImage = modal.querySelector('#category-imageUrl');
-
-  if (title) title.textContent = 'Editar categoría';
-  if (submit) submit.textContent = 'Guardar cambios';
-  if (inputName) inputName.value = category.name || '';
-  if (inputImage) inputImage.value = category.imageUrl || '';
-
-  form?.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    if (!form || !submit) return;
-
-    resetFormErrors(form);
-
-    const formData = new FormData(form);
-    const name = String(formData.get('name') || '').trim();
-    const imageValue = String(formData.get('imageUrl') || '').trim();
-
-    if (name.length < 2) {
-      setInputError(form, 'category-name', 'Ingresá un nombre válido (2-80 caracteres).');
-      form.querySelector('#category-name')?.focus();
+    const modal = document.getElementById('modal-body');
+    if (!modal) {
+      resolveResult(false);
       return;
     }
 
-    let imageUrl = '';
-    if (imageValue) {
-      try {
-        imageUrl = normalizeImageUrl(imageValue);
-      } catch (err) {
-        setInputError(form, 'category-imageUrl', err.message);
-        form.querySelector('#category-imageUrl')?.focus();
+    const form = modal.querySelector('#category-form');
+    const title = modal.querySelector('#category-modal-title');
+    const submit = modal.querySelector('#category-submit');
+    const inputName = modal.querySelector('#category-name');
+    const inputImage = modal.querySelector('#category-imageUrl');
+
+    if (title) title.textContent = 'Editar categoría';
+    if (submit) submit.textContent = 'Guardar cambios';
+    if (inputName) inputName.value = category.name || '';
+    if (inputImage) inputImage.value = category.imageUrl || '';
+
+    form?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!form || !submit) return;
+
+      resetFormErrors(form);
+
+      const formData = new FormData(form);
+      const name = String(formData.get('name') || '').trim();
+      const imageValue = String(formData.get('imageUrl') || '').trim();
+
+      if (name.length < 2) {
+        setInputError(form, 'category-name', 'Ingresá un nombre válido (2-80 caracteres).');
+        form.querySelector('#category-name')?.focus();
         return;
       }
-    }
 
-    submit.disabled = true;
-    try {
-      await updateCategory(category.id, { name, imageUrl });
-      toastSuccess('Categoría actualizada correctamente.');
-      closeModal();
-      renderSnapshot();
-    } catch (err) {
-      applyServerFieldErrors(form, err);
-      toastError(err, 'No se pudo actualizar la categoría.');
-    } finally {
-      submit.disabled = false;
-    }
+      let imageUrl = '';
+      if (imageValue) {
+        try {
+          imageUrl = normalizeImageUrl(imageValue);
+        } catch (err) {
+          setInputError(form, 'category-imageUrl', err.message);
+          form.querySelector('#category-imageUrl')?.focus();
+          return;
+        }
+      }
+
+      submit.disabled = true;
+      try {
+        await updateCategory(category.id, { name, imageUrl });
+        toastSuccess('Categoría actualizada correctamente.');
+        resolveResult(true);
+        closeModal();
+      } catch (err) {
+        applyServerFieldErrors(form, err);
+        toastError(err, 'No se pudo actualizar la categoría.');
+      } finally {
+        submit.disabled = false;
+      }
+    });
   });
 }
 
 export function openDeleteCategoryModal(categoryId) {
+  const template = document.getElementById('tpl-category-delete');
+  if (!template) return Promise.resolve(false);
+
   const category = findCategoryById(categoryId);
   if (!category) {
     toastError({ code: 'RESOURCE_NOT_FOUND', message: 'Categoría no encontrada.' }, 'No se encontró la categoría.');
-    return;
+    return Promise.resolve(false);
   }
 
-  const template = document.getElementById('tpl-category-delete');
-  if (!template) return;
+  return modalResultPromise((resolveResult) => {
+    openModal(template.innerHTML, '#category-confirm-delete');
 
-  openModal(template.innerHTML, '#category-confirm-delete');
-
-  const modal = document.getElementById('modal-body');
-  if (!modal) return;
-
-  const message = modal.querySelector('#category-delete-message');
-  const confirmBtn = modal.querySelector('#category-confirm-delete');
-
-  if (message) {
-    message.innerHTML = `¿Eliminar la categoría <strong>${escapeHTML(category.name || '')}</strong>?`;
-  }
-
-  confirmBtn?.addEventListener('click', async () => {
-    if (!confirmBtn) return;
-    confirmBtn.disabled = true;
-    try {
-      await deleteCategory(category.id);
-      toastSuccess('Categoría eliminada correctamente.');
-      closeModal();
-      renderSnapshot();
-    } catch (err) {
-      toastError(err, 'No se pudo eliminar la categoría.');
-      confirmBtn.disabled = false;
+    const modal = document.getElementById('modal-body');
+    if (!modal) {
+      resolveResult(false);
+      return;
     }
-  }, { once: true });
+
+    const message = modal.querySelector('#category-delete-message');
+    const confirmBtn = modal.querySelector('#category-confirm-delete');
+
+    if (message) {
+      message.innerHTML = `¿Eliminar la categoría <strong>${escapeHTML(category.name || '')}</strong>?`;
+    }
+
+    confirmBtn?.addEventListener('click', async () => {
+      if (!confirmBtn) return;
+      confirmBtn.disabled = true;
+      try {
+        await deleteCategory(category.id);
+        toastSuccess('Categoría eliminada correctamente.');
+        resolveResult(true);
+        closeModal();
+      } catch (err) {
+        toastError(err, 'No se pudo eliminar la categoría.');
+        confirmBtn.disabled = false;
+      }
+    }, { once: true });
+  });
 }

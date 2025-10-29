@@ -14,11 +14,13 @@ import {
 /** Estado global (sin framework) */
 export const state = {
   items: [],
-  meta: { page: 1, pageSize: DEFAULT_PAGE_SIZE, total: 0 },
+  meta: { page: 1, pageSize: DEFAULT_PAGE_SIZE, total: 0, pageCount: 1 },
   q: '',
   status: 'all', // 'all' | 'active' | 'inactive'
   orderBy: 'name', // por ahora ordenamos por nombre
   orderDir: 'asc', // 'asc' | 'desc'
+  loading: false,
+  error: null,
 };
 
 const subscribers = new Set();
@@ -41,15 +43,24 @@ export function notify(container) {
 
 /** Copia inmutable del estado (para render). */
 export function getSnapshot() {
-  // Ensure the table renderer gets filtered rows via snapshot.viewItems
+  const items = state.items.slice();
+  const viewItems = filterItemsByActive(items, state.status);
+  const meta = { ...state.meta };
   return {
-    items: state.items.slice(),
-    meta: { ...state.meta },
+    items,
+    viewItems,
+    meta: {
+      page: meta.page ?? 1,
+      pageSize: meta.pageSize ?? DEFAULT_PAGE_SIZE,
+      total: meta.total ?? items.length,
+      pageCount: meta.pageCount ?? 1,
+    },
+    loading: Boolean(state.loading),
+    error: state.error,
     q: state.q,
     status: state.status,
     orderBy: state.orderBy,
     orderDir: state.orderDir,
-    viewItems: filterItemsByActive(state.items, state.status),
   };
 }
 
@@ -65,7 +76,16 @@ export function setOrder(dir) {
 }
 export function setPage(n) {
   const p = Number(n || 1);
-  state.meta.page = p < 1 ? 1 : p;
+  const minPage = 1;
+  const maxPage = Number.isFinite(Number(state.meta?.pageCount))
+    ? Math.max(minPage, Number(state.meta.pageCount))
+    : null;
+  const normalized = Number.isFinite(p) ? Math.floor(p) : minPage;
+  if (maxPage !== null) {
+    state.meta.page = Math.min(Math.max(minPage, normalized), maxPage);
+  } else {
+    state.meta.page = normalized < minPage ? minPage : normalized;
+  }
 }
 
 /** Construye los query params actuales. */
@@ -80,66 +100,84 @@ function buildQuery() {
   return params;
 }
 
+function computePageCount(total, pageSize) {
+  const safeTotal = Number.isFinite(Number(total)) ? Number(total) : 0;
+  const safeSize = Number.isFinite(Number(pageSize)) && Number(pageSize) > 0 ? Number(pageSize) : DEFAULT_PAGE_SIZE;
+  return Math.max(1, Math.ceil(safeTotal / safeSize));
+}
+
 /** GET categorías y actualiza estado. */
 export async function fetchCategories({ silentToast = false } = {}) {
   const params = buildQuery();
   params.set('_', Date.now().toString(36));
 
-  const res = await apiFetch(`/categories?${params.toString()}`, {
-    showErrorToast: !silentToast,
-  });
+  state.loading = true;
+  state.error = null;
+  notify();
 
-  const raw = res?.data?.items ?? res?.items ?? res?.data ?? [];
-  const list = Array.isArray(raw) ? raw : null;
-  const items = list ? list.map(mapCategoryFromApi) : state.items.slice();
+  try {
+    const res = await apiFetch(`/categories?${params.toString()}`, {
+      showErrorToast: !silentToast,
+    });
 
-  const prevItems = state.items;
-  const prevMeta = state.meta;
-  const apiMeta = (res?.data && res.data.meta) || res?.meta;
+    const raw = res?.data?.items ?? res?.items ?? res?.data ?? [];
+    const list = Array.isArray(raw) ? raw : null;
+    const items = list ? list.map(mapCategoryFromApi).filter(Boolean) : state.items.slice();
 
-  const pickNumber = (value) => {
-    const num = Number(value);
-    return Number.isFinite(num) ? num : null;
-  };
+    const prevMeta = state.meta;
+    const apiMeta = (res?.data && res.data.meta) || res?.meta;
 
-  const nextMeta = { ...prevMeta };
-  let metaTotal = null;
-  if (apiMeta && typeof apiMeta === 'object') {
-    const metaPage = pickNumber(apiMeta.page);
-    const metaPageSize = pickNumber(apiMeta.pageSize);
-    metaTotal = pickNumber(apiMeta.total);
+    const pickNumber = (value) => {
+      const num = Number(value);
+      return Number.isFinite(num) ? num : null;
+    };
 
-    if (metaPage !== null) nextMeta.page = metaPage;
-    if (metaPageSize !== null) nextMeta.pageSize = metaPageSize;
-    if (metaTotal !== null) nextMeta.total = metaTotal;
-  }
-  if (metaTotal === null) {
-    if (list) {
-      nextMeta.total = items.length;
-    } else if (!Number.isFinite(nextMeta.total)) {
-      nextMeta.total = prevMeta.total;
+    const nextMeta = { ...prevMeta };
+    let metaTotal = null;
+    if (apiMeta && typeof apiMeta === 'object') {
+      const metaPage = pickNumber(apiMeta.page);
+      const metaPageSize = pickNumber(apiMeta.pageSize);
+      metaTotal = pickNumber(apiMeta.total);
+
+      if (metaPage !== null) nextMeta.page = metaPage;
+      if (metaPageSize !== null) nextMeta.pageSize = metaPageSize;
+      if (metaTotal !== null) nextMeta.total = metaTotal;
     }
+
+    if (metaTotal === null) {
+      if (list) {
+        nextMeta.total = items.length;
+      } else if (!Number.isFinite(nextMeta.total)) {
+        nextMeta.total = prevMeta.total;
+      }
+    }
+
+    if (!Number.isFinite(nextMeta.total)) {
+      nextMeta.total = items.length;
+    }
+
+    nextMeta.pageCount = computePageCount(nextMeta.total, nextMeta.pageSize);
+    if (!Number.isFinite(Number(nextMeta.page)) || Number(nextMeta.page) < 1) {
+      nextMeta.page = 1;
+    }
+    if (nextMeta.page > nextMeta.pageCount) {
+      nextMeta.page = nextMeta.pageCount;
+    }
+
+    state.items = items;
+    state.meta = nextMeta;
+    state.loading = false;
+    state.error = null;
+
+    notify();
+
+    return getSnapshot();
+  } catch (err) {
+    state.loading = false;
+    state.error = err;
+    notify();
+    throw err;
   }
-  if (!Number.isFinite(nextMeta.total)) {
-    nextMeta.total = items.length;
-  }
-
-  const prevIds = prevItems.map((it) => String(it.id));
-  const nextIds = items.map((it) => String(it.id));
-  const itemsChanged =
-    prevIds.length !== nextIds.length || prevIds.some((id, idx) => id !== nextIds[idx]);
-  const metaChanged =
-    prevMeta.page !== nextMeta.page ||
-    prevMeta.pageSize !== nextMeta.pageSize ||
-    prevMeta.total !== nextMeta.total;
-  const changed = itemsChanged || metaChanged;
-
-  state.items = items;
-  state.meta = nextMeta;
-
-  if (changed) notify();
-
-  return getSnapshot();
 }
 
 /** Utilidades de lectura */
@@ -159,8 +197,12 @@ export async function createCategory(payload) {
 
   const raw = res?.data?.item ?? res?.data;
   const created = mapCategoryFromApi(raw);
-  state.items.unshift(created);
-  state.meta.total = (state.meta.total || 0) + 1;
+  if (created) {
+    state.items.unshift(created);
+  }
+  const total = Number(state.meta.total || 0) + 1;
+  state.meta.total = total;
+  state.meta.pageCount = computePageCount(total, state.meta.pageSize);
   return created;
 }
 
@@ -193,7 +235,9 @@ export async function deleteCategory(id) {
   const idx = state.items.findIndex((x) => String(x.id) === String(id));
   if (idx >= 0) {
     state.items.splice(idx, 1);
-    state.meta.total = Math.max(0, (state.meta.total || 1) - 1);
+    const total = Math.max(0, (state.meta.total || 1) - 1);
+    state.meta.total = total;
+    state.meta.pageCount = computePageCount(total, state.meta.pageSize);
   }
   return true;
 }

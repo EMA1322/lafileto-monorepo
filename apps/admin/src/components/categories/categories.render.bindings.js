@@ -61,13 +61,20 @@ export function bindCategoriesBindings(container) {
     $search.addEventListener('input', onSearch);
   }
 
+  const $refresh = container.querySelector('#categories-refresh');
+  if ($refresh) {
+    $refresh.addEventListener('click', async () => {
+      await refreshAndRender(container);
+    });
+  }
+
   // --- Filtros
   container.addEventListener('change', async (ev) => {
     const el = ev.target;
     if (!el || !el.dataset) return;
 
     // filtro activo
-    if (el.matches('[data-filter="active"]')) {
+    if (el.matches('[data-filter]')) {
       setFilterActive(el.value);
       await refreshAndRender(container);
       return;
@@ -97,30 +104,26 @@ export function bindCategoriesBindings(container) {
     const t = ev.target.closest('[data-action]');
     if (!t) return;
     // Accept both "category-*" and plain actions; fallback to <tr data-id> for row id.
-    const action = (t.dataset.action || '').replace(/^category-/, '');
-    const targetId = t.dataset.id || t.closest('tr')?.dataset.id || '';
+    const action = (t.dataset.action || '').replace(/^category-/, '').toLowerCase();
+    const targetId = (t.dataset.id || t.closest('tr')?.dataset.id || '').trim();
 
     // Crear nueva categoría
     if (action === 'new') {
       const created = await openCreateCategoryModal();
-      if (created) {
-        await refreshAndRender(container);
-      }
+      if (created) await refreshAndRender(container);
       return;
     }
 
     // Editar
     if (action === 'edit' && targetId) {
-      const category = findCategoryById(targetId);
-      const updated = await openEditCategoryModal(category);
+      const updated = await openEditCategoryModal(targetId);
       if (updated) await refreshAndRender(container);
       return;
     }
 
     // Eliminar
     if (action === 'delete' && targetId) {
-      const category = findCategoryById(targetId);
-      const removed = await openDeleteCategoryModal(category);
+      const removed = await openDeleteCategoryModal(targetId);
       if (removed) await refreshAndRender(container);
       return;
     }

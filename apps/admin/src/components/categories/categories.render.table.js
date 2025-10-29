@@ -36,6 +36,7 @@ function renderImageCell(item) {
 
 function renderRow(item) {
   const id = escapeHTML(item.id || '');
+  const idAttr = escapeAttr(item.id || '');
   const name = escapeHTML(item.name || '—');
   const imageCell = renderImageCell(item);
   const productCount = Number.isFinite(Number(item.productCount)) ? Number(item.productCount) : '—';
@@ -46,22 +47,22 @@ function renderRow(item) {
   const actions = `
     <!-- Expose row id for delegated handlers without changing the visible UI -->
     <div class="categories__actions" role="group" aria-label="Acciones">
-      <button class="btn btn--outline" type="button" data-action="category-edit" data-id="${id}" data-rbac-action="update">Editar</button>
+      <button class="btn btn--outline" type="button" data-action="edit" data-id="${idAttr}" data-rbac-action="update">Editar</button>
       <button
         class="btn btn--outline"
         type="button"
-        data-action="category-toggle"
-        data-id="${id}"
+        data-action="toggle"
+        data-id="${idAttr}"
         data-rbac-action="update"
         data-next-active="${nextActive}"
         aria-pressed="${item.active ? 'true' : 'false'}"
         aria-label="${toggleTitle}"
       >${toggleLabel}</button>
-      <button class="btn btn--outline" type="button" data-action="category-delete" data-id="${id}" data-rbac-action="delete">Eliminar</button>
+      <button class="btn btn--outline" type="button" data-action="delete" data-id="${idAttr}" data-rbac-action="delete">Eliminar</button>
     </div>
   `;
   return `
-    <tr data-id="${id}">
+    <tr data-id="${idAttr}">
       <td class="categories__cell-id">${id || '—'}</td>
       <td class="categories__cell-name">${name}</td>
       <td class="categories__cell-image">${imageCell}</td>
@@ -123,12 +124,18 @@ export function renderCategoriesTable(snapshot, root = document.querySelector('#
   }
 
   if (btnPrev) {
-    btnPrev.disabled = loading || (Number(meta.page) || 1) <= 1;
+    const current = Number(meta.page) || 1;
+    const totalPages = Math.max(1, Number(meta.pageCount) || 1);
+    const prevPage = current > 1 ? current - 1 : 1;
+    btnPrev.disabled = loading || current <= 1;
+    btnPrev.dataset.page = String(prevPage);
   }
   if (btnNext) {
     const current = Number(meta.page) || 1;
     const totalPages = Math.max(1, Number(meta.pageCount) || 1);
+    const nextPage = current < totalPages ? current + 1 : totalPages;
     btnNext.disabled = loading || current >= totalPages;
+    btnNext.dataset.page = String(nextPage);
   }
 
   applyRBAC(container);
