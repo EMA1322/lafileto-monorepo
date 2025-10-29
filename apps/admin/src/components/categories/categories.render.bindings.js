@@ -40,7 +40,9 @@ async function refreshAndRender(container) {
     await fetchCategories();
   } catch {
     renderCategoriesTable(getSnapshot(), container);
+    return;
   }
+  renderCategoriesTable(getSnapshot(), container);
 }
 
 /** Enlaza eventos de la vista de categorías */
@@ -94,45 +96,42 @@ export function bindCategoriesBindings(container) {
   container.addEventListener('click', async (ev) => {
     const t = ev.target.closest('[data-action]');
     if (!t) return;
+    // Accept both "category-*" and plain actions; fallback to <tr data-id> for row id.
+    const action = (t.dataset.action || '').replace(/^category-/, '');
+    const targetId = t.dataset.id || t.closest('tr')?.dataset.id || '';
 
-    // Crear nueva categor��a
-    if (t.dataset.action === 'new') {
+    // Crear nueva categoría
+    if (action === 'new') {
       const created = await openCreateCategoryModal();
       if (created) {
-        try {
-          await fetchCategories({ silentToast: true });
-          renderCategoriesTable(getSnapshot(), container);
-        } catch {
-          renderCategoriesTable(getSnapshot(), container);
-        }
+        await refreshAndRender(container);
       }
       return;
     }
 
     // Editar
-    if (t.dataset.action === 'edit' && t.dataset.id) {
-      const category = findCategoryById(t.dataset.id);
+    if (action === 'edit' && targetId) {
+      const category = findCategoryById(targetId);
       const updated = await openEditCategoryModal(category);
       if (updated) await refreshAndRender(container);
       return;
     }
 
     // Eliminar
-    if (t.dataset.action === 'delete' && t.dataset.id) {
-      const category = findCategoryById(t.dataset.id);
+    if (action === 'delete' && targetId) {
+      const category = findCategoryById(targetId);
       const removed = await openDeleteCategoryModal(category);
       if (removed) await refreshAndRender(container);
       return;
     }
 
     // Toggle activo/inactivo (optimista con fallback)
-    if (t.dataset.action === 'toggle' && t.dataset.id) {
+    if (action === 'toggle' && targetId) {
       try {
-        const snapshotBefore = getSnapshot();
-        const category = findCategoryById(t.dataset.id);
+        const category = findCategoryById(targetId);
         const next = !category?.active;
-        await toggleCategoryActive(t.dataset.id, next, { silentToast: true });
-        renderCategoriesTable(getSnapshot(), container);
+        await toggleCategoryActive(targetId, next, { silentToast: true });
+        await refreshAndRender(container);
       } catch (err) {
         // Re-render fallback + toast
         renderCategoriesTable(getSnapshot(), container);
