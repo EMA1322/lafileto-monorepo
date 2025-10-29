@@ -17,6 +17,25 @@ function buildOrder(orderBy = 'name', orderDirection = 'asc') {
   return { [field]: direction };
 }
 
+function buildWhere({ search, status } = {}) {
+  const where = {};
+
+  if (status === 'active') {
+    where.active = true;
+  } else if (status === 'inactive') {
+    where.active = false;
+  }
+
+  if (search) {
+    where.name = {
+      contains: search,
+      mode: 'insensitive'
+    };
+  }
+
+  return where;
+}
+
 export const categoryRepository = {
   findById: (id) =>
     prisma.category.findUnique({
@@ -30,18 +49,16 @@ export const categoryRepository = {
       select: baseSelect
     }),
 
-  async list({ page, pageSize, search, all = false, orderBy, orderDirection }) {
-    const where = {
-      active: true,
-      ...(search
-        ? {
-            name: {
-              contains: search,
-              mode: 'insensitive'
-            }
-          }
-        : undefined)
-    };
+  async list({
+    page,
+    pageSize,
+    search,
+    status = 'active',
+    all = false,
+    orderBy,
+    orderDirection
+  }) {
+    const where = buildWhere({ search, status });
 
     const order = buildOrder(orderBy, orderDirection);
 

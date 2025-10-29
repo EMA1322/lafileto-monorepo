@@ -73,35 +73,50 @@ function normalizeOrderDir(value) {
   return normalized === 'desc' ? 'desc' : 'asc';
 }
 
-export const categoryListQuerySchema = z.object({
-  page: z
-    .string()
-    .optional()
-    .transform((val) => (val ? Number.parseInt(val, 10) : undefined))
-    .refine((val) => val === undefined || (Number.isInteger(val) && val > 0), {
-      message: 'page debe ser un entero positivo.'
-    }),
-  pageSize: z
-    .string()
-    .optional()
-    .transform((val) => (val ? Number.parseInt(val, 10) : undefined))
-    .refine((val) => val === undefined || (Number.isInteger(val) && val > 0), {
-      message: 'pageSize debe ser un entero positivo.'
-    }),
-  search: z
-    .string()
-    .optional()
-    .transform(normalizeSearch),
-  all: boolishOptional.transform((val) => val ?? false),
-  orderBy: z
-    .string()
-    .optional()
-    .transform(normalizeOrderBy),
-  orderDir: z
-    .string()
-    .optional()
-    .transform(normalizeOrderDir)
-});
+const statusParam = z
+  .preprocess((value) => {
+    if (value === undefined || value === null) return undefined;
+    const normalized = String(value).trim().toLowerCase();
+    return normalized.length > 0 ? normalized : undefined;
+  }, z.enum(['all', 'active', 'inactive']).optional())
+  .transform((val) => val ?? 'active');
+
+const queryNumber = z
+  .string()
+  .optional()
+  .transform((val) => (val ? Number.parseInt(val, 10) : undefined))
+  .refine((val) => val === undefined || (Number.isInteger(val) && val > 0), {
+    message: 'Debe ser un entero positivo.'
+  });
+
+const searchParam = z.string().optional().transform(normalizeSearch);
+
+export const categoryListQuerySchema = z
+  .object({
+    page: queryNumber,
+    pageSize: queryNumber,
+    search: searchParam,
+    q: searchParam,
+    status: statusParam,
+    all: boolishOptional.transform((val) => val ?? false),
+    orderBy: z
+      .string()
+      .optional()
+      .transform(normalizeOrderBy),
+    orderDir: z
+      .string()
+      .optional()
+      .transform(normalizeOrderDir)
+  })
+  .transform((values) => ({
+    page: values.page,
+    pageSize: values.pageSize,
+    search: values.q ?? values.search,
+    status: values.status,
+    all: values.all,
+    orderBy: values.orderBy,
+    orderDir: values.orderDir
+  }));
 
 export const categoryCreateSchema = z.object({
   name: nonEmptyString,
@@ -110,8 +125,14 @@ export const categoryCreateSchema = z.object({
 
 export const categoryUpdateSchema = z.object({
   name: nonEmptyString.optional(),
-  imageUrl: optionalImageUrl,
-  active: boolishOptional
+  imageUrl: optionalImageUrl
+});
+
+export const categoryToggleSchema = z.object({
+  active: z.preprocess((value) => {
+    const normalized = toBooleanish(value);
+    return typeof normalized === 'boolean' ? normalized : value;
+  }, z.boolean({ required_error: 'active es requerido.' }))
 });
 
 export const categoryIdParamSchema = z.object({

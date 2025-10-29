@@ -15,6 +15,16 @@ export const categoryController = {
     }
   },
 
+  show: async (req, res, next) => {
+    try {
+      const params = req.validated?.params ?? req.params ?? {};
+      const category = await categoryService.getCategory(params.id ?? req.params.id);
+      return res.json(ok(category));
+    } catch (err) {
+      next(err);
+    }
+  },
+
   create: async (req, res, next) => {
     try {
       const body = req.validated?.body ?? req.body ?? {};
@@ -30,6 +40,20 @@ export const categoryController = {
       const params = req.validated?.params ?? req.params ?? {};
       const body = req.validated?.body ?? req.body ?? {};
       const category = await categoryService.updateCategory(params.id ?? req.params.id, body);
+      return res.json(ok(category));
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  toggle: async (req, res, next) => {
+    try {
+      const params = req.validated?.params ?? req.params ?? {};
+      const body = req.validated?.body ?? req.body ?? {};
+      const category = await categoryService.toggleCategoryActive(
+        params.id ?? req.params.id,
+        body.active
+      );
       return res.json(ok(category));
     } catch (err) {
       next(err);

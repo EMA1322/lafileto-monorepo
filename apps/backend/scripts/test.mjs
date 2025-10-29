@@ -1,3 +1,20 @@
-// Placeholder test runner while we add proper coverage for the backend.
-// Keeps CI flowing without masking that real tests are still pending.
-console.log('[backend] test placeholder: add integration/unit tests when available.');
+import { spawn } from 'node:child_process';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const projectRoot = resolve(__dirname, '..');
+const testFile = resolve(projectRoot, 'tests/integration/categories.api.test.mjs');
+
+const child = spawn(process.execPath, ['--test', testFile], {
+  cwd: projectRoot,
+  stdio: 'inherit'
+});
+
+child.on('exit', (code, signal) => {
+  if (signal) {
+    process.kill(process.pid, signal);
+    return;
+  }
+  process.exitCode = code ?? 0;
+});
