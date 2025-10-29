@@ -44,18 +44,20 @@ function renderRow(item) {
   const toggleLabel = item.active ? 'Desactivar' : 'Activar';
   const toggleTitle = item.active ? 'Desactivar categoría' : 'Activar categoría';
   const actions = `
+    <!-- Expose row id for delegated handlers without changing the visible UI -->
     <div class="categories__actions" role="group" aria-label="Acciones">
-      <button class="btn btn--outline" type="button" data-action="category-edit" data-rbac-action="update">Editar</button>
+      <button class="btn btn--outline" type="button" data-action="category-edit" data-id="${id}" data-rbac-action="update">Editar</button>
       <button
         class="btn btn--outline"
         type="button"
         data-action="category-toggle"
+        data-id="${id}"
         data-rbac-action="update"
         data-next-active="${nextActive}"
         aria-pressed="${item.active ? 'true' : 'false'}"
         aria-label="${toggleTitle}"
       >${toggleLabel}</button>
-      <button class="btn btn--outline" type="button" data-action="category-delete" data-rbac-action="delete">Eliminar</button>
+      <button class="btn btn--outline" type="button" data-action="category-delete" data-id="${id}" data-rbac-action="delete">Eliminar</button>
     </div>
   `;
   return `

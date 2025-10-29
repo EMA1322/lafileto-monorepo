@@ -8,6 +8,7 @@ import {
   normalizeFilterActive,
   normalizeOrder,
   mapCategoryFromApi,
+  filterItemsByActive,
 } from './categories.helpers.js';
 
 /** Estado global (sin framework) */
@@ -40,6 +41,7 @@ export function notify(container) {
 
 /** Copia inmutable del estado (para render). */
 export function getSnapshot() {
+  // Ensure the table renderer gets filtered rows via snapshot.viewItems
   return {
     items: state.items.slice(),
     meta: { ...state.meta },
@@ -47,6 +49,7 @@ export function getSnapshot() {
     status: state.status,
     orderBy: state.orderBy,
     orderDir: state.orderDir,
+    viewItems: filterItemsByActive(state.items, state.status),
   };
 }
 
