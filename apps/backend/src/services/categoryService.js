@@ -1,7 +1,19 @@
 // Servicio de categorías: listados y mutaciones con reglas básicas
-import { Prisma } from '@prisma/client';
 import { categoryRepository } from '../repositories/categoryRepository.js';
 import { createError } from '../utils/errors.js';
+
+let PrismaClientKnownRequestError;
+
+try {
+  const { Prisma } = await import('@prisma/client');
+  PrismaClientKnownRequestError = Prisma.PrismaClientKnownRequestError;
+} catch (err) {
+  if (process.env.NODE_ENV === 'test' || process.env.PRISMA_CLIENT_STUB === '1') {
+    PrismaClientKnownRequestError = class PrismaClientKnownRequestErrorStub extends Error {};
+  } else {
+    throw err;
+  }
+}
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_PAGE_SIZE = 10;
@@ -35,6 +47,15 @@ function normalizeOrderDirection(value) {
   return 'asc';
 }
 
+function normalizeStatus(value) {
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === 'all') return 'all';
+    if (normalized === 'inactive') return 'inactive';
+  }
+  return 'active';
+}
+
 function normalizeId(value) {
   if (typeof value !== 'string') return '';
   return value.trim();
@@ -57,21 +78,34 @@ function sanitizeCategory(row) {
 }
 
 function isUniqueConstraintError(err) {
-  return err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002';
+  return err instanceof PrismaClientKnownRequestError && err.code === 'P2002';
 }
 
 export const categoryService = {
-  async listCategories({ page, pageSize, search, all, orderBy, orderDirection } = {}) {
+  async listCategories({
+    page,
+    pageSize,
+    search,
+    q,
+    all,
+    status,
+    orderBy,
+    orderDir,
+    orderDirection
+  } = {}) {
     const wantsAll = Boolean(all);
-    const normalizedSearch = typeof search === 'string' ? search.trim() : '';
+    const rawSearch = typeof search === 'string' ? search : typeof q === 'string' ? q : '';
+    const normalizedSearch = rawSearch.trim();
     const orderField = normalizeOrderBy(orderBy);
-    const direction = normalizeOrderDirection(orderDirection);
+    const direction = normalizeOrderDirection(orderDir ?? orderDirection);
+    const normalizedStatus = normalizeStatus(status);
 
     if (wantsAll) {
       const { items, total } = await categoryRepository.list({
         page: DEFAULT_PAGE,
         pageSize: MAX_PAGE_SIZE,
         search: normalizedSearch ? normalizedSearch : undefined,
+        status: normalizedStatus,
         all: true,
         orderBy: orderField,
         orderDirection: direction
@@ -95,6 +129,7 @@ export const categoryService = {
       page: normalizedPage,
       pageSize: normalizedPageSize,
       search: normalizedSearch ? normalizedSearch : undefined,
+      status: normalizedStatus,
       all: false,
       orderBy: orderField,
       orderDirection: direction
@@ -144,6 +179,20 @@ export const categoryService = {
     }
   },
 
+  async getCategory(id) {
+    const categoryId = normalizeId(id);
+    if (!categoryId) {
+      throw createError('CATEGORY_NOT_FOUND', 'La categoría indicada no existe.');
+    }
+
+    const existing = await categoryRepository.findById(categoryId);
+    if (!existing) {
+      throw createError('CATEGORY_NOT_FOUND', 'La categoría indicada no existe.');
+    }
+
+    return sanitizeCategory(existing);
+  },
+
   async updateCategory(id, payload) {
     const categoryId = normalizeId(id);
     if (!categoryId) {
@@ -179,10 +228,6 @@ export const categoryService = {
       data.imageUrl = normalizeImageUrl(payload.imageUrl);
     }
 
-    if (payload.active !== undefined) {
-      data.active = Boolean(payload.active);
-    }
-
     if (Object.keys(data).length === 0) {
       return sanitizeCategory(existing);
     }
@@ -198,6 +243,27 @@ export const categoryService = {
       }
       throw err;
     }
+  },
+
+  async toggleCategoryActive(id, active) {
+    const categoryId = normalizeId(id);
+    if (!categoryId) {
+      throw createError('CATEGORY_NOT_FOUND', 'La categoría indicada no existe.');
+    }
+
+    const existing = await categoryRepository.findById(categoryId);
+    if (!existing) {
+      throw createError('CATEGORY_NOT_FOUND', 'La categoría indicada no existe.');
+    }
+
+    const nextActive = Boolean(active);
+
+    if (existing.active === nextActive) {
+      return sanitizeCategory(existing);
+    }
+
+    const updated = await categoryRepository.update(categoryId, { active: nextActive });
+    return sanitizeCategory(updated);
   },
 
   async deleteCategory(id) {
