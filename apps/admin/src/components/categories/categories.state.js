@@ -82,7 +82,7 @@ export async function fetchCategories({ silentToast = false } = {}) {
   const params = buildQuery();
   params.set('_', Date.now().toString(36));
 
-  const res = await apiFetch(`/api/v1/categories?${params.toString()}`, {
+  const res = await apiFetch(`/categories?${params.toString()}`, {
     showErrorToast: !silentToast,
   });
 

@@ -34,13 +34,26 @@ function debounce(fn, wait = 300) {
   };
 }
 
+/** Normalizes legacy data-action aliases. */
+function normalizeAction(action) {
+  const map = {
+    'category-create': 'new',
+    'category-edit': 'edit',
+    'category-delete': 'delete',
+    'category-toggle': 'toggle',
+  };
+  return map[action] || action;
+}
+
 /** Refresca desde la API y vuelve a renderizar con fallback a snapshot */
 async function refreshAndRender(container) {
   try {
     await fetchCategories();
   } catch {
     renderCategoriesTable(getSnapshot(), container);
+    return;
   }
+  renderCategoriesTable(getSnapshot(), container);
 }
 
 /** Enlaza eventos de la vista de categorías */
@@ -94,23 +107,19 @@ export function bindCategoriesBindings(container) {
   container.addEventListener('click', async (ev) => {
     const t = ev.target.closest('[data-action]');
     if (!t) return;
+    const action = normalizeAction(t.dataset.action);
 
     // Crear nueva categor��a
-    if (t.dataset.action === 'new') {
+    if (action === 'new') {
       const created = await openCreateCategoryModal();
       if (created) {
-        try {
-          await fetchCategories({ silentToast: true });
-          renderCategoriesTable(getSnapshot(), container);
-        } catch {
-          renderCategoriesTable(getSnapshot(), container);
-        }
+        await refreshAndRender(container);
       }
       return;
     }
 
     // Editar
-    if (t.dataset.action === 'edit' && t.dataset.id) {
+    if (action === 'edit' && t.dataset.id) {
       const category = findCategoryById(t.dataset.id);
       const updated = await openEditCategoryModal(category);
       if (updated) await refreshAndRender(container);
@@ -118,7 +127,7 @@ export function bindCategoriesBindings(container) {
     }
 
     // Eliminar
-    if (t.dataset.action === 'delete' && t.dataset.id) {
+    if (action === 'delete' && t.dataset.id) {
       const category = findCategoryById(t.dataset.id);
       const removed = await openDeleteCategoryModal(category);
       if (removed) await refreshAndRender(container);
@@ -126,7 +135,7 @@ export function bindCategoriesBindings(container) {
     }
 
     // Toggle activo/inactivo (optimista con fallback)
-    if (t.dataset.action === 'toggle' && t.dataset.id) {
+    if (action === 'toggle' && t.dataset.id) {
       try {
         const snapshotBefore = getSnapshot();
         const category = findCategoryById(t.dataset.id);
