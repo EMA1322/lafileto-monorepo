@@ -57,8 +57,14 @@
       </div>
 
       <div class="categories__control categories__control--actions">
-        <button id="categories-refresh" class="btn btn--ghost" type="button">
-          Recargar
+        <button
+          id="categories-refresh"
+          class="btn categories__toolbarButton"
+          type="button"
+          aria-label="Recargar categorías"
+          title="Recargar categorías"
+        >
+          <span class="icon icon--sm" data-icon="refresh" aria-hidden="true"></span>
         </button>
         <button
           id="categories-create"
@@ -82,7 +88,6 @@
       <caption class="sr-only">Listado de categorías</caption>
       <thead>
         <tr>
-          <th scope="col">ID</th>
           <th scope="col">Nombre</th>
           <th scope="col">Imagen</th>
           <th scope="col">#Productos</th>
@@ -180,6 +185,60 @@
       <footer class="categories__formActions">
         <button type="button" class="btn btn--outline" data-close-modal>Cancelar</button>
         <button id="category-confirm-delete" type="button" class="btn btn--primary">Eliminar</button>
+      </footer>
+    </div>
+  </template>
+
+  <template id="tpl-category-view">
+    <div class="categories__modal categories__modal--view" role="dialog" aria-modal="true">
+      <header class="categories__modalHeader">
+        <h3 id="category-view-title" class="categories__modalTitle">Detalle de categoría</h3>
+      </header>
+      <div class="categories__modalBody categories__modalBody--view">
+        <dl class="categories__details" aria-label="Información de la categoría">
+          <div class="categories__detailsRow">
+            <dt>Nombre</dt>
+            <dd data-field="category-name">—</dd>
+          </div>
+          <div class="categories__detailsRow">
+            <dt>Imagen</dt>
+            <dd>
+              <div class="categories__detailsImage" data-field="category-image-wrapper">
+                <img data-field="category-image" alt="" hidden />
+                <span data-field="category-image-fallback">Sin imagen</span>
+              </div>
+            </dd>
+          </div>
+          <div class="categories__detailsRow">
+            <dt>Estado</dt>
+            <dd data-field="category-status"></dd>
+          </div>
+        </dl>
+
+        <div class="categories__switchSection">
+          <h4 class="categories__switchTitle">Estado de la categoría</h4>
+          <p id="category-view-switch-hint" class="categories__switchHint">
+            Activá o desactivá la categoría desde este panel.
+          </p>
+          <button
+            id="category-view-switch"
+            class="categories__switch"
+            type="button"
+            role="switch"
+            aria-checked="false"
+            aria-describedby="category-view-switch-hint"
+            data-role="active-switch"
+          >
+            <span class="categories__switchTrack" aria-hidden="true">
+              <span class="categories__switchThumb"></span>
+            </span>
+            <span class="categories__switchLabel" data-role="active-switch-label">Inactivo</span>
+          </button>
+        </div>
+      </div>
+      <footer class="categories__formActions categories__viewActions">
+        <button id="category-view-close" type="button" class="btn btn--outline" data-close-modal>Cerrar</button>
+        <button id="category-view-confirm" type="button" class="btn btn--primary" disabled>Guardar cambios</button>
       </footer>
     </div>
   </template>

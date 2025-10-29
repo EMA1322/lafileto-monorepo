@@ -40,6 +40,10 @@ export const ICONS = {
     body:
       '<circle cx="8" cy="9" r="3"/><circle cx="16" cy="9" r="3"/><path d="M2.5 20a5.5 5.5 0 0 1 11 0"/><path d="M10.5 20a5.5 5.5 0 0 1 11 0"/>',
   },
+  eye: {
+    viewBox: '0 0 24 24',
+    body: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  },
   phone: {
     viewBox: '0 0 24 24',
     body: '<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M10 18h4"/>',
@@ -88,6 +92,11 @@ export const ICONS = {
   'chevron-right': {
     viewBox: '0 0 24 24',
     body: '<path d="M9 6l6 6-6 6"/>',
+  },
+  refresh: {
+    viewBox: '0 0 24 24',
+    body:
+      '<path d="M21 3v6h-6"/><path d="M3 21v-6h6"/><path d="M5.64 8.51a9 9 0 0 1 14.36 3.49"/><path d="M18.36 15.49A9 9 0 0 1 4 12"/>',
   },
   'alert-circle': {
     viewBox: '0 0 24 24',

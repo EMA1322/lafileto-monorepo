@@ -2,19 +2,14 @@
 // Comentarios en español, código en inglés.
 
 import { applyRBAC } from '@/utils/rbac.js';
+import { mountIcons } from '@/utils/icons.js';
 
 import {
   escapeAttr,
   escapeHTML,
   formatSummary,
+  renderStatusBadge,
 } from './categories.helpers.js';
-
-function renderStatusBadge(active) {
-  if (active) {
-    return '<span class="badge badge--success">Activo</span>';
-  }
-  return '<span class="badge badge--neutral">Inactivo</span>';
-}
 
 function renderImageCell(item) {
   if (item.imageUrl) {
@@ -35,35 +30,36 @@ function renderImageCell(item) {
 }
 
 function renderRow(item) {
-  const id = escapeHTML(item.id || '');
   const idAttr = escapeAttr(item.id || '');
   const name = escapeHTML(item.name || '—');
   const imageCell = renderImageCell(item);
   const productCount = Number.isFinite(Number(item.productCount)) ? Number(item.productCount) : '—';
   const productLabel = productCount === '—' ? '—' : String(productCount);
-  const nextActive = item.active ? 'false' : 'true';
-  const toggleLabel = item.active ? 'Desactivar' : 'Activar';
-  const toggleTitle = item.active ? 'Desactivar categoría' : 'Activar categoría';
   const actions = `
     <!-- Expose row id for delegated handlers without changing the visible UI -->
-    <div class="categories__actions" role="group" aria-label="Acciones">
-      <button class="btn btn--outline" type="button" data-action="edit" data-id="${idAttr}" data-rbac-action="update">Editar</button>
+    <div class="categories__row-actions" role="group" aria-label="Acciones">
       <button
-        class="btn btn--outline"
+        class="btn categories__actionIcon"
         type="button"
-        data-action="toggle"
+        data-action="view"
         data-id="${idAttr}"
-        data-rbac-action="update"
-        data-next-active="${nextActive}"
-        aria-pressed="${item.active ? 'true' : 'false'}"
-        aria-label="${toggleTitle}"
-      >${toggleLabel}</button>
-      <button class="btn btn--outline" type="button" data-action="delete" data-id="${idAttr}" data-rbac-action="delete">Eliminar</button>
+        aria-label="Ver categoría"
+        title="Ver categoría"
+      >
+        <span class="icon icon--sm" data-icon="eye" aria-hidden="true"></span>
+      </button>
+      <button class="btn btn--secondary" type="button" data-action="edit" data-id="${idAttr}" data-rbac-action="update">
+        <span class="icon icon--sm" data-icon="edit" aria-hidden="true"></span>
+        <span class="icon-label">Editar</span>
+      </button>
+      <button class="btn categories__action--danger" type="button" data-action="delete" data-id="${idAttr}" data-rbac-action="delete">
+        <span class="icon icon--sm" data-icon="trash" aria-hidden="true"></span>
+        <span class="icon-label">Eliminar</span>
+      </button>
     </div>
   `;
   return `
     <tr data-id="${idAttr}">
-      <td class="categories__cell-id">${id || '—'}</td>
       <td class="categories__cell-name">${name}</td>
       <td class="categories__cell-image">${imageCell}</td>
       <td class="categories__cell-count" title="Se activará cuando Products backend exponga conteo">${productLabel}</td>
@@ -139,4 +135,5 @@ export function renderCategoriesTable(snapshot, root = document.querySelector('#
   }
 
   applyRBAC(container);
+  mountIcons(container);
 }
