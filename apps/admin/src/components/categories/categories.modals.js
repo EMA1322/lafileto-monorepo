@@ -9,20 +9,8 @@ import {
   updateCategory,
   deleteCategory,
   findCategoryById,
-  getSnapshot,
 } from './categories.state.js';
 import { escapeHTML, mapErrorToMessage } from './categories.helpers.js';
-import { renderCategoriesTable } from './categories.render.table.js';
-
-function getCategoriesContainer() {
-  return document.querySelector('#categories-view');
-}
-
-function renderSnapshot() {
-  const container = getCategoriesContainer();
-  if (!container) return;
-  renderCategoriesTable(getSnapshot(), container);
-}
 
 function setInputError(form, fieldId, message) {
   const input = form.querySelector(`#${fieldId}`);
@@ -91,14 +79,32 @@ function applyServerFieldErrors(form, error) {
   });
 }
 
+// Watch the modal container to resolve promises when it closes.
+function observeModalClose(onClose) {
+  const modalRoot = document.getElementById('global-modal');
+  if (!modalRoot || typeof MutationObserver === 'undefined') {
+    return () => {};
+  }
+  const observer = new MutationObserver(() => {
+    if (modalRoot.classList.contains('hidden')) {
+      onClose();
+    }
+  });
+  observer.observe(modalRoot, { attributes: true, attributeFilter: ['class'] });
+  return () => observer.disconnect();
+}
+
 export function openCreateCategoryModal() {
   const template = document.getElementById('tpl-category-form');
-  if (!template) return;
+  if (!template) return Promise.resolve(false);
 
   openModal(template.innerHTML, '#category-name');
 
   const modal = document.getElementById('modal-body');
-  if (!modal) return;
+  if (!modal) {
+    closeModal();
+    return Promise.resolve(false);
+  }
 
   const form = modal.querySelector('#category-form');
   const title = modal.querySelector('#category-modal-title');
@@ -107,45 +113,66 @@ export function openCreateCategoryModal() {
   if (title) title.textContent = 'Nueva categoría';
   if (submit) submit.textContent = 'Crear';
 
-  form?.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    if (!form || !submit) return;
+  if (!form || !submit) {
+    closeModal();
+    return Promise.resolve(false);
+  }
 
-    resetFormErrors(form);
+  // Resolve with a boolean result once the creation flow finishes.
+  return new Promise((resolve) => {
+    let settled = false;
+    let stopObserver = () => {};
 
-    const formData = new FormData(form);
-    const name = String(formData.get('name') || '').trim();
-    const imageValue = String(formData.get('imageUrl') || '').trim();
-
-    if (name.length < 2) {
-      setInputError(form, 'category-name', 'Ingresá un nombre válido (2-80 caracteres).');
-      form.querySelector('#category-name')?.focus();
-      return;
+    function finalize(result) {
+      if (settled) return;
+      settled = true;
+      form.removeEventListener('submit', onSubmit);
+      stopObserver();
+      resolve(Boolean(result));
     }
 
-    let imageUrl = '';
-    if (imageValue) {
-      try {
-        imageUrl = normalizeImageUrl(imageValue);
-      } catch (err) {
-        setInputError(form, 'category-imageUrl', err.message);
-        form.querySelector('#category-imageUrl')?.focus();
+    stopObserver = observeModalClose(() => finalize(false));
+
+    async function onSubmit(event) {
+      event.preventDefault();
+      resetFormErrors(form);
+
+      const formData = new FormData(form);
+      const name = String(formData.get('name') || '').trim();
+      const imageValue = String(formData.get('imageUrl') || '').trim();
+
+      if (name.length < 2) {
+        setInputError(form, 'category-name', 'Ingresá un nombre válido (2-80 caracteres).');
+        form.querySelector('#category-name')?.focus();
         return;
+      }
+
+      let imageUrl = '';
+      if (imageValue) {
+        try {
+          imageUrl = normalizeImageUrl(imageValue);
+        } catch (err) {
+          setInputError(form, 'category-imageUrl', err.message);
+          form.querySelector('#category-imageUrl')?.focus();
+          return;
+        }
+      }
+
+      submit.disabled = true;
+      try {
+        await createCategory({ name, imageUrl });
+        toastSuccess('Categoría creada correctamente.');
+        finalize(true);
+        closeModal();
+      } catch (err) {
+        applyServerFieldErrors(form, err);
+        toastError(err, 'No se pudo crear la categoría.');
+      } finally {
+        submit.disabled = false;
       }
     }
 
-    submit.disabled = true;
-    try {
-      await createCategory({ name, imageUrl });
-      toastSuccess('Categoría creada correctamente.');
-      closeModal();
-      renderSnapshot();
-    } catch (err) {
-      applyServerFieldErrors(form, err);
-      toastError(err, 'No se pudo crear la categoría.');
-    } finally {
-      submit.disabled = false;
-    }
+    form.addEventListener('submit', onSubmit);
   });
 }
 
@@ -153,16 +180,19 @@ export function openEditCategoryModal(categoryId) {
   const category = findCategoryById(categoryId);
   if (!category) {
     toastError({ code: 'RESOURCE_NOT_FOUND', message: 'Categoría no encontrada.' }, 'No se encontró la categoría.');
-    return;
+    return Promise.resolve(false);
   }
 
   const template = document.getElementById('tpl-category-form');
-  if (!template) return;
+  if (!template) return Promise.resolve(false);
 
   openModal(template.innerHTML, '#category-name');
 
   const modal = document.getElementById('modal-body');
-  if (!modal) return;
+  if (!modal) {
+    closeModal();
+    return Promise.resolve(false);
+  }
 
   const form = modal.querySelector('#category-form');
   const title = modal.querySelector('#category-modal-title');
@@ -175,45 +205,66 @@ export function openEditCategoryModal(categoryId) {
   if (inputName) inputName.value = category.name || '';
   if (inputImage) inputImage.value = category.imageUrl || '';
 
-  form?.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    if (!form || !submit) return;
+  if (!form || !submit) {
+    closeModal();
+    return Promise.resolve(false);
+  }
 
-    resetFormErrors(form);
+  // Resolve with a boolean result once the edition flow finishes.
+  return new Promise((resolve) => {
+    let settled = false;
+    let stopObserver = () => {};
 
-    const formData = new FormData(form);
-    const name = String(formData.get('name') || '').trim();
-    const imageValue = String(formData.get('imageUrl') || '').trim();
-
-    if (name.length < 2) {
-      setInputError(form, 'category-name', 'Ingresá un nombre válido (2-80 caracteres).');
-      form.querySelector('#category-name')?.focus();
-      return;
+    function finalize(result) {
+      if (settled) return;
+      settled = true;
+      form.removeEventListener('submit', onSubmit);
+      stopObserver();
+      resolve(Boolean(result));
     }
 
-    let imageUrl = '';
-    if (imageValue) {
-      try {
-        imageUrl = normalizeImageUrl(imageValue);
-      } catch (err) {
-        setInputError(form, 'category-imageUrl', err.message);
-        form.querySelector('#category-imageUrl')?.focus();
+    stopObserver = observeModalClose(() => finalize(false));
+
+    async function onSubmit(event) {
+      event.preventDefault();
+      resetFormErrors(form);
+
+      const formData = new FormData(form);
+      const name = String(formData.get('name') || '').trim();
+      const imageValue = String(formData.get('imageUrl') || '').trim();
+
+      if (name.length < 2) {
+        setInputError(form, 'category-name', 'Ingresá un nombre válido (2-80 caracteres).');
+        form.querySelector('#category-name')?.focus();
         return;
+      }
+
+      let imageUrl = '';
+      if (imageValue) {
+        try {
+          imageUrl = normalizeImageUrl(imageValue);
+        } catch (err) {
+          setInputError(form, 'category-imageUrl', err.message);
+          form.querySelector('#category-imageUrl')?.focus();
+          return;
+        }
+      }
+
+      submit.disabled = true;
+      try {
+        await updateCategory(category.id, { name, imageUrl });
+        toastSuccess('Categoría actualizada correctamente.');
+        finalize(true);
+        closeModal();
+      } catch (err) {
+        applyServerFieldErrors(form, err);
+        toastError(err, 'No se pudo actualizar la categoría.');
+      } finally {
+        submit.disabled = false;
       }
     }
 
-    submit.disabled = true;
-    try {
-      await updateCategory(category.id, { name, imageUrl });
-      toastSuccess('Categoría actualizada correctamente.');
-      closeModal();
-      renderSnapshot();
-    } catch (err) {
-      applyServerFieldErrors(form, err);
-      toastError(err, 'No se pudo actualizar la categoría.');
-    } finally {
-      submit.disabled = false;
-    }
+    form.addEventListener('submit', onSubmit);
   });
 }
 
@@ -221,16 +272,19 @@ export function openDeleteCategoryModal(categoryId) {
   const category = findCategoryById(categoryId);
   if (!category) {
     toastError({ code: 'RESOURCE_NOT_FOUND', message: 'Categoría no encontrada.' }, 'No se encontró la categoría.');
-    return;
+    return Promise.resolve(false);
   }
 
   const template = document.getElementById('tpl-category-delete');
-  if (!template) return;
+  if (!template) return Promise.resolve(false);
 
   openModal(template.innerHTML, '#category-confirm-delete');
 
   const modal = document.getElementById('modal-body');
-  if (!modal) return;
+  if (!modal) {
+    closeModal();
+    return Promise.resolve(false);
+  }
 
   const message = modal.querySelector('#category-delete-message');
   const confirmBtn = modal.querySelector('#category-confirm-delete');
@@ -239,17 +293,39 @@ export function openDeleteCategoryModal(categoryId) {
     message.innerHTML = `¿Eliminar la categoría <strong>${escapeHTML(category.name || '')}</strong>?`;
   }
 
-  confirmBtn?.addEventListener('click', async () => {
-    if (!confirmBtn) return;
-    confirmBtn.disabled = true;
-    try {
-      await deleteCategory(category.id);
-      toastSuccess('Categoría eliminada correctamente.');
-      closeModal();
-      renderSnapshot();
-    } catch (err) {
-      toastError(err, 'No se pudo eliminar la categoría.');
-      confirmBtn.disabled = false;
+  if (!confirmBtn) {
+    closeModal();
+    return Promise.resolve(false);
+  }
+
+  // Resolve with a boolean result once the deletion flow finishes.
+  return new Promise((resolve) => {
+    let settled = false;
+    let stopObserver = () => {};
+
+    function finalize(result) {
+      if (settled) return;
+      settled = true;
+      confirmBtn.removeEventListener('click', onConfirm);
+      stopObserver();
+      resolve(Boolean(result));
     }
-  }, { once: true });
+
+    stopObserver = observeModalClose(() => finalize(false));
+
+    async function onConfirm() {
+      confirmBtn.disabled = true;
+      try {
+        await deleteCategory(category.id);
+        toastSuccess('Categoría eliminada correctamente.');
+        finalize(true);
+        closeModal();
+      } catch (err) {
+        toastError(err, 'No se pudo eliminar la categoría.');
+        confirmBtn.disabled = false;
+      }
+    }
+
+    confirmBtn.addEventListener('click', onConfirm, { once: true });
+  });
 }

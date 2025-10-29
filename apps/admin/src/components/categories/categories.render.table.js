@@ -9,6 +9,26 @@ import {
   formatSummary,
 } from './categories.helpers.js';
 
+// Render helper for loading state rows.
+function renderLoadingRow() {
+  return `
+    <tr class="categories__row categories__row--loading">
+      <td colspan="6">Cargando categorías…</td>
+    </tr>
+  `;
+}
+
+// Render helper for errors inside the table body.
+function renderErrorRow(message) {
+  const fallback = message || 'No se pudo cargar la información.';
+  const text = escapeHTML(fallback);
+  return `
+    <tr class="categories__row categories__row--error">
+      <td colspan="6">${text}</td>
+    </tr>
+  `;
+}
+
 function renderStatusBadge(active) {
   if (active) {
     return '<span class="badge badge--success">Activo</span>';
@@ -46,18 +66,18 @@ function renderRow(item) {
   const actions = `
     <!-- Expose row id for delegated handlers without changing the visible UI -->
     <div class="categories__actions" role="group" aria-label="Acciones">
-      <button class="btn btn--outline" type="button" data-action="category-edit" data-id="${id}" data-rbac-action="update">Editar</button>
+      <button class="btn btn--outline" type="button" data-action="edit" data-id="${id}" data-rbac-action="update">Editar</button>
       <button
         class="btn btn--outline"
         type="button"
-        data-action="category-toggle"
+        data-action="toggle"
         data-id="${id}"
         data-rbac-action="update"
         data-next-active="${nextActive}"
         aria-pressed="${item.active ? 'true' : 'false'}"
         aria-label="${toggleTitle}"
       >${toggleLabel}</button>
-      <button class="btn btn--outline" type="button" data-action="category-delete" data-id="${id}" data-rbac-action="delete">Eliminar</button>
+      <button class="btn btn--outline" type="button" data-action="delete" data-id="${id}" data-rbac-action="delete">Eliminar</button>
     </div>
   `;
   return `
@@ -89,46 +109,55 @@ export function renderCategoriesTable(snapshot, root = document.querySelector('#
   const error = view.error;
   const items = Array.isArray(view.viewItems) ? view.viewItems : [];
   const meta = view.meta || { page: 1, pageCount: 1, total: 0, pageSize: 10 };
+  const currentPage = Number(meta.page) || 1;
+  const totalPages = Math.max(1, Number(meta.pageCount) || 1);
+  const errorMessage = typeof error === 'string' && error.trim()
+    ? error.trim()
+    : typeof error?.message === 'string'
+      ? error.message
+      : '';
 
   if (status) {
     if (loading) {
       status.textContent = 'Cargando categorías…';
-    } else if (error) {
-      status.textContent = typeof error?.message === 'string' ? error.message : 'No se pudo cargar la información.';
+    } else if (errorMessage) {
+      status.textContent = errorMessage;
     } else {
       status.textContent = '';
     }
   }
 
-  if (tbody && !loading) {
-    tbody.innerHTML = items.map(renderRow).join('');
-  } else if (tbody && loading && !tbody.innerHTML) {
-    tbody.innerHTML = '';
+  if (tbody) {
+    if (loading) {
+      tbody.innerHTML = renderLoadingRow();
+    } else if (errorMessage) {
+      tbody.innerHTML = renderErrorRow(errorMessage);
+    } else if (items.length > 0) {
+      tbody.innerHTML = items.map(renderRow).join('');
+    } else {
+      tbody.innerHTML = '';
+    }
   }
 
   if (empty) {
-    empty.hidden = loading || error || items.length > 0;
+    empty.hidden = loading || Boolean(errorMessage) || items.length > 0;
   }
 
   if (summary) {
     if (loading) summary.textContent = 'Cargando…';
-    else if (error) summary.textContent = 'No se pudo cargar.';
+    else if (errorMessage) summary.textContent = 'No se pudo cargar.';
     else summary.textContent = formatSummary(meta);
   }
 
   if (pageIndicator) {
-    const current = Number(meta.page) || 1;
-    const totalPages = Math.max(1, Number(meta.pageCount) || 1);
-    pageIndicator.textContent = `${current} / ${totalPages}`;
+    pageIndicator.textContent = `${currentPage} / ${totalPages}`;
   }
 
   if (btnPrev) {
-    btnPrev.disabled = loading || (Number(meta.page) || 1) <= 1;
+    btnPrev.disabled = Boolean(loading || errorMessage) || currentPage <= 1;
   }
   if (btnNext) {
-    const current = Number(meta.page) || 1;
-    const totalPages = Math.max(1, Number(meta.pageCount) || 1);
-    btnNext.disabled = loading || current >= totalPages;
+    btnNext.disabled = Boolean(loading || errorMessage) || currentPage >= totalPages;
   }
 
   applyRBAC(container);

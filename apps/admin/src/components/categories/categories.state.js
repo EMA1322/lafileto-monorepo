@@ -12,13 +12,16 @@ import {
 } from './categories.helpers.js';
 
 /** Estado global (sin framework) */
+// Track items, pagination and async status for the table renderer.
 export const state = {
   items: [],
-  meta: { page: 1, pageSize: DEFAULT_PAGE_SIZE, total: 0 },
+  meta: { page: 1, pageSize: DEFAULT_PAGE_SIZE, total: 0, pageCount: 1 },
   q: '',
   status: 'all', // 'all' | 'active' | 'inactive'
   orderBy: 'name', // por ahora ordenamos por nombre
   orderDir: 'asc', // 'asc' | 'desc'
+  loading: false,
+  error: null,
 };
 
 const subscribers = new Set();
@@ -42,13 +45,26 @@ export function notify(container) {
 /** Copia inmutable del estado (para render). */
 export function getSnapshot() {
   // Ensure the table renderer gets filtered rows via snapshot.viewItems
+  const meta = { ...state.meta };
+  const total = Number.isFinite(Number(meta.total)) ? Number(meta.total) : state.items.length;
+  const pageSize = Number.isFinite(Number(meta.pageSize)) && Number(meta.pageSize) > 0
+    ? Number(meta.pageSize)
+    : DEFAULT_PAGE_SIZE;
+  const pageCountRaw = Number(meta.pageCount);
+  const computedPageCount = Number.isFinite(pageCountRaw) && pageCountRaw > 0
+    ? Math.max(1, Math.floor(pageCountRaw))
+    : Math.max(1, Math.ceil(total / pageSize) || 1);
+  meta.pageCount = computedPageCount;
+
   return {
     items: state.items.slice(),
-    meta: { ...state.meta },
+    meta,
     q: state.q,
     status: state.status,
     orderBy: state.orderBy,
     orderDir: state.orderDir,
+    loading: Boolean(state.loading),
+    error: state.error ? String(state.error) : null,
     viewItems: filterItemsByActive(state.items, state.status),
   };
 }
@@ -64,6 +80,17 @@ export function setOrder(dir) {
   state.orderDir = normalizeOrder(dir);
 }
 export function setPage(n) {
+  // Support prev/next tokens and direct page numbers.
+  const current = Number(state.meta.page) || 1;
+  const pageCount = Number(state.meta.pageCount) || Math.ceil((state.meta.total || 0) / (state.meta.pageSize || DEFAULT_PAGE_SIZE)) || 1;
+  if (n === 'prev') {
+    state.meta.page = current > 1 ? current - 1 : 1;
+    return;
+  }
+  if (n === 'next') {
+    state.meta.page = current < pageCount ? current + 1 : pageCount;
+    return;
+  }
   const p = Number(n || 1);
   state.meta.page = p < 1 ? 1 : p;
 }
@@ -82,62 +109,75 @@ function buildQuery() {
 
 /** GET categorías y actualiza estado. */
 export async function fetchCategories({ silentToast = false } = {}) {
+  // Signal loading state before hitting the API.
+  state.loading = true;
+  state.error = null;
+  notify();
+
   const params = buildQuery();
   params.set('_', Date.now().toString(36));
 
-  const res = await apiFetch(`/categories?${params.toString()}`, {
-    showErrorToast: !silentToast,
-  });
+  try {
+    const res = await apiFetch(`/categories?${params.toString()}`, {
+      showErrorToast: !silentToast,
+    });
 
-  const raw = res?.data?.items ?? res?.items ?? res?.data ?? [];
-  const list = Array.isArray(raw) ? raw : null;
-  const items = list ? list.map(mapCategoryFromApi) : state.items.slice();
+    const raw = res?.data?.items ?? res?.items ?? res?.data ?? [];
+    const list = Array.isArray(raw) ? raw : null;
+    const items = list ? list.map(mapCategoryFromApi).filter(Boolean) : state.items.slice();
 
-  const prevItems = state.items;
-  const prevMeta = state.meta;
-  const apiMeta = (res?.data && res.data.meta) || res?.meta;
+    const prevMeta = state.meta;
+    const apiMeta = (res?.data && res.data.meta) || res?.meta;
 
-  const pickNumber = (value) => {
-    const num = Number(value);
-    return Number.isFinite(num) ? num : null;
-  };
+    const pickNumber = (value) => {
+      const num = Number(value);
+      return Number.isFinite(num) ? num : null;
+    };
 
-  const nextMeta = { ...prevMeta };
-  let metaTotal = null;
-  if (apiMeta && typeof apiMeta === 'object') {
-    const metaPage = pickNumber(apiMeta.page);
-    const metaPageSize = pickNumber(apiMeta.pageSize);
-    metaTotal = pickNumber(apiMeta.total);
+    const nextMeta = { ...prevMeta };
+    let metaTotal = null;
+    let metaPageCount = null;
+    if (apiMeta && typeof apiMeta === 'object') {
+      const metaPage = pickNumber(apiMeta.page);
+      const metaPageSize = pickNumber(apiMeta.pageSize);
+      metaTotal = pickNumber(apiMeta.total);
+      metaPageCount = pickNumber(apiMeta.pageCount);
 
-    if (metaPage !== null) nextMeta.page = metaPage;
-    if (metaPageSize !== null) nextMeta.pageSize = metaPageSize;
-    if (metaTotal !== null) nextMeta.total = metaTotal;
-  }
-  if (metaTotal === null) {
-    if (list) {
-      nextMeta.total = items.length;
-    } else if (!Number.isFinite(nextMeta.total)) {
-      nextMeta.total = prevMeta.total;
+      if (metaPage !== null) nextMeta.page = metaPage;
+      if (metaPageSize !== null) nextMeta.pageSize = metaPageSize;
+      if (metaTotal !== null) nextMeta.total = metaTotal;
     }
+
+    if (metaTotal === null) {
+      if (list) {
+        nextMeta.total = items.length;
+      } else if (!Number.isFinite(nextMeta.total)) {
+        nextMeta.total = prevMeta.total;
+      }
+    }
+
+    if (!Number.isFinite(nextMeta.total)) {
+      nextMeta.total = items.length;
+    }
+
+    const pageSize = Number.isFinite(Number(nextMeta.pageSize)) && Number(nextMeta.pageSize) > 0
+      ? Number(nextMeta.pageSize)
+      : DEFAULT_PAGE_SIZE;
+    const computedPageCount = metaPageCount !== null && metaPageCount > 0
+      ? Math.max(1, Math.floor(metaPageCount))
+      : Math.max(1, Math.ceil((Number(nextMeta.total) || 0) / pageSize) || 1);
+    nextMeta.pageCount = computedPageCount;
+
+    state.items = items;
+    state.meta = nextMeta;
+    state.loading = false;
+    state.error = null;
+    notify();
+  } catch (err) {
+    state.loading = false;
+    state.error = err?.message ? String(err.message) : 'No se pudo cargar las categorías.';
+    notify();
   }
-  if (!Number.isFinite(nextMeta.total)) {
-    nextMeta.total = items.length;
-  }
-
-  const prevIds = prevItems.map((it) => String(it.id));
-  const nextIds = items.map((it) => String(it.id));
-  const itemsChanged =
-    prevIds.length !== nextIds.length || prevIds.some((id, idx) => id !== nextIds[idx]);
-  const metaChanged =
-    prevMeta.page !== nextMeta.page ||
-    prevMeta.pageSize !== nextMeta.pageSize ||
-    prevMeta.total !== nextMeta.total;
-  const changed = itemsChanged || metaChanged;
-
-  state.items = items;
-  state.meta = nextMeta;
-
-  if (changed) notify();
 
   return getSnapshot();
 }

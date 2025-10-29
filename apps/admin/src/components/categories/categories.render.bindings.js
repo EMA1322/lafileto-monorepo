@@ -3,7 +3,6 @@
 
 import {
   fetchCategories,
-  getSnapshot,
   setFilterActive,
   setOrder,
   setPage,
@@ -11,7 +10,6 @@ import {
   toggleCategoryActive,
   findCategoryById,
 } from './categories.state.js';
-import { renderCategoriesTable } from './categories.render.table.js';
 import {
   openCreateCategoryModal,
   openEditCategoryModal,
@@ -34,15 +32,9 @@ function debounce(fn, wait = 300) {
   };
 }
 
-/** Refresca desde la API y vuelve a renderizar con fallback a snapshot */
-async function refreshAndRender(container) {
-  try {
-    await fetchCategories();
-  } catch {
-    renderCategoriesTable(getSnapshot(), container);
-    return;
-  }
-  renderCategoriesTable(getSnapshot(), container);
+// Shared helper to run the API refresh while reusing state notifications.
+async function refreshCategories(options) {
+  await fetchCategories(options);
 }
 
 /** Enlaza eventos de la vista de categorías */
@@ -56,72 +48,91 @@ export function bindCategoriesBindings(container) {
   if ($search) {
     const onSearch = debounce(async () => {
       setSearch($search.value);
-      await refreshAndRender(container);
+      await refreshCategories();
     }, 300);
     $search.addEventListener('input', onSearch);
   }
 
-  // --- Filtros
+  // --- Filtros y ordenamiento por select/botones
   container.addEventListener('change', async (ev) => {
     const el = ev.target;
-    if (!el || !el.dataset) return;
+    if (!el) return;
 
-    // filtro activo
-    if (el.matches('[data-filter="active"]')) {
-      setFilterActive(el.value);
-      await refreshAndRender(container);
+    if (el.matches('[data-filter-control]')) {
+      const isSelect = typeof HTMLSelectElement !== 'undefined' && el instanceof HTMLSelectElement;
+      const selected = isSelect ? el.options[el.selectedIndex] : null;
+      const value = selected?.dataset.filter || el.value;
+      setFilterActive(value);
+      await refreshCategories();
       return;
     }
 
-    // orden
-    if (el.matches('[data-order]')) {
-      setOrder(el.value);
-      await refreshAndRender(container);
-      return;
+    if (el.matches('[data-order-control]')) {
+      const isSelect = typeof HTMLSelectElement !== 'undefined' && el instanceof HTMLSelectElement;
+      const selected = isSelect ? el.options[el.selectedIndex] : null;
+      const value = selected?.dataset.order || el.value;
+      setOrder(value);
+      await refreshCategories();
     }
   });
 
-  // --- Paginación
   container.addEventListener('click', async (ev) => {
+    const filterBtn = ev.target.closest('[data-filter]');
+    if (filterBtn) {
+      setFilterActive(filterBtn.dataset.filter);
+      await refreshCategories();
+      return;
+    }
+
+    const orderBtn = ev.target.closest('[data-order]');
+    if (orderBtn) {
+      setOrder(orderBtn.dataset.order);
+      await refreshCategories();
+      return;
+    }
+
     const btn = ev.target.closest('[data-page]');
-    if (!btn) return;
-    const page = Number(btn.dataset.page || 1);
-    if (Number.isFinite(page)) {
-      setPage(page);
-      await refreshAndRender(container);
+    if (btn) {
+      const token = btn.dataset.page;
+      setPage(token);
+      await refreshCategories();
+      return;
     }
   });
+
+  const refreshBtn = container.querySelector('#categories-refresh');
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', async () => {
+      await refreshCategories();
+    });
+  }
 
   // --- Delegación de eventos por filas de la tabla
   container.addEventListener('click', async (ev) => {
     const t = ev.target.closest('[data-action]');
     if (!t) return;
-    // Accept both "category-*" and plain actions; fallback to <tr data-id> for row id.
+    // Accept normalized actions and resolve the row identifier gracefully.
     const action = (t.dataset.action || '').replace(/^category-/, '');
     const targetId = t.dataset.id || t.closest('tr')?.dataset.id || '';
 
     // Crear nueva categoría
     if (action === 'new') {
       const created = await openCreateCategoryModal();
-      if (created) {
-        await refreshAndRender(container);
-      }
+      if (created) await refreshCategories();
       return;
     }
 
     // Editar
     if (action === 'edit' && targetId) {
-      const category = findCategoryById(targetId);
-      const updated = await openEditCategoryModal(category);
-      if (updated) await refreshAndRender(container);
+      const updated = await openEditCategoryModal(targetId);
+      if (updated) await refreshCategories();
       return;
     }
 
     // Eliminar
     if (action === 'delete' && targetId) {
-      const category = findCategoryById(targetId);
-      const removed = await openDeleteCategoryModal(category);
-      if (removed) await refreshAndRender(container);
+      const removed = await openDeleteCategoryModal(targetId);
+      if (removed) await refreshCategories();
       return;
     }
 
@@ -131,10 +142,8 @@ export function bindCategoriesBindings(container) {
         const category = findCategoryById(targetId);
         const next = !category?.active;
         await toggleCategoryActive(targetId, next, { silentToast: true });
-        await refreshAndRender(container);
       } catch (err) {
         // Re-render fallback + toast
-        renderCategoriesTable(getSnapshot(), container);
         showToast(mapErrorToMessage(err));
       }
     }
@@ -142,6 +151,6 @@ export function bindCategoriesBindings(container) {
 
   // --- Helper público para que el *entrypoint* pueda refrescar. */
   container.fetchAndRender = async () => {
-    await refreshAndRender(container);
+    await refreshCategories();
   };
 }

@@ -26,23 +26,24 @@
           placeholder="Buscar por nombre…"
           autocomplete="off"
           inputmode="search"
+          data-role="search"
         />
       </div>
 
       <div class="categories__control">
         <label for="categories-filter-active" class="sr-only">Filtrar por estado</label>
-        <select id="categories-filter-active" class="categories__select" name="filter-active">
-          <option value="all" selected>Todas</option>
-          <option value="active">Activas</option>
-          <option value="inactive">Inactivas</option>
+        <select id="categories-filter-active" class="categories__select" name="filter-active" data-filter-control>
+          <option value="all" data-filter="all" selected>Todas</option>
+          <option value="active" data-filter="active">Activas</option>
+          <option value="inactive" data-filter="inactive">Inactivas</option>
         </select>
       </div>
 
       <div class="categories__control categories__control--order">
         <label for="categories-order" class="sr-only">Ordenar por nombre</label>
-        <select id="categories-order" class="categories__select" name="order">
-          <option value="asc" selected>Nombre ascendente</option>
-          <option value="desc">Nombre descendente</option>
+        <select id="categories-order" class="categories__select" name="order" data-order-control>
+          <option value="asc" data-order="asc" selected>Nombre ascendente</option>
+          <option value="desc" data-order="desc">Nombre descendente</option>
         </select>
       </div>
 
@@ -54,7 +55,7 @@
           id="categories-create"
           class="btn"
           type="button"
-          data-action="category-create"
+          data-action="new"
           data-rbac-action="write"
           data-rbac-hide
           hidden
@@ -89,9 +90,9 @@
   <footer class="categories__footer" aria-label="Paginación de categorías">
     <div id="categories-summary" class="categories__summary">—</div>
     <div class="categories__pager">
-      <button id="categories-page-prev" class="btn btn--ghost" type="button" aria-label="Página anterior">◀</button>
+      <button id="categories-page-prev" class="btn btn--ghost" type="button" aria-label="Página anterior" data-page="prev">◀</button>
       <span id="categories-page-indicator" class="categories__page">1 / 1</span>
-      <button id="categories-page-next" class="btn btn--ghost" type="button" aria-label="Página siguiente">▶</button>
+      <button id="categories-page-next" class="btn btn--ghost" type="button" aria-label="Página siguiente" data-page="next">▶</button>
     </div>
   </footer>
 
