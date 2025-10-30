@@ -6,11 +6,12 @@ import { showToast } from '@/utils/snackbar.js';
 
 import {
   createCategory,
-  updateCategory,
+  updateCategoryDetails,
   deleteCategory,
   findCategoryById,
+  patchCategoryActive,
 } from './categories.state.js';
-import { escapeHTML, mapErrorToMessage } from './categories.helpers.js';
+import { escapeHTML, mapErrorToMessage, renderStatusBadge } from './categories.helpers.js';
 function modalResultPromise(setup) {
   return new Promise((resolve) => {
     const modalRoot = document.getElementById('global-modal');
@@ -241,7 +242,7 @@ export function openEditCategoryModal(categoryId) {
 
       submit.disabled = true;
       try {
-        await updateCategory(category.id, { name, imageUrl });
+        await updateCategoryDetails(category.id, { name, imageUrl });
         toastSuccess('Categoría actualizada correctamente.');
         resolveResult(true);
         closeModal();
@@ -294,5 +295,108 @@ export function openDeleteCategoryModal(categoryId) {
         confirmBtn.disabled = false;
       }
     }, { once: true });
+  });
+}
+
+export function openViewCategoryModal(categoryId) {
+  const template = document.getElementById('tpl-category-view');
+  if (!template) return Promise.resolve(false);
+
+  const category = findCategoryById(categoryId);
+  if (!category) {
+    toastError({ code: 'RESOURCE_NOT_FOUND', message: 'Categoría no encontrada.' }, 'No se encontró la categoría.');
+    return Promise.resolve(false);
+  }
+
+  return modalResultPromise((resolveResult) => {
+    openModal(template.innerHTML, '#category-view-switch');
+
+    const modal = document.getElementById('modal-body');
+    if (!modal) {
+      resolveResult(false);
+      return;
+    }
+
+    const nameField = modal.querySelector('[data-field="category-name"]');
+    const statusField = modal.querySelector('[data-field="category-status"]');
+    const imageWrapper = modal.querySelector('[data-field="category-image-wrapper"]');
+    const imageEl = modal.querySelector('[data-field="category-image"]');
+    const imageFallback = modal.querySelector('[data-field="category-image-fallback"]');
+    const switchControl = modal.querySelector('[data-role="active-switch"]');
+    const switchLabel = modal.querySelector('[data-role="active-switch-label"]');
+    const confirmBtn = modal.querySelector('#category-view-confirm');
+
+    if (nameField) nameField.textContent = category.name || '—';
+    if (statusField) statusField.innerHTML = renderStatusBadge(category.active);
+
+    if (imageEl && category.imageUrl) {
+      imageEl.src = category.imageUrl;
+      imageEl.alt = category.name ? `Imagen de ${category.name}` : 'Imagen de categoría';
+      imageEl.hidden = false;
+      if (imageFallback) imageFallback.hidden = true;
+      if (imageWrapper) imageWrapper.removeAttribute('data-empty');
+    } else {
+      if (imageWrapper) imageWrapper.setAttribute('data-empty', 'true');
+      if (imageFallback) imageFallback.hidden = false;
+      if (imageEl) imageEl.hidden = true;
+    }
+
+    let nextActive = Boolean(category.active);
+    let dirty = false;
+
+    const updateSwitchUI = (value) => {
+      nextActive = Boolean(value);
+      dirty = nextActive !== Boolean(category.active);
+      if (switchControl) {
+        switchControl.setAttribute('aria-checked', nextActive ? 'true' : 'false');
+        switchControl.classList.toggle('is-active', nextActive);
+        switchControl.classList.toggle('is-inactive', !nextActive);
+      }
+      if (switchLabel) switchLabel.textContent = nextActive ? 'Activo' : 'Inactivo';
+      if (statusField) statusField.innerHTML = renderStatusBadge(nextActive);
+      if (confirmBtn) {
+        confirmBtn.disabled = !dirty;
+      }
+    };
+
+    const toggleSwitch = () => {
+      updateSwitchUI(!nextActive);
+    };
+
+    if (switchControl) {
+      switchControl.addEventListener('click', () => {
+        toggleSwitch();
+      });
+      switchControl.addEventListener('keydown', (event) => {
+        if (event.key === ' ' || event.key === 'Enter' || event.key === 'Spacebar') {
+          event.preventDefault();
+          toggleSwitch();
+        }
+      });
+    }
+
+    updateSwitchUI(nextActive);
+
+    confirmBtn?.addEventListener('click', async () => {
+      if (!confirmBtn) return;
+      if (!dirty) {
+        closeModal();
+        resolveResult(false);
+        return;
+      }
+
+      confirmBtn.disabled = true;
+      confirmBtn.setAttribute('aria-busy', 'true');
+      try {
+        await patchCategoryActive(category.id, nextActive);
+        toastSuccess('Estado actualizado correctamente.');
+        resolveResult(true);
+        closeModal();
+      } catch (err) {
+        toastError(err, 'No se pudo actualizar el estado.');
+        confirmBtn.disabled = false;
+        confirmBtn.removeAttribute('aria-busy');
+      }
+    });
   });
 }

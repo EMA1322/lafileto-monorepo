@@ -8,17 +8,14 @@ import {
   setOrder,
   setPage,
   setSearch,
-  toggleCategoryActive,
-  findCategoryById,
 } from './categories.state.js';
 import { renderCategoriesTable } from './categories.render.table.js';
 import {
   openCreateCategoryModal,
   openEditCategoryModal,
   openDeleteCategoryModal,
+  openViewCategoryModal,
 } from './categories.modals.js';
-import { mapErrorToMessage } from './categories.helpers.js';
-import { showToast } from '@/utils/snackbar.js';
 
 /** Debounce util sin dependencias. */
 function debounce(fn, wait = 300) {
@@ -121,25 +118,17 @@ export function bindCategoriesBindings(container) {
       return;
     }
 
+    if (action === 'view' && targetId) {
+      const shouldRefresh = await openViewCategoryModal(targetId);
+      if (shouldRefresh) await refreshAndRender(container);
+      return;
+    }
+
     // Eliminar
     if (action === 'delete' && targetId) {
       const removed = await openDeleteCategoryModal(targetId);
       if (removed) await refreshAndRender(container);
       return;
-    }
-
-    // Toggle activo/inactivo (optimista con fallback)
-    if (action === 'toggle' && targetId) {
-      try {
-        const category = findCategoryById(targetId);
-        const next = !category?.active;
-        await toggleCategoryActive(targetId, next, { silentToast: true });
-        await refreshAndRender(container);
-      } catch (err) {
-        // Re-render fallback + toast
-        renderCategoriesTable(getSnapshot(), container);
-        showToast(mapErrorToMessage(err));
-      }
     }
   });
 

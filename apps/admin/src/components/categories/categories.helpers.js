@@ -5,6 +5,12 @@ export const MODULE_KEY = 'categories';
 export const MODULE_KEY_ALIAS = 'category';
 export const DEFAULT_PAGE_SIZE = 10;
 
+export function renderStatusBadge(active) {
+  return active
+    ? '<span class="badge badge--success">Activo</span>'
+    : '<span class="badge badge--muted">Inactivo</span>';
+}
+
 /** Escape seguro para inyectar texto en HTML. */
 export function escapeHTML(value) {
   return String(value ?? '')

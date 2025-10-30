@@ -17,6 +17,7 @@ try {
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_PAGE_SIZE = 10;
+const MIN_PAGE_SIZE = 5;
 const MAX_PAGE_SIZE = 100;
 
 function normalizePage(value) {
@@ -26,16 +27,27 @@ function normalizePage(value) {
 
 function normalizePageSize(value) {
   const n = Number.parseInt(value, 10);
-  if (!Number.isFinite(n) || n <= 0) return DEFAULT_PAGE_SIZE;
-  return Math.min(n, MAX_PAGE_SIZE);
+  if (!Number.isFinite(n)) return DEFAULT_PAGE_SIZE;
+  if (n < MIN_PAGE_SIZE) return MIN_PAGE_SIZE;
+  if (n > MAX_PAGE_SIZE) return MAX_PAGE_SIZE;
+  return n;
 }
 
 function normalizeOrderBy(value) {
   if (typeof value === 'string') {
-    const normalized = value.trim().toLowerCase();
-    if (normalized === 'createdat') return 'createdAt';
+    const trimmed = value.trim();
+    if (!trimmed) return 'name';
+
+    if (trimmed === 'name' || trimmed === 'createdAt' || trimmed === 'updatedAt') {
+      return trimmed;
+    }
+
+    const normalized = trimmed.toLowerCase();
     if (normalized === 'name') return 'name';
+    if (normalized === 'createdat' || normalized === 'created_at') return 'createdAt';
+    if (normalized === 'updatedat' || normalized === 'updated_at') return 'updatedAt';
   }
+
   return 'name';
 }
 
@@ -52,8 +64,9 @@ function normalizeStatus(value) {
     const normalized = value.trim().toLowerCase();
     if (normalized === 'all') return 'all';
     if (normalized === 'inactive') return 'inactive';
+    if (normalized === 'active') return 'active';
   }
-  return 'active';
+  return 'all';
 }
 
 function normalizeId(value) {
@@ -85,7 +98,6 @@ export const categoryService = {
   async listCategories({
     page,
     pageSize,
-    search,
     q,
     all,
     status,
@@ -94,54 +106,60 @@ export const categoryService = {
     orderDirection
   } = {}) {
     const wantsAll = Boolean(all);
-    const rawSearch = typeof search === 'string' ? search : typeof q === 'string' ? q : '';
-    const normalizedSearch = rawSearch.trim();
+    const normalizedSearch = typeof q === 'string' ? q.trim() : '';
     const orderField = normalizeOrderBy(orderBy);
     const direction = normalizeOrderDirection(orderDir ?? orderDirection);
     const normalizedStatus = normalizeStatus(status);
+
+    const normalizedPage = normalizePage(page);
+    const normalizedPageSize = normalizePageSize(pageSize);
 
     if (wantsAll) {
       const { items, total } = await categoryRepository.list({
         page: DEFAULT_PAGE,
         pageSize: MAX_PAGE_SIZE,
-        search: normalizedSearch ? normalizedSearch : undefined,
+        q: normalizedSearch ? normalizedSearch : undefined,
         status: normalizedStatus,
         all: true,
         orderBy: orderField,
-        orderDirection: direction
+        orderDirection: direction,
       });
 
       const sanitized = items.map(sanitizeCategory);
+      const effectiveTotal = Number.isFinite(total) ? total : sanitized.length;
+      const pageCount = Math.max(1, Math.ceil(effectiveTotal / normalizedPageSize));
       return {
         items: sanitized,
         meta: {
           page: 1,
-          pageSize: total || sanitized.length || 0,
-          total
-        }
+          pageSize: normalizedPageSize,
+          total: effectiveTotal,
+          pageCount,
+        },
       };
     }
-
-    const normalizedPage = normalizePage(page);
-    const normalizedPageSize = normalizePageSize(pageSize);
 
     const { items, total } = await categoryRepository.list({
       page: normalizedPage,
       pageSize: normalizedPageSize,
-      search: normalizedSearch ? normalizedSearch : undefined,
+      q: normalizedSearch ? normalizedSearch : undefined,
       status: normalizedStatus,
       all: false,
       orderBy: orderField,
-      orderDirection: direction
+      orderDirection: direction,
     });
+
+    const safeTotal = Number.isFinite(total) ? total : items.length;
+    const pageCount = Math.max(1, Math.ceil(safeTotal / normalizedPageSize));
 
     return {
       items: items.map(sanitizeCategory),
       meta: {
         page: normalizedPage,
         pageSize: normalizedPageSize,
-        total
-      }
+        total: safeTotal,
+        pageCount,
+      },
     };
   },
 

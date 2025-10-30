@@ -60,62 +60,91 @@ function normalizeSearch(value) {
   return trimmed.length > 0 ? trimmed : undefined;
 }
 
-function normalizeOrderBy(value) {
-  if (!value) return 'name';
-  const normalized = String(value).trim().toLowerCase();
-  if (normalized === 'createdat' || normalized === 'created_at') return 'createdAt';
-  return 'name';
-}
-
-function normalizeOrderDir(value) {
-  if (!value) return 'asc';
-  const normalized = String(value).trim().toLowerCase();
-  return normalized === 'desc' ? 'desc' : 'asc';
-}
-
 const statusParam = z
   .preprocess((value) => {
     if (value === undefined || value === null) return undefined;
     const normalized = String(value).trim().toLowerCase();
     return normalized.length > 0 ? normalized : undefined;
   }, z.enum(['all', 'active', 'inactive']).optional())
-  .transform((val) => val ?? 'active');
+  .transform((val) => val ?? 'all');
 
-const queryNumber = z
-  .string()
-  .optional()
-  .transform((val) => (val ? Number.parseInt(val, 10) : undefined))
-  .refine((val) => val === undefined || (Number.isInteger(val) && val > 0), {
-    message: 'Debe ser un entero positivo.'
-  });
+const pageParam = z
+  .preprocess((value) => {
+    if (value === undefined || value === null || value === '') return undefined;
+    const parsed = Number.parseInt(value, 10);
+    return Number.isFinite(parsed) ? parsed : value;
+  }, z.number().int().min(1, 'Debe ser un entero positivo.').optional())
+  .transform((val) => val ?? 1);
 
-const searchParam = z.string().optional().transform(normalizeSearch);
+const pageSizeParam = z
+  .preprocess((value) => {
+    if (value === undefined || value === null || value === '') return undefined;
+    const parsed = Number.parseInt(value, 10);
+    return Number.isFinite(parsed) ? parsed : value;
+  }, z.number().int().min(5, 'Debe ser un entero positivo.').max(100, 'Máximo 100.').optional())
+  .transform((val) => val ?? 10);
+
+const orderByParam = z
+  .preprocess((value) => {
+    if (typeof value !== 'string') return undefined;
+    const trimmed = value.trim();
+    if (!trimmed) return undefined;
+
+    const normalized = trimmed.toLowerCase();
+    if (normalized === 'name') return 'name';
+    if (normalized === 'createdat' || normalized === 'created_at') return 'createdAt';
+    if (normalized === 'updatedat' || normalized === 'updated_at') return 'updatedAt';
+
+    if (['name', 'createdAt', 'updatedAt'].includes(trimmed)) return trimmed;
+    return undefined;
+  }, z.enum(['name', 'createdAt', 'updatedAt']).optional())
+  .transform((val) => val ?? 'name');
+
+const orderDirParam = z
+  .preprocess((value) => {
+    if (typeof value !== 'string') return undefined;
+    const normalized = value.trim().toLowerCase();
+    if (normalized === 'desc') return 'desc';
+    if (normalized === 'asc') return 'asc';
+    return undefined;
+  }, z.enum(['asc', 'desc']).optional())
+  .transform((val) => val ?? 'asc');
+
+const orderDirectionParam = z
+  .preprocess((value) => {
+    if (typeof value !== 'string') return undefined;
+    const normalized = value.trim().toLowerCase();
+    if (normalized === 'desc') return 'desc';
+    if (normalized === 'asc') return 'asc';
+    return undefined;
+  }, z.enum(['asc', 'desc']).optional());
+
+const searchParam = z
+  .preprocess((value) => {
+    if (value === undefined || value === null) return undefined;
+    return normalizeSearch(String(value));
+  }, z.string().optional());
 
 export const categoryListQuerySchema = z
   .object({
-    page: queryNumber,
-    pageSize: queryNumber,
-    search: searchParam,
+    page: pageParam,
+    pageSize: pageSizeParam,
     q: searchParam,
     status: statusParam,
     all: boolishOptional.transform((val) => val ?? false),
-    orderBy: z
-      .string()
-      .optional()
-      .transform(normalizeOrderBy),
-    orderDir: z
-      .string()
-      .optional()
-      .transform(normalizeOrderDir)
+    orderBy: orderByParam,
+    orderDir: orderDirParam,
+    orderDirection: orderDirectionParam,
   })
   .transform((values) => ({
     page: values.page,
     pageSize: values.pageSize,
-    search: values.q ?? values.search,
+    q: values.q,
     status: values.status,
     all: values.all,
     orderBy: values.orderBy,
-    orderDir: values.orderDir
+    orderDir: values.orderDir,
+    orderDirection: values.orderDirection,
   }));
 
 export const categoryCreateSchema = z.object({
