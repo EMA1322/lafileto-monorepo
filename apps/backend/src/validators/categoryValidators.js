@@ -87,9 +87,17 @@ const pageSizeParam = z
 const orderByParam = z
   .preprocess((value) => {
     if (typeof value !== 'string') return undefined;
-    const normalized = value.trim().toLowerCase();
-    return normalized === 'name' ? 'name' : undefined;
-  }, z.enum(['name']).optional())
+    const trimmed = value.trim();
+    if (!trimmed) return undefined;
+
+    const normalized = trimmed.toLowerCase();
+    if (normalized === 'name') return 'name';
+    if (normalized === 'createdat' || normalized === 'created_at') return 'createdAt';
+    if (normalized === 'updatedat' || normalized === 'updated_at') return 'updatedAt';
+
+    if (['name', 'createdAt', 'updatedAt'].includes(trimmed)) return trimmed;
+    return undefined;
+  }, z.enum(['name', 'createdAt', 'updatedAt']).optional())
   .transform((val) => val ?? 'name');
 
 const orderDirParam = z
@@ -102,6 +110,15 @@ const orderDirParam = z
   }, z.enum(['asc', 'desc']).optional())
   .transform((val) => val ?? 'asc');
 
+const orderDirectionParam = z
+  .preprocess((value) => {
+    if (typeof value !== 'string') return undefined;
+    const normalized = value.trim().toLowerCase();
+    if (normalized === 'desc') return 'desc';
+    if (normalized === 'asc') return 'asc';
+    return undefined;
+  }, z.enum(['asc', 'desc']).optional());
+
 const searchParam = z
   .preprocess((value) => {
     if (value === undefined || value === null) return undefined;
@@ -112,21 +129,22 @@ export const categoryListQuerySchema = z
   .object({
     page: pageParam,
     pageSize: pageSizeParam,
-    search: searchParam,
     q: searchParam,
     status: statusParam,
     all: boolishOptional.transform((val) => val ?? false),
     orderBy: orderByParam,
     orderDir: orderDirParam,
+    orderDirection: orderDirectionParam,
   })
   .transform((values) => ({
     page: values.page,
     pageSize: values.pageSize,
-    search: values.q ?? values.search,
+    q: values.q,
     status: values.status,
     all: values.all,
     orderBy: values.orderBy,
     orderDir: values.orderDir,
+    orderDirection: values.orderDirection,
   }));
 
 export const categoryCreateSchema = z.object({

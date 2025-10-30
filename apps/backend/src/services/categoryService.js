@@ -35,9 +35,19 @@ function normalizePageSize(value) {
 
 function normalizeOrderBy(value) {
   if (typeof value === 'string') {
-    const normalized = value.trim().toLowerCase();
+    const trimmed = value.trim();
+    if (!trimmed) return 'name';
+
+    if (trimmed === 'name' || trimmed === 'createdAt' || trimmed === 'updatedAt') {
+      return trimmed;
+    }
+
+    const normalized = trimmed.toLowerCase();
     if (normalized === 'name') return 'name';
+    if (normalized === 'createdat' || normalized === 'created_at') return 'createdAt';
+    if (normalized === 'updatedat' || normalized === 'updated_at') return 'updatedAt';
   }
+
   return 'name';
 }
 
@@ -88,7 +98,6 @@ export const categoryService = {
   async listCategories({
     page,
     pageSize,
-    search,
     q,
     all,
     status,
@@ -97,8 +106,7 @@ export const categoryService = {
     orderDirection
   } = {}) {
     const wantsAll = Boolean(all);
-    const rawSearch = typeof search === 'string' ? search : typeof q === 'string' ? q : '';
-    const normalizedSearch = rawSearch.trim();
+    const normalizedSearch = typeof q === 'string' ? q.trim() : '';
     const orderField = normalizeOrderBy(orderBy);
     const direction = normalizeOrderDirection(orderDir ?? orderDirection);
     const normalizedStatus = normalizeStatus(status);
@@ -110,7 +118,7 @@ export const categoryService = {
       const { items, total } = await categoryRepository.list({
         page: DEFAULT_PAGE,
         pageSize: MAX_PAGE_SIZE,
-        search: normalizedSearch ? normalizedSearch : undefined,
+        q: normalizedSearch ? normalizedSearch : undefined,
         status: normalizedStatus,
         all: true,
         orderBy: orderField,
@@ -134,7 +142,7 @@ export const categoryService = {
     const { items, total } = await categoryRepository.list({
       page: normalizedPage,
       pageSize: normalizedPageSize,
-      search: normalizedSearch ? normalizedSearch : undefined,
+      q: normalizedSearch ? normalizedSearch : undefined,
       status: normalizedStatus,
       all: false,
       orderBy: orderField,

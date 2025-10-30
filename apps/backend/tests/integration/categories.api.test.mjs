@@ -73,7 +73,7 @@ function sortItems(items, orderBy = 'name', orderDirection = 'asc') {
 categoryRepository.list = async function list({
   page,
   pageSize,
-  search,
+  q,
   status = 'active',
   all = false,
   orderBy,
@@ -90,8 +90,8 @@ categoryRepository.list = async function list({
     filtered = filtered.filter((item) => !item.active);
   }
 
-  if (search && typeof search === 'string') {
-    const needle = search.trim().toLowerCase();
+  if (q && typeof q === 'string') {
+    const needle = q.trim().toLowerCase();
     filtered = filtered.filter((item) => item.name.toLowerCase().includes(needle));
   }
 

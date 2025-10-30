@@ -10,13 +10,15 @@ const baseSelect = {
   updatedAt: true,
 };
 
-function buildOrder(orderBy = 'name', orderDirection = 'asc') {
-  const field = 'name';
+const ORDERABLE_FIELDS = new Set(['name', 'createdAt', 'updatedAt']);
+
+export function buildCategoryOrder(orderBy = 'name', orderDirection = 'asc') {
+  const field = ORDERABLE_FIELDS.has(orderBy) ? orderBy : 'name';
   const direction = orderDirection === 'desc' ? 'desc' : 'asc';
   return { [field]: direction };
 }
 
-function buildWhere({ search, status } = {}) {
+export function buildCategoryWhere({ q, status } = {}) {
   const where = {};
 
   if (status === 'active') {
@@ -25,11 +27,13 @@ function buildWhere({ search, status } = {}) {
     where.active = false;
   }
 
-  if (search) {
-    where.name = {
-      contains: search,
-      mode: 'insensitive'
-    };
+  if (typeof q === 'string') {
+    const trimmed = q.trim();
+    if (trimmed) {
+      where.name = {
+        contains: trimmed,
+      };
+    }
   }
 
   return where;
@@ -51,15 +55,15 @@ export const categoryRepository = {
   async list({
     page,
     pageSize,
-    search,
+    q,
     status = 'all',
     all = false,
     orderBy,
     orderDirection,
   }) {
-    const where = buildWhere({ search, status });
+    const where = buildCategoryWhere({ q, status });
 
-    const order = buildOrder(orderBy, orderDirection);
+    const order = buildCategoryOrder(orderBy, orderDirection);
 
     if (all) {
       const items = await prisma.category.findMany({
