@@ -207,10 +207,27 @@ export async function createCategory(payload) {
 }
 
 /** Actualiza categoría y sincroniza estado. */
-export async function updateCategory(id, payload) {
+function applyUpdatedCategory(id, updated) {
+  if (!updated) return updated;
+  const idx = state.items.findIndex((x) => String(x.id) === String(id));
+  if (idx >= 0) {
+    state.items[idx] = updated;
+  }
+  return updated;
+}
+
+export async function updateCategoryDetails(id, payload) {
+  const body = {};
+  if (payload && Object.prototype.hasOwnProperty.call(payload, 'name')) {
+    body.name = payload.name;
+  }
+  if (payload && Object.prototype.hasOwnProperty.call(payload, 'imageUrl')) {
+    body.imageUrl = payload.imageUrl;
+  }
+
   const res = await apiFetch(`/categories/${encodeURIComponent(id)}`, {
-    method: 'PATCH',
-    body: payload,
+    method: 'PUT',
+    body,
     showErrorToast: true,
     showSuccessToast: true,
   });
@@ -218,10 +235,29 @@ export async function updateCategory(id, payload) {
   const raw = res?.data?.item ?? res?.data;
   const updated = mapCategoryFromApi(raw);
 
-  const idx = state.items.findIndex((x) => String(x.id) === String(id));
-  if (idx >= 0) state.items[idx] = updated;
+  return applyUpdatedCategory(id, updated);
+}
 
-  return updated;
+export async function patchCategoryActive(
+  id,
+  active,
+  { silentToast = false, notifyListeners = true } = {},
+) {
+  const res = await apiFetch(`/categories/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    body: { active: Boolean(active) },
+    showErrorToast: !silentToast,
+    showSuccessToast: !silentToast,
+  });
+
+  const raw = res?.data?.item ?? res?.data;
+  const updated = mapCategoryFromApi(raw);
+
+  const result = applyUpdatedCategory(id, updated);
+  if (notifyListeners) {
+    notify();
+  }
+  return result;
 }
 
 /** Elimina categoría y sincroniza estado. */
@@ -256,15 +292,11 @@ export async function toggleCategoryActive(categoryId, nextActive, { silentToast
   notify();
 
   try {
-    const res = await apiFetch(`/categories/${encodeURIComponent(categoryId)}`, {
-      method: 'PATCH',
-      body: { active: Boolean(nextActive) },
-      showErrorToast: !silentToast,
+    const updated = await patchCategoryActive(categoryId, nextActive, {
+      silentToast,
+      notifyListeners: false,
     });
-
-    // Si backend devuelve la entidad, normalizamos y dejamos exacto
-    const raw = res?.data?.item ?? res?.data ?? state.items[idx];
-    state.items[idx] = mapCategoryFromApi(raw);
+    state.items[idx] = updated ?? state.items[idx];
     notify();
     return state.items[idx];
   } catch (err) {

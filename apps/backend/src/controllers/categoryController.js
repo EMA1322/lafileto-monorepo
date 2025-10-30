@@ -6,10 +6,8 @@ export const categoryController = {
   list: async (req, res, next) => {
     try {
       const query = req.validated?.query ?? {};
-      const wantsAll = !!query.all;
       const { items, meta } = await categoryService.listCategories(query);
-      const payload = wantsAll ? { items } : { items, meta };
-      return res.json(ok(payload));
+      return res.json(ok({ items, meta }));
     } catch (err) {
       next(err);
     }

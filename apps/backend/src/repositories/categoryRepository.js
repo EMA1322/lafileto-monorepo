@@ -7,12 +7,11 @@ const baseSelect = {
   imageUrl: true,
   active: true,
   createdAt: true,
-  updatedAt: true
+  updatedAt: true,
 };
 
 function buildOrder(orderBy = 'name', orderDirection = 'asc') {
-  const allowedFields = new Set(['name', 'createdAt']);
-  const field = allowedFields.has(orderBy) ? orderBy : 'name';
+  const field = 'name';
   const direction = orderDirection === 'desc' ? 'desc' : 'asc';
   return { [field]: direction };
 }
@@ -53,10 +52,10 @@ export const categoryRepository = {
     page,
     pageSize,
     search,
-    status = 'active',
+    status = 'all',
     all = false,
     orderBy,
-    orderDirection
+    orderDirection,
   }) {
     const where = buildWhere({ search, status });
 

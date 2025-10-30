@@ -6,9 +6,10 @@ import { showToast } from '@/utils/snackbar.js';
 
 import {
   createCategory,
-  updateCategory,
+  updateCategoryDetails,
   deleteCategory,
   findCategoryById,
+  patchCategoryActive,
 } from './categories.state.js';
 import { escapeHTML, mapErrorToMessage, renderStatusBadge } from './categories.helpers.js';
 function modalResultPromise(setup) {
@@ -241,7 +242,7 @@ export function openEditCategoryModal(categoryId) {
 
       submit.disabled = true;
       try {
-        await updateCategory(category.id, { name, imageUrl });
+        await updateCategoryDetails(category.id, { name, imageUrl });
         toastSuccess('Categoría actualizada correctamente.');
         resolveResult(true);
         closeModal();
@@ -387,7 +388,8 @@ export function openViewCategoryModal(categoryId) {
       confirmBtn.disabled = true;
       confirmBtn.setAttribute('aria-busy', 'true');
       try {
-        await updateCategory(category.id, { active: nextActive });
+        await patchCategoryActive(category.id, nextActive);
+        toastSuccess('Estado actualizado correctamente.');
         resolveResult(true);
         closeModal();
       } catch (err) {
