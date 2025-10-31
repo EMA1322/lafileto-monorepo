@@ -28,4 +28,4 @@ curl -i -X OPTIONS http://localhost:3000/api/v1/auth/login \
 
 Deberías ver un `204 No Content` y el header `Access-Control-Allow-Origin` con el origen consultado.
 
-> Nota: el runner de tests ya inyecta las variables mínimas cuando `NODE_ENV=test`, por lo que no necesitás un `.env` para ejecutar `pnpm --filter backend test` en local.
+> Nota: el runner de tests ya inyecta las variables mínimas cuando `NODE_ENV=test`, por lo que no necesitás un `.env` para ejecutar `pnpm --filter backend test` en local. Las pruebas de CORS requieren `supertest` como dependencia de desarrollo y se ejecutan con `NODE_ENV=test` y un `JWT_SECRET` por defecto para CI.
