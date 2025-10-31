@@ -23,3 +23,6 @@ cp .env.example .env
     -H "Origin: http://192.168.1.33:5173" \
     -H "Access-Control-Request-Method: GET"
   ```
+
+### Refrescar lockfile
+- Después de rebasear o mergear cambios que toquen dependencias, ejecutá `pnpm -w install --lockfile-only` en la raíz para recalcular `pnpm-lock.yaml`.
