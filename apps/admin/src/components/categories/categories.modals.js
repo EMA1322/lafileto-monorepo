@@ -3,6 +3,7 @@
 
 import { openModal, closeModal } from '@/utils/modals.js';
 import { toast } from '@/utils/toast.js';
+import { applyRBAC } from '@/utils/rbac.js';
 
 import {
   createCategory,
@@ -11,7 +12,20 @@ import {
   findCategoryById,
   patchCategoryActive,
 } from './categories.state.js';
-import { escapeHTML, mapErrorToMessage, renderStatusBadge } from './categories.helpers.js';
+import { MODULE_KEY, MODULE_KEY_ALIAS, escapeHTML, mapErrorToMessage, renderStatusBadge } from './categories.helpers.js';
+
+function prepareModalRBAC() {
+  const modal = document.getElementById('modal-body');
+  if (!modal) return null;
+  modal.dataset.rbacModule = MODULE_KEY;
+  if (MODULE_KEY_ALIAS && MODULE_KEY_ALIAS !== MODULE_KEY) {
+    modal.dataset.rbacAlias = MODULE_KEY_ALIAS;
+  } else {
+    delete modal.dataset.rbacAlias;
+  }
+  applyRBAC(modal);
+  return modal;
+}
 function modalResultPromise(setup) {
   return new Promise((resolve) => {
     const modalRoot = document.getElementById('global-modal');
@@ -127,7 +141,7 @@ export function openCreateCategoryModal() {
   return modalResultPromise((resolveResult) => {
     openModal(template.innerHTML, '#category-name');
 
-    const modal = document.getElementById('modal-body');
+    const modal = prepareModalRBAC();
     if (!modal) {
       resolveResult(false);
       return;
@@ -196,7 +210,7 @@ export function openEditCategoryModal(categoryId) {
   return modalResultPromise((resolveResult) => {
     openModal(template.innerHTML, '#category-name');
 
-    const modal = document.getElementById('modal-body');
+    const modal = prepareModalRBAC();
     if (!modal) {
       resolveResult(false);
       return;
@@ -269,7 +283,7 @@ export function openDeleteCategoryModal(categoryId) {
   return modalResultPromise((resolveResult) => {
     openModal(template.innerHTML, '#category-confirm-delete');
 
-    const modal = document.getElementById('modal-body');
+    const modal = prepareModalRBAC();
     if (!modal) {
       resolveResult(false);
       return;
@@ -311,7 +325,7 @@ export function openViewCategoryModal(categoryId) {
   return modalResultPromise((resolveResult) => {
     openModal(template.innerHTML, '#category-view-switch');
 
-    const modal = document.getElementById('modal-body');
+    const modal = prepareModalRBAC();
     if (!modal) {
       resolveResult(false);
       return;

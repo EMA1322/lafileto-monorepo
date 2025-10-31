@@ -48,11 +48,24 @@ function renderRow(item) {
       >
         <span class="icon icon--sm" data-icon="eye" aria-hidden="true"></span>
       </button>
-      <button class="btn btn--secondary btn--sm" type="button" data-action="edit" data-id="${idAttr}" data-rbac-action="update">
+      <button
+        class="btn btn--secondary btn--sm"
+        type="button"
+        data-action="edit"
+        data-id="${idAttr}"
+        data-rbac-action="update"
+        data-rbac-hide
+      >
         <span class="icon icon--sm" data-icon="edit" aria-hidden="true"></span>
         <span class="icon-label">Editar</span>
       </button>
-      <button class="btn btn--sm categories__action--danger" type="button" data-action="delete" data-id="${idAttr}" data-rbac-action="delete">
+      <button
+        class="btn btn--sm categories__action--danger"
+        type="button"
+        data-action="delete"
+        data-id="${idAttr}"
+        data-rbac-action="delete"
+      >
         <span class="icon icon--sm" data-icon="trash" aria-hidden="true"></span>
         <span class="icon-label">Eliminar</span>
       </button>
@@ -100,7 +113,12 @@ export function renderCategoriesTable(snapshot, root = document.querySelector('#
     if (loading) {
       status.textContent = 'Cargando categorías…';
     } else if (error) {
-      status.textContent = typeof error?.message === 'string' ? error.message : 'No se pudo cargar la información.';
+      const code = String(error?.code || '').toUpperCase();
+      if (code === 'PERMISSION_DENIED' || code === 'RBAC_FORBIDDEN') {
+        status.textContent = 'No tenés permisos para ver esta sección.';
+      } else {
+        status.textContent = typeof error?.message === 'string' ? error.message : 'No se pudo cargar la información.';
+      }
     } else {
       status.textContent = '';
     }

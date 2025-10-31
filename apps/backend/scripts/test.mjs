@@ -4,9 +4,12 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(__dirname, '..');
-const testFile = resolve(projectRoot, 'tests/integration/categories.api.test.mjs');
+const testFiles = [
+  resolve(projectRoot, 'tests/integration/categories.api.test.mjs'),
+  resolve(projectRoot, 'tests/integration/categories.rbac.test.mjs'),
+];
 
-const child = spawn(process.execPath, ['--test', testFile], {
+const child = spawn(process.execPath, ['--test', ...testFiles], {
   cwd: projectRoot,
   stdio: 'inherit'
 });
