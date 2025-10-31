@@ -11,15 +11,13 @@ import {
 import { validator } from '../middlewares/validator.js';
 import { authJWT } from '../middlewares/authJWT.js';
 import { rbacGuard } from '../middlewares/rbacGuard.js';
-import { requireAdminRole } from '../middlewares/requireAdminRole.js';
 
 export const categoriesRoutes = Router();
 
 categoriesRoutes.get(
   '/',
   authJWT(),
-  requireAdminRole(),
-  rbacGuard('categories', 'r', { errorCode: 'RBAC_FORBIDDEN' }),
+  rbacGuard('categories', 'r'),
   validator(categoryListQuerySchema, 'query'),
   categoryController.list
 );
@@ -27,7 +25,7 @@ categoriesRoutes.get(
 categoriesRoutes.get(
   '/:id',
   authJWT(),
-  rbacGuard('categories', 'r', { errorCode: 'RBAC_FORBIDDEN' }),
+  rbacGuard('categories', 'r'),
   validator(categoryIdParamSchema, 'params'),
   categoryController.show
 );
@@ -35,7 +33,7 @@ categoriesRoutes.get(
 categoriesRoutes.post(
   '/',
   authJWT(),
-  rbacGuard('categories', 'w', { errorCode: 'RBAC_FORBIDDEN' }),
+  rbacGuard('categories', 'w'),
   validator(categoryCreateSchema),
   categoryController.create
 );
@@ -43,7 +41,7 @@ categoriesRoutes.post(
 categoriesRoutes.put(
   '/:id',
   authJWT(),
-  rbacGuard('categories', 'u', { errorCode: 'RBAC_FORBIDDEN' }),
+  rbacGuard('categories', 'u'),
   validator(categoryIdParamSchema, 'params'),
   validator(categoryUpdateSchema),
   categoryController.update
@@ -52,7 +50,7 @@ categoriesRoutes.put(
 categoriesRoutes.patch(
   '/:id',
   authJWT(),
-  rbacGuard('categories', 'u', { errorCode: 'RBAC_FORBIDDEN' }),
+  rbacGuard('categories', 'u'),
   validator(categoryIdParamSchema, 'params'),
   validator(categoryToggleSchema),
   categoryController.toggle
@@ -61,7 +59,7 @@ categoriesRoutes.patch(
 categoriesRoutes.delete(
   '/:id',
   authJWT(),
-  rbacGuard('categories', 'd', { errorCode: 'RBAC_FORBIDDEN' }),
+  rbacGuard('categories', 'd'),
   validator(categoryIdParamSchema, 'params'),
   categoryController.remove
 );

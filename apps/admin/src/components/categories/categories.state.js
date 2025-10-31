@@ -173,6 +173,9 @@ export async function fetchCategories({ silentToast = false } = {}) {
 
     return getSnapshot();
   } catch (err) {
+    if (err && (err.code === 'PERMISSION_DENIED' || err.code === 'RBAC_FORBIDDEN')) {
+      err.message = 'No tenés permisos para ver esta sección.';
+    }
     state.loading = false;
     state.error = err;
     notify();

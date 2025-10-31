@@ -215,7 +215,7 @@
           </div>
         </dl>
 
-        <div class="categories__switchSection">
+        <div class="categories__switchSection" data-rbac-action="update" data-rbac-hide>
           <h4 class="categories__switchTitle">Estado de la categoría</h4>
           <p id="category-view-switch-hint" class="categories__switchHint">
             Activá o desactivá la categoría desde este panel.
@@ -227,6 +227,8 @@
             role="switch"
             aria-checked="false"
             aria-describedby="category-view-switch-hint"
+            data-rbac-action="update"
+            data-rbac-hide
             data-role="active-switch"
           >
             <span class="categories__switchTrack" aria-hidden="true">
@@ -238,7 +240,7 @@
       </div>
       <footer class="categories__formActions categories__viewActions">
         <button id="category-view-close" type="button" class="btn btn--outline" data-close-modal>Cerrar</button>
-        <button id="category-view-confirm" type="button" class="btn btn--primary" disabled>Guardar cambios</button>
+        <button id="category-view-confirm" type="button" class="btn btn--primary" data-rbac-action="update" data-rbac-hide disabled>Guardar cambios</button>
       </footer>
     </div>
   </template>
