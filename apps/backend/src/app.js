@@ -16,12 +16,12 @@ const app = express();
 
 app.use(express.json({ limit: env.limits.bodyLimit }));
 app.use(express.urlencoded({ extended: true, limit: env.limits.bodyLimit }));
+// Registramos CORS antes de requestTimeout y del resto de middlewares/rutas.
+app.use(corsMiddleware);
+// Respuesta inmediata a preflight (OPTIONS) para cualquier endpoint (204).
+app.options(/.*/, corsMiddleware);
 app.use(requestId());
 app.use(requestTimeout(env.limits.requestTimeoutMs));
-// Registramos CORS antes de las rutas para que toda request pase por la allowlist.
-app.use(corsMiddleware);
-// Respuesta inmediata a preflight (OPTIONS) para cualquier endpoint.
-app.options(/.*/, corsMiddleware);
 app.use(helmet());
 app.use(morgan('dev'));
 

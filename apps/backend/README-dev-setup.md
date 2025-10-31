@@ -11,3 +11,4 @@ cd backend
 npm i
 cp .env.example .env
 # Edita .env con tus valores locales (puerto, allowlist CORS, etc.)
+# Ejemplo CORS: CORS_ALLOWLIST=http://192.168.1.34:5174,http://localhost:5174

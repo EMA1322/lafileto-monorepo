@@ -24,10 +24,8 @@ export const env = {
     requestTimeoutMs: toNumber(process.env.REQUEST_TIMEOUT_MS, 15000)
   },
   cors: {
-    allowlist: (process.env.CORS_ALLOWLIST || "")
-      .split(",")
-      .map(s => s.trim())
-      .filter(Boolean)
+    // Guardamos el CSV crudo para que el middleware decida defaults vs. overrides.
+    allowlistCsv: process.env.CORS_ALLOWLIST || ""
   },
   jwt: {
     secret: requireString(process.env.JWT_SECRET, "JWT_SECRET"),
