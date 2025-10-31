@@ -49,6 +49,30 @@
     --btn-border: var(--c-border);
     background: transparent;
   }
+  .btn--ghost {
+    --btn-bg: transparent;
+    --btn-color: var(--c-text);
+    --btn-border: color-mix(in srgb, var(--c-border) 65%, transparent);
+    background: transparent;
+    box-shadow: none;
+  }
+  .btn--ghost:hover {
+    background: color-mix(in srgb, var(--c-secondary) 8%, transparent);
+    --btn-border: color-mix(in srgb, var(--c-secondary) 40%, transparent);
+  }
+  .btn--sm {
+    padding: var(--space-2) var(--space-3);
+    min-height: calc(var(--space-6) + var(--space-1));
+    font-size: var(--fs-h6);
+    box-shadow: none;
+  }
+  .btn--icon {
+    padding: var(--space-2);
+    min-width: calc(var(--space-6) + var(--space-1));
+    min-height: calc(var(--space-6) + var(--space-1));
+    box-shadow: none;
+  }
+  .btn--icon .icon { margin: 0; }
 
   /* ——— Formularios ——— */
   .form-control {
@@ -80,6 +104,12 @@
   .form-success { color: var(--c-success); font-size: .875rem; margin-top: .375rem; }
 
   select.form-control, textarea.form-control { min-height: 2.5rem; }
+
+  .form-control--dense {
+    padding: var(--space-2) var(--space-3);
+    min-height: calc(var(--space-6) + var(--space-1));
+    font-size: var(--fs-base);
+  }
 
   /* ——— Modales ——— */
   .modal {
@@ -146,6 +176,141 @@
     background: color-mix(in srgb, var(--c-secondary), #fff 85%);
     color: #0b172a;
     box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c-secondary), #000 15%);
+  }
+
+  /* ——— Tablas ——— */
+  .table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-md);
+    background: var(--c-surface);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .data-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  .data-table thead th {
+    position: sticky;
+    top: 0;
+    background: var(--c-surface-muted);
+    color: var(--c-text-muted);
+    text-align: left;
+    font-weight: var(--fw-semibold);
+    font-size: var(--fs-h6);
+    border-bottom: 1px solid var(--c-border);
+    padding: var(--space-3) var(--space-4);
+    z-index: 1;
+  }
+
+  .data-table tbody td {
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--c-border);
+    vertical-align: middle;
+    background: var(--c-surface);
+  }
+
+  .data-table tbody tr:nth-child(odd) {
+    background: color-mix(in srgb, var(--c-surface-muted) 65%, transparent);
+  }
+
+  .data-table tbody tr:hover {
+    background: color-mix(in srgb, var(--c-surface-muted) 85%, transparent);
+  }
+
+  /* ——— Toasts ——— */
+  .toast-stack {
+    position: fixed;
+    inset-block-start: var(--space-6);
+    inset-inline-end: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    width: min(340px, 92vw);
+    z-index: 120;
+    pointer-events: none;
+  }
+
+  .toast {
+    pointer-events: auto;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--space-3);
+    align-items: start;
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--c-border);
+    background: var(--c-surface);
+    color: var(--c-text);
+    box-shadow: var(--shadow-lg);
+    opacity: 0;
+    transform: translateX(16px);
+    transition: opacity .25s ease, transform .25s ease;
+  }
+
+  .toast--visible {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .toast__message {
+    margin: 0;
+    font-size: var(--fs-base);
+    line-height: var(--lh-base);
+  }
+
+  .toast__close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-1);
+    border: 1px solid color-mix(in srgb, var(--c-border) 70%, transparent);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: inherit;
+    padding: var(--space-1) var(--space-2);
+    font-size: var(--fs-h6);
+    cursor: pointer;
+    transition: background .2s ease, border-color .2s ease;
+  }
+
+  .toast__close:hover {
+    background: color-mix(in srgb, var(--c-secondary) 12%, transparent);
+    border-color: color-mix(in srgb, var(--c-secondary) 45%, transparent);
+  }
+
+  .toast__close:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 var(--ring-width) var(--ring-color);
+  }
+
+  .toast--success {
+    border-color: color-mix(in srgb, var(--c-success) 30%, var(--c-border));
+    background: color-mix(in srgb, var(--c-success) 10%, var(--c-surface));
+    color: color-mix(in srgb, var(--c-success) 65%, var(--c-text));
+  }
+
+  .toast--error {
+    border-color: color-mix(in srgb, var(--c-error) 35%, var(--c-border));
+    background: color-mix(in srgb, var(--c-error) 12%, var(--c-surface));
+    color: color-mix(in srgb, var(--c-error) 70%, var(--c-text));
+  }
+
+  .toast--info {
+    border-color: color-mix(in srgb, var(--c-secondary) 30%, var(--c-border));
+    background: color-mix(in srgb, var(--c-secondary) 10%, var(--c-surface));
+    color: color-mix(in srgb, var(--c-secondary) 65%, var(--c-text));
+  }
+
+  @media (max-width: 480px) {
+    .toast-stack {
+      inset-inline: var(--space-3);
+      width: auto;
+    }
   }
 
   /* ——— Layout: contenedor principal ——— */

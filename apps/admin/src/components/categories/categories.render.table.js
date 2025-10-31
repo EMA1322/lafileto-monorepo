@@ -39,7 +39,7 @@ function renderRow(item) {
     <!-- Expose row id for delegated handlers without changing the visible UI -->
     <div class="categories__row-actions" role="group" aria-label="Acciones">
       <button
-        class="btn categories__actionIcon"
+        class="btn btn--ghost btn--icon categories__actionIcon"
         type="button"
         data-action="view"
         data-id="${idAttr}"
@@ -48,11 +48,11 @@ function renderRow(item) {
       >
         <span class="icon icon--sm" data-icon="eye" aria-hidden="true"></span>
       </button>
-      <button class="btn btn--secondary" type="button" data-action="edit" data-id="${idAttr}" data-rbac-action="update">
+      <button class="btn btn--secondary btn--sm" type="button" data-action="edit" data-id="${idAttr}" data-rbac-action="update">
         <span class="icon icon--sm" data-icon="edit" aria-hidden="true"></span>
         <span class="icon-label">Editar</span>
       </button>
-      <button class="btn categories__action--danger" type="button" data-action="delete" data-id="${idAttr}" data-rbac-action="delete">
+      <button class="btn btn--sm categories__action--danger" type="button" data-action="delete" data-id="${idAttr}" data-rbac-action="delete">
         <span class="icon icon--sm" data-icon="trash" aria-hidden="true"></span>
         <span class="icon-label">Eliminar</span>
       </button>
@@ -86,6 +86,15 @@ export function renderCategoriesTable(snapshot, root = document.querySelector('#
   const error = view.error;
   const items = Array.isArray(view.viewItems) ? view.viewItems : [];
   const meta = view.meta || { page: 1, pageCount: 1, total: 0, pageSize: 10 };
+  const ready = (!loading && !error) || container.dataset.categoriesReady === 'true';
+  if (!loading) {
+    container.dataset.categoriesReady = 'true';
+  }
+  const isEmpty = ready && !loading && !error && items.length === 0;
+
+  container.classList.toggle('is-loading', loading);
+  container.classList.toggle('has-error', !!error);
+  container.classList.toggle('is-empty', isEmpty);
 
   if (status) {
     if (loading) {
@@ -104,7 +113,7 @@ export function renderCategoriesTable(snapshot, root = document.querySelector('#
   }
 
   if (empty) {
-    empty.hidden = loading || error || items.length > 0;
+    empty.hidden = !(isEmpty);
   }
 
   if (summary) {

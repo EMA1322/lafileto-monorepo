@@ -57,7 +57,7 @@ export function renderRolesView(root = document.querySelector('.users')) {
           <td>${escapeHTML(name)}</td>
           <td class="users__row-actions">
             <button
-              class="btn btn-secondary"
+              class="btn btn-secondary btn--sm"
               type="button"
               data-action="role-edit"
               data-rbac-role="admin"
@@ -66,7 +66,7 @@ export function renderRolesView(root = document.querySelector('.users')) {
               ${createButtonTemplate({ label: 'Editar', iconName: 'edit', iconSize: 'sm' })}
             </button>
             <button
-              class="btn btn-secondary"
+              class="btn btn-secondary btn--sm"
               type="button"
               data-action="role-perms"
               title="Permisos del rol"
@@ -76,7 +76,7 @@ export function renderRolesView(root = document.querySelector('.users')) {
               ${createButtonTemplate({ label: 'Permisos', iconName: 'shield-check', iconSize: 'sm' })}
             </button>
             <button
-              class="btn btn-tertiary"
+              class="btn btn-tertiary btn--sm"
               type="button"
               data-action="role-delete"
               data-rbac-role="admin"

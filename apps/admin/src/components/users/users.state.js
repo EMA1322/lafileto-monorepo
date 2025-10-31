@@ -1,4 +1,4 @@
-import { showSnackbar } from '@/utils/snackbar.js';
+import { toast } from '@/utils/toast.js';
 import { apiFetch } from '@/utils/api.js';
 
 import { computeIsAdmin, mapErrorToMessage } from './users.helpers.js';
@@ -106,20 +106,23 @@ function normalizeUsersResponse(data) {
   };
 }
 
-export function snackInfo(message, code) {
-  showSnackbar(message, { type: 'info', code });
+const TOAST_DEFAULT = 3200;
+const TOAST_ERROR = 4600;
+
+export function snackInfo(message) {
+  toast.info(message, { duration: TOAST_DEFAULT });
 }
 
-export function snackOk(message, code) {
-  showSnackbar(message, { type: 'success', code });
+export function snackOk(message) {
+  toast.success(message, { duration: TOAST_DEFAULT });
 }
 
-export function snackWarn(message, code) {
-  showSnackbar(message, { type: 'warning', code });
+export function snackWarn(message) {
+  toast.info(message, { duration: TOAST_DEFAULT });
 }
 
-export function snackErr(message, code = 'INTERNAL_ERROR') {
-  showSnackbar(message, { type: 'error', code });
+export function snackErr(message) {
+  toast.error(message, { duration: TOAST_ERROR });
 }
 
 export function getCurrentRoleIdFromSession() {

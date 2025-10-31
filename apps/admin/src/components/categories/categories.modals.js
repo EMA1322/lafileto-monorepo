@@ -2,7 +2,7 @@
 // Comentarios en español, código en inglés.
 
 import { openModal, closeModal } from '@/utils/modals.js';
-import { showToast } from '@/utils/snackbar.js';
+import { toast } from '@/utils/toast.js';
 
 import {
   createCategory,
@@ -103,11 +103,11 @@ function toastError(err, fallback) {
   const message = mapErrorToMessage(err, fallback);
   const code = err?.code ? String(err.code) : '';
   const composed = code ? `${message} (${code})` : message;
-  showToast({ message: composed, type: 'error', timeout: 4000 });
+  toast.error(composed, { duration: 4000 });
 }
 
 function toastSuccess(message) {
-  showToast({ message, type: 'success', timeout: 2600 });
+  toast.success(message, { duration: 2600 });
 }
 
 function applyServerFieldErrors(form, error) {
