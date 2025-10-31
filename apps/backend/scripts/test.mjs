@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(__dirname, '..');
 const testFiles = [
+  resolve(projectRoot, 'src/config/__tests__/cors.test.js'),
   resolve(projectRoot, 'tests/integration/categories.api.test.mjs'),
   resolve(projectRoot, 'tests/integration/categories.rbac.test.mjs'),
 ];

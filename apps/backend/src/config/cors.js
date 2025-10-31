@@ -9,76 +9,97 @@ const LOCALHOST_ORIGINS = Array.from(VITE_PORTS).flatMap(port => [
   `http://127.0.0.1:${port}`
 ]);
 
-const parseAllowlistCsv = csv =>
+const defaultLogger = {
+  info: (...args) => console.info(...args),
+  debug: (...args) => console.debug(...args)
+};
+
+const normalizeOrigin = value => {
+  const trimmed = (value ?? "").trim();
+  if (!trimmed) return "";
+
+  try {
+    const url = new URL(trimmed);
+    return url.origin;
+  } catch (error) {
+    return trimmed.replace(/\/+$/, "");
+  }
+};
+
+const parseAllowlistCsv = csv => {
+  const uniqueOrigins = new Set();
+
   (csv || "")
     .split(",")
-    .map(origin => origin.trim())
-    .filter(Boolean);
+    .map(item => normalizeOrigin(item))
+    .filter(Boolean)
+    .forEach(origin => uniqueOrigins.add(origin));
 
-const buildDefaultAllowlist = () => [...new Set(LOCALHOST_ORIGINS)];
+  return [...uniqueOrigins];
+};
 
-const isPrivateLanOrigin = origin => {
-  let url;
-  try {
-    url = new URL(origin);
-  } catch (error) {
-    return false;
+const buildDefaultAllowlist = nodeEnv => {
+  if (nodeEnv !== "development") return [];
+  return [...new Set(LOCALHOST_ORIGINS)];
+};
+
+const formatAllowlistForLog = allowlist =>
+  allowlist.length > 0 ? allowlist.join(", ") : "(empty)";
+
+export const buildCorsOptions = ({
+  allowlistCsv = env.cors.allowlistCsv,
+  nodeEnv = env.nodeEnv,
+  logger = defaultLogger
+} = {}) => {
+  const originsFromEnv = parseAllowlistCsv(allowlistCsv);
+  const allowlist = originsFromEnv.length > 0
+    ? originsFromEnv
+    : buildDefaultAllowlist(nodeEnv);
+  const allowlistSet = new Set(allowlist);
+
+  if (nodeEnv === "development" && logger?.info) {
+    logger.info(`[cors] allowlist: ${formatAllowlistForLog(allowlist)}`);
   }
 
-  if (url.protocol !== "http:") return false;
-  if (!VITE_PORTS.has(url.port)) return false;
+  const originValidator = (requestOrigin, cb) => {
+    if (!requestOrigin) return cb(null, true);
 
-  const segments = url.hostname.split(".");
-  if (segments.length !== 4) return false;
+    const normalizedOrigin = normalizeOrigin(requestOrigin);
+    if (!normalizedOrigin) return cb(null, true);
 
-  const isValidOctet = value => {
-    if (!/^\d+$/.test(value)) return false;
-    const n = Number.parseInt(value, 10);
-    return n >= 0 && n <= 255;
+    if (allowlistSet.has(normalizedOrigin)) {
+      return cb(null, true);
+    }
+
+    if (logger?.debug) {
+      logger.debug(
+        `[cors] blocked origin ${requestOrigin}. allowlist=${JSON.stringify([
+          ...allowlistSet
+        ])}`
+      );
+    }
+
+    cb(new Error(`Not allowed by CORS: ${requestOrigin}`));
   };
-
-  if (!segments.every(isValidOctet)) return false;
-
-  const [a, b] = segments.map(Number);
-
-  if (a === 10) return true;
-  if (a === 192 && b === 168) return true;
-  if (a === 172 && b >= 16 && b <= 31) return true;
-
-  return false;
-};
-
-export const buildCorsOptions = () => {
-  const originsFromEnv = parseAllowlistCsv(env.cors.allowlistCsv);
-  const hasCustomAllowlist = originsFromEnv.length > 0;
-  const allowlist = hasCustomAllowlist
-    ? [...new Set(originsFromEnv)]
-    : buildDefaultAllowlist();
-  const allowlistSet = new Set(allowlist);
-  const allowPrivateLanOrigins = !hasCustomAllowlist && env.nodeEnv === "development";
 
   return {
-    origin(requestOrigin, cb) {
-      if (!requestOrigin) return cb(null, true);
-
-      const origin = requestOrigin.trim();
-      if (!origin) return cb(null, true);
-
-      if (allowlistSet.has(origin)) return cb(null, true);
-
-      if (allowPrivateLanOrigins && isPrivateLanOrigin(origin)) return cb(null, true);
-
-      cb(new Error(`Not allowed by CORS: ${origin}`));
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
-    optionsSuccessStatus: 204
+    allowlist,
+    options: {
+      origin: originValidator,
+      credentials: true,
+      methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+      optionsSuccessStatus: 204
+    }
   };
 };
 
+const { allowlist: cachedAllowlist, options: corsOptions } = buildCorsOptions();
+
+export const getCorsAllowlist = () => [...cachedAllowlist];
+
 // Exportamos el middleware listo para usar en Express.
-export const corsMiddleware = cors(buildCorsOptions());
+export const corsMiddleware = cors(corsOptions);
 
 // Referencia rápida: si necesitás incluir una IP LAN fija, añadila a CORS_ALLOWLIST
 // en tu .env, por ejemplo:
