@@ -79,7 +79,9 @@ export const buildCorsOptions = ({
       );
     }
 
-    cb(new Error(`Not allowed by CORS: ${requestOrigin}`));
+    const error = new Error(`Not allowed by CORS: ${requestOrigin}`);
+    error.status = 403;
+    cb(error);
   };
 
   return {

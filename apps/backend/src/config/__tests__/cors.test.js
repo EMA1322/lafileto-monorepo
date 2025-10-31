@@ -1,9 +1,12 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import express from 'express';
+import request from 'supertest';
 import cors from 'cors';
-import http from 'node:http';
 
 import { buildCorsOptions } from '../cors.js';
+
+const noopLogger = { info: () => {}, debug: () => {} };
 
 test('buildCorsOptions trims CSV entries and normalizes origins', () => {
   const logs = [];
@@ -27,11 +30,10 @@ test('buildCorsOptions trims CSV entries and normalizes origins', () => {
 });
 
 test('origin callback allows and rejects according to allowlist', async () => {
-  const logger = { info: () => {}, debug: () => {} };
   const { options } = buildCorsOptions({
     allowlistCsv: 'http://192.168.1.34:5174',
     nodeEnv: 'development',
-    logger
+    logger: noopLogger
   });
 
   await new Promise((resolve, reject) => {
@@ -51,6 +53,7 @@ test('origin callback allows and rejects according to allowlist', async () => {
       try {
         assert.ok(error instanceof Error);
         assert.equal(error.message, 'Not allowed by CORS: http://192.168.1.34:5173');
+        assert.equal(error.status, 403);
         assert.equal(allow, undefined);
         resolve();
       } catch (assertionError) {
@@ -60,45 +63,51 @@ test('origin callback allows and rejects according to allowlist', async () => {
   });
 });
 
-test('preflight OPTIONS returns 204 with expected headers', async t => {
-  const logger = { info: () => {}, debug: () => {} };
+const createAppWithCors = options => {
+  const app = express();
+  const middleware = cors(options);
+  app.use(middleware);
+  app.options('*', middleware);
+  app.get('/sample', (_req, res) => {
+    res.json({ ok: true });
+  });
+  app.use((err, _req, res, _next) => {
+    res.status(err.status || err.statusCode || 500).json({ message: err.message });
+  });
+  return app;
+};
+
+test('preflight OPTIONS returns 204 with expected headers when allowed', async () => {
   const { options } = buildCorsOptions({
     allowlistCsv: 'http://localhost:5174',
     nodeEnv: 'development',
-    logger
+    logger: noopLogger
   });
 
-  const middleware = cors(options);
-  const server = http.createServer((req, res) => {
-    middleware(req, res, () => {
-      if (req.method === 'OPTIONS') {
-        res.statusCode = 204;
-        res.end();
-        return;
-      }
-
-      res.statusCode = 200;
-      res.setHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify({ ok: true }));
-    });
-  });
-  await new Promise(resolve => {
-    server.listen(0, resolve);
-  });
-  t.after(() => {
-    server.close();
-  });
-
-  const { port } = server.address();
-  const response = await fetch(`http://127.0.0.1:${port}/sample`, {
-    method: 'OPTIONS',
-    headers: {
-      Origin: 'http://localhost:5174',
-      'Access-Control-Request-Method': 'GET',
-      'Access-Control-Request-Headers': 'Content-Type'
-    }
-  });
+  const app = createAppWithCors(options);
+  const response = await request(app)
+    .options('/sample')
+    .set('Origin', 'http://localhost:5174')
+    .set('Access-Control-Request-Method', 'GET')
+    .set('Access-Control-Request-Headers', 'Content-Type');
 
   assert.equal(response.status, 204);
-  assert.equal(response.headers.get('access-control-allow-origin'), 'http://localhost:5174');
+  assert.equal(response.headers['access-control-allow-origin'], 'http://localhost:5174');
+});
+
+test('preflight OPTIONS returns 403 when origin is not allowed', async () => {
+  const { options } = buildCorsOptions({
+    allowlistCsv: 'http://localhost:5174',
+    nodeEnv: 'development',
+    logger: noopLogger
+  });
+
+  const app = createAppWithCors(options);
+  const response = await request(app)
+    .options('/sample')
+    .set('Origin', 'http://example.com')
+    .set('Access-Control-Request-Method', 'GET');
+
+  assert.equal(response.status, 403);
+  assert.equal(response.body.message, 'Not allowed by CORS: http://example.com');
 });
