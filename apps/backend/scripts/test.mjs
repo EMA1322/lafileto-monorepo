@@ -5,8 +5,6 @@ import { spawn } from 'node:child_process';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-await import('../tests/setup-env.mjs');
-
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(__dirname, '..');
 const testFiles = [
@@ -17,7 +15,7 @@ const testFiles = [
 
 const child = spawn(process.execPath, ['--test', ...testFiles], {
   cwd: projectRoot,
-  stdio: 'inherit'
+  stdio: 'inherit',
 });
 
 child.on('exit', (code, signal) => {
