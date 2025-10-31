@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import supertest from 'supertest';
 
-import { createCorsTestApp } from '../../../tests/setup-env.mjs';
+import { createCorsTestApp, setAllowlistAndReload } from './setup-env.mjs';
 
 const { buildCorsOptions } = await import('../cors.js');
 
@@ -14,7 +14,7 @@ function evaluateOrigin(options, origin) {
   });
 }
 
-test('buildCorsOptions trims CSV and normalizes origins', async (t) => {
+test('buildCorsOptions trims CSV and normalizes origins', async () => {
   const csvAllowlist = ' https://foo.test , https://bar.test,https://foo.test ';
   const options = buildCorsOptions(csvAllowlist);
 
@@ -27,7 +27,7 @@ test('buildCorsOptions trims CSV and normalizes origins', async (t) => {
   assert.equal(allowedBar.allowed, true);
 });
 
-test('origin callback allows whitelisted origins and rejects others', async (t) => {
+test('origin callback allows whitelisted origins and rejects others', async () => {
   const options = buildCorsOptions(['https://allowed.test']);
 
   const allowed = await evaluateOrigin(options, 'https://allowed.test');
@@ -44,12 +44,9 @@ test('origin callback allows whitelisted origins and rejects others', async (t) 
   assert.equal(denied.allowed, undefined);
 });
 
-test('preflight OPTIONS responds 204 with Access-Control-Allow-Origin header', async (t) => {
+test('preflight OPTIONS responds 204 with Access-Control-Allow-Origin header', async () => {
   const allowedOrigin = 'https://preflight.test';
-  process.env.CORS_ALLOWLIST = allowedOrigin;
-
-  const { corsMiddleware } = await import(`../cors.js?preflight=${Date.now()}`);
-  const app = createCorsTestApp(corsMiddleware);
+  const { app } = await createCorsTestApp({ allowlist: allowedOrigin });
 
   const response = await supertest(app)
     .options('/ping')
@@ -58,4 +55,21 @@ test('preflight OPTIONS responds 204 with Access-Control-Allow-Origin header', a
     .expect(204);
 
   assert.equal(response.headers['access-control-allow-origin'], allowedOrigin);
+
+  await setAllowlistAndReload(undefined);
+});
+
+test('denies requests from origins outside of allowlist', async () => {
+  const allowedOrigin = 'https://allowlisted.test';
+  const deniedOrigin = 'https://denied.test';
+  const { app } = await createCorsTestApp({ allowlist: allowedOrigin });
+
+  const response = await supertest(app)
+    .get('/ping')
+    .set('Origin', deniedOrigin)
+    .expect(403);
+
+  assert.equal(response.text, `Not allowed by CORS: ${deniedOrigin}`);
+
+  await setAllowlistAndReload(undefined);
 });
