@@ -1,6 +1,6 @@
 import { ensureRbacLoaded, applyRBAC } from '@/utils/rbac.js';
 import { mountIcons } from '@/utils/icons.js';
-import { showToast } from '@/utils/snackbar.js';
+import { toast } from '@/utils/toast.js';
 
 import {
   createButtonTemplate,
@@ -49,7 +49,7 @@ export async function initUsers(attempt = 0) {
       return;
     }
     console.warn('[users] Container not found.');
-    showToast({ message: 'No se encontró la vista de usuarios.', type: 'error', timeout: 4000 });
+    toast.error('No se encontró la vista de usuarios.', { duration: 4000 });
     return;
   }
 

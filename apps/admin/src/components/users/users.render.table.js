@@ -81,11 +81,11 @@ export function renderUsersTable(root = document.querySelector('.users')) {
       const roleId = escapeHTML(user.roleId || '');
       const actions = `
         <div class="users__row-actions" role="group" aria-label="Acciones">
-          <button class="btn btn-secondary" type="button" data-action="user-edit" data-rbac-action="update" data-rbac-hide>
+          <button class="btn btn-secondary btn--sm" type="button" data-action="user-edit" data-rbac-action="update" data-rbac-hide>
             ${createButtonTemplate({ label: 'Editar', iconName: 'edit', iconSize: 'sm' })}
           </button>
           ${statusSwitchMarkup(user)}
-          <button class="btn btn-danger" type="button" data-action="user-delete" data-rbac-action="delete">
+          <button class="btn btn-danger btn--sm" type="button" data-action="user-delete" data-rbac-action="delete">
             ${createButtonTemplate({ label: 'Eliminar', iconName: 'trash', iconSize: 'sm' })}
           </button>
         </div>
