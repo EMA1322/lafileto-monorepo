@@ -2,7 +2,7 @@ import express from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import { env } from './config/env.js';
-import { corsMiddleware } from './config/cors.js';
+import { corsMiddleware, getCorsAllowlist } from './config/cors.js';
 import { requestId } from './middlewares/requestId.js';
 import { requestTimeout } from './middlewares/requestTimeout.js';
 import { errorHandler } from './middlewares/errorHandler.js';
@@ -16,12 +16,12 @@ const app = express();
 
 app.use(express.json({ limit: env.limits.bodyLimit }));
 app.use(express.urlencoded({ extended: true, limit: env.limits.bodyLimit }));
+// Registramos CORS antes de requestTimeout y del resto de middlewares/rutas.
+app.use(corsMiddleware);
+// Respuesta inmediata a preflight (OPTIONS) para cualquier endpoint (204).
+app.options(/.*/, corsMiddleware);
 app.use(requestId());
 app.use(requestTimeout(env.limits.requestTimeoutMs));
-// Registramos CORS antes de las rutas para que toda request pase por la allowlist.
-app.use(corsMiddleware);
-// Respuesta inmediata a preflight (OPTIONS) para cualquier endpoint.
-app.options(/.*/, corsMiddleware);
 app.use(helmet());
 app.use(morgan('dev'));
 
@@ -37,6 +37,15 @@ const debugPingHandler = (req, res) => {
 app.get('/_debug/ping', debugPingHandler);
 // Alias requerido para que el proxy del Admin (`/api/*`) pueda alcanzar el ping sin reescritura adicional.
 app.get('/api/_debug/ping', debugPingHandler);
+
+if (env.nodeEnv === 'development') {
+  const debugCorsHandler = (_req, res) => {
+    res.json(ok({ allowlist: getCorsAllowlist(), now: new Date().toISOString() }));
+  };
+
+  app.get('/_debug/cors', debugCorsHandler);
+  app.get('/api/_debug/cors', debugCorsHandler);
+}
 
 app.use('/api/v1', router);
 

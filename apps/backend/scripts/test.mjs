@@ -1,3 +1,6 @@
+process.env.NODE_ENV ??= 'test';
+process.env.JWT_SECRET ??= 'test-secret';
+
 import { spawn } from 'node:child_process';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -5,13 +8,14 @@ import { fileURLToPath } from 'node:url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(__dirname, '..');
 const testFiles = [
+  resolve(projectRoot, 'src/config/__tests__/cors.test.js'),
   resolve(projectRoot, 'tests/integration/categories.api.test.mjs'),
   resolve(projectRoot, 'tests/integration/categories.rbac.test.mjs'),
 ];
 
 const child = spawn(process.execPath, ['--test', ...testFiles], {
   cwd: projectRoot,
-  stdio: 'inherit'
+  stdio: 'inherit',
 });
 
 child.on('exit', (code, signal) => {
