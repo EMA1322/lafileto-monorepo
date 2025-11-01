@@ -2,6 +2,9 @@ import { spawn } from 'node:child_process';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+process.env.NODE_ENV ??= 'test';
+process.env.JWT_SECRET ??= 'test-secret';
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(__dirname, '..');
 const testFiles = [
