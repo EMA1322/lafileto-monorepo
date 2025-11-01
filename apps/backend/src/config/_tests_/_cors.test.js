@@ -1,10 +1,49 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import supertest from 'supertest';
 
 import { createCorsTestApp, setAllowlistAndReload } from './setup-env.mjs';
 
 const { buildCorsOptions } = await import('../cors.js');
+
+async function performRequest(app, {
+  method = 'GET',
+  path = '/',
+  headers = {},
+} = {}) {
+  const server = app.listen(0);
+
+  await new Promise((resolve, reject) => {
+    server.once('listening', resolve);
+    server.once('error', reject);
+  });
+
+  try {
+    const address = server.address();
+    if (!address || typeof address === 'string') {
+      throw new Error('Unexpected server address');
+    }
+
+    const url = new URL(path, `http://127.0.0.1:${address.port}`);
+    const response = await fetch(url, { method, headers });
+    const text = await response.text();
+
+    return {
+      status: response.status,
+      headers: response.headers,
+      text,
+    };
+  } finally {
+    await new Promise((resolve, reject) => {
+      server.close((err) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve();
+      });
+    });
+  }
+}
 
 function evaluateOrigin(options, origin) {
   return new Promise((resolve) => {
@@ -48,13 +87,17 @@ test('preflight OPTIONS responds 204 with Access-Control-Allow-Origin header', a
   const allowedOrigin = 'https://preflight.test';
   const { app } = await createCorsTestApp({ allowlist: allowedOrigin });
 
-  const response = await supertest(app)
-    .options('/ping')
-    .set('Origin', allowedOrigin)
-    .set('Access-Control-Request-Method', 'GET')
-    .expect(204);
+  const response = await performRequest(app, {
+    method: 'OPTIONS',
+    path: '/ping',
+    headers: {
+      Origin: allowedOrigin,
+      'Access-Control-Request-Method': 'GET',
+    },
+  });
 
-  assert.equal(response.headers['access-control-allow-origin'], allowedOrigin);
+  assert.equal(response.status, 204);
+  assert.equal(response.headers.get('access-control-allow-origin'), allowedOrigin);
 
   await setAllowlistAndReload(undefined);
 });
@@ -64,11 +107,15 @@ test('denies requests from origins outside of allowlist', async () => {
   const deniedOrigin = 'https://denied.test';
   const { app } = await createCorsTestApp({ allowlist: allowedOrigin });
 
-  const response = await supertest(app)
-    .get('/ping')
-    .set('Origin', deniedOrigin)
-    .expect(403);
+  const response = await performRequest(app, {
+    method: 'GET',
+    path: '/ping',
+    headers: {
+      Origin: deniedOrigin,
+    },
+  });
 
+  assert.equal(response.status, 403);
   assert.equal(response.text, `Not allowed by CORS: ${deniedOrigin}`);
 
   await setAllowlistAndReload(undefined);
