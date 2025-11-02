@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { boolish as boolishFormatter } from '../utils/formatters.js';
+
 export const loginSchema = z.object({
   email: z.string().email('Email inválido.'),
   password: z.string().min(1, 'La contraseña es obligatoria.')
@@ -15,16 +17,7 @@ export const roleIdParamSchema = z.object({
   roleId: roleIdNormalizer
 });
 
-const boolish = z.any().transform((value) => {
-  if (value === true || value === 1 || value === '1') return true;
-  if (value === false || value === 0 || value === '0') return false;
-  if (typeof value === 'string') {
-    const normalized = value.trim().toLowerCase();
-    if (normalized === 'true' || normalized === 'yes' || normalized === 'on') return true;
-    if (normalized === 'false' || normalized === 'no' || normalized === 'off') return false;
-  }
-  return false;
-});
+const boolish = z.any().transform((value) => boolishFormatter(value));
 
 const permissionEntrySchema = z
   .object({
@@ -91,7 +84,7 @@ export const userListQuerySchema = z.object({
     .optional()
     .transform((value) => {
       if (value === undefined || value === null) return false;
-      return boolish.parse(value);
+      return boolishFormatter(value);
     })
 });
 
