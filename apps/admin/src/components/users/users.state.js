@@ -5,16 +5,70 @@ import { computeIsAdmin, mapErrorToMessage } from './users.helpers.js';
 
 export const PHONE_REGEX = /^[0-9()+\s-]{7,20}$/;
 
+const DEFAULT_PAGE_SIZE = 10;
+
 const usersState = {
   items: [],
   total: 0,
+  meta: {
+    page: 1,
+    pageSize: DEFAULT_PAGE_SIZE,
+    total: 0,
+    pageCount: 1,
+  },
 };
 
 const defaultFilters = {
-  query: '',
+  q: '',
   page: 1,
-  pageSize: 10,
+  pageSize: DEFAULT_PAGE_SIZE,
+  orderBy: 'fullName',
+  orderDir: 'asc',
 };
+
+function computePageCount(total, pageSize = DEFAULT_PAGE_SIZE) {
+  const numericTotal = Number(total);
+  const safeTotal = Number.isFinite(numericTotal) && numericTotal >= 0 ? numericTotal : 0;
+  const numericSize = Number(pageSize);
+  const safeSize = Number.isFinite(numericSize) && numericSize > 0 ? numericSize : DEFAULT_PAGE_SIZE;
+  return Math.max(1, Math.ceil(safeTotal / safeSize));
+}
+
+function syncUsersMeta(partial = {}) {
+  const base = usersState.meta ?? {
+    page: 1,
+    pageSize: DEFAULT_PAGE_SIZE,
+    total: 0,
+    pageCount: 1,
+  };
+
+  const pageSizeNumber = Number(partial.pageSize ?? base.pageSize);
+  const normalizedPageSize = Number.isFinite(pageSizeNumber) && pageSizeNumber > 0
+    ? Math.floor(pageSizeNumber)
+    : DEFAULT_PAGE_SIZE;
+
+  const totalNumber = Number(partial.total ?? base.total ?? usersState.total ?? 0);
+  const normalizedTotal = Number.isFinite(totalNumber) && totalNumber >= 0 ? totalNumber : 0;
+
+  const pageNumber = Number(partial.page ?? base.page ?? 1);
+  const rawPage = Number.isFinite(pageNumber) && pageNumber > 0 ? Math.floor(pageNumber) : 1;
+
+  const pageCountNumber = Number(partial.pageCount);
+  const normalizedPageCount = Number.isFinite(pageCountNumber) && pageCountNumber > 0
+    ? Math.floor(pageCountNumber)
+    : computePageCount(normalizedTotal, normalizedPageSize);
+
+  const clampedPage = Math.min(Math.max(1, rawPage), Math.max(1, normalizedPageCount));
+
+  usersState.meta = {
+    page: clampedPage,
+    pageSize: normalizedPageSize,
+    total: normalizedTotal,
+    pageCount: Math.max(1, normalizedPageCount),
+  };
+
+  return usersState.meta;
+}
 
 export const state = {
   users: usersState,
@@ -49,6 +103,7 @@ Object.defineProperty(state, 'users', {
       usersState.items = value.map(normalizeUserEntry).filter(Boolean);
       usersState.items.sort((a, b) => (a.fullName || '').localeCompare(b.fullName || ''));
       usersState.total = usersState.items.length;
+      syncUsersMeta({ total: usersState.total, page: 1 });
       return;
     }
 
@@ -62,11 +117,17 @@ Object.defineProperty(state, 'users', {
       } else {
         usersState.total = usersState.items.length;
       }
+      const metaPayload = value.meta && typeof value.meta === 'object' ? { ...value.meta } : {};
+      if (typeof metaPayload.total === 'undefined') {
+        metaPayload.total = usersState.total;
+      }
+      syncUsersMeta(metaPayload);
       return;
     }
 
     usersState.items = [];
     usersState.total = 0;
+    syncUsersMeta({ total: 0, page: 1 });
   },
 });
 
@@ -96,13 +157,44 @@ function normalizeUserEntry(entry) {
 
 function normalizeUsersResponse(data) {
   if (!data || typeof data !== 'object') {
-    return { items: [], total: 0 };
+    return {
+      items: [],
+      meta: {
+        page: 1,
+        pageSize: DEFAULT_PAGE_SIZE,
+        total: 0,
+        pageCount: 1,
+      },
+    };
   }
   const items = Array.isArray(data.items) ? data.items : [];
-  const meta = data.meta && typeof data.meta === 'object' ? data.meta : {};
+  const metaRaw = data.meta && typeof data.meta === 'object' ? data.meta : {};
+
+  const pickNumber = (value) => {
+    const num = Number(value);
+    return Number.isFinite(num) ? num : null;
+  };
+
+  const metaTotal = pickNumber(metaRaw.total);
+  const metaPageSize = pickNumber(metaRaw.pageSize);
+  const metaPage = pickNumber(metaRaw.page);
+  const metaPageCount = pickNumber(metaRaw.pageCount);
+
+  const safePageSize = metaPageSize !== null && metaPageSize > 0 ? metaPageSize : DEFAULT_PAGE_SIZE;
+  const safeTotal = metaTotal !== null && metaTotal >= 0 ? metaTotal : items.length;
+  const computedPageCount = metaPageCount !== null && metaPageCount > 0
+    ? Math.floor(metaPageCount)
+    : computePageCount(safeTotal, safePageSize);
+  const safePage = metaPage !== null && metaPage > 0 ? Math.min(Math.floor(metaPage), computedPageCount) : 1;
+
   return {
     items,
-    total: Number(meta.total) || items.length,
+    meta: {
+      page: safePage,
+      pageSize: safePageSize,
+      total: safeTotal,
+      pageCount: Math.max(1, computedPageCount),
+    },
   };
 }
 
@@ -159,8 +251,18 @@ export async function fetchUsers() {
   state.ui.loadingUsers = true;
   state.ui.errorUsers = null;
 
-  const res = await apiFetch('/users', { params: { all: 1 }, showErrorToast: false });
-  const { items, total } = normalizeUsersResponse(res?.data || {});
+  const params = {
+    all: 1,
+    pageSize: state.filters.pageSize,
+    orderBy: state.filters.orderBy,
+    orderDir: state.filters.orderDir,
+  };
+  if (state.filters.q) {
+    params.q = state.filters.q;
+  }
+
+  const res = await apiFetch('/users', { params, showErrorToast: false });
+  const { items, meta } = normalizeUsersResponse(res?.data || {});
 
   const mapped = items
     .map(mapUserFromApi)
@@ -168,7 +270,8 @@ export async function fetchUsers() {
     .sort((a, b) => (a.fullName || '').localeCompare(b.fullName || ''));
 
   usersState.items = mapped;
-  usersState.total = Number(total) || mapped.length;
+  usersState.total = Number(meta.total) || mapped.length;
+  syncUsersMeta({ ...meta, total: usersState.total });
   state.ui.loadingUsers = false;
 }
 
@@ -183,6 +286,7 @@ function upsertUserInState(user) {
   }
   usersState.items.sort((a, b) => (a.fullName || '').localeCompare(b.fullName || ''));
   usersState.total = Math.max(usersState.items.length, usersState.total || 0);
+  syncUsersMeta({ total: usersState.total });
   return normalized;
 }
 
@@ -191,6 +295,7 @@ function removeUserFromState(userId) {
   if (idx >= 0) {
     usersState.items.splice(idx, 1);
     usersState.total = Math.max(0, (usersState.total || 0) - 1);
+    syncUsersMeta({ total: usersState.total });
   }
 }
 

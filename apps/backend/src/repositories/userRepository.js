@@ -21,20 +21,26 @@ export const userRepository = {
       select: baseSelect
     }),
 
-  async list({ page, pageSize, search, all = false }) {
-    const where = search
+  async list({ page, pageSize, q, orderBy = 'fullName', orderDirection = 'asc', all = false }) {
+    const where = q
       ? {
           OR: [
-            { fullName: { contains: search, mode: 'insensitive' } },
-            { email: { contains: search, mode: 'insensitive' } }
+            { fullName: { contains: q, mode: 'insensitive' } },
+            { email: { contains: q, mode: 'insensitive' } }
           ]
         }
       : undefined;
 
+    const direction = orderDirection === 'desc' ? 'desc' : 'asc';
+    const field = ['id', 'fullName', 'email', 'status'].includes(orderBy)
+      ? orderBy
+      : 'fullName';
+    const order = { [field]: direction };
+
     if (all) {
       const items = await prisma.user.findMany({
         where,
-        orderBy: { fullName: 'asc' },
+        orderBy: order,
         select: baseSelect
       });
       return { items, total: items.length };
@@ -45,7 +51,7 @@ export const userRepository = {
     const [items, total] = await Promise.all([
       prisma.user.findMany({
         where,
-        orderBy: { fullName: 'asc' },
+        orderBy: order,
         skip,
         take: pageSize,
         select: baseSelect

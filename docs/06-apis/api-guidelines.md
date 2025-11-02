@@ -20,7 +20,12 @@ Error: `{ "ok": false, "error": { "code": "VALIDATION_ERROR", "message": "..." }
 `UNAUTHORIZED (401)`, `FORBIDDEN (403)`, `NOT_FOUND (404)`, `CONFLICT (409)`, `RESOURCE_CONFLICT (409)`, `VALIDATION_ERROR (422)`, `RATE_LIMITED (429)`.
 
 ## Paginación/orden/búsqueda
-`page`, `pageSize (1..100, default 20)`, `sort=field:asc|desc[,field2:desc]`, `q`.
+- `q`: término de búsqueda libre, recortado en backend.
+- `page`: entero `>= 1`, default `1`.
+- `pageSize`: entero `>= 1` y `<= 100`, default `20` (el servicio puede restringir el rango efectivo).
+- `orderBy`: nombre de campo permitido por el recurso (p. ej. `name`, `fullName`).
+- `orderDir`: `asc` (default) | `desc`.
+- `pageCount`: total de páginas devuelto en `data.meta.pageCount`; siempre incluir en las respuestas paginadas.
 
 ## Versionado
 `v1` estable; compatibilidad hacia Client; cambios incompatibles → `v2`.

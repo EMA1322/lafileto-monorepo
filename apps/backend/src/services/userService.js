@@ -8,33 +8,41 @@ import { normalizePage, normalizePageSize } from '../utils/pagination.js';
 const DEFAULT_PAGE = 1;
 const DEFAULT_PAGE_SIZE = 10;
 const MAX_PAGE_SIZE = 100;
+const DEFAULT_ORDER_BY = 'fullName';
+const ALLOWED_ORDER_FIELDS = new Set(['id', 'fullName', 'email', 'status']);
 
 function compactPhone(phone) {
   return phone.replace(/[\s-]+/g, '').trim();
 }
 
+function normalizeOrderBy(value) {
+  if (typeof value !== 'string') return DEFAULT_ORDER_BY;
+  const normalized = value.trim();
+  if (!normalized) return DEFAULT_ORDER_BY;
+
+  const lower = normalized.toLowerCase();
+  if (lower === 'fullname' || lower === 'full_name' || lower === 'name') return 'fullName';
+  if (lower === 'mail') return 'email';
+  if (lower === 'user_id' || lower === 'userid') return 'id';
+
+  if (ALLOWED_ORDER_FIELDS.has(normalized)) return normalized;
+  if (ALLOWED_ORDER_FIELDS.has(lower)) return lower;
+
+  return ALLOWED_ORDER_FIELDS.has(value) ? value : DEFAULT_ORDER_BY;
+}
+
+function normalizeOrderDirection(value) {
+  if (typeof value !== 'string') return 'asc';
+  const normalized = value.trim().toLowerCase();
+  return normalized === 'desc' ? 'desc' : 'asc';
+}
+
 export const userService = {
-  async listUsers({ page, pageSize, search, all } = {}) {
+  async listUsers({ page, pageSize, q, all, orderBy, orderDir } = {}) {
     const wantsAll = Boolean(all);
-    const normalizedSearch = typeof search === 'string' ? search.trim() : '';
-
-    if (wantsAll) {
-      const { items, total } = await userRepository.list({
-        page: DEFAULT_PAGE,
-        pageSize: MAX_PAGE_SIZE,
-        search: normalizedSearch ? normalizedSearch : undefined,
-        all: true
-      });
-
-      return {
-        items,
-        meta: {
-          page: 1,
-          pageSize: total || items.length || 0,
-          total
-        }
-      };
-    }
+    const normalizedSearch = typeof q === 'string' ? q.trim() : '';
+    const sortField = normalizeOrderBy(orderBy);
+    const sortDirection = normalizeOrderDirection(orderDir);
 
     const normalizedPage = normalizePage(page, { defaultValue: DEFAULT_PAGE });
     const normalizedPageSize = normalizePageSize(pageSize, {
@@ -42,19 +50,49 @@ export const userService = {
       max: MAX_PAGE_SIZE
     });
 
+    if (wantsAll) {
+      const { items, total } = await userRepository.list({
+        page: DEFAULT_PAGE,
+        pageSize: MAX_PAGE_SIZE,
+        q: normalizedSearch ? normalizedSearch : undefined,
+        orderBy: sortField,
+        orderDirection: sortDirection,
+        all: true
+      });
+
+      const safeTotal = Number.isFinite(total) ? total : items.length;
+      const pageCount = Math.max(1, Math.ceil(safeTotal / normalizedPageSize));
+
+      return {
+        items,
+        meta: {
+          page: 1,
+          pageSize: normalizedPageSize,
+          total: safeTotal,
+          pageCount
+        }
+      };
+    }
+
     const { items, total } = await userRepository.list({
       page: normalizedPage,
       pageSize: normalizedPageSize,
-      search: normalizedSearch ? normalizedSearch : undefined,
+      q: normalizedSearch ? normalizedSearch : undefined,
+      orderBy: sortField,
+      orderDirection: sortDirection,
       all: false
     });
+
+    const safeTotal = Number.isFinite(total) ? total : items.length;
+    const pageCount = Math.max(1, Math.ceil(safeTotal / normalizedPageSize));
 
     return {
       items,
       meta: {
         page: normalizedPage,
         pageSize: normalizedPageSize,
-        total
+        total: safeTotal,
+        pageCount
       }
     };
   },

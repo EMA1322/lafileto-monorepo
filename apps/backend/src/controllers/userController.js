@@ -5,16 +5,9 @@ import { ok } from '../utils/envelope.js';
 export const userController = {
   list: async (req, res, next) => {
     try {
-      const rawQuery = req.validated?.query ?? req.query ?? {};
-      const query = typeof rawQuery === 'object' && rawQuery !== null ? { ...rawQuery } : {};
-      const wantsAll = isAllRequested(query.all);
-      const { items, meta } = await userService.listUsers({
-        ...query,
-        all: wantsAll
-      });
-
-      const payload = wantsAll ? { items } : { items, meta };
-      return res.json(ok(payload));
+      const query = req.validated?.query ?? req.query ?? {};
+      const { items, meta } = await userService.listUsers(query);
+      return res.json(ok({ items, meta }));
     } catch (err) {
       next(err);
     }
@@ -53,13 +46,3 @@ export const userController = {
     }
   }
 };
-
-function isAllRequested(value) {
-  if (value === true || value === 1 || value === '1') return true;
-  if (value === false || value === 0 || value === '0') return false;
-  if (typeof value === 'string') {
-    const normalized = value.trim().toLowerCase();
-    return normalized === 'true' || normalized === 'yes' || normalized === 'on';
-  }
-  return false;
-}
