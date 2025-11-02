@@ -20,6 +20,7 @@ export const ErrorCodes = {
   GATEWAY_TIMEOUT:            504,
   // 409 → Conflictos de negocio (duplicados, dependencias, etc.).
   CONFLICT:                   409,
+  RESOURCE_CONFLICT:          409,
   CATEGORY_REASSIGN_REQUIRED: 409,
   CATEGORY_NAME_CONFLICT:     409,
   ROLE_IN_USE:                409,

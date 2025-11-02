@@ -17,7 +17,7 @@ scope: Base URL, auth, envelope, errores, paginación, versionado y compatibilid
 Error: `{ "ok": false, "error": { "code": "VALIDATION_ERROR", "message": "..." } }`
 
 ## Errores (códigos)
-`UNAUTHORIZED (401)`, `FORBIDDEN (403)`, `NOT_FOUND (404)`, `CONFLICT (409)`, `VALIDATION_ERROR (422)`, `RATE_LIMITED (429)`.
+`UNAUTHORIZED (401)`, `FORBIDDEN (403)`, `NOT_FOUND (404)`, `CONFLICT (409)`, `RESOURCE_CONFLICT (409)`, `VALIDATION_ERROR (422)`, `RATE_LIMITED (429)`.
 
 ## Paginación/orden/búsqueda
 `page`, `pageSize (1..100, default 20)`, `sort=field:asc|desc[,field2:desc]`, `q`.
