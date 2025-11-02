@@ -69,6 +69,8 @@ scope: Tabla sincronizada con OpenAPI v1; filtros/paginación/orden/búsqueda co
 | `orderDir` | enum | `asc` | `asc` o `desc`. |
 | `all` | boolean | `false` | Si es `true`, fuerza `page=1` y `pageSize=100`. |
 
+La búsqueda (`q`) utiliza `contains` con `mode: 'insensitive'` en Prisma, por lo que ignora mayúsculas y minúsculas.
+
 ### Endpoints
 
 | Método | Path | Permiso | Body / Query | 200 (data) |

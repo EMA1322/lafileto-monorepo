@@ -32,6 +32,7 @@ export function buildCategoryWhere({ q, status } = {}) {
     if (trimmed) {
       where.name = {
         contains: trimmed,
+        mode: 'insensitive',
       };
     }
   }

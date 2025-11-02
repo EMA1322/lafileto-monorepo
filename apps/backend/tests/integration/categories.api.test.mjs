@@ -205,6 +205,34 @@ test('GET /categories?status=all → incluye meta', async () => {
   assert.equal(res.body.data.meta.pageSize, 5);
 });
 
+test('GET /categories?q=... → búsqueda case-insensitive', async () => {
+  const req = {
+    validated: {
+      query: {
+        page: '1',
+        pageSize: '10',
+        q: 'beBIDAS',
+        status: 'all',
+        all: false,
+        orderBy: 'name',
+        orderDir: 'asc'
+      }
+    }
+  };
+  const res = createResponse();
+  let error = null;
+  await categoryController.list(req, res, (err) => {
+    error = err;
+  });
+
+  assert.equal(error, null);
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body?.ok, true);
+  assert.equal(res.body?.data?.meta?.total, 1);
+  assert.equal(res.body?.data?.items?.length, 1);
+  assert.equal(res.body.data.items[0]?.name, 'Bebidas');
+});
+
 test('GET /categories?all=1 → respeta límites de paginación', async () => {
   const req = {
     validated: {
