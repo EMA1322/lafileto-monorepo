@@ -1,6 +1,7 @@
 // Servicio de categorías: listados y mutaciones con reglas básicas
 import { categoryRepository } from '../repositories/categoryRepository.js';
 import { createError } from '../utils/errors.js';
+import { normalizePage, normalizePageSize } from '../utils/pagination.js';
 
 let PrismaClientKnownRequestError;
 
@@ -19,19 +20,6 @@ const DEFAULT_PAGE = 1;
 const DEFAULT_PAGE_SIZE = 10;
 const MIN_PAGE_SIZE = 5;
 const MAX_PAGE_SIZE = 100;
-
-function normalizePage(value) {
-  const n = Number.parseInt(value, 10);
-  return Number.isFinite(n) && n > 0 ? n : DEFAULT_PAGE;
-}
-
-function normalizePageSize(value) {
-  const n = Number.parseInt(value, 10);
-  if (!Number.isFinite(n)) return DEFAULT_PAGE_SIZE;
-  if (n < MIN_PAGE_SIZE) return MIN_PAGE_SIZE;
-  if (n > MAX_PAGE_SIZE) return MAX_PAGE_SIZE;
-  return n;
-}
 
 function normalizeOrderBy(value) {
   if (typeof value === 'string') {
@@ -111,8 +99,12 @@ export const categoryService = {
     const direction = normalizeOrderDirection(orderDir ?? orderDirection);
     const normalizedStatus = normalizeStatus(status);
 
-    const normalizedPage = normalizePage(page);
-    const normalizedPageSize = normalizePageSize(pageSize);
+    const normalizedPage = normalizePage(page, { defaultValue: DEFAULT_PAGE });
+    const normalizedPageSize = normalizePageSize(pageSize, {
+      defaultValue: DEFAULT_PAGE_SIZE,
+      min: MIN_PAGE_SIZE,
+      max: MAX_PAGE_SIZE,
+    });
 
     if (wantsAll) {
       const { items, total } = await categoryRepository.list({

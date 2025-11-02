@@ -181,7 +181,7 @@ test('GET /categories?status=all → incluye meta', async () => {
     validated: {
       query: {
         page: undefined,
-        pageSize: undefined,
+        pageSize: '3',
         search: undefined,
         status: 'all',
         all: false,
@@ -202,6 +202,36 @@ test('GET /categories?status=all → incluye meta', async () => {
   assert.ok(Array.isArray(res.body?.data?.items));
   assert.ok(res.body?.data?.meta);
   assert.equal(res.body.data.meta.total, initialSnapshot.length);
+  assert.equal(res.body.data.meta.pageSize, 5);
+});
+
+test('GET /categories?all=1 → respeta límites de paginación', async () => {
+  const req = {
+    validated: {
+      query: {
+        page: '0',
+        pageSize: '500',
+        search: undefined,
+        status: 'all',
+        all: true,
+        orderBy: 'createdAt',
+        orderDir: 'desc'
+      }
+    }
+  };
+  const res = createResponse();
+  let error = null;
+  await categoryController.list(req, res, (err) => {
+    error = err;
+  });
+
+  assert.equal(error, null);
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body?.ok, true);
+  assert.equal(res.body?.data?.meta?.page, 1);
+  assert.equal(res.body?.data?.meta?.pageSize, 100);
+  assert.equal(res.body?.data?.meta?.total, initialSnapshot.length);
+  assert.equal(res.body?.data?.meta?.pageCount, 1);
 });
 
 test('PATCH /categories/:id cambia active y persiste', async () => {

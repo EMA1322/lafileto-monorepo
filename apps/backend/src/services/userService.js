@@ -3,21 +3,11 @@ import { userRepository } from '../repositories/userRepository.js';
 import { roleRepository } from '../repositories/roleRepository.js';
 import { createError } from '../utils/errors.js';
 import { hashPassword } from '../utils/bcrypt.js';
+import { normalizePage, normalizePageSize } from '../utils/pagination.js';
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_PAGE_SIZE = 10;
 const MAX_PAGE_SIZE = 100;
-
-function normalizePage(value) {
-  const n = Number.parseInt(value, 10);
-  return Number.isFinite(n) && n > 0 ? n : DEFAULT_PAGE;
-}
-
-function normalizePageSize(value) {
-  const n = Number.parseInt(value, 10);
-  if (!Number.isFinite(n) || n <= 0) return DEFAULT_PAGE_SIZE;
-  return Math.min(n, MAX_PAGE_SIZE);
-}
 
 function compactPhone(phone) {
   return phone.replace(/[\s-]+/g, '').trim();
@@ -46,8 +36,11 @@ export const userService = {
       };
     }
 
-    const normalizedPage = normalizePage(page);
-    const normalizedPageSize = normalizePageSize(pageSize);
+    const normalizedPage = normalizePage(page, { defaultValue: DEFAULT_PAGE });
+    const normalizedPageSize = normalizePageSize(pageSize, {
+      defaultValue: DEFAULT_PAGE_SIZE,
+      max: MAX_PAGE_SIZE
+    });
 
     const { items, total } = await userRepository.list({
       page: normalizedPage,
