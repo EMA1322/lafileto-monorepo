@@ -54,39 +54,139 @@ scope: Tabla sincronizada con OpenAPI v1; filtros/paginación/orden/búsqueda co
 | GET | `/roles/:id/permissions` | JWT (`role-admin`) | — | Devuelve `{ roleId, permissions[{ moduleKey,r,w,u,d }] }` | **I1 listo** |
 | PUT | `/roles/:id/permissions` | JWT (`role-admin`) | `{ permissions:[{ moduleKey,r,w,u,d }] }` | Upsert por `moduleKey` dentro de transacción; entradas ausentes no se modifican | **I1 listo** |
 
-## Categories (Catálogo)
-| Método | Path | Auth | Query/Body | Notas | Estado |
-|---|---|---|---|---|---|
-| GET | `/categories` | **(público)** | `page,pageSize,search,all,orderBy?,orderDir?` | Devuelve solo `active=true`; envelope `{ items[{ id,name,imageUrl,active }], meta }`; `orderBy=name|createdAt` | **I2 listo** |
-| POST | `/categories` | JWT (`rbac:categories.w`) | `{ name, imageUrl? }` | 201; nombre único (`CATEGORY_NAME_CONFLICT`), `imageUrl` absoluta opcional | **I2 listo** |
-| PATCH | `/categories/:id` | JWT (`rbac:categories.u`) | `{ name?, imageUrl?, active? }` | Cambia nombre/imagen/estado; 404 `CATEGORY_NOT_FOUND`; valida duplicados | **I2 listo** |
-| DELETE | `/categories/:id` | JWT (`rbac:categories.d`) | — | Borrado duro; responde `{ deleted: true }` | **I2 listo** |
 
-#### Smokes (API v1)
+## Categories (Admin)
+
+### Parámetros soportados (GET `/api/v1/categories`)
+
+| Parámetro | Tipo | Default | Descripción |
+|-----------|------|---------|-------------|
+| `page` | number | `1` | Página actual (`>=1`). |
+| `pageSize` | number | `10` | Límite por página (`5..100`). |
+| `q` | string | — | Búsqueda parcial por nombre (case-insensitive). |
+| `status` | enum | `all` | `all`, `active`, `inactive`. |
+| `orderBy` | enum | `name` | `name`, `createdAt`, `updatedAt`. |
+| `orderDir` | enum | `asc` | `asc` o `desc`. |
+| `all` | boolean | `false` | Si es `true`, fuerza `page=1` y `pageSize=100`. |
+
+### Endpoints
+
+| Método | Path | Permiso | Body / Query | 200 (data) |
+|---|---|---|---|---|
+| GET | `/api/v1/categories` | `categories:r` | Query arriba | `{ ok:true, data:{ items[{ id,name,imageUrl,active }], meta{ page,pageSize,total,pageCount } } }` |
+| GET | `/api/v1/categories/:id` | `categories:r` | — | `{ ok:true, data:{ id,name,imageUrl,active } }` |
+| POST | `/api/v1/categories` | `categories:w` | `{ name:string[2..50], imageUrl?:URL }` | `{ ok:true, data:{ id,name,imageUrl,active:true } }` (201) |
+| PUT | `/api/v1/categories/:id` | `categories:u` | `{ name?, imageUrl? }` | `{ ok:true, data:{ id,name,imageUrl,active } }` |
+| PATCH | `/api/v1/categories/:id` | `categories:u` | `{ active:boolean }` | `{ ok:true, data:{ id,name,imageUrl,active } }` |
+| DELETE | `/api/v1/categories/:id` | `categories:d` | — | `{ ok:true, data:{ deleted:true } }` |
+
+> NOTE: No existe endpoint público `/categories`; la Client SPA reutiliza estos endpoints protegidos y hoy falla al parsear el envelope (`data.items`).
+
+### Ejemplos
+
+**GET paginado**
+```http
+GET /api/v1/categories?page=1&pageSize=10&status=all&orderBy=name&orderDir=asc
+Authorization: Bearer <token>
+Accept: application/json
+```
+
+```json
+{
+  "ok": true,
+  "data": {
+    "items": [
+      { "id": "cat-001", "name": "Bebidas", "imageUrl": "https://cdn.example.com/cat/bebidas.png", "active": true },
+      { "id": "cat-002", "name": "Pastas", "imageUrl": null, "active": false }
+    ],
+    "meta": {
+      "page": 1,
+      "pageSize": 10,
+      "total": 5,
+      "pageCount": 1
+    }
+  }
+}
+```
+
+**POST**
+```http
+POST /api/v1/categories
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{ "name": "Carnes", "imageUrl": "https://cdn.example.com/cat/carnes.webp" }
+```
+
+```json
+{
+  "ok": true,
+  "data": {
+    "id": "cat-abc123",
+    "name": "Carnes",
+    "imageUrl": "https://cdn.example.com/cat/carnes.webp",
+    "active": true
+  }
+}
+```
+
+**Error 409**
+```json
+{
+  "ok": false,
+  "error": {
+    "code": "CATEGORY_NAME_CONFLICT",
+    "message": "La categoría indicada ya existe."
+  }
+}
+```
+
+### RBAC (moduleKey=`categories`)
+
+| Acción | Descripción | `role-admin` | `role-supervisor` (seed) | `role-viewer` |
+|---|---|---|---|---|
+| `r` | Listar / ver detalle | ✔︎ | ✔︎ | ✔︎ |
+| `w` | Crear | ✔︎ | ✔︎ | ✖︎ |
+| `u` | Editar / toggle | ✔︎ | ✔︎ | ✖︎ |
+| `d` | Eliminar | ✔︎ | ✖︎ | ✖︎ |
+
+> NOTE: Suites de integración modelan supervisor solo lectura; alinear fixtures con seeds.
+
+### Errores frecuentes
+
+| Código | HTTP | Descripción | Acción recomendada |
+|---|---|---|---|
+| `PERMISSION_DENIED` | 403 | Falta permiso requerido (`categories:w/u/d`). | Revisar `effectivePermissions` en sesión o seeds. |
+| `CATEGORY_NOT_FOUND` | 404 | ID inexistente o eliminada previamente. | Confirmar `id` antes de invocar PUT/PATCH/DELETE. |
+| `CATEGORY_NAME_CONFLICT` | 409 | Nombre duplicado (trim/case insensitive). | Ajustar `name` en formulario. |
+| `VALIDATION_ERROR` | 422 | Longitud inválida (`<2` o `>50`) o URL no válida. | Validar campos en UI antes de enviar. |
+
+### Comandos de verificación (smoke manual)
 
 ```bash
-# listado público
-curl -s -H "Accept: application/json" http://localhost:3000/api/v1/categories
+# Listado con meta (JWT requerido)
+curl -s -H "Authorization: Bearer $ADMIN_JWT" \
+  "http://localhost:3000/api/v1/categories?page=1&pageSize=10&status=all" | jq '.'
 
-# crear (JWT con permiso write en moduleKey=categories)
-curl -s -X POST -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $ADMIN_JWT" \
-  -d '{"name":"Carnes","imageUrl":"https://cdn.example.com/categories/carnes.webp"}' \
-  http://localhost:3000/api/v1/categories
+# Crear categoría
+timestamp=$(date +%s)
+curl -s -X POST -H "Authorization: Bearer $ADMIN_JWT" \
+  -H "Content-Type: application/json" \
+  -d "{\"name\":\"Bebidas ${timestamp}\",\"imageUrl\":\"https://cdn.example.com/cat/${timestamp}.png\"}" \
+  http://localhost:3000/api/v1/categories | jq '.'
 
-# toggle active (permiso update)
-curl -s -X PATCH -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $ADMIN_JWT" \
+# Toggle active
+curl -s -X PATCH -H "Authorization: Bearer $ADMIN_JWT" \
+  -H "Content-Type: application/json" \
   -d '{"active":false}' \
-  http://localhost:3000/api/v1/categories/<id>
+  http://localhost:3000/api/v1/categories/<id> | jq '.'
 
-# eliminar (permiso delete)
+# Eliminar
 curl -s -X DELETE -H "Authorization: Bearer $ADMIN_JWT" \
-  http://localhost:3000/api/v1/categories/<id>
-
-# Proxy Vite (dev)
-curl -s -H "Accept: application/json" http://localhost:5174/api/v1/categories
+  http://localhost:3000/api/v1/categories/<id> | jq '.'
 ```
+
+
 
 ## Products (Catálogo)
 | Método | Path | Auth | Query/Body | Notas | Estado |

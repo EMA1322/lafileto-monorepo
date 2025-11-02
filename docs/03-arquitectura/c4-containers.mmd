@@ -11,3 +11,18 @@ Rel(client, api, "GET público")
 Rel(admin, api, "JWT Bearer")
 Rel(api, db, "Prisma ORM")
 ```
+
+```mermaid
+%% Extensión Categorías — Containers
+C4Container
+title La Fileto — Containers (Categorías)
+System_Boundary(sysCat, "La Fileto") {
+  Container(client, "Client SPA", "Vite/JS", "Catálogo público — filtros por categoría (bug envelope actual)")
+  Container(admin, "Admin SPA", "Vite/JS", "CRUD categorías con toasts y RBAC")
+  Container(api, "API Backend", "Node/Express", "REST JSON { ok, data, meta }")
+  ContainerDb(db, "MySQL", "Prisma", "Tabla Category + futuras FK a Products")
+}
+Rel(admin, api, "JWT + moduleKey=categories")
+Rel(api, db, "Prisma Category")
+Rel(client, api, "GET categorías activas (pendiente endpoint público)")
+```

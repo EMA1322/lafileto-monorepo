@@ -1,539 +1,656 @@
 {
-  "info": {
-    "name": "La Fileto API v1",
-    "_postman_id": "placeholder-la-fileto-api-v1",
-    "description": "Colecci\u00f3n base con variables y carpetas por m\u00f3dulo. Alinear con /docs/06-apis/endpoints.md.",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-  },
-  "variable": [
-    {
-      "key": "baseUrl",
-      "value": "http://localhost:3000/api/v1"
+    "info": {
+        "name": "La Fileto API v1",
+        "_postman_id": "placeholder-la-fileto-api-v1",
+        "description": "Colecci\u00f3n base con variables y carpetas por m\u00f3dulo. Alinear con /docs/06-apis/endpoints.md.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
-    {
-      "key": "token",
-      "value": ""
-    }
-  ],
-  "item": [
-    {
-      "name": "Auth",
-      "item": [
+    "variable": [
         {
-          "name": "POST /auth/login",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/auth/login",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "login"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\"email\":\"admin@lafileto.com\",\"password\":\"secret123\"}"
-            }
-          }
+            "key": "baseUrl",
+            "value": "http://localhost:3000/api/v1"
         },
         {
-          "name": "GET /auth/me",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/auth/me",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "me"
-              ]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "Users",
-      "item": [
+            "key": "token",
+            "value": ""
+        },
         {
-          "name": "GET /users",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/users?page=1&pageSize=20&q=&sort=name:asc",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "users"
-              ],
-              "query": [
+            "key": "categoryId",
+            "value": "<replace-with-category-id>"
+        }
+    ],
+    "item": [
+        {
+            "name": "Auth",
+            "item": [
                 {
-                  "key": "page",
-                  "value": "1"
+                    "name": "POST /auth/login",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/login",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "login"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"email\":\"admin@lafileto.com\",\"password\":\"secret123\"}"
+                        }
+                    }
                 },
                 {
-                  "key": "pageSize",
-                  "value": "20"
-                },
-                {
-                  "key": "q",
-                  "value": ""
-                },
-                {
-                  "key": "sort",
-                  "value": "name:asc"
+                    "name": "GET /auth/me",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/me",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "me"
+                            ]
+                        }
+                    }
                 }
-              ]
-            }
-          }
+            ]
         },
         {
-          "name": "POST /users",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/users",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "users"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\"name\":\"User\",\"email\":\"user@example.com\",\"password\":\"secret123\",\"roleId\":2}"
-            }
-          }
-        },
-        {
-          "name": "GET /users/:id",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/users/1",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "users",
-                "1"
-              ]
-            }
-          }
-        },
-        {
-          "name": "PUT /users/:id",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/users/1",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "users",
-                "1"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\"name\":\"Updated Name\"}"
-            }
-          }
-        },
-        {
-          "name": "DELETE /users/:id",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/users/1",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "users",
-                "1"
-              ]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "Roles",
-      "item": [
-        {
-          "name": "GET /roles",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/roles",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "roles"
-              ]
-            }
-          }
-        },
-        {
-          "name": "GET /roles/:id",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/roles/1",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "roles",
-                "1"
-              ]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "Permissions",
-      "item": [
-        {
-          "name": "GET /permissions",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/permissions",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "permissions"
-              ]
-            }
-          }
-        },
-        {
-          "name": "GET /roles/:id/permissions",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/roles/1/permissions",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "roles",
-                "1",
-                "permissions"
-              ]
-            }
-          }
-        },
-        {
-          "name": "PUT /roles/:id/permissions",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/roles/1/permissions",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "roles",
-                "1",
-                "permissions"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\"permissions\":[{\"moduleKey\":\"products\",\"action\":\"READ\"}]}"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "Categories",
-      "item": [
-        {
-          "name": "GET /categories",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{baseUrl}}/categories?page=1&pageSize=12&q=&sort=name:asc",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "categories"
-              ],
-              "query": [
+            "name": "Users",
+            "item": [
                 {
-                  "key": "page",
-                  "value": "1"
+                    "name": "GET /users",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/users?page=1&pageSize=20&q=&sort=name:asc",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "users"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "pageSize",
+                                    "value": "20"
+                                },
+                                {
+                                    "key": "q",
+                                    "value": ""
+                                },
+                                {
+                                    "key": "sort",
+                                    "value": "name:asc"
+                                }
+                            ]
+                        }
+                    }
                 },
                 {
-                  "key": "pageSize",
-                  "value": "12"
+                    "name": "POST /users",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/users",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "users"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"name\":\"User\",\"email\":\"user@example.com\",\"password\":\"secret123\",\"roleId\":2}"
+                        }
+                    }
                 },
                 {
-                  "key": "q",
-                  "value": ""
+                    "name": "GET /users/:id",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/users/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "users",
+                                "1"
+                            ]
+                        }
+                    }
                 },
                 {
-                  "key": "sort",
-                  "value": "name:asc"
+                    "name": "PUT /users/:id",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/users/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "users",
+                                "1"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"name\":\"Updated Name\"}"
+                        }
+                    }
+                },
+                {
+                    "name": "DELETE /users/:id",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/users/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "users",
+                                "1"
+                            ]
+                        }
+                    }
                 }
-              ]
-            }
-          }
+            ]
         },
         {
-          "name": "POST /categories",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/categories",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "categories"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\"name\":\"Milanesas\",\"description\":\"Empanadas y napolitanas\"}"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "Products",
-      "item": [
-        {
-          "name": "GET /products",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{baseUrl}}/products?page=1&pageSize=12&q=milanesa&categoryId=3&isOffer=true&sort=price:asc",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "products"
-              ],
-              "query": [
+            "name": "Categories",
+            "item": [
                 {
-                  "key": "page",
-                  "value": "1"
+                    "name": "GET /api/v1/categories",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/categories?page=1&pageSize=10&status=all&orderBy=name&orderDir=asc",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "categories"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "pageSize",
+                                    "value": "10"
+                                },
+                                {
+                                    "key": "status",
+                                    "value": "all"
+                                },
+                                {
+                                    "key": "orderBy",
+                                    "value": "name"
+                                },
+                                {
+                                    "key": "orderDir",
+                                    "value": "asc"
+                                }
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('status 200', () => pm.response.code === 200);",
+                                    "const json = pm.response.json();",
+                                    "pm.test('ok true', () => json.ok === true);",
+                                    "pm.test('items es array', () => Array.isArray(json.data.items));",
+                                    "pm.test('meta incluye total', () => json.data.meta && typeof json.data.meta.total === 'number');"
+                                ]
+                            }
+                        }
+                    ]
                 },
                 {
-                  "key": "pageSize",
-                  "value": "12"
+                    "name": "POST /api/v1/categories",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Bebidas {{timestamp}}\",\n  \"imageUrl\": \"https://cdn.example.com/cat/{{timestamp}}.webp\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/categories",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "categories"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('status 201', () => pm.response.code === 201);",
+                                    "const json = pm.response.json();",
+                                    "pm.test('ok true', () => json.ok === true);",
+                                    "pm.test('incluye id', () => json.data && json.data.id);"
+                                ]
+                            }
+                        }
+                    ]
                 },
                 {
-                  "key": "q",
-                  "value": "milanesa"
+                    "name": "PUT /api/v1/categories/:id",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Bebidas Actualizadas\",\n  \"imageUrl\": \"https://cdn.example.com/cat/bebidas-actualizado.webp\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/categories/{{categoryId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "categories",
+                                "{{categoryId}}"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('status 200', () => pm.response.code === 200);",
+                                    "const json = pm.response.json();",
+                                    "pm.test('ok true', () => json.ok === true);",
+                                    "pm.test('mantiene id', () => json.data && json.data.id === pm.collectionVariables.get('categoryId') || true);"
+                                ]
+                            }
+                        }
+                    ]
                 },
                 {
-                  "key": "categoryId",
-                  "value": "3"
-                },
-                {
-                  "key": "isOffer",
-                  "value": "true"
-                },
-                {
-                  "key": "sort",
-                  "value": "price:asc"
+                    "name": "DELETE /api/v1/categories/:id",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/categories/{{categoryId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "categories",
+                                "{{categoryId}}"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('status 200', () => pm.response.code === 200);",
+                                    "pm.test('deleted true', () => pm.response.json().data?.deleted === true);"
+                                ]
+                            }
+                        }
+                    ]
                 }
-              ]
-            }
-          }
+            ]
         },
         {
-          "name": "POST /products",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/products",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "products"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\"name\":\"Milanesa Napolitana\",\"price\":5000,\"categoryId\":3,\"description\":\"Con salsa y queso\",\"isOffer\":true,\"discount\":10}"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "Settings",
-      "item": [
-        {
-          "name": "GET /settings",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{baseUrl}}/settings",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "settings"
-              ]
-            }
-          }
+            "name": "Roles",
+            "item": [
+                {
+                    "name": "GET /roles",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/roles",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "roles"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "GET /roles/:id",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/roles/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "roles",
+                                "1"
+                            ]
+                        }
+                    }
+                }
+            ]
         },
         {
-          "name": "PUT /settings",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/settings",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "settings"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\"isOpen\": false, \"whatsapp\": \"+54 9 266 555-0000\"}"
-            }
-          }
+            "name": "Permissions",
+            "item": [
+                {
+                    "name": "GET /permissions",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/permissions",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "permissions"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "GET /roles/:id/permissions",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/roles/1/permissions",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "roles",
+                                "1",
+                                "permissions"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "PUT /roles/:id/permissions",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/roles/1/permissions",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "roles",
+                                "1",
+                                "permissions"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"permissions\":[{\"moduleKey\":\"products\",\"action\":\"READ\"}]}"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Products",
+            "item": [
+                {
+                    "name": "GET /products",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/products?page=1&pageSize=12&q=milanesa&categoryId=3&isOffer=true&sort=price:asc",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "products"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "pageSize",
+                                    "value": "12"
+                                },
+                                {
+                                    "key": "q",
+                                    "value": "milanesa"
+                                },
+                                {
+                                    "key": "categoryId",
+                                    "value": "3"
+                                },
+                                {
+                                    "key": "isOffer",
+                                    "value": "true"
+                                },
+                                {
+                                    "key": "sort",
+                                    "value": "price:asc"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "POST /products",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/products",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "products"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"name\":\"Milanesa Napolitana\",\"price\":5000,\"categoryId\":3,\"description\":\"Con salsa y queso\",\"isOffer\":true,\"discount\":10}"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Settings",
+            "item": [
+                {
+                    "name": "GET /settings",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/settings",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "settings"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "PUT /settings",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/settings",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "settings"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"isOpen\": false, \"whatsapp\": \"+54 9 266 555-0000\"}"
+                        }
+                    }
+                }
+            ]
         }
-      ]
-    }
-  ]
+    ]
 }

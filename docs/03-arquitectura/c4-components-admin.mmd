@@ -24,3 +24,23 @@ Container_Boundary(adminSpa, "Admin SPA (Vite)") {
 System_Ext(api, "API Backend", "Express / JSON")
 Rel(apiClient, api, "HTTP/JSON con JWT")
 ```
+
+```mermaid
+%% Componentes específicos de Categorías
+C4Component
+title Admin SPA — Categorías
+Container_Boundary(catBoundary, "Módulo Categorías") {
+  Component(categoriesView, "CategoriesView", "View", "Entrada al módulo, invoca init")
+  Component(catState, "categories.state", "Store", "Mantiene items/meta/filtros y llama a /categories")
+  Component(catTable, "categories.render.table", "UI", "Tabla con estados loading/error/empty")
+  Component(catBindings, "categories.render.bindings", "Events", "Debounce búsqueda, paginación, delegación de acciones")
+  Component(catModals, "categories.modals", "UI", "Alta/edición/eliminar/ver con focus trap y toasts")
+  Component(rbac, "applyRBAC", "Helper", "Oculta acciones según permisos effectivePermissions")
+  Component(toast, "toast", "UI", "Feedback accesible (aria-live)")
+}
+System_Ext(api, "API Backend", "Express REST")
+Rel(catState, api, "GET/POST/PUT/PATCH/DELETE /api/v1/categories")
+Rel(catModals, catState, "Refresca lista tras éxito/error")
+Rel(catTable, rbac, "Aplicar data-rbac-action")
+Rel(catBindings, catModals, "Abre modales y maneja optimismo")
+```

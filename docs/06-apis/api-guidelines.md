@@ -32,3 +32,13 @@ Error: `{ "ok": false, "error": { "code": "VALIDATION_ERROR", "message": "..." }
 
 ## CORS
 - Allowlist por entorno configurada en el backend vía `CORS_ALLOWLIST` (ver `/07-anexos/env.md`).
+
+## Categorías — convenciones
+- IDs `cuid()` (p. ej. `ckud3a...`); no exponer autoincrementales.
+- `name` se recorta (`trim`) y valida longitud 2–50; backend responde `CATEGORY_NAME_CONFLICT` (409) ante duplicados.
+- `imageUrl` opcional: si llega vacío se normaliza a `null`; sólo se aceptan URLs absolutas `http(s)`.
+- Estado booleano `active`; no existe soft-delete (`deletedAt`). Borrado actual es físico; documentar si se agrega soft-delete.
+- Envelope obligatorio `{ ok, data, meta? }`; `GET /categories` siempre responde `meta` con `page`, `pageSize`, `total`, `pageCount`.
+- Parámetros soportados: `page`, `pageSize (5..100)`, `q`, `status=all|active|inactive`, `orderBy=name|createdAt|updatedAt`, `orderDir=asc|desc`, `all=true` (fuerza `pageSize=100`).
+- Errores negocio: `CATEGORY_NOT_FOUND (404)`, `CATEGORY_NAME_CONFLICT (409)`, `PERMISSION_DENIED (403)`, `VALIDATION_ERROR (422)`.
+- > NOTE: Si se agrega `slug`, usar snake-case o kebab-case consistente (`slugify(name)`), índice único y exponerlo en responses.

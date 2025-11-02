@@ -13,3 +13,20 @@ Container_Boundary(clientSpa, "Client SPA (Vite)") {
 }
 System_Ext(api, "API Backend", "Express / JSON")
 ```
+
+```mermaid
+%% Componentes Client SPA — Categorías
+C4Component
+title Client SPA — Filtros por Categoría
+Container_Boundary(clientCat, "Vista Products") {
+  Component(productsView, "ProductsView", "UI", "Renderiza tarjetas y controla filtros")
+  Component(categoryButtons, "renderCategories", "UI", "Botones 'Todas' + categorías activas")
+  Component(publicApi, "fetchPublicCategories", "Fetch", "GET /api/v1/categories (requiere envelope { items, meta })")
+  Component(state, "products.state", "State", "Mantiene categoryId seleccionado")
+}
+System_Ext(api, "API Backend", "Express JSON")
+Rel(categoryButtons, publicApi, "page=1&pageSize=100&status=active")
+Rel(categoryButtons, state, "Actualiza categoryId y dispara filtrado")
+Rel(productsView, state, "Renderiza según filtros aplicados")
+%% NOTE: La implementación actual trata la respuesta como arreglo plano; ajustar al envelope `{ data.items }`.
+```
