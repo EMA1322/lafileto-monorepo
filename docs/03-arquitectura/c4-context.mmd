@@ -13,3 +13,20 @@ Rel(client, api, "HTTP/JSON (público)")
 Rel(admin, adminSpa, "Gestiona")
 Rel(adminSpa, api, "HTTP/JSON con JWT")
 ```
+
+```mermaid
+%% Extensión enfocada en Categorías (Admin + Client)
+C4Context
+title La Fileto — Context (Categorías)
+Person(cliente, "Cliente")
+Person(admin, "Admin / Operador")
+System_Boundary(sysCat, "La Fileto — Categorías") {
+  System(clientSpa, "Client SPA", "Filtros por categoría")
+  System(adminSpa, "Admin SPA", "CRUD categorías con RBAC")
+  System(api, "API Backend", "Express + Prisma")
+}
+Rel(cliente, clientSpa, "Filtra productos por categoría (requiere GET público pendiente)")
+Rel(admin, adminSpa, "Gestiona categorías, productos y permisos")
+Rel(adminSpa, api, "HTTP/JSON + JWT (moduleKey=categories)")
+Rel(clientSpa, api, "HTTP/JSON (solo lectura — pendiente de habilitar público)")
+```

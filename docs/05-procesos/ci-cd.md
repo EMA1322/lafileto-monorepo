@@ -119,3 +119,14 @@ Si un job falla, el merge se bloquea porque `main` exige el check **CI** en verd
 ## Secretos
 - **Actions → Secrets and variables → Actions** por entorno.
 - Nunca almacenar secretos en el repo.
+
+## Categorías — consideraciones específicas
+
+- Cambios en `/docs/` solamente no disparan builds adicionales, pero es obligatorio validar que diagrams Mermaid y JSON sean válidos antes del PR.
+- `pnpm -r test` ejecuta las suites de categorías (API + RBAC); si fallan bloquean el job `test`.
+- Pre-check recomendado localmente:
+  - `pnpm -r lint:docs` (si existe) o, en su defecto, `pnpm -F docs lint` para validar Markdown (cuando esté disponible).
+  - `npx @mermaid-js/mermaid-cli` o [Mermaid Live](https://mermaid.live) para asegurar que los nuevos diagramas compilan.
+  - `python -m json.tool docs/06-apis/postman_collection.json` para garantizar JSON válido.
+- Para seeds consistentes en CI preview, ejecutar `pnpm -F backend prisma:migrate:deploy` seguido de `pnpm -F backend db:seed` (crea permisos `categories:r/w/u/d`).
+- > NOTE: Si se agrega soft-delete o conteo de productos, actualizar scripts de seeds y smoke tests antes de habilitar nuevos checks.

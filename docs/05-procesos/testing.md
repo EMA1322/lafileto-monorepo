@@ -78,3 +78,27 @@ curl -i "http://localhost:5174/api/v1/categories?page=1&pageSize=10"
   - `categories:u` → **Editar** y **Toggle Activo**.
   - `categories:d` → **Eliminar**.
 - Todos los errores muestran toast con código (`error.code`) para debugging rápido (ej. `CATEGORY_NAME_CONFLICT`, `RBAC_FORBIDDEN`, `AUTH_INVALID`).
+
+## Matriz de pruebas — Categorías
+
+| Tipo | Caso | Cobertura actual | Gap / Acción |
+|---|---|---|---|
+| Unit (servicio) | `createCategory` valida duplicados y normaliza `imageUrl` | ❌ | Agregar pruebas con mock de repositorio para `findByName` y normalización de URL vacía. |
+| Unit (servicio) | `deleteCategory` verifica dependencias de productos | ❌ | > NOTE: Pendiente de implementar conteo real de productos antes de cubrirlo. |
+| Integración API | GET paginado (`page`, `pageSize`, `status`, `orderBy`) | ✅ `tests/integration/categories.api.test.mjs` | Extender para `orderBy=updatedAt` y `all=true`. |
+| Integración API | POST (201) + 409 duplicado | ⚠️ Solo flujo feliz | Añadir caso duplicado y validaciones 422 (longitud, URL inválida). |
+| Integración API | PUT + PATCH idempotente | ⚠️ Parcial | Cubrir retorno sin cambios (PUT) y `PATCH` `true→true`. |
+| Integración API | DELETE con dependencias | ❌ | Bloquear hasta que exista verificación con productos. |
+| Integración RBAC | Supervisor solo lectura | ✅ `tests/integration/categories.rbac.test.mjs` | Alinear seeds vs fixtures (hoy supervisor en seed tiene `w/u`). |
+| Smoke API | Script CLI `scripts/smoke/categories.smoke.mjs` | ⚠️ Usa rutas `/admin/categories` y soft-delete | Actualizar script conforme a `/api/v1/categories` y toggles booleanos. |
+| Smoke Admin SPA | Búsqueda, filtros, modales, toasts | 🔁 Checklist manual (ver arriba) | Automatizar con Playwright cuando endpoints estén estables. |
+| Client SPA | Filtro por categoría (botones) | ❌ | Corregir consumo de envelope (`data.items`) y agregar prueba de regresión. |
+
+### Datos semilla sugeridos
+- Ejecutar `pnpm -F backend prisma:migrate:deploy` + `pnpm -F backend db:seed` antes de correr integraciones.
+- Mantener categorías base (`Bebidas`, `Pastas`, `Carnes`, `Ensaladas`, `Postres`) para validar paginado y filtros.
+
+### Checks previos a merge (Categorías)
+- [ ] `pnpm -r test` (ejecuta suites API + RBAC de categorías).
+- [ ] Validar manualmente toggle en Admin SPA con usuario supervisor (sin permisos w/u/d) para garantizar RBAC.
+- [ ] Confirmar que Postman folder "Categories" ejecuta sin errores (GET 200, POST 201, PUT 200, DELETE 200).
