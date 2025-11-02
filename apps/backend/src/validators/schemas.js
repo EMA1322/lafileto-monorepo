@@ -60,33 +60,69 @@ const userIdParam = z
 
 export const userIdParamSchema = userIdParam;
 
-export const userListQuerySchema = z.object({
-  page: z
-    .string()
-    .optional()
-    .transform((val) => (val ? Number.parseInt(val, 10) : undefined))
-    .refine((val) => val === undefined || (Number.isInteger(val) && val > 0), {
-      message: 'page debe ser un entero positivo.'
-    }),
-  pageSize: z
-    .string()
-    .optional()
-    .transform((val) => (val ? Number.parseInt(val, 10) : undefined))
-    .refine((val) => val === undefined || (Number.isInteger(val) && val > 0), {
-      message: 'pageSize debe ser un entero positivo.'
-    }),
-  search: z
-    .string()
-    .optional()
-    .transform((val) => (typeof val === 'string' ? val.trim() : undefined)),
-  all: z
-    .any()
-    .optional()
-    .transform((value) => {
-      if (value === undefined || value === null) return false;
-      return boolishFormatter(value);
-    })
-});
+const orderByParam = z
+  .string()
+  .optional()
+  .transform((val) => {
+    if (typeof val !== 'string') return 'fullName';
+    const normalized = val.trim().toLowerCase();
+    if (!normalized) return 'fullName';
+    if (['fullname', 'full_name', 'name'].includes(normalized)) return 'fullName';
+    if (['email', 'mail'].includes(normalized)) return 'email';
+    if (['status', 'state'].includes(normalized)) return 'status';
+    if (['id', 'userId', 'user_id'].includes(normalized)) return 'id';
+    return ['fullName', 'email', 'status', 'id'].includes(val)
+      ? val
+      : 'fullName';
+  });
+
+const orderDirParam = z
+  .string()
+  .optional()
+  .transform((val) => {
+    if (typeof val !== 'string') return 'asc';
+    const normalized = val.trim().toLowerCase();
+    return normalized === 'desc' ? 'desc' : 'asc';
+  });
+
+export const userListQuerySchema = z
+  .object({
+    page: z
+      .string()
+      .optional()
+      .transform((val) => (val ? Number.parseInt(val, 10) : undefined))
+      .refine((val) => val === undefined || (Number.isInteger(val) && val > 0), {
+        message: 'page debe ser un entero positivo.'
+      }),
+    pageSize: z
+      .string()
+      .optional()
+      .transform((val) => (val ? Number.parseInt(val, 10) : undefined))
+      .refine((val) => val === undefined || (Number.isInteger(val) && val > 0), {
+        message: 'pageSize debe ser un entero positivo.'
+      }),
+    q: z
+      .string()
+      .optional()
+      .transform((val) => (typeof val === 'string' ? val.trim() : undefined)),
+    all: z
+      .any()
+      .optional()
+      .transform((value) => {
+        if (value === undefined || value === null) return false;
+        return boolishFormatter(value);
+      }),
+    orderBy: orderByParam,
+    orderDir: orderDirParam
+  })
+  .transform((value) => ({
+    page: value.page,
+    pageSize: value.pageSize,
+    q: value.q,
+    all: value.all,
+    orderBy: value.orderBy,
+    orderDir: value.orderDir
+  }));
 
 export const userCreateSchema = z.object({
   fullName: z
