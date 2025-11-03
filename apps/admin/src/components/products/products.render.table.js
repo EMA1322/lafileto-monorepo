@@ -142,17 +142,17 @@ function renderTable(items, refs, categories) {
               <button
                 class="products__action-btn"
                 type="button"
+                data-action="view"
+                data-id="${idAttr}"
+                data-rbac-action="read"
+              >Ver</button>
+              <button
+                class="products__action-btn"
+                type="button"
                 data-action="edit"
                 data-id="${idAttr}"
                 data-rbac-action="update"
               >Editar</button>
-              <button
-                class="products__action-btn"
-                type="button"
-                data-action="change-status"
-                data-id="${idAttr}"
-                data-rbac-action="change-status"
-              >Estado</button>
               <button
                 class="products__action-btn"
                 type="button"
@@ -210,17 +210,17 @@ function renderCards(items, refs, categories) {
             <button
               class="products__action-btn"
               type="button"
+              data-action="view"
+              data-id="${idAttr}"
+              data-rbac-action="read"
+            >Ver</button>
+            <button
+              class="products__action-btn"
+              type="button"
               data-action="edit"
               data-id="${idAttr}"
               data-rbac-action="update"
             >Editar</button>
-            <button
-              class="products__action-btn"
-              type="button"
-              data-action="change-status"
-              data-id="${idAttr}"
-              data-rbac-action="change-status"
-            >Estado</button>
             <button
               class="products__action-btn"
               type="button"

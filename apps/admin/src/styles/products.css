@@ -606,10 +606,194 @@
   font-size: var(--products-font-sm);
 }
 
+.products__help-text {
+  margin: 0;
+  margin-top: var(--products-spacing-1);
+  font-size: var(--products-font-sm);
+  color: var(--products-muted);
+}
+
+.products__image-preview {
+  display: grid;
+  gap: var(--products-spacing-2);
+  margin-top: var(--products-spacing-2);
+}
+
+.products__image-preview-img {
+  width: 100%;
+  max-height: 240px;
+  object-fit: cover;
+  border-radius: var(--products-radius-md);
+  border: 1px solid var(--products-border);
+}
+
+.products__image-preview-placeholder {
+  display: grid;
+  place-items: center;
+  min-height: 160px;
+  border-radius: var(--products-radius-md);
+  border: 1px dashed var(--products-border);
+  color: var(--products-muted);
+  background-color: color-mix(in srgb, var(--products-bg) 85%, white 15%);
+  text-align: center;
+  padding: var(--products-spacing-3);
+}
+
+.products__image-preview-placeholder--static {
+  min-height: 180px;
+}
+
+.products__section {
+  display: grid;
+  gap: var(--products-spacing-3);
+  padding: var(--products-spacing-4);
+  border: 1px solid var(--products-border);
+  border-radius: var(--products-radius-md);
+  background-color: color-mix(in srgb, var(--products-bg) 92%, white 8%);
+}
+
+.products__section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--products-spacing-2);
+}
+
+.products__section-title {
+  margin: 0;
+  font-size: var(--products-font-md);
+  font-weight: 600;
+}
+
+.products__switch {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--products-spacing-2);
+  font-size: var(--products-font-md);
+  cursor: pointer;
+  user-select: none;
+}
+
+.products__switch input {
+  width: 18px;
+  height: 18px;
+}
+
+.products__section-body {
+  display: grid;
+  gap: var(--products-spacing-3);
+}
+
 .products__form-actions {
   display: flex;
   justify-content: flex-end;
   gap: var(--products-spacing-2);
+}
+
+.products__view-modal {
+  display: grid;
+  gap: var(--products-spacing-4);
+  max-width: min(520px, 90vw);
+}
+
+.products__view-title {
+  margin: 0;
+  font-size: clamp(1.4rem, 1.2rem + 1vw, 1.8rem);
+  font-weight: 600;
+}
+
+.products__view-body {
+  display: grid;
+  gap: var(--products-spacing-3);
+}
+
+.products__view-media {
+  display: grid;
+  place-items: center;
+  background-color: color-mix(in srgb, var(--products-bg) 90%, white 10%);
+  border: 1px solid var(--products-border);
+  border-radius: var(--products-radius-md);
+  padding: var(--products-spacing-3);
+}
+
+.products__view-grid {
+  display: grid;
+  gap: var(--products-spacing-2);
+}
+
+.products__view-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--products-spacing-2);
+  padding-bottom: var(--products-spacing-1);
+  border-bottom: 1px solid var(--products-border);
+}
+
+.products__view-row:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.products__view-label {
+  font-weight: 500;
+  color: var(--products-muted);
+}
+
+.products__view-value {
+  text-align: right;
+}
+
+.products__view-grid--compact {
+  gap: var(--products-spacing-1);
+}
+
+.products__view-grid--compact .products__view-row {
+  border-bottom: 0;
+  padding: 0;
+}
+
+.products__view-description {
+  display: grid;
+  gap: var(--products-spacing-2);
+}
+
+.products__view-description h4 {
+  margin: 0;
+  font-size: var(--products-font-md);
+}
+
+.products__view-description p {
+  margin: 0;
+  color: var(--products-muted);
+}
+
+.products__view-section {
+  display: grid;
+  gap: var(--products-spacing-3);
+}
+
+.products__view-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--products-spacing-2);
+}
+
+.products__view-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--products-spacing-1);
+  padding: var(--products-spacing-1) var(--products-spacing-2);
+  border-radius: var(--products-radius-sm);
+  border: 1px solid var(--products-border);
+  font-size: var(--products-font-sm);
+  color: var(--products-muted);
+}
+
+.products__view-tag--active {
+  border-color: color-mix(in srgb, var(--products-success) 45%, transparent);
+  color: var(--products-success);
+  background-color: color-mix(in srgb, var(--products-success) 12%, transparent);
 }
 
 .products__status-menu {

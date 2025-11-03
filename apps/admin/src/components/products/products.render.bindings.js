@@ -18,7 +18,7 @@ import {
   notify,
 } from './products.state.js';
 import { normalizeFeatured } from './products.helpers.js';
-import { openProductModal, openStatusModal, openDeleteModal } from './products.modals.js';
+import { openProductModal, openProductViewModal, openDeleteModal } from './products.modals.js';
 
 function getRefs(container) {
   return {
@@ -173,20 +173,20 @@ export function bindProductsBindings(container) {
       showSnackbar('No encontramos el producto seleccionado.', { type: 'warning' });
       return;
     }
+    if (action === 'view') {
+      if (!can('products', 'r')) {
+        showSnackbar('No tenés permisos para ver productos.', { type: 'warning' });
+        return;
+      }
+      openProductViewModal(product);
+      return;
+    }
     if (action === 'edit') {
       if (!can('products', 'u')) {
         showSnackbar('No tenés permisos para editar productos.', { type: 'warning' });
         return;
       }
       openProductModal({ mode: 'edit', product, container });
-      return;
-    }
-    if (action === 'change-status') {
-      if (!can('products', 'changeStatus')) {
-        showSnackbar('No tenés permisos para cambiar el estado.', { type: 'warning' });
-        return;
-      }
-      openStatusModal(product, container);
       return;
     }
     if (action === 'delete') {
