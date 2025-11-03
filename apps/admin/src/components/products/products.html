@@ -1,94 +1,156 @@
-<!-- Admin / Products (fragmento inyectado en #app) -->
-<!-- Code-splitting: el CSS del módulo se carga aquí -->
-<link rel="stylesheet" href="/src/styles/products.css" />
+<!-- Vista del módulo Products -->
+<link rel="stylesheet" href="/src/styles/core/products.css" />
 
-<section id="products-view" class="products" aria-labelledby="products-title">
-  <!-- Encabezado -->
+<section
+  class="products"
+  id="products-module"
+  data-rbac-module="products"
+  aria-labelledby="products-title"
+>
   <header class="products__header">
-    <h2 id="products-title" class="products__title">Productos</h2>
-
-    <!-- Toolbar -->
-    <div class="products__toolbar" role="region" aria-label="Búsqueda, filtros y orden">
-      <!-- Buscar por nombre -->
-      <div class="products__tool">
-        <label for="prd-q" class="sr-only">Buscar</label>
-        <input id="prd-q" class="products__search" type="search" placeholder="Buscar por nombre…" inputmode="search" />
-      </div>
-
-      <!-- Filtrar por categoría -->
-      <div class="products__tool">
-        <label for="prd-cat" class="sr-only">Categoría</label>
-        <select id="prd-cat" class="products__select" aria-label="Categoría">
-          <option value="all" selected>Todas las categorías</option>
-        </select>
-      </div>
-
-      <!-- Filtrar por estado -->
-      <div class="products__tool">
-        <label for="prd-status" class="sr-only">Estado</label>
-        <select id="prd-status" class="products__select" aria-label="Estado">
-          <option value="all" selected>Todos</option>
-          <option value="active">Activos</option>
-          <option value="inactive">Inactivos</option>
-        </select>
-      </div>
-
-      <!-- Ordenar por (sin createdAt) -->
-      <div class="products__tool">
-        <label for="prd-sort-by" class="sr-only">Ordenar por</label>
-        <select id="prd-sort-by" class="products__select" aria-label="Ordenar por">
-          <option value="name">Nombre</option>
-          <option value="price">Precio</option>
-          <option value="status">Estado</option>
-        </select>
-      </div>
-
-      <!-- Dirección -->
-      <div class="products__tool">
-        <label for="prd-sort-dir" class="sr-only">Dirección</label>
-        <select id="prd-sort-dir" class="products__select" aria-label="Dirección de orden">
-          <option value="asc" selected>Asc</option>
-          <option value="desc">Desc</option>
-        </select>
-      </div>
-
-      <!-- Acciones -->
-      <div class="products__tool products__tool--cta">
-        <button id="prd-refresh" class="btn btn--ghost" type="button" title="Refrescar">⟳</button>
-        <button id="prd-create" class="btn" type="button" data-requires="write">+ Nuevo</button>
-      </div>
+    <div class="products__heading">
+      <h1 id="products-title" class="products__title">Productos</h1>
+      <p class="products__subtitle">Gestioná el catálogo, los precios y el stock disponible.</p>
+    </div>
+    <div class="products__header-actions">
+      <button
+        id="product-create"
+        class="products__button products__button--primary"
+        type="button"
+        data-action="create"
+        data-rbac-hide
+        data-rbac-action="write"
+      >
+        <span aria-hidden="true">＋</span>
+        <span>Crear producto</span>
+      </button>
     </div>
   </header>
 
-  <!-- Tabla -->
-  <div class="products__tableWrap">
-    <table class="products__table">
-      <thead>
-        <tr>
-          <th scope="col">Imagen</th>
-          <th scope="col">Nombre</th>
-          <th scope="col">Categoría</th>
-          <th scope="col">Precio</th>
-          <th scope="col">Estado</th>
-          <th scope="col" class="col-actions">Acciones</th>
-        </tr>
-      </thead>
-      <tbody id="prd-tbody">
-        <!-- filas dinámicas -->
-      </tbody>
-    </table>
-  </div>
-
-  <!-- Empty -->
-  <p id="prd-empty" class="empty" hidden>No hay productos para mostrar.</p>
-
-  <!-- Footer: meta + paginación -->
-  <footer class="products__footer">
-    <div id="prd-meta" class="products__summary">—</div>
-    <div class="products__pager">
-      <button id="prd-prev" class="btn btn--ghost" type="button" title="Página anterior">◀</button>
-      <span id="prd-page" class="products__page">1 / 1</span>
-      <button id="prd-next" class="btn btn--ghost" type="button" title="Página siguiente">▶</button>
+  <form class="products__filters" id="products-filters" novalidate>
+    <div class="products__filters-group" role="group" aria-label="Buscar">
+      <label class="products__label" for="filter-q">Buscar</label>
+      <input
+        id="filter-q"
+        class="products__input"
+        type="search"
+        name="q"
+        placeholder="Buscar por nombre o SKU"
+        inputmode="search"
+        autocomplete="off"
+      />
     </div>
+
+    <div class="products__filters-group">
+      <label class="products__label" for="filter-category">Categoría</label>
+      <select id="filter-category" class="products__select" name="category">
+        <option value="all">Todas las categorías</option>
+      </select>
+    </div>
+
+    <div class="products__filters-group">
+      <label class="products__label" for="filter-status">Estado</label>
+      <select id="filter-status" class="products__select" name="status">
+        <option value="all">Todos</option>
+        <option value="draft">Borrador</option>
+        <option value="active">Activo</option>
+        <option value="archived">Archivado</option>
+      </select>
+    </div>
+
+    <div class="products__filters-group products__filters-group--toggle">
+      <label class="products__label" for="filter-featured">Destacados</label>
+      <button
+        id="filter-featured"
+        class="products__toggle"
+        type="button"
+        role="switch"
+        aria-checked="false"
+      >
+        Sólo destacados
+      </button>
+    </div>
+
+    <div class="products__filters-group">
+      <label class="products__label" for="filter-order-by">Ordenar por</label>
+      <select id="filter-order-by" class="products__select" name="orderBy">
+        <option value="updatedAt">Última actualización</option>
+        <option value="name">Nombre</option>
+        <option value="price">Precio</option>
+      </select>
+    </div>
+
+    <div class="products__filters-group">
+      <label class="products__label" for="filter-order-dir">Dirección</label>
+      <select id="filter-order-dir" class="products__select" name="orderDir">
+        <option value="desc">Descendente</option>
+        <option value="asc">Ascendente</option>
+      </select>
+    </div>
+
+    <div class="products__filters-group">
+      <label class="products__label" for="filter-page-size">Resultados por página</label>
+      <select id="filter-page-size" class="products__select" name="pageSize">
+        <option value="10">10</option>
+        <option value="20">20</option>
+        <option value="50">50</option>
+      </select>
+    </div>
+
+    <div class="products__filters-group products__filters-group--actions">
+      <button id="filter-clear" class="products__button products__button--ghost" type="reset">
+        Limpiar filtros
+      </button>
+    </div>
+  </form>
+
+  <section class="products__content" aria-live="polite" aria-busy="false">
+    <div class="products__state products__state--loading" id="products-loading" role="status">
+      <span class="products__spinner" aria-hidden="true"></span>
+      <p>Cargando productos…</p>
+    </div>
+
+    <div class="products__state products__state--error" id="products-error" role="alert" hidden>
+      <p id="products-error-message">No pudimos cargar los productos. Intentá nuevamente.</p>
+      <button id="products-retry" class="products__button products__button--ghost" type="button">Reintentar</button>
+    </div>
+
+    <div class="products__state products__state--empty" id="products-empty" role="status" hidden>
+      <p>No encontramos productos con estos filtros.</p>
+      <button id="products-empty-clear" class="products__button products__button--ghost" type="button">
+        Limpiar filtros
+      </button>
+    </div>
+
+    <div class="products__table-wrapper" id="products-table-wrapper" hidden>
+      <table class="products__table" aria-describedby="products-meta">
+        <thead>
+          <tr>
+            <th scope="col">Nombre</th>
+            <th scope="col">SKU</th>
+            <th scope="col" class="products__cell--numeric">Precio</th>
+            <th scope="col" class="products__cell--numeric">Stock</th>
+            <th scope="col">Estado</th>
+            <th scope="col">Categoría</th>
+            <th scope="col">Actualizado</th>
+            <th scope="col" class="products__cell--actions">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="products-table-body"></tbody>
+      </table>
+    </div>
+
+    <div class="products__cards" id="products-cards" hidden aria-live="polite"></div>
+  </section>
+
+  <footer class="products__footer">
+    <div class="products__meta" id="products-meta" role="status" aria-live="polite">—</div>
+    <nav class="products__pagination" aria-label="Paginación de productos">
+      <button id="page-first" class="products__pager" type="button" aria-label="Primera página">«</button>
+      <button id="page-prev" class="products__pager" type="button" aria-label="Página anterior">‹</button>
+      <ol class="products__page-list" id="products-page-list" aria-live="polite"></ol>
+      <button id="page-next" class="products__pager" type="button" aria-label="Página siguiente">›</button>
+      <button id="page-last" class="products__pager" type="button" aria-label="Última página">»</button>
+    </nav>
   </footer>
 </section>

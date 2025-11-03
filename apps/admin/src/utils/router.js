@@ -81,9 +81,12 @@ async function loadAdminHeader() {
 async function router() {
   // Hash normalizado (sin '#', minúsculas)
   const raw = window.location.hash || '#login';
-  const hash = raw.replace(/^#/, '').toLowerCase();
-  const isLoginRoute = hash === 'login';
-  const isNoAccessRoute = hash === 'not-authorized';
+  const normalized = raw.replace(/^#/, '');
+  const lower = normalized.toLowerCase();
+  const [hashPath] = lower.split('?');
+  const hashRoute = hashPath || 'login';
+  const isLoginRoute = hashRoute === 'login';
+  const isNoAccessRoute = hashRoute === 'not-authorized';
 
   if (isLoginRoute && isAuthenticated()) {
     const ready = await ensureAuthReady({ silent: true });
@@ -119,7 +122,7 @@ async function router() {
   }
 
   // -------- Guard: permiso de lectura (R)
-  const moduleKey = moduleKeyFromHash(hash);
+  const moduleKey = moduleKeyFromHash(hashRoute);
   if (!isLoginRoute && moduleKey && !canRead(moduleKey)) {
     await renderNoAccess();
     // Emite snackbar con código estandarizado (sin cambiar texto visible)
@@ -128,11 +131,11 @@ async function router() {
   }
 
   // -------- 404 si la ruta no existe
-  const path = routes[hash];
+  const path = routes[hashRoute];
   if (!path) {
     const app = document.getElementById('app');
     if (app) {
-      const message = hash ? `La ruta #${hash} no existe.` : undefined;
+      const message = hashRoute ? `La ruta #${hashRoute} no existe.` : undefined;
       app.innerHTML = uiNotFound(message);
     }
     return;
@@ -144,7 +147,7 @@ async function router() {
     await renderView(path);
 
     // Import dinámico del JS correspondiente (mismo patrón que ya usás)
-    switch (hash) {
+    switch (hashRoute) {
       case 'login': {
         // Ocultar header en login
         const header = document.getElementById('admin-header');
@@ -162,7 +165,10 @@ async function router() {
       case 'products': {
         await loadAdminHeader();
         const mod = await import('../components/products/products.js');
-        if (mod && typeof mod.initProducts === 'function') mod.initProducts();
+        if (mod) {
+          if (typeof mod.initModule === 'function') mod.initModule();
+          else if (typeof mod.initProducts === 'function') mod.initProducts();
+        }
         break;
       }
       case 'categories': {

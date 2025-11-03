@@ -135,3 +135,74 @@ export function getErrorMessage(code) {
       return 'Ocurrió un error. Intentá nuevamente.';
   }
 }
+
+/**
+ * Serializa un objeto plano a querystring.
+ * - Ignora claves con valores undefined, null o string vacío.
+ * - Convierte booleanos a 'true'/'false'.
+ * - Acepta arrays para parámetros repetidos.
+ */
+export function buildQuery(params = {}) {
+  const searchParams = new URLSearchParams();
+  if (!params || typeof params !== 'object') return '';
+
+  const appendValue = (key, value) => {
+    if (value === undefined || value === null) return;
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (!trimmed) return;
+      searchParams.append(key, trimmed);
+      return;
+    }
+    if (typeof value === 'boolean') {
+      searchParams.append(key, value ? 'true' : 'false');
+      return;
+    }
+    if (Number.isFinite(value)) {
+      searchParams.append(key, String(value));
+      return;
+    }
+    searchParams.append(key, String(value));
+  };
+
+  for (const [key, rawValue] of Object.entries(params)) {
+    if (!key) continue;
+    const value = rawValue;
+    if (Array.isArray(value)) {
+      value.forEach((entry) => appendValue(key, entry));
+    } else {
+      appendValue(key, value);
+    }
+  }
+
+  const query = searchParams.toString();
+  return query;
+}
+
+/** Formatea montos monetarios en ARS (sin decimales innecesarios). */
+export function formatMoney(value, { locale = 'es-AR', currency = 'ARS', minimumFractionDigits = 0 } = {}) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return '';
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency,
+    minimumFractionDigits,
+  }).format(number);
+}
+
+/** Debounce básico para inputs y scroll. */
+export function debounce(fn, delay = 300) {
+  if (typeof fn !== 'function') {
+    throw new TypeError('debounce: fn must be a function');
+  }
+  let timer = null;
+  return (...args) => {
+    if (timer) {
+      clearTimeout(timer);
+    }
+    timer = setTimeout(() => {
+      timer = null;
+      fn(...args);
+    }, Math.max(0, delay));
+  };
+}

@@ -92,24 +92,41 @@ export function uiNotFound(message = 'sin resultados') {
  * @param {string} path - Ruta del archivo HTML a cargar
  */
 export async function renderView(path) {
-  const app = document.querySelector('#app');
-  if (!app) {
-    console.error('Error: No se encontró el contenedor #app');
+  const container = resolveContainer();
+  if (!container) {
+    console.error('Error: No se encontró el contenedor principal (#main-content/#app)');
     return;
   }
 
   ensureUiLoaderStyles();
-  app.innerHTML = uiLoader();
+  container.innerHTML = uiLoader();
 
   try {
     const res = await fetch(path, { cache: 'no-store' });
     if (!res.ok) throw new Error(`HTTP ${res.status} al cargar ${path}`);
 
     const html = await res.text();
-    app.innerHTML = html;
-    app.setAttribute('data-loaded', 'true');
+    container.innerHTML = html;
+    container.setAttribute('data-loaded', 'true');
   } catch (error) {
     console.error('Error al cargar la vista:', error);
-    app.innerHTML = uiNotFound('No se pudo cargar la vista solicitada.');
+    container.innerHTML = uiNotFound('No se pudo cargar la vista solicitada.');
   }
+}
+
+function resolveContainer() {
+  if (typeof document === 'undefined') return null;
+  const existingMain = document.getElementById('main-content');
+  if (existingMain) return existingMain;
+
+  const app = document.getElementById('app');
+  if (!app) return null;
+
+  const main = document.createElement('main');
+  main.id = 'main-content';
+  main.setAttribute('role', 'main');
+  main.setAttribute('tabindex', '-1');
+  app.innerHTML = '';
+  app.appendChild(main);
+  return main;
 }
