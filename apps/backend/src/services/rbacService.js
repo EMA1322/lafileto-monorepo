@@ -13,7 +13,8 @@ function mapRowsToArray(rows) {
     r: !!r.r,
     w: !!r.w,
     u: !!r.u,
-    d: !!r.d
+    d: !!r.d,
+    changeStatus: !!r.changeStatus
   }));
 }
 
@@ -132,7 +133,8 @@ export const rbacService = {
           r: !!entry.r,
           w: !!entry.w,
           u: !!entry.u,
-          d: !!entry.d
+          d: !!entry.d,
+          changeStatus: !!entry.changeStatus
         })).filter((entry) => entry.moduleKey.length > 0)
       : [];
 

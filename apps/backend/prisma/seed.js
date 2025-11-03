@@ -31,22 +31,52 @@ async function upsertPermission(roleId, moduleKey, flags) {
   // En tu schema, RolePermission tiene PK compuesta (roleId, moduleKey)
   await prisma.rolePermission.upsert({
     where: { roleId_moduleKey: { roleId, moduleKey } },
-    update: { r: !!flags.r, w: !!flags.w, u: !!flags.u, d: !!flags.d },
-    create: { roleId, moduleKey, r: !!flags.r, w: !!flags.w, u: !!flags.u, d: !!flags.d }
+    update: {
+      r: !!flags.r,
+      w: !!flags.w,
+      u: !!flags.u,
+      d: !!flags.d,
+      changeStatus: !!flags.changeStatus
+    },
+    create: {
+      roleId,
+      moduleKey,
+      r: !!flags.r,
+      w: !!flags.w,
+      u: !!flags.u,
+      d: !!flags.d,
+      changeStatus: !!flags.changeStatus
+    }
   });
 }
 
 const RBAC_MODULES = [
   { key: 'admin-header', name: 'Header Admin' },
-  { key: 'dashboard', name: 'Dashboard', supervisorFlags: { r: true, w: false, u: false, d: false } },
-  { key: 'products', name: 'Productos', supervisorFlags: { r: true, w: true, u: true, d: false } },
-  { key: 'categories', name: 'Categorías', supervisorFlags: { r: true, w: true, u: true, d: false } },
+  {
+    key: 'dashboard',
+    name: 'Dashboard',
+    supervisorFlags: { r: true, w: false, u: false, d: false },
+    viewerFlags: { r: true, w: false, u: false, d: false }
+  },
+  {
+    key: 'products',
+    name: 'Productos',
+    supervisorFlags: { r: true, w: true, u: true, d: false, changeStatus: true },
+    viewerFlags: { r: true, w: false, u: false, d: false, changeStatus: false }
+  },
+  {
+    key: 'categories',
+    name: 'Categorías',
+    supervisorFlags: { r: true, w: true, u: true, d: false },
+    viewerFlags: { r: true, w: false, u: false, d: false }
+  },
   { key: 'settings', name: 'Configuración' },
   { key: 'users', name: 'Usuarios / Roles & Permisos' }
 ];
 
-const ADMIN_FULL_ACCESS = { r: true, w: true, u: true, d: true };
-const NO_ACCESS = { r: false, w: false, u: false, d: false };
+const ADMIN_FULL_ACCESS = { r: true, w: true, u: true, d: true, changeStatus: true };
+const NO_ACCESS = { r: false, w: false, u: false, d: false, changeStatus: false };
+const VIEWER_NO_ACCESS = { r: false, w: false, u: false, d: false, changeStatus: false };
 
 async function upsertSetting(key, value) {
   await prisma.setting.upsert({
@@ -84,6 +114,7 @@ async function seedI1() {
   console.log('▶ Seeding roles…');
   await upsertRole('role-admin', 'Administrador');
   await upsertRole('role-supervisor', 'Supervisor');
+  await upsertRole('role-viewer', 'Viewer');
 
   console.log('▶ Seeding modules…');
   for (const mod of RBAC_MODULES) {
@@ -99,6 +130,12 @@ async function seedI1() {
   for (const mod of RBAC_MODULES) {
     const flags = mod.supervisorFlags || NO_ACCESS;
     await upsertPermission('role-supervisor', mod.key, flags);
+  }
+
+  console.log('▶ Seeding permissions (Viewer)…');
+  for (const mod of RBAC_MODULES) {
+    const flags = mod.viewerFlags || VIEWER_NO_ACCESS;
+    await upsertPermission('role-viewer', mod.key, flags);
   }
 
   console.log('▶ Seeding admin user…');

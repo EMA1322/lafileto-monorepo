@@ -25,14 +25,16 @@ const permissionEntrySchema = z
     r: boolish.optional().transform((val) => (val === undefined ? false : val)),
     w: boolish.optional().transform((val) => (val === undefined ? false : val)),
     u: boolish.optional().transform((val) => (val === undefined ? false : val)),
-    d: boolish.optional().transform((val) => (val === undefined ? false : val))
+    d: boolish.optional().transform((val) => (val === undefined ? false : val)),
+    changeStatus: boolish.optional().transform((val) => (val === undefined ? false : val))
   })
   .transform((entry) => ({
     moduleKey: entry.moduleKey,
     r: entry.r,
     w: entry.w,
     u: entry.u,
-    d: entry.d
+    d: entry.d,
+    changeStatus: entry.changeStatus
   }));
 
 export const rolePermissionsUpdateSchema = z.object({
