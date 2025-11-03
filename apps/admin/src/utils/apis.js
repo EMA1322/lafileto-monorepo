@@ -19,7 +19,7 @@ function ensureEnvelope(response) {
 export const productsApi = {
   /** Lista productos con filtros y paginación */
   async list(params = {}) {
-    const response = await apiFetch('/api/v1/products', {
+    const response = await apiFetch('/products', {
       method: 'GET',
       params,
       showErrorToast: false,
@@ -30,7 +30,7 @@ export const productsApi = {
   /** Obtiene un producto específico */
   async get(id) {
     if (!id) throw new Error('Product id is required');
-    const response = await apiFetch(`/api/v1/products/${encodeURIComponent(id)}`, {
+    const response = await apiFetch(`/products/${encodeURIComponent(id)}`, {
       method: 'GET',
       showErrorToast: false,
     });
@@ -39,7 +39,7 @@ export const productsApi = {
 
   /** Crea un nuevo producto */
   async create(payload) {
-    const response = await apiFetch('/api/v1/products', {
+    const response = await apiFetch('/products', {
       method: 'POST',
       body: payload,
       showErrorToast: false,
@@ -50,7 +50,7 @@ export const productsApi = {
   /** Actualiza un producto existente */
   async update(id, payload) {
     if (!id) throw new Error('Product id is required');
-    const response = await apiFetch(`/api/v1/products/${encodeURIComponent(id)}`, {
+    const response = await apiFetch(`/products/${encodeURIComponent(id)}`, {
       method: 'PUT',
       body: payload,
       showErrorToast: false,
@@ -61,7 +61,7 @@ export const productsApi = {
   /** Cambia el estado de un producto */
   async changeStatus(id, payload) {
     if (!id) throw new Error('Product id is required');
-    const response = await apiFetch(`/api/v1/products/${encodeURIComponent(id)}/status`, {
+    const response = await apiFetch(`/products/${encodeURIComponent(id)}/status`, {
       method: 'PATCH',
       body: payload,
       showErrorToast: false,
@@ -72,7 +72,7 @@ export const productsApi = {
   /** Elimina un producto */
   async remove(id) {
     if (!id) throw new Error('Product id is required');
-    const response = await apiFetch(`/api/v1/products/${encodeURIComponent(id)}`, {
+    const response = await apiFetch(`/products/${encodeURIComponent(id)}`, {
       method: 'DELETE',
       showErrorToast: false,
     });
@@ -83,7 +83,7 @@ export const productsApi = {
 export const categoriesApi = {
   /** Lista categorías (para selects y filtros) */
   async listAll(params = {}) {
-    const response = await apiFetch('/api/v1/categories', {
+    const response = await apiFetch('/categories', {
       method: 'GET',
       params: { ...params, all: params.all ?? 1, pageSize: params.pageSize ?? 100 },
       showErrorToast: false,
