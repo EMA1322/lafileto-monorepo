@@ -104,6 +104,37 @@ export const offersApi = {
     });
     return ensureEnvelope(response);
   },
+
+  /** Crea una oferta para un producto */
+  async create(payload) {
+    const response = await apiFetch('/offers', {
+      method: 'POST',
+      body: payload,
+      showErrorToast: false,
+    });
+    return ensureEnvelope(response);
+  },
+
+  /** Actualiza una oferta existente */
+  async update(id, payload) {
+    if (!id) throw new Error('Offer id is required');
+    const response = await apiFetch(`/offers/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      body: payload,
+      showErrorToast: false,
+    });
+    return ensureEnvelope(response);
+  },
+
+  /** Elimina una oferta */
+  async remove(id) {
+    if (!id) throw new Error('Offer id is required');
+    const response = await apiFetch(`/offers/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      showErrorToast: false,
+    });
+    return ensureEnvelope(response);
+  },
 };
 
 export const apis = {

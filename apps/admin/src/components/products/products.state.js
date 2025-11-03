@@ -212,9 +212,8 @@ export function upsertProduct(product) {
   } else {
     state.items.unshift(normalized);
     state.meta.total += 1;
+    state.meta.pageCount = computePageCount(state.meta.total, state.meta.pageSize);
   }
-  state.meta.page = 1;
-  state.meta.pageCount = computePageCount(state.meta.total, state.meta.pageSize);
 }
 
 export function removeProduct(id) {

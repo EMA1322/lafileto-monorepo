@@ -4,7 +4,7 @@
 // Comentarios en español, código y nombres en inglés.
 // ============================================================================
 
-import { formatMoney as sharedFormatMoney, slugify, isValidSlug } from '@/utils/helpers.js';
+import { formatMoney as sharedFormatMoney } from '@/utils/helpers.js';
 
 export const MODULE_KEY = 'products';
 export const DEFAULT_PAGE_SIZE = 10;
@@ -102,20 +102,6 @@ export function formatMoney(value, options = {}) {
     minimumFractionDigits: 2,
     ...options,
   });
-}
-
-/** Genera un slug kebab-case basado en el helper global */
-export function kebabifySlug(value) {
-  if (!value) return '';
-  return slugify(String(value)).replace(/[^a-z0-9-]/g, '');
-}
-
-export function normalizeSku(value) {
-  if (!value) return '';
-  return String(value)
-    .toUpperCase()
-    .replace(/[^A-Z0-9_-]/g, '')
-    .slice(0, 40);
 }
 
 /** Normaliza bool featured desde controles UI */
@@ -273,16 +259,6 @@ export function validateProductPayload(payload = {}) {
     errors.push({ field: 'name', message: 'Ingresá el nombre.' });
   }
 
-  const slug = String(payload.slug || '').trim();
-  if (slug && !isValidSlug(slug)) {
-    errors.push({ field: 'slug', message: 'El slug debe estar en formato kebab-case.' });
-  }
-
-  const sku = String(payload.sku || '').trim();
-  if (sku && !/^[A-Z0-9_-]{3,40}$/.test(sku)) {
-    errors.push({ field: 'sku', message: 'El SKU debe tener 3 a 40 caracteres alfanuméricos.' });
-  }
-
   const price = Number(payload.price);
   if (!Number.isFinite(price) || price < 0) {
     errors.push({ field: 'price', message: 'El precio debe ser mayor o igual a 0.' });
@@ -301,6 +277,23 @@ export function validateProductPayload(payload = {}) {
   const status = payload.status ?? 'draft';
   if (!STATUS_VALUES.includes(status)) {
     errors.push({ field: 'status', message: 'Seleccioná un estado válido.' });
+  }
+
+  const imageUrl = String(payload.imageUrl || payload.image_url || '').trim();
+  if (imageUrl) {
+    const isValidHttps = /^https:\/\//i.test(imageUrl);
+    let isValidUrl = false;
+    if (isValidHttps) {
+      try {
+        const parsed = new URL(imageUrl);
+        isValidUrl = parsed.protocol === 'https:' && Boolean(parsed.hostname);
+      } catch {
+        isValidUrl = false;
+      }
+    }
+    if (!isValidHttps || !isValidUrl) {
+      errors.push({ field: 'imageUrl', message: 'Ingresá una URL https válida.' });
+    }
   }
 
   return errors;
