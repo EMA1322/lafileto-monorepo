@@ -24,14 +24,10 @@ const initialProducts = [
   {
     id: 'prod-001',
     name: 'Pollo al Horno',
-    slug: 'pollo-al-horno',
-    sku: 'POL-001',
     description: 'Clásico de la casa',
     price: 2500,
-    currency: 'ARS',
     stock: 15,
     status: 'ACTIVE',
-    isFeatured: true,
     categoryId: 'cat-001',
     createdAt: new Date('2024-01-01T10:00:00.000Z'),
     updatedAt: new Date('2024-01-01T10:00:00.000Z')
@@ -39,14 +35,10 @@ const initialProducts = [
   {
     id: 'prod-002',
     name: 'Pollo a la Parrilla',
-    slug: 'pollo-a-la-parrilla',
-    sku: 'POL-002',
     description: 'Servido con papas rústicas',
     price: 2100,
-    currency: 'ARS',
     stock: 12,
     status: 'ACTIVE',
-    isFeatured: true,
     categoryId: 'cat-001',
     createdAt: new Date('2024-01-05T10:00:00.000Z'),
     updatedAt: new Date('2024-01-05T10:00:00.000Z')
@@ -54,14 +46,10 @@ const initialProducts = [
   {
     id: 'prod-003',
     name: 'Milanesa Napolitana',
-    slug: 'milanesa-napolitana',
-    sku: 'MIL-001',
     description: 'Con puré de papas',
     price: 1900,
-    currency: 'ARS',
     stock: 20,
     status: 'DRAFT',
-    isFeatured: false,
     categoryId: 'cat-001',
     createdAt: new Date('2024-02-01T10:00:00.000Z'),
     updatedAt: new Date('2024-02-01T10:00:00.000Z')
@@ -69,14 +57,10 @@ const initialProducts = [
   {
     id: 'prod-004',
     name: 'Pizza Napolitana',
-    slug: 'pizza-napolitana',
-    sku: 'PIZ-001',
     description: 'Con tomate y mozzarella',
     price: 3300,
-    currency: 'ARS',
     stock: 8,
     status: 'ARCHIVED',
-    isFeatured: false,
     categoryId: 'cat-002',
     createdAt: new Date('2024-02-15T10:00:00.000Z'),
     updatedAt: new Date('2024-02-15T10:00:00.000Z')
@@ -84,14 +68,10 @@ const initialProducts = [
   {
     id: 'prod-005',
     name: 'Ensalada César',
-    slug: 'ensalada-cesar',
-    sku: 'ENS-001',
     description: 'Lechuga, pollo y crutones',
     price: 1500,
-    currency: 'ARS',
     stock: 10,
     status: 'ACTIVE',
-    isFeatured: false,
     categoryId: 'cat-001',
     createdAt: new Date('2024-03-01T10:00:00.000Z'),
     updatedAt: new Date('2024-03-01T10:00:00.000Z')
@@ -99,14 +79,10 @@ const initialProducts = [
   {
     id: 'prod-006',
     name: 'Lasaña Boloñesa',
-    slug: 'lasana-bolonesa',
-    sku: 'LAS-001',
     description: 'Capas de pasta y carne',
     price: 2800,
-    currency: 'ARS',
     stock: 6,
     status: 'ACTIVE',
-    isFeatured: false,
     categoryId: 'cat-002',
     createdAt: new Date('2024-03-10T10:00:00.000Z'),
     updatedAt: new Date('2024-03-10T10:00:00.000Z')
@@ -213,7 +189,6 @@ productRepository.list = async function list({
   q,
   status = 'all',
   categoryId,
-  isFeatured,
   priceMin,
   priceMax,
   orderBy = 'name',
@@ -227,11 +202,10 @@ productRepository.list = async function list({
 
   if (typeof q === 'string' && q.trim().length > 0) {
     const needle = q.trim().toLowerCase();
-    filtered = filtered.filter((item) =>
-      item.name.toLowerCase().includes(needle) ||
-      item.slug.toLowerCase().includes(needle) ||
-      item.sku.toLowerCase().includes(needle)
-    );
+    filtered = filtered.filter((item) => {
+      const fields = [item.name, item.description];
+      return fields.some((value) => String(value ?? '').toLowerCase().includes(needle));
+    });
   }
 
   if (typeof status === 'string' && status !== 'all') {
@@ -241,10 +215,6 @@ productRepository.list = async function list({
 
   if (typeof categoryId === 'string' && categoryId.trim().length > 0) {
     filtered = filtered.filter((item) => item.categoryId === categoryId.trim());
-  }
-
-  if (typeof isFeatured === 'boolean') {
-    filtered = filtered.filter((item) => item.isFeatured === isFeatured);
   }
 
   if (Number.isFinite(priceMin)) {
@@ -271,29 +241,15 @@ productRepository.findById = async (id) => {
   return found ? cloneProduct(found) : null;
 };
 
-productRepository.findBySlug = async (slug) => {
-  const found = products.find((item) => item.slug === slug);
-  return found ? cloneProduct(found) : null;
-};
-
-productRepository.findBySku = async (sku) => {
-  const found = products.find((item) => item.sku === sku);
-  return found ? cloneProduct(found) : null;
-};
-
 productRepository.create = async (data) => {
   const now = new Date();
   const created = {
     id: data.id || `prod-${String(products.length + 1).padStart(3, '0')}`,
     name: data.name,
-    slug: data.slug,
-    sku: data.sku,
     description: data.description ?? null,
     price: Number.parseFloat(data.price),
-    currency: data.currency,
     stock: data.stock,
     status: data.status,
-    isFeatured: data.isFeatured,
     categoryId: data.categoryId,
     createdAt: now,
     updatedAt: now
@@ -393,7 +349,6 @@ offerRepository.listActiveOffers = async ({
   q,
   status = 'all',
   categoryId,
-  isFeatured,
   priceMin,
   priceMax,
   orderBy = 'name',
@@ -414,10 +369,8 @@ offerRepository.listActiveOffers = async ({
   const filtered = entries.filter(({ product }) => {
     if (typeof q === 'string' && q.trim().length > 0) {
       const needle = q.trim().toLowerCase();
-      const haystack = [product.name, product.slug, product.sku].map((value) =>
-        String(value ?? '').toLowerCase()
-      );
-      if (!haystack.some((field) => field.includes(needle))) {
+      const fields = [product.name, product.description];
+      if (!fields.some((value) => String(value ?? '').toLowerCase().includes(needle))) {
         return false;
       }
     }
@@ -430,12 +383,6 @@ offerRepository.listActiveOffers = async ({
 
     if (typeof categoryId === 'string' && categoryId.trim().length > 0) {
       if (product.categoryId !== categoryId.trim()) {
-        return false;
-      }
-    }
-
-    if (typeof isFeatured === 'boolean') {
-      if (product.isFeatured !== isFeatured) {
         return false;
       }
     }
@@ -509,15 +456,15 @@ test('POST /products crea un producto nuevo', async () => {
     validated: {
       body: {
         name: 'Ravioles de espinaca',
-        slug: 'ravioles-de-espinaca',
-        sku: 'RAV-010',
         description: 'Con salsa rosa',
         price: 1850.5,
-        currency: 'ARS',
         stock: 30,
         status: 'active',
-        isFeatured: false,
-        categoryId: 'cat-001'
+        categoryId: 'cat-001',
+        slug: 'legacy-ravioles',
+        sku: 'RAV-010',
+        currency: 'USD',
+        isFeatured: true
       }
     }
   };
@@ -531,10 +478,12 @@ test('POST /products crea un producto nuevo', async () => {
   assert.equal(error, null);
   assert.equal(res.statusCode, 201);
   assert.equal(res.body?.ok, true);
-  assert.equal(res.body?.data?.slug, 'ravioles-de-espinaca');
-  assert.equal(res.body?.data?.sku, 'RAV-010');
   assert.equal(res.body?.data?.price, 1850.5);
   assert.equal(res.body?.data?.status, 'active');
+  assert.equal(res.body?.data?.slug, undefined);
+  assert.equal(res.body?.data?.sku, undefined);
+  assert.equal(res.body?.data?.currency, undefined);
+  assert.equal(res.body?.data?.isFeatured, undefined);
   assert.equal(products.length, initialProducts.length + 1);
 });
 
@@ -564,8 +513,7 @@ test('PUT /products/:id actualiza datos principales', async () => {
       body: {
         name: 'Pollo a la Parrilla Especial',
         price: 2250.75,
-        stock: 18,
-        isFeatured: false
+        stock: 18
       }
     }
   };
@@ -581,7 +529,6 @@ test('PUT /products/:id actualiza datos principales', async () => {
   assert.equal(res.body?.ok, true);
   assert.equal(res.body?.data?.name, 'Pollo a la Parrilla Especial');
   assert.equal(res.body?.data?.price, 2250.75);
-  assert.equal(res.body?.data?.isFeatured, false);
 });
 
 test('DELETE /products/:id elimina el producto', async () => {
@@ -600,66 +547,6 @@ test('DELETE /products/:id elimina el producto', async () => {
   assert.equal(products.find((item) => item.id === 'prod-004'), undefined);
 });
 
-test('POST /products con slug duplicado retorna 409', async () => {
-  const req = {
-    validated: {
-      body: {
-        name: 'Pollo BBQ',
-        slug: 'pollo-al-horno',
-        sku: 'POL-999',
-        price: 2600,
-        currency: 'ARS',
-        stock: 5,
-        status: 'active',
-        isFeatured: false,
-        categoryId: 'cat-001'
-      }
-    }
-  };
-  const res = createResponse();
-  let capturedError = null;
-
-  await productsController.create(req, res, (err) => {
-    capturedError = err;
-  });
-
-  assert.ok(capturedError, 'Debe retornar error por slug duplicado');
-  const errorRes = createResponse();
-  await errorHandler(capturedError, req, errorRes, () => {});
-  assert.equal(errorRes.statusCode, 409);
-  assert.equal(errorRes.body?.error?.code, 'RESOURCE_CONFLICT');
-});
-
-test('POST /products con SKU duplicado retorna 409', async () => {
-  const req = {
-    validated: {
-      body: {
-        name: 'Pollo a la Mostaza',
-        slug: 'pollo-a-la-mostaza',
-        sku: 'POL-002',
-        price: 2400,
-        currency: 'ARS',
-        stock: 9,
-        status: 'active',
-        isFeatured: false,
-        categoryId: 'cat-001'
-      }
-    }
-  };
-  const res = createResponse();
-  let capturedError = null;
-
-  await productsController.create(req, res, (err) => {
-    capturedError = err;
-  });
-
-  assert.ok(capturedError, 'Debe retornar error por SKU duplicado');
-  const errorRes = createResponse();
-  await errorHandler(capturedError, req, errorRes, () => {});
-  assert.equal(errorRes.statusCode, 409);
-  assert.equal(errorRes.body?.error?.code, 'RESOURCE_CONFLICT');
-});
-
 test('GET /products con filtros combinados retorna meta coherente', async () => {
   const req = {
     validated: {
@@ -669,7 +556,6 @@ test('GET /products con filtros combinados retorna meta coherente', async () => 
         q: 'pollo',
         status: 'active',
         categoryId: 'cat-001',
-        isFeatured: true,
         priceMin: 2000,
         priceMax: 2600,
         orderBy: 'price',
@@ -708,7 +594,6 @@ test('GET /products?q=pollo es case-insensitive', async () => {
         q: 'PoLlO',
         status: 'all',
         categoryId: undefined,
-        isFeatured: undefined,
         priceMin: undefined,
         priceMax: undefined,
         orderBy: 'name',
@@ -741,7 +626,6 @@ test('GET /products?all=1 retorna todos con meta normalizada', async () => {
         q: undefined,
         status: 'all',
         categoryId: undefined,
-        isFeatured: undefined,
         priceMin: undefined,
         priceMax: undefined,
         orderBy: 'updatedAt',
@@ -779,7 +663,6 @@ test('GET /products incluye resumen de oferta con priceFinal según vigencia', a
         q: undefined,
         status: 'all',
         categoryId: undefined,
-        isFeatured: undefined,
         priceMin: undefined,
         priceMax: undefined,
         orderBy: 'name',
@@ -840,7 +723,6 @@ test('GET /offers devuelve sólo productos con ofertas activas', async () => {
         q: undefined,
         status: 'all',
         categoryId: undefined,
-        isFeatured: undefined,
         priceMin: undefined,
         priceMax: undefined,
         orderBy: 'name',

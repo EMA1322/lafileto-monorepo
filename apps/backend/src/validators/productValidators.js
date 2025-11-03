@@ -5,6 +5,14 @@ import { toBooleanish } from '../utils/formatters.js';
 
 const STATUS_VALUES = ['draft', 'active', 'archived'];
 
+const stripLegacyProductFields = (data) => {
+  if (!data || typeof data !== 'object') return data;
+
+  // Campos legacy que serán eliminados en próximas migraciones.
+  const { slug: _slug, sku: _sku, currency: _currency, isFeatured: _isFeatured, ...rest } = data;
+  return rest;
+};
+
 const boolishOptional = z.preprocess((value) => {
   if (value === undefined || value === null) return undefined;
   return toBooleanish(value);
@@ -106,7 +114,6 @@ export const productListQuerySchema = z
     q: searchParam,
     status: statusParam,
     categoryId: categoryIdParam,
-    isFeatured: boolishOptional,
     priceMin: priceFilterParam,
     priceMax: priceFilterParam,
     orderBy: orderByParam,
@@ -114,13 +121,13 @@ export const productListQuerySchema = z
     orderDirection: orderDirectionParam,
     all: boolishOptional.transform((val) => val ?? false)
   })
+  .passthrough()
   .transform((values) => ({
     page: values.page,
     pageSize: values.pageSize,
     q: values.q,
     status: values.status,
     categoryId: values.categoryId,
-    isFeatured: values.isFeatured,
     priceMin: values.priceMin,
     priceMax: values.priceMax,
     orderBy: values.orderBy,
@@ -134,22 +141,6 @@ const nameSchema = z
   .trim()
   .min(2, 'El nombre debe tener al menos 2 caracteres.')
   .max(80, 'El nombre es demasiado largo.');
-
-const slugSchema = z
-  .string({ required_error: 'El slug es obligatorio.' })
-  .trim()
-  .min(2, 'El slug debe tener al menos 2 caracteres.')
-  .max(120, 'El slug es demasiado largo.')
-  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'El slug debe estar en kebab-case.')
-  .transform((val) => val.toLowerCase());
-
-const skuSchema = z
-  .string({ required_error: 'El SKU es obligatorio.' })
-  .trim()
-  .min(2, 'El SKU debe tener al menos 2 caracteres.')
-  .max(120, 'El SKU es demasiado largo.')
-  .regex(/^[A-Z0-9_-]+$/, 'El SKU solo puede contener A-Z, 0-9, guiones o guiones bajos.')
-  .transform((val) => val.toUpperCase());
 
 const descriptionInput = z.preprocess((value) => {
   if (value === undefined) return undefined;
@@ -192,13 +183,6 @@ const priceSchema = z
     .min(0, 'El precio debe ser mayor o igual a 0.'))
   .transform((val) => Math.round(val * 100) / 100);
 
-const currencySchema = z
-  .string()
-  .trim()
-  .default('ARS')
-  .transform((val) => val.toUpperCase())
-  .refine((val) => val === 'ARS', { message: 'Sólo se permite ARS.' });
-
 const stockSchema = z
   .preprocess((value) => {
     if (value === undefined || value === null || value === '') return value;
@@ -225,31 +209,29 @@ const categoryIdSchema = z
   .trim()
   .min(1, 'La categoría es obligatoria.');
 
-export const productCreateSchema = z.object({
-  name: nameSchema,
-  slug: slugSchema,
-  sku: skuSchema,
-  description: descriptionCreateSchema,
-  price: priceSchema,
-  currency: currencySchema.optional(),
-  stock: stockSchema,
-  status: statusSchema.optional().transform((val) => val ?? 'draft'),
-  isFeatured: boolishOptional.transform((val) => val ?? false),
-  categoryId: categoryIdSchema
-});
+export const productCreateSchema = z
+  .object({
+    name: nameSchema,
+    description: descriptionCreateSchema,
+    price: priceSchema,
+    stock: stockSchema,
+    status: statusSchema.optional().transform((val) => val ?? 'draft'),
+    categoryId: categoryIdSchema
+  })
+  .passthrough()
+  .transform(stripLegacyProductFields);
 
-export const productUpdateSchema = z.object({
-  name: nameSchema.optional(),
-  slug: slugSchema.optional(),
-  sku: skuSchema.optional(),
-  description: descriptionUpdateSchema,
-  price: priceSchema.optional(),
-  currency: currencySchema.optional(),
-  stock: stockSchema.optional(),
-  status: statusSchema.optional(),
-  isFeatured: boolishOptional,
-  categoryId: categoryIdSchema.optional()
-});
+export const productUpdateSchema = z
+  .object({
+    name: nameSchema.optional(),
+    description: descriptionUpdateSchema,
+    price: priceSchema.optional(),
+    stock: stockSchema.optional(),
+    status: statusSchema.optional(),
+    categoryId: categoryIdSchema.optional()
+  })
+  .passthrough()
+  .transform(stripLegacyProductFields);
 
 export const productStatusSchema = z.object({
   status: statusSchema

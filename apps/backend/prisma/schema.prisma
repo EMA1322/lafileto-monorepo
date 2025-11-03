@@ -85,14 +85,10 @@ model Category {
 model Product {
   id          String        @id @default(cuid()) @db.VarChar(191)
   name        String        @db.VarChar(80)
-  slug        String        @unique @db.VarChar(120)
-  sku         String        @unique @db.VarChar(120)
   description String?       @db.VarChar(1024)
   price       Decimal       @db.Decimal(10, 2)
-  currency    String        @default("ARS") @db.Char(3)
   stock       Int           @default(0)
   status      ProductStatus @default(DRAFT)
-  isFeatured  Boolean       @default(false)
   categoryId  String        @db.VarChar(191)
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
