@@ -18,7 +18,8 @@ function normalizePermissions(rows = []) {
       r: !!row.r,
       w: !!row.w,
       u: !!row.u,
-      d: !!row.d
+      d: !!row.d,
+      changeStatus: !!row.changeStatus
     };
   }
   return map;

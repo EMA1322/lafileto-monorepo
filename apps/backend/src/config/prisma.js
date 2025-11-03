@@ -20,6 +20,15 @@ try {
           update: notImplemented,
           delete: notImplemented
         };
+        this.product = {
+          findUnique: notImplemented,
+          findMany: notImplemented,
+          count: notImplemented,
+          create: notImplemented,
+          update: notImplemented,
+          delete: notImplemented,
+          deleteMany: notImplemented
+        };
         this.rolePermission = {
           findUnique: notImplemented
         };

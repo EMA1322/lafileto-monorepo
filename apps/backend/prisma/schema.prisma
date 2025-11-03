@@ -16,6 +16,12 @@ enum UserStatus {
   ACTIVE
   INACTIVE
 }
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
 // ── Models ──────────────────────────────────────────────────────────────────
 model User {
   id           Int        @id @default(autoincrement())
@@ -50,6 +56,7 @@ model RolePermission {
   w         Boolean @default(false) // write (create)
   u         Boolean @default(false) // update
   d         Boolean @default(false) // delete
+  changeStatus Boolean @default(false)
 
   role   Role   @relation(fields: [roleId], references: [roleId])
   module Module @relation(fields: [moduleKey], references: [moduleKey])
@@ -70,5 +77,28 @@ model Category {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  products  Product[]
+
   @@index([active])
+}
+
+model Product {
+  id          String        @id @default(cuid()) @db.VarChar(191)
+  name        String        @db.VarChar(80)
+  slug        String        @unique @db.VarChar(120)
+  sku         String        @unique @db.VarChar(120)
+  description String?       @db.VarChar(1024)
+  price       Decimal       @db.Decimal(10, 2)
+  currency    String        @default("ARS") @db.Char(3)
+  stock       Int           @default(0)
+  status      ProductStatus @default(DRAFT)
+  isFeatured  Boolean       @default(false)
+  categoryId  String        @db.VarChar(191)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  category Category @relation(fields: [categoryId], references: [id])
+
+  @@index([categoryId])
+  @@index([status, updatedAt])
 }

@@ -3,7 +3,7 @@
 import { prisma } from '../config/prisma.js';
 import { createError } from '../utils/errors.js';
 
-// action: 'r' | 'w' | 'u' | 'd'
+// action: 'r' | 'w' | 'u' | 'd' | 'changeStatus'
 export function rbacGuard(moduleKey, action = 'r', options = {}) {
   const deniedCode = typeof options.errorCode === 'string' && options.errorCode.trim().length > 0
     ? options.errorCode.trim()
@@ -30,7 +30,7 @@ export function rbacGuard(moduleKey, action = 'r', options = {}) {
     try {
       const rp = await prisma.rolePermission.findUnique({
         where: { roleId_moduleKey: { roleId, moduleKey } },
-        select: { r: true, w: true, u: true, d: true }
+        select: { r: true, w: true, u: true, d: true, changeStatus: true }
       });
 
       const allowed = !!rp?.[action];

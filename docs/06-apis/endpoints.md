@@ -11,7 +11,7 @@ scope: Tabla sincronizada con OpenAPI v1; filtros/paginación/orden/búsqueda co
 ## Parámetros comunes
 - `page` (>=1), `pageSize` (1..100, **default 10**), `sort` (`field:asc|desc`[, ...]), `q` (texto).
 - `all=1` en `/users` devuelve todos los registros (sin paginar).
-- Filtros de **Products**: `categoryId`, `isOffer`.
+- Filtros de **Products**: `q`, `status`, `categoryId`, `isFeatured`, `priceMin`, `priceMax`, `orderBy`, `orderDir`, `all`.
 
 
 ## Health
@@ -190,14 +190,187 @@ curl -s -X DELETE -H "Authorization: Bearer $ADMIN_JWT" \
 
 
 
-## Products (Catálogo)
-| Método | Path | Auth | Query/Body | Notas | Estado |
-|---|---|---|---|---|---|
-| GET | `/products` | **(público)** | `page,pageSize,q,sort,categoryId,isOffer` | `discount 0–100` | **Pendiente (I2)** |
-| POST | `/products` | JWT | `{ name,price,categoryId,description?,isOffer?,discount? }` | — | **Pendiente (I2)** |
-| GET | `/products/:id` | **(público)** | — | — | **Pendiente (I2)** |
-| PUT | `/products/:id` | JWT | `{ ...campos opcionales... }` | — | **Pendiente (I2)** |
-| DELETE | `/products/:id` | JWT | — | Idempotente | **Pendiente (I2)** |
+## Products (Admin)
+
+### Parámetros soportados (GET `/api/v1/products`)
+
+| Parámetro | Tipo | Default | Descripción |
+|-----------|------|---------|-------------|
+| `page` | number | `1` | Página actual (`>=1`). |
+| `pageSize` | number | `10` | Límite por página (`5..100`). |
+| `q` | string | — | Búsqueda parcial por `name`, `slug` o `sku` (case-insensitive). |
+| `status` | enum | `all` | `all`, `draft`, `active`, `archived`. |
+| `categoryId` | string | — | Filtra por categoría asociada. |
+| `isFeatured` | boolean | `false` | Si está presente, filtra por destacados. |
+| `priceMin` | number | — | Precio mínimo (>=0). |
+| `priceMax` | number | — | Precio máximo (>= `priceMin`). |
+| `orderBy` | enum | `name` | `name`, `price`, `updatedAt`. |
+| `orderDir` | enum | `asc` | `asc` o `desc`. |
+| `all` | boolean | `false` | Si es `true`, fuerza `page=1` y `pageSize=100`. |
+
+### Endpoints
+
+| Método | Path | Permiso | Body / Query | 200 (data) |
+|---|---|---|---|---|
+| GET | `/api/v1/products` | `products:r` | Query arriba | `{ ok:true, data:{ items[{ id,name,slug,sku,description?,price,currency,stock,status,isFeatured,categoryId,createdAt,updatedAt }], meta{ page,pageSize,total,pageCount } } }` |
+| GET | `/api/v1/products/:id` | `products:r` | — | `{ ok:true, data:{ id,name,slug,sku,description?,price,currency,stock,status,isFeatured,categoryId,createdAt,updatedAt } }` |
+| POST | `/api/v1/products` | `products:w` | `{ name, slug, sku, price, currency?, stock, status?, isFeatured?, description?, categoryId }` | `{ ok:true, data:Product }` (201) |
+| PUT | `/api/v1/products/:id` | `products:u` | `{ name?, slug?, sku?, price?, currency?, stock?, status?, isFeatured?, description?, categoryId? }` | `{ ok:true, data:Product }` |
+| PATCH | `/api/v1/products/:id/status` | `products:changeStatus` | `{ status:"draft|active|archived" }` | `{ ok:true, data:Product }` |
+| DELETE | `/api/v1/products/:id` | `products:d` | — | `{ ok:true, data:{ id, deleted:true } }` |
+
+> `price` se almacena como `Decimal(10,2)` pero se serializa como número (`float`) en el envelope. `slug` (kebab-case) y `sku` (A–Z, 0–9, `-`, `_`) son únicos.
+
+### Ejemplos
+
+**GET con filtros y orden**
+```http
+GET /api/v1/products?q=pollo&status=active&categoryId=cat-001&isFeatured=true&priceMin=2000&priceMax=2600&orderBy=price&orderDir=desc&page=1&pageSize=1
+Authorization: Bearer <token_admin>
+Accept: application/json
+```
+
+```json
+{
+  "ok": true,
+  "data": {
+    "items": [
+      {
+        "id": "prod-001",
+        "name": "Pollo al Horno",
+        "slug": "pollo-al-horno",
+        "sku": "POL-001",
+        "description": "Clásico de la casa",
+        "price": 2500,
+        "currency": "ARS",
+        "stock": 15,
+        "status": "active",
+        "isFeatured": true,
+        "categoryId": "cat-001",
+        "createdAt": "2024-01-01T10:00:00.000Z",
+        "updatedAt": "2024-01-05T12:00:00.000Z"
+      }
+    ],
+    "meta": {
+      "page": 1,
+      "pageSize": 1,
+      "total": 2,
+      "pageCount": 2
+    }
+  }
+}
+```
+
+**POST**
+```http
+POST /api/v1/products
+Authorization: Bearer <token_admin>
+Content-Type: application/json
+
+{
+  "name": "Ravioles de espinaca",
+  "slug": "ravioles-de-espinaca",
+  "sku": "RAV-010",
+  "price": 1850.5,
+  "stock": 30,
+  "status": "draft",
+  "categoryId": "cat-001"
+}
+```
+
+```json
+{
+  "ok": true,
+  "data": {
+    "id": "prod-xyz123",
+    "name": "Ravioles de espinaca",
+    "slug": "ravioles-de-espinaca",
+    "sku": "RAV-010",
+    "description": null,
+    "price": 1850.5,
+    "currency": "ARS",
+    "stock": 30,
+    "status": "draft",
+    "isFeatured": false,
+    "categoryId": "cat-001",
+    "createdAt": "2025-03-20T15:12:00.000Z",
+    "updatedAt": "2025-03-20T15:12:00.000Z"
+  }
+}
+```
+
+**PATCH status**
+```http
+PATCH /api/v1/products/prod-xyz123/status
+Authorization: Bearer <token_supervisor>
+Content-Type: application/json
+
+{ "status": "active" }
+```
+
+```json
+{
+  "ok": true,
+  "data": {
+    "id": "prod-xyz123",
+    "status": "active",
+    "updatedAt": "2025-03-20T15:20:00.000Z"
+  }
+}
+```
+
+**Error 409 (slug o SKU duplicado)**
+```json
+{
+  "ok": false,
+  "error": {
+    "code": "RESOURCE_CONFLICT",
+    "message": "El slug ya está en uso."
+  }
+}
+```
+
+### RBAC (moduleKey=`products`)
+
+| Acción | Descripción | `role-admin` | `role-supervisor` (seed) | `role-viewer` |
+|---|---|---|---|---|
+| `r` | Listar / ver detalle | ✔︎ | ✔︎ | ✔︎ |
+| `w` | Crear | ✔︎ | ✔︎ | ✖︎ |
+| `u` | Editar | ✔︎ | ✔︎ | ✖︎ |
+| `d` | Eliminar | ✔︎ | ✖︎ | ✖︎ |
+| `changeStatus` | Cambiar estado (`draft/active/archived`) | ✔︎ | ✔︎ | ✖︎ |
+
+### Errores frecuentes
+
+| Código | HTTP | Descripción | Acción recomendada |
+|---|---|---|---|
+| `RESOURCE_NOT_FOUND` | 404 | Producto inexistente o ID inválido. | Confirmar `id` antes de invocar GET/PUT/PATCH/DELETE. |
+| `RESOURCE_CONFLICT` | 409 | `slug` o `sku` duplicados (`P2002`). | Ajustar valores únicos antes de reintentar. |
+| `VALIDATION_ERROR` | 422 | Campos fuera de rango (precio <0, stock <0, slug inválido, categoría inexistente). | Validar datos en UI; verificar categoría. |
+| `PERMISSION_DENIED` | 403 | Falta del permiso (`products:w/u/d/changeStatus`). | Revisar rol y seeds. |
+
+### Comandos de verificación (smoke manual)
+
+```bash
+# crear producto
+curl -X POST "$API_BASE/api/v1/products" \
+ -H "Authorization: Bearer $TOKEN_ADMIN" -H "Content-Type: application/json" \
+ -d '{"name":"Pollo al horno","slug":"pollo-al-horno","sku":"POL-001","price":2500.00,"stock":10,"status":"active","categoryId":"cat-001"}' | jq '.'
+
+# listar con filtros
+curl "$API_BASE/api/v1/products?q=pollo&page=1&pageSize=10&orderBy=updatedAt&orderDir=desc" \
+ -H "Authorization: Bearer $TOKEN_VIEWER" | jq '.'
+
+# duplicado de slug → 409
+curl -X POST "$API_BASE/api/v1/products" \
+ -H "Authorization: Bearer $TOKEN_ADMIN" -H "Content-Type: application/json" \
+ -d '{"name":"Pollo BBQ","slug":"pollo-al-horno","sku":"POL-999","price":2100,"stock":5,"status":"draft","categoryId":"cat-001"}' | jq '.'
+
+# cambiar status
+curl -X PATCH "$API_BASE/api/v1/products/prod-001/status" \
+ -H "Authorization: Bearer $TOKEN_SUPERVISOR" -H "Content-Type: application/json" \
+ -d '{"status":"archived"}' | jq '.'
+```
 
 ## Settings (Negocio)
 | Método | Path | Auth | Body | Notas | Estado |

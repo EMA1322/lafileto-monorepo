@@ -17,6 +17,10 @@
         {
             "key": "categoryId",
             "value": "<replace-with-category-id>"
+        },
+        {
+            "key": "productId",
+            "value": "<replace-with-product-id>"
         }
     ],
     "item": [
@@ -535,8 +539,14 @@
                     "name": "GET /products",
                     "request": {
                         "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
                         "url": {
-                            "raw": "{{baseUrl}}/products?page=1&pageSize=12&q=milanesa&categoryId=3&isOffer=true&sort=price:asc",
+                            "raw": "{{baseUrl}}/products?page=1&pageSize=10&q=pollo&status=active&categoryId={{categoryId}}&isFeatured=true&priceMin=2000&priceMax=2600&orderBy=price&orderDir=desc&all=false",
                             "host": [
                                 "{{baseUrl}}"
                             ],
@@ -544,30 +554,39 @@
                                 "products"
                             ],
                             "query": [
-                                {
-                                    "key": "page",
-                                    "value": "1"
-                                },
-                                {
-                                    "key": "pageSize",
-                                    "value": "12"
-                                },
-                                {
-                                    "key": "q",
-                                    "value": "milanesa"
-                                },
-                                {
-                                    "key": "categoryId",
-                                    "value": "3"
-                                },
-                                {
-                                    "key": "isOffer",
-                                    "value": "true"
-                                },
-                                {
-                                    "key": "sort",
-                                    "value": "price:asc"
-                                }
+                                { "key": "page", "value": "1" },
+                                { "key": "pageSize", "value": "10" },
+                                { "key": "q", "value": "pollo" },
+                                { "key": "status", "value": "active" },
+                                { "key": "categoryId", "value": "{{categoryId}}" },
+                                { "key": "isFeatured", "value": "true" },
+                                { "key": "priceMin", "value": "2000" },
+                                { "key": "priceMax", "value": "2600" },
+                                { "key": "orderBy", "value": "price" },
+                                { "key": "orderDir", "value": "desc" },
+                                { "key": "all", "value": "false" }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "GET /products/:id",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/products/{{productId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "products",
+                                "{{productId}}"
                             ]
                         }
                     }
@@ -597,7 +616,119 @@
                         },
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"name\":\"Milanesa Napolitana\",\"price\":5000,\"categoryId\":3,\"description\":\"Con salsa y queso\",\"isOffer\":true,\"discount\":10}"
+                            "raw": "{\"name\":\"Ravioles de espinaca\",\"slug\":\"ravioles-de-espinaca\",\"sku\":\"RAV-010\",\"price\":1850.5,\"stock\":30,\"status\":\"draft\",\"categoryId\":\"{{categoryId}}\"}"
+                        }
+                    }
+                },
+                {
+                    "name": "PUT /products/:id",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/products/{{productId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "products",
+                                "{{productId}}"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"price\":1990.75,\"stock\":12,\"isFeatured\":true}"
+                        }
+                    }
+                },
+                {
+                    "name": "PATCH /products/:id/status",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/products/{{productId}}/status",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "products",
+                                "{{productId}}",
+                                "status"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"status\":\"archived\"}"
+                        }
+                    }
+                },
+                {
+                    "name": "DELETE /products/:id",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/products/{{productId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "products",
+                                "{{productId}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "POST /products (slug conflict → 409)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/products",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "products"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"name\":\"Pollo BBQ\",\"slug\":\"pollo-al-horno\",\"sku\":\"POL-999\",\"price\":2100,\"stock\":5,\"status\":\"draft\",\"categoryId\":\"{{categoryId}}\"}"
                         }
                     }
                 }

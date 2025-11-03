@@ -16,7 +16,8 @@ export const rolePermissionRepository = {
           r: entry.r,
           w: entry.w,
           u: entry.u,
-          d: entry.d
+          d: entry.d,
+          changeStatus: entry.changeStatus ?? false
         },
         create: {
           roleId,
@@ -24,7 +25,8 @@ export const rolePermissionRepository = {
           r: entry.r,
           w: entry.w,
           u: entry.u,
-          d: entry.d
+          d: entry.d,
+          changeStatus: entry.changeStatus ?? false
         }
       })
     );
@@ -41,7 +43,8 @@ export const rolePermissionRepository = {
       r: false,
       w: false,
       u: false,
-      d: false
+      d: false,
+      changeStatus: false
     }));
     return prisma.rolePermission.createMany({ data, skipDuplicates: true });
   }

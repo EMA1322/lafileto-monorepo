@@ -1,0 +1,186 @@
+// Acceso a productos (Prisma directo)
+import { Prisma } from '@prisma/client';
+import { prisma } from '../config/prisma.js';
+
+const baseSelect = {
+  id: true,
+  name: true,
+  slug: true,
+  sku: true,
+  description: true,
+  price: true,
+  currency: true,
+  stock: true,
+  status: true,
+  isFeatured: true,
+  categoryId: true,
+  createdAt: true,
+  updatedAt: true
+};
+
+const ORDERABLE_FIELDS = new Set(['name', 'price', 'updatedAt']);
+
+const STATUS_MAP = new Map([
+  ['draft', 'DRAFT'],
+  ['active', 'ACTIVE'],
+  ['archived', 'ARCHIVED']
+]);
+
+function normalizeStatus(status) {
+  if (!status || status === 'all') return undefined;
+  const lookup = typeof status === 'string' ? status.trim().toLowerCase() : '';
+  return STATUS_MAP.get(lookup);
+}
+
+function toDecimal(value) {
+  if (value instanceof Prisma.Decimal) {
+    return value;
+  }
+  if (typeof value === 'string' || typeof value === 'number') {
+    return new Prisma.Decimal(value);
+  }
+  return undefined;
+}
+
+export function buildProductOrder(orderBy = 'name', orderDirection = 'asc') {
+  const field = ORDERABLE_FIELDS.has(orderBy) ? orderBy : 'name';
+  const direction = orderDirection === 'desc' ? 'desc' : 'asc';
+  return { [field]: direction };
+}
+
+export function buildProductWhere({
+  q,
+  status,
+  categoryId,
+  isFeatured,
+  priceMin,
+  priceMax
+} = {}) {
+  const where = {};
+
+  const normalizedStatus = normalizeStatus(status);
+  if (normalizedStatus) {
+    where.status = normalizedStatus;
+  }
+
+  if (typeof categoryId === 'string' && categoryId.trim().length > 0) {
+    where.categoryId = categoryId.trim();
+  }
+
+  if (typeof isFeatured === 'boolean') {
+    where.isFeatured = isFeatured;
+  }
+
+  const priceFilter = {};
+  if (priceMin !== undefined && priceMin !== null) {
+    const decimal = toDecimal(priceMin);
+    if (decimal !== undefined) {
+      priceFilter.gte = decimal;
+    }
+  }
+  if (priceMax !== undefined && priceMax !== null) {
+    const decimal = toDecimal(priceMax);
+    if (decimal !== undefined) {
+      priceFilter.lte = decimal;
+    }
+  }
+  if (Object.keys(priceFilter).length > 0) {
+    where.price = priceFilter;
+  }
+
+  if (typeof q === 'string') {
+    const trimmed = q.trim();
+    if (trimmed) {
+      where.OR = [
+        { name: { contains: trimmed, mode: 'insensitive' } },
+        { slug: { contains: trimmed, mode: 'insensitive' } },
+        { sku: { contains: trimmed, mode: 'insensitive' } }
+      ];
+    }
+  }
+
+  return where;
+}
+
+export const productRepository = {
+  findById: (id) =>
+    prisma.product.findUnique({
+      where: { id },
+      select: baseSelect
+    }),
+
+  findBySlug: (slug) =>
+    prisma.product.findUnique({
+      where: { slug },
+      select: baseSelect
+    }),
+
+  findBySku: (sku) =>
+    prisma.product.findUnique({
+      where: { sku },
+      select: baseSelect
+    }),
+
+  async list({
+    page,
+    pageSize,
+    q,
+    status,
+    categoryId,
+    isFeatured,
+    priceMin,
+    priceMax,
+    orderBy,
+    orderDirection,
+    all = false
+  }) {
+    const where = buildProductWhere({ q, status, categoryId, isFeatured, priceMin, priceMax });
+    const order = buildProductOrder(orderBy, orderDirection);
+
+    if (all) {
+      const items = await prisma.product.findMany({
+        where,
+        orderBy: order,
+        select: baseSelect
+      });
+      return { items, total: items.length };
+    }
+
+    const skip = (page - 1) * pageSize;
+
+    const [items, total] = await Promise.all([
+      prisma.product.findMany({
+        where,
+        orderBy: order,
+        skip,
+        take: pageSize,
+        select: baseSelect
+      }),
+      prisma.product.count({ where })
+    ]);
+
+    return { items, total };
+  },
+
+  create: (data) =>
+    prisma.product.create({
+      data,
+      select: baseSelect
+    }),
+
+  update: (id, data) =>
+    prisma.product.update({
+      where: { id },
+      data,
+      select: baseSelect
+    }),
+
+  updateStatus: (id, status) =>
+    prisma.product.update({
+      where: { id },
+      data: { status },
+      select: baseSelect
+    }),
+
+  deleteById: (id) => prisma.product.delete({ where: { id } })
+};
