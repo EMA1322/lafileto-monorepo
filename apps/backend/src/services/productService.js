@@ -6,19 +6,6 @@ import { createError } from '../utils/errors.js';
 import { normalizePage, normalizePageSize } from '../utils/pagination.js';
 import { buildOfferSummary } from '../utils/offers.js';
 
-let PrismaClientKnownRequestError;
-
-try {
-  const { Prisma } = await import('@prisma/client');
-  PrismaClientKnownRequestError = Prisma.PrismaClientKnownRequestError;
-} catch (err) {
-  if (process.env.NODE_ENV === 'test' || process.env.PRISMA_CLIENT_STUB === '1') {
-    PrismaClientKnownRequestError = class PrismaClientKnownRequestErrorStub extends Error {};
-  } else {
-    throw err;
-  }
-}
-
 const DEFAULT_PAGE = 1;
 const DEFAULT_PAGE_SIZE = 10;
 const MIN_PAGE_SIZE = 5;
@@ -91,14 +78,10 @@ export function sanitizeProduct(row) {
   return {
     id: row.id,
     name: row.name,
-    slug: row.slug,
-    sku: row.sku,
     description: row.description ?? null,
     price: toNumber(row.price),
-    currency: row.currency,
     stock: row.stock,
     status,
-    isFeatured: !!row.isFeatured,
     categoryId: row.categoryId,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt
@@ -124,25 +107,6 @@ async function attachActiveOfferSummaries(products, { now } = {}) {
   }));
 }
 
-function isUniqueConstraintError(err) {
-  return err instanceof PrismaClientKnownRequestError && err.code === 'P2002';
-}
-
-function buildUniqueConflictError(target = []) {
-  const targets = Array.isArray(target) ? target : [target];
-  if (targets.includes('slug') || targets.includes('Product_slug_key')) {
-    return createError('RESOURCE_CONFLICT', 'El slug ya está en uso.', {
-      fields: [{ path: 'slug', message: 'El slug ya se encuentra en uso.' }]
-    });
-  }
-  if (targets.includes('sku') || targets.includes('Product_sku_key')) {
-    return createError('RESOURCE_CONFLICT', 'El SKU ya está en uso.', {
-      fields: [{ path: 'sku', message: 'El SKU ya se encuentra en uso.' }]
-    });
-  }
-  return createError('RESOURCE_CONFLICT', 'Ya existe un producto con los mismos datos.');
-}
-
 async function ensureCategoryExists(categoryId) {
   const category = await categoryRepository.findById(categoryId);
   if (!category) {
@@ -166,7 +130,6 @@ export const productService = {
     q,
     status,
     categoryId,
-    isFeatured,
     priceMin,
     priceMax,
     orderBy,
@@ -194,7 +157,6 @@ export const productService = {
       q: normalizedSearch || undefined,
       status: normalizedStatus,
       categoryId: normalizedCategoryId.length > 0 ? normalizedCategoryId : undefined,
-      isFeatured: typeof isFeatured === 'boolean' ? isFeatured : undefined,
       priceMin: Number.isFinite(min) ? min : undefined,
       priceMax: Number.isFinite(max) ? max : undefined
     };
@@ -273,64 +235,39 @@ export const productService = {
 
   async createProduct(payload) {
     const name = typeof payload.name === 'string' ? payload.name.trim() : '';
-    const slug = typeof payload.slug === 'string' ? payload.slug.trim().toLowerCase() : '';
-    const sku = typeof payload.sku === 'string' ? payload.sku.trim().toUpperCase() : '';
     const description = sanitizeDescription(payload.description);
     const price = toPriceInput(payload.price);
     const stock = Number(payload.stock ?? 0);
     const statusInput = normalizeStatusInput(payload.status, { required: false }) ?? 'DRAFT';
-    const isFeatured = !!payload.isFeatured;
     const categoryId = typeof payload.categoryId === 'string' ? payload.categoryId.trim() : '';
-    const currency = 'ARS';
 
-    if (!name || !slug || !sku || price === undefined || !categoryId) {
+    if (!name || price === undefined || !categoryId) {
       throw createError('VALIDATION_ERROR', 'Datos incompletos para crear el producto.', {
         fields: [
           ...(name ? [] : [{ path: 'name', message: 'El nombre es obligatorio.' }]),
-          ...(slug ? [] : [{ path: 'slug', message: 'El slug es obligatorio.' }]),
-          ...(sku ? [] : [{ path: 'sku', message: 'El SKU es obligatorio.' }]),
           ...(price !== undefined ? [] : [{ path: 'price', message: 'El precio es obligatorio.' }]),
           ...(categoryId ? [] : [{ path: 'categoryId', message: 'La categoría es obligatoria.' }])
         ]
       });
     }
 
+    if (!Number.isInteger(stock) || stock < 0) {
+      throw createError('VALIDATION_ERROR', 'El stock es inválido.', {
+        fields: [{ path: 'stock', message: 'El stock debe ser un entero mayor o igual a 0.' }]
+      });
+    }
+
     await ensureCategoryExists(categoryId);
 
-    const existingSlug = await productRepository.findBySlug(slug);
-    if (existingSlug) {
-      throw createError('RESOURCE_CONFLICT', 'El slug ya está en uso.', {
-        fields: [{ path: 'slug', message: 'El slug ya se encuentra en uso.' }]
-      });
-    }
-
-    const existingSku = await productRepository.findBySku(sku);
-    if (existingSku) {
-      throw createError('RESOURCE_CONFLICT', 'El SKU ya está en uso.', {
-        fields: [{ path: 'sku', message: 'El SKU ya se encuentra en uso.' }]
-      });
-    }
-
-    try {
-      const created = await productRepository.create({
-        name,
-        slug,
-        sku,
-        description,
-        price,
-        currency,
-        stock,
-        status: statusInput,
-        isFeatured,
-        categoryId
-      });
-      return sanitizeProduct(created);
-    } catch (err) {
-      if (isUniqueConstraintError(err)) {
-        throw buildUniqueConflictError(err?.meta?.target);
-      }
-      throw err;
-    }
+    const created = await productRepository.create({
+      name,
+      description,
+      price,
+      stock,
+      status: statusInput,
+      categoryId
+    });
+    return sanitizeProduct(created);
   },
 
   async updateProduct(id, payload = {}) {
@@ -356,42 +293,6 @@ export const productService = {
       data.name = name;
     }
 
-    if (payload.slug !== undefined) {
-      const slug = typeof payload.slug === 'string' ? payload.slug.trim().toLowerCase() : '';
-      if (!slug) {
-        throw createError('VALIDATION_ERROR', 'El slug es obligatorio.', {
-          fields: [{ path: 'slug', message: 'El slug es obligatorio.' }]
-        });
-      }
-      if (slug !== existing.slug) {
-        const conflict = await productRepository.findBySlug(slug);
-        if (conflict && conflict.id !== productId) {
-          throw createError('RESOURCE_CONFLICT', 'El slug ya está en uso.', {
-            fields: [{ path: 'slug', message: 'El slug ya se encuentra en uso.' }]
-          });
-        }
-      }
-      data.slug = slug;
-    }
-
-    if (payload.sku !== undefined) {
-      const sku = typeof payload.sku === 'string' ? payload.sku.trim().toUpperCase() : '';
-      if (!sku) {
-        throw createError('VALIDATION_ERROR', 'El SKU es obligatorio.', {
-          fields: [{ path: 'sku', message: 'El SKU es obligatorio.' }]
-        });
-      }
-      if (sku !== existing.sku) {
-        const conflict = await productRepository.findBySku(sku);
-        if (conflict && conflict.id !== productId) {
-          throw createError('RESOURCE_CONFLICT', 'El SKU ya está en uso.', {
-            fields: [{ path: 'sku', message: 'El SKU ya se encuentra en uso.' }]
-          });
-        }
-      }
-      data.sku = sku;
-    }
-
     if (payload.description !== undefined) {
       data.description = sanitizeDescription(payload.description);
     }
@@ -404,16 +305,6 @@ export const productService = {
         });
       }
       data.price = price;
-    }
-
-    if (payload.currency !== undefined) {
-      const currency = String(payload.currency || '').trim().toUpperCase();
-      if (currency !== 'ARS') {
-        throw createError('VALIDATION_ERROR', 'La moneda es inválida.', {
-          fields: [{ path: 'currency', message: 'Sólo se permite ARS.' }]
-        });
-      }
-      data.currency = currency;
     }
 
     if (payload.stock !== undefined) {
@@ -436,10 +327,6 @@ export const productService = {
       data.status = statusInput;
     }
 
-    if (payload.isFeatured !== undefined) {
-      data.isFeatured = !!payload.isFeatured;
-    }
-
     if (payload.categoryId !== undefined) {
       const categoryId = typeof payload.categoryId === 'string' ? payload.categoryId.trim() : '';
       if (!categoryId) {
@@ -455,15 +342,8 @@ export const productService = {
       return sanitizeProduct(existing);
     }
 
-    try {
-      const updated = await productRepository.update(productId, data);
-      return sanitizeProduct(updated);
-    } catch (err) {
-      if (isUniqueConstraintError(err)) {
-        throw buildUniqueConflictError(err?.meta?.target);
-      }
-      throw err;
-    }
+    const updated = await productRepository.update(productId, data);
+    return sanitizeProduct(updated);
   },
 
   async changeProductStatus(id, status) {

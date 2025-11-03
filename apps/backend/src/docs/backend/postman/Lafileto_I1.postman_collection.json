@@ -187,7 +187,23 @@
             { "key": "pageSize", "value": "10" }
           ]
         }
-      }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('status 200', () => pm.response.code === 200);",
+              "const json = pm.response.json();",
+              "pm.test('respuesta con datos', () => json?.ok === true && Array.isArray(json?.data?.items));",
+              "pm.test('productos sin campos legacy', () => {",
+              "  const items = Array.isArray(json?.data?.items) ? json.data.items : [];",
+              "  pm.expect(items.every((item) => item.slug === undefined && item.sku === undefined && item.currency === undefined && item.isFeatured === undefined)).to.be.true;",
+              "});"
+            ]
+          }
+        }
+      ]
     },
     {
       "name": "Auth — Login (wrong password) → 401",

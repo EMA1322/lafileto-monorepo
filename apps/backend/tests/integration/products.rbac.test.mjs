@@ -59,14 +59,10 @@ function resetProducts() {
       {
         id: 'prod-001',
         name: 'Pollo al Horno',
-        slug: 'pollo-al-horno',
-        sku: 'POL-001',
         description: 'Clásico de la casa',
         price: 2500,
-        currency: 'ARS',
         stock: 15,
         status: 'ACTIVE',
-        isFeatured: true,
         categoryId: 'cat-001',
         createdAt: new Date('2024-01-01T10:00:00.000Z'),
         updatedAt: new Date('2024-01-01T10:00:00.000Z')
@@ -84,10 +80,6 @@ function filterProducts(where = {}) {
 
   if (typeof where.categoryId === 'string') {
     items = items.filter((item) => item.categoryId === where.categoryId);
-  }
-
-  if (typeof where.isFeatured === 'boolean') {
-    items = items.filter((item) => item.isFeatured === where.isFeatured);
   }
 
   if (where.price) {
@@ -108,13 +100,9 @@ function filterProducts(where = {}) {
           const needle = clause.name.contains.toLowerCase();
           return item.name.toLowerCase().includes(needle);
         }
-        if (clause.slug?.contains) {
-          const needle = clause.slug.contains.toLowerCase();
-          return item.slug.toLowerCase().includes(needle);
-        }
-        if (clause.sku?.contains) {
-          const needle = clause.sku.contains.toLowerCase();
-          return item.sku.toLowerCase().includes(needle);
+        if (clause.description?.contains) {
+          const needle = clause.description.contains.toLowerCase();
+          return String(item.description ?? '').toLowerCase().includes(needle);
         }
         return false;
       })
@@ -169,14 +157,7 @@ prisma.product.findMany = async ({ where = {}, orderBy = {}, skip = 0, take, sel
 prisma.product.count = async ({ where = {} } = {}) => filterProducts(where).length;
 
 prisma.product.findUnique = async ({ where = {}, select } = {}) => {
-  let match = null;
-  if (where.id && productsStore.has(where.id)) {
-    match = productsStore.get(where.id);
-  } else if (where.slug) {
-    match = Array.from(productsStore.values()).find((item) => item.slug === where.slug) || null;
-  } else if (where.sku) {
-    match = Array.from(productsStore.values()).find((item) => item.sku === where.sku) || null;
-  }
+  const match = where.id && productsStore.has(where.id) ? productsStore.get(where.id) : null;
   if (!match) return null;
   const clone = cloneProduct(match);
   if (!select) return clone;
@@ -195,14 +176,10 @@ prisma.product.create = async ({ data, select } = {}) => {
   const row = {
     id,
     name: data.name,
-    slug: data.slug,
-    sku: data.sku,
     description: data.description ?? null,
     price: Number.parseFloat(data.price),
-    currency: data.currency,
     stock: data.stock,
     status: data.status,
-    isFeatured: data.isFeatured,
     categoryId: data.categoryId,
     createdAt: now,
     updatedAt: now
@@ -355,14 +332,10 @@ test('supervisor puede crear, actualizar y cambiar estado pero no eliminar', { c
       validated: {
         body: {
           name: 'Ravioles de espinaca',
-          slug: 'ravioles-de-espinaca',
-          sku: 'RAV-001',
           description: 'Con salsa rosa',
           price: 1850.5,
-          currency: 'ARS',
           stock: 25,
           status: 'draft',
-          isFeatured: false,
           categoryId: 'cat-001'
         }
       }
@@ -380,7 +353,7 @@ test('supervisor puede crear, actualizar y cambiar estado pero no eliminar', { c
       user: { ...supervisorUser },
       validated: {
         params: { id: createdId },
-        body: { price: 1990.75, isFeatured: true }
+        body: { price: 1990.75 }
       },
       params: { id: createdId }
     },
@@ -390,7 +363,6 @@ test('supervisor puede crear, actualizar y cambiar estado pero no eliminar', { c
 
   assert.equal(updateRes.statusCode, 200);
   assert.equal(updateRes.payload?.data?.price, 1990.75);
-  assert.equal(updateRes.payload?.data?.isFeatured, true);
 
   const statusRes = await runAllowed(
     {
@@ -435,13 +407,9 @@ test('admin con permisos completos puede realizar todas las operaciones', { conc
       validated: {
         body: {
           name: 'Lomo a la mostaza',
-          slug: 'lomo-a-la-mostaza',
-          sku: 'LOM-001',
           price: 3200,
-          currency: 'ARS',
           stock: 10,
           status: 'active',
-          isFeatured: false,
           categoryId: 'cat-001'
         }
       }

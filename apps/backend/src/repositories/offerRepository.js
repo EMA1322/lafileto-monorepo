@@ -76,7 +76,6 @@ export const offerRepository = {
     q,
     status,
     categoryId,
-    isFeatured,
     priceMin,
     priceMax,
     orderBy,
@@ -85,7 +84,7 @@ export const offerRepository = {
     now
   } = {}) {
     const reference = now instanceof Date ? now : new Date();
-    const productWhere = buildProductWhere({ q, status, categoryId, isFeatured, priceMin, priceMax });
+    const productWhere = buildProductWhere({ q, status, categoryId, priceMin, priceMax });
     const offerWhere = buildActiveOfferWhere(reference);
 
     const where = {

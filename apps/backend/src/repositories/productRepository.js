@@ -5,14 +5,10 @@ import { prisma } from '../config/prisma.js';
 export const productBaseSelect = {
   id: true,
   name: true,
-  slug: true,
-  sku: true,
   description: true,
   price: true,
-  currency: true,
   stock: true,
   status: true,
-  isFeatured: true,
   categoryId: true,
   createdAt: true,
   updatedAt: true
@@ -48,14 +44,7 @@ export function buildProductOrder(orderBy = 'name', orderDirection = 'asc') {
   return { [field]: direction };
 }
 
-export function buildProductWhere({
-  q,
-  status,
-  categoryId,
-  isFeatured,
-  priceMin,
-  priceMax
-} = {}) {
+export function buildProductWhere({ q, status, categoryId, priceMin, priceMax } = {}) {
   const where = {};
 
   const normalizedStatus = normalizeStatus(status);
@@ -65,10 +54,6 @@ export function buildProductWhere({
 
   if (typeof categoryId === 'string' && categoryId.trim().length > 0) {
     where.categoryId = categoryId.trim();
-  }
-
-  if (typeof isFeatured === 'boolean') {
-    where.isFeatured = isFeatured;
   }
 
   const priceFilter = {};
@@ -93,8 +78,7 @@ export function buildProductWhere({
     if (trimmed) {
       where.OR = [
         { name: { contains: trimmed, mode: 'insensitive' } },
-        { slug: { contains: trimmed, mode: 'insensitive' } },
-        { sku: { contains: trimmed, mode: 'insensitive' } }
+        { description: { contains: trimmed, mode: 'insensitive' } }
       ];
     }
   }
@@ -109,32 +93,19 @@ export const productRepository = {
       select: productBaseSelect
     }),
 
-  findBySlug: (slug) =>
-    prisma.product.findUnique({
-      where: { slug },
-      select: productBaseSelect
-    }),
-
-  findBySku: (sku) =>
-    prisma.product.findUnique({
-      where: { sku },
-      select: productBaseSelect
-    }),
-
   async list({
     page,
     pageSize,
     q,
     status,
     categoryId,
-    isFeatured,
     priceMin,
     priceMax,
     orderBy,
     orderDirection,
     all = false
   }) {
-    const where = buildProductWhere({ q, status, categoryId, isFeatured, priceMin, priceMax });
+    const where = buildProductWhere({ q, status, categoryId, priceMin, priceMax });
     const order = buildProductOrder(orderBy, orderDirection);
 
     if (all) {

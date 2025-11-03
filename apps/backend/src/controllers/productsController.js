@@ -2,6 +2,12 @@
 import { productService } from '../services/productService.js';
 import { ok } from '../utils/envelope.js';
 
+const stripLegacyProductFields = (data) => {
+  if (!data || typeof data !== 'object') return {};
+  const { slug: _slug, sku: _sku, currency: _currency, isFeatured: _isFeatured, ...rest } = data;
+  return rest;
+};
+
 export const productsController = {
   list: async (req, res, next) => {
     try {
@@ -25,7 +31,7 @@ export const productsController = {
 
   create: async (req, res, next) => {
     try {
-      const body = req.validated?.body ?? req.body ?? {};
+      const body = stripLegacyProductFields(req.validated?.body ?? req.body ?? {});
       const product = await productService.createProduct(body);
       return res.status(201).json(ok(product));
     } catch (err) {
@@ -36,7 +42,7 @@ export const productsController = {
   update: async (req, res, next) => {
     try {
       const params = req.validated?.params ?? req.params ?? {};
-      const body = req.validated?.body ?? req.body ?? {};
+      const body = stripLegacyProductFields(req.validated?.body ?? req.body ?? {});
       const product = await productService.updateProduct(params.id ?? req.params.id, body);
       return res.json(ok(product));
     } catch (err) {
