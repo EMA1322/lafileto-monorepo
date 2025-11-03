@@ -20,6 +20,17 @@ import {
 
 const subscribers = new Set();
 
+export const REQUEST_STATUS = {
+  IDLE: 'idle',
+  LOADING: 'loading',
+  SUCCESS: 'success',
+  EMPTY: 'empty',
+  ERROR: 'error',
+};
+
+let activeProductsController = null;
+let requestSequence = 0;
+
 function normalizeBoolean(value) {
   if (value === true || value === 'true' || value === 1 || value === '1') return true;
   return 'all';
@@ -80,6 +91,7 @@ export const state = {
   loading: false,
   error: null,
   selectedId: null,
+  status: REQUEST_STATUS.IDLE,
 };
 
 function computePageCount(total, pageSize) {
@@ -110,6 +122,7 @@ export function getSnapshot() {
     loading: state.loading,
     error: state.error,
     selectedId: state.selectedId,
+    status: state.status,
   };
 }
 
@@ -266,13 +279,23 @@ export async function fetchCategories() {
 }
 
 export async function fetchProducts({ silentToast = false } = {}) {
+  if (activeProductsController) {
+    activeProductsController.abort();
+  }
+
+  const controller = new AbortController();
+  activeProductsController = controller;
+  const currentRequest = ++requestSequence;
+
   state.loading = true;
+  state.status = REQUEST_STATUS.LOADING;
   state.error = null;
   notify();
 
+  const params = buildQuery(state.filters);
+
   try {
-    const params = buildQuery(state.filters);
-    const response = await productsApi.list(params);
+    const response = await productsApi.list(params, { signal: controller.signal });
 
     if (!response?.ok) {
       throw new Error('No se pudieron cargar los productos.');
@@ -285,27 +308,43 @@ export async function fetchProducts({ silentToast = false } = {}) {
     const metaPayload = response?.meta || response?.data?.meta || {};
     const meta = deriveMeta(metaPayload, Array.isArray(list) ? list.length : 0);
 
+    if (controller.signal.aborted || currentRequest !== requestSequence) {
+      return null;
+    }
+
     state.items = items;
     state.meta = meta;
     state.filters.page = meta.page;
     state.filters.pageSize = meta.pageSize;
     state.loading = false;
     state.error = null;
+    state.status = items.length > 0 ? REQUEST_STATUS.SUCCESS : REQUEST_STATUS.EMPTY;
 
     notify();
     return getSnapshot();
   } catch (error) {
+    if (controller.signal.aborted || currentRequest !== requestSequence) {
+      return null;
+    }
+
     state.loading = false;
     state.error = error;
+    state.status = REQUEST_STATUS.ERROR;
+    state.items = [];
     notify();
     if (!silentToast) {
       console.error('[products.state] fetchProducts failed', error);
     }
     throw error;
+  } finally {
+    if (currentRequest === requestSequence && activeProductsController === controller) {
+      activeProductsController = null;
+    }
   }
 }
 
 export function setError(error) {
   state.error = error;
+  state.status = error ? REQUEST_STATUS.ERROR : state.status;
   notify();
 }

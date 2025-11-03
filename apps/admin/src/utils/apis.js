@@ -18,11 +18,12 @@ function ensureEnvelope(response) {
 
 export const productsApi = {
   /** Lista productos con filtros y paginación */
-  async list(params = {}) {
+  async list(params = {}, { signal } = {}) {
     const response = await apiFetch('/products', {
       method: 'GET',
       params,
       showErrorToast: false,
+      signal,
     });
     return ensureEnvelope(response);
   },
@@ -92,9 +93,23 @@ export const categoriesApi = {
   },
 };
 
+export const offersApi = {
+  /** Lista ofertas disponibles */
+  async list(params = {}, { signal } = {}) {
+    const response = await apiFetch('/offers', {
+      method: 'GET',
+      params,
+      showErrorToast: false,
+      signal,
+    });
+    return ensureEnvelope(response);
+  },
+};
+
 export const apis = {
   products: productsApi,
   categories: categoriesApi,
+  offers: offersApi,
 };
 
 export default apis;

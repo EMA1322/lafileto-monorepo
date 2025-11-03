@@ -12,7 +12,9 @@ import {
   escapeHTML,
   formatMoney,
   formatStatusLabel,
+  resolveOfferPricing,
 } from './products.helpers.js';
+import { REQUEST_STATUS } from './products.state.js';
 
 function getRefs(container) {
   return {
@@ -50,22 +52,68 @@ function resolveCategoryName(id, categories = []) {
   return item?.name ? String(item.name) : '—';
 }
 
-function renderProductImage(item) {
+function renderOfferBadge(pricing, { ariaHidden = false } = {}) {
+  if (!pricing?.hasActiveOffer) return '';
+  const rawPercent = Number(pricing.discountPercent);
+  const hasPercent = Number.isFinite(rawPercent) && rawPercent > 0;
+  const label = hasPercent ? `-${Math.round(rawPercent)}% OFF` : '% OFF';
+  const aria = ariaHidden ? ' aria-hidden="true"' : '';
+  return `<span class="products__badge products__badge--offer"${aria}>${escapeHTML(label)}</span>`;
+}
+
+function renderProductPrice(pricing) {
+  const safePricing = pricing || {
+    hasActiveOffer: false,
+    originalPrice: 0,
+    finalPrice: 0,
+  };
+  const base = escapeHTML(formatMoney(safePricing.originalPrice ?? safePricing.finalPrice ?? 0));
+  const finalValue = escapeHTML(formatMoney(safePricing.finalPrice ?? safePricing.originalPrice ?? 0));
+
+  if (!safePricing.hasActiveOffer) {
+    return `<span class="products__price-group"><span class="products__price products__price--final">${finalValue}</span></span>`;
+  }
+
+  const parts = [
+    `<span class="products__price products__price--original">${base}</span>`,
+    '<span class="products__price-separator" aria-hidden="true">→</span>',
+    `<span class="products__price products__price--final">${finalValue}</span>`,
+  ];
+
+  if (Number.isFinite(Number(safePricing.discountPercent)) && Number(safePricing.discountPercent) > 0) {
+    parts.push(
+      `<span class="products__price-discount">(-${escapeHTML(String(Math.round(Number(safePricing.discountPercent))))}%)</span>`,
+    );
+  }
+
+  return `<span class="products__price-group">${parts.join(' ')}</span>`;
+}
+
+function renderProductImage(item, pricing) {
   const src = item?.imageUrl;
+  const badgeMarkup = renderOfferBadge(pricing, { ariaHidden: true });
   if (src) {
     const url = escapeHTML(src);
     const altText = item?.name ? `Imagen de ${item.name}` : 'Imagen del producto';
     return `
-      <img
-        src="${url}"
-        alt="${escapeHTML(altText)}"
-        class="products__image"
-        loading="lazy"
-        decoding="async"
-      />
+      <div class="products__image-wrapper">
+        <img
+          src="${url}"
+          alt="${escapeHTML(altText)}"
+          class="products__image"
+          loading="lazy"
+          decoding="async"
+        />
+        ${badgeMarkup}
+      </div>
     `;
   }
-  return '<span class="products__image products__image--placeholder" aria-hidden="true">—</span>';
+  return `
+    <div class="products__image-wrapper products__image-wrapper--empty">
+      <span class="products__image products__image--placeholder" aria-hidden="true">—</span>
+      ${badgeMarkup}
+    </div>
+  `;
 }
 
 function renderTable(items, refs, categories) {
@@ -75,15 +123,17 @@ function renderTable(items, refs, categories) {
       const idAttr = escapeHTML(item.id ?? '');
       const status = item.status || 'draft';
       const statusLabel = STATUS_LABELS[status] || '—';
-      const imageMarkup = renderProductImage(item);
+      const pricing = resolveOfferPricing(item);
+      const imageMarkup = renderProductImage(item, pricing);
       const hasImage = Boolean(item?.imageUrl);
+      const priceMarkup = renderProductPrice(pricing);
       return `
         <tr data-id="${idAttr}">
           <td class="products__cell-image"${hasImage ? '' : ' aria-label="Sin imagen"'}>
             ${imageMarkup}
           </td>
           <td>${escapeHTML(item.name ?? '—')}</td>
-          <td class="products__cell--numeric">${formatMoney(item.price)}</td>
+          <td class="products__cell--numeric">${priceMarkup}</td>
           <td class="products__cell--numeric">${Number(item.stock ?? 0)}</td>
           <td><span class="products__row-status products__row-status--${escapeHTML(status)}">${escapeHTML(statusLabel)}</span></td>
           <td>${escapeHTML(resolveCategoryName(item.categoryId, categories))}</td>
@@ -126,7 +176,9 @@ function renderCards(items, refs, categories) {
       const idAttr = escapeHTML(item.id ?? '');
       const status = item.status || 'draft';
       const statusLabel = formatStatusLabel(status);
-      const imageMarkup = renderProductImage(item);
+      const pricing = resolveOfferPricing(item);
+      const imageMarkup = renderProductImage(item, pricing);
+      const priceMarkup = renderProductPrice(pricing);
       return `
         <article class="products__card" data-id="${idAttr}">
           <div class="products__card-media">
@@ -139,7 +191,7 @@ function renderCards(items, refs, categories) {
           <dl class="products__card-meta">
             <div class="products__card-row">
               <span class="products__card-label">Precio</span>
-              <span>${formatMoney(item.price)}</span>
+              <span class="products__card-price">${priceMarkup}</span>
             </div>
             <div class="products__card-row">
               <span class="products__card-label">Stock</span>
@@ -281,42 +333,63 @@ export function renderProductsView(snapshot, root = document.querySelector('#pro
 
   const refs = getRefs(container);
   const view = snapshot || {};
-  const loading = !!view.loading;
+  const status = view.status || REQUEST_STATUS.IDLE;
+  const isInitial = status === REQUEST_STATUS.IDLE;
+  const isLoading = status === REQUEST_STATUS.LOADING;
+  const showLoading = isInitial || isLoading;
+  const isError = status === REQUEST_STATUS.ERROR;
+  const isEmpty = status === REQUEST_STATUS.EMPTY;
+  const hasData = status === REQUEST_STATUS.SUCCESS;
   const error = view.error;
   const items = Array.isArray(view.items) ? view.items : [];
   const meta = view.meta || { page: 1, pageSize: DEFAULT_PAGE_SIZE, pageCount: 1, total: 0 };
   const categories = Array.isArray(view.categories) ? view.categories : [];
 
-  const ready = !loading && !error;
-  const isEmpty = ready && items.length === 0;
-
-  if (refs.loadingState) refs.loadingState.hidden = !loading;
-  if (refs.errorState) refs.errorState.hidden = !error;
+  if (refs.loadingState) refs.loadingState.hidden = !showLoading;
+  if (refs.errorState) refs.errorState.hidden = !isError;
   if (refs.emptyState) refs.emptyState.hidden = !isEmpty;
-  if (refs.tableWrapper) refs.tableWrapper.hidden = !ready || isEmpty;
-  if (refs.cardsWrapper) refs.cardsWrapper.hidden = !ready || isEmpty;
+  if (refs.tableWrapper) refs.tableWrapper.hidden = !hasData;
+  if (refs.cardsWrapper) refs.cardsWrapper.hidden = !hasData;
+
+  const content = container.querySelector('.products__content');
+  if (content) {
+    content.setAttribute('aria-busy', showLoading ? 'true' : 'false');
+  }
 
   if (error && refs.errorMessage) {
     const message = typeof error?.message === 'string' ? error.message : 'No se pudieron cargar los productos.';
     refs.errorMessage.textContent = message;
   }
 
-  if (!loading) {
+  if (!isLoading) {
     renderCategoryOptions(categories, refs);
   }
 
-  if (loading) {
+  if (showLoading) {
     if (refs.tableBody) refs.tableBody.innerHTML = '';
     if (refs.cardsWrapper) refs.cardsWrapper.innerHTML = '';
-  } else if (ready && !isEmpty) {
+  } else if (hasData) {
     renderTable(items, refs, categories);
     renderCards(items, refs, categories);
+  } else {
+    if (refs.tableBody) refs.tableBody.innerHTML = '';
+    if (refs.cardsWrapper) refs.cardsWrapper.innerHTML = '';
   }
 
-  if (!loading) {
+  if (!isLoading || isInitial) {
     renderFilters(view, refs);
+  }
+
+  if (!showLoading && !isError) {
     renderMeta(meta, refs);
     renderPagination(meta, refs);
+  } else if (isError) {
+    if (refs.meta) refs.meta.textContent = '—';
+    if (refs.pagination) refs.pagination.innerHTML = '';
+    if (refs.pageFirst) refs.pageFirst.disabled = true;
+    if (refs.pagePrev) refs.pagePrev.disabled = true;
+    if (refs.pageNext) refs.pageNext.disabled = true;
+    if (refs.pageLast) refs.pageLast.disabled = true;
   }
 
   applyRBAC(container);
