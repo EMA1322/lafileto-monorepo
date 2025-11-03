@@ -248,7 +248,15 @@ Accept: application/json
         "isFeatured": true,
         "categoryId": "cat-001",
         "createdAt": "2024-01-01T10:00:00.000Z",
-        "updatedAt": "2024-01-05T12:00:00.000Z"
+        "updatedAt": "2024-01-05T12:00:00.000Z",
+        "offer": {
+          "id": "offer-001",
+          "discountPct": 10,
+          "startAt": "2024-01-01T00:00:00.000Z",
+          "endAt": "2026-01-01T00:00:00.000Z",
+          "isActive": true,
+          "priceFinal": 2250
+        }
       }
     ],
     "meta": {
@@ -330,6 +338,14 @@ Content-Type: application/json
 }
 ```
 
+> **Campo `offer`** (nuevo): cada item incluye `{ id?, discountPct?, startAt?, endAt?, isActive, priceFinal }`.
+> `priceFinal = price * (1 - discountPct/100)` cuando `isActive=true`, caso contrario se devuelve el precio base.
+> Una oferta está activa si:
+> - tiene `startAt` y `endAt` y se cumple `startAt ≤ now ≤ endAt`;
+> - sólo `startAt` y `startAt ≤ now`;
+> - sólo `endAt` y `now ≤ endAt`;
+> - ninguna de las fechas (vigente siempre).
+
 ### RBAC (moduleKey=`products`)
 
 | Acción | Descripción | `role-admin` | `role-supervisor` (seed) | `role-viewer` |
@@ -354,8 +370,8 @@ Content-Type: application/json
 ```bash
 # crear producto
 curl -X POST "$API_BASE/api/v1/products" \
- -H "Authorization: Bearer $TOKEN_ADMIN" -H "Content-Type: application/json" \
- -d '{"name":"Pollo al horno","slug":"pollo-al-horno","sku":"POL-001","price":2500.00,"stock":10,"status":"active","categoryId":"cat-001"}' | jq '.'
+  -H "Authorization: Bearer $TOKEN_ADMIN" -H "Content-Type: application/json" \
+  -d '{"name":"Pollo al horno","slug":"pollo-al-horno","sku":"POL-001","price":2500.00,"stock":10,"status":"active","categoryId":"cat-001"}' | jq '.'
 
 # listar con filtros
 curl "$API_BASE/api/v1/products?q=pollo&page=1&pageSize=10&orderBy=updatedAt&orderDir=desc" \
@@ -368,8 +384,97 @@ curl -X POST "$API_BASE/api/v1/products" \
 
 # cambiar status
 curl -X PATCH "$API_BASE/api/v1/products/prod-001/status" \
- -H "Authorization: Bearer $TOKEN_SUPERVISOR" -H "Content-Type: application/json" \
- -d '{"status":"archived"}' | jq '.'
+  -H "Authorization: Bearer $TOKEN_SUPERVISOR" -H "Content-Type: application/json" \
+  -d '{"status":"archived"}' | jq '.'
+```
+
+## Offers (Admin)
+
+### Parámetros soportados (GET `/api/v1/offers`)
+
+| Parámetro | Tipo | Default | Descripción |
+|-----------|------|---------|-------------|
+| `page` | number | `1` | Página actual (`>=1`). |
+| `pageSize` | number | `10` | Límite por página (`5..100`). |
+| `q` | string | — | Búsqueda parcial por nombre/slug/SKU (case-insensitive). |
+| `status` | enum | `all` | Reutiliza filtro de productos (`draft`, `active`, `archived`, `all`). |
+| `categoryId` | string | — | Filtra por categoría exacta. |
+| `isFeatured` | boolean | — | Filtra destacados. |
+| `priceMin` / `priceMax` | number | — | Rango de precio base. |
+| `orderBy` | enum | `name` | `name`, `price`, `updatedAt`. |
+| `orderDir` | enum | `asc` | `asc` o `desc`. |
+| `all` | boolean | `false` | Devuelve todo el conjunto (sin paginar) respetando `pageSize` normalizado. |
+
+> Respuesta: `{ ok:true, data:{ items[{ ...Producto, offer{ id?,discountPct?,startAt?,endAt?,isActive,priceFinal } }], meta{ page,pageSize,total,pageCount } } }`.
+> Sólo se incluyen productos cuya oferta está activa al momento del request (`offer.isActive=true`).
+
+| Método | Path | Permiso | Query | 200 (data) |
+|---|---|---|---|---|
+| GET | `/api/v1/offers` | `offers:r` | Query arriba | Lista paginada con productos + `offer` activo |
+
+**Ejemplo**
+
+```http
+GET /api/v1/offers?page=1&pageSize=2&orderBy=price&orderDir=asc
+Authorization: Bearer <token_admin>
+Accept: application/json
+```
+
+```json
+{
+  "ok": true,
+  "data": {
+    "items": [
+      {
+        "id": "prod-002",
+        "name": "Pollo a la Parrilla",
+        "slug": "pollo-a-la-parrilla",
+        "sku": "POL-002",
+        "description": "Servido con papas rústicas",
+        "price": 2100,
+        "currency": "ARS",
+        "stock": 12,
+        "status": "active",
+        "isFeatured": true,
+        "categoryId": "cat-001",
+        "createdAt": "2024-01-05T10:00:00.000Z",
+        "updatedAt": "2024-01-05T10:00:00.000Z",
+        "offer": {
+          "id": "offer-002",
+          "discountPct": 20,
+          "startAt": "2024-02-01T00:00:00.000Z",
+          "endAt": null,
+          "isActive": true,
+          "priceFinal": 1680
+        }
+      }
+    ],
+    "meta": {
+      "page": 1,
+      "pageSize": 2,
+      "total": 1,
+      "pageCount": 1
+    }
+  }
+}
+```
+
+### RBAC (moduleKey=`offers`)
+
+| Acción | Descripción | `role-admin` | `role-supervisor` (seed) | `role-viewer` |
+|---|---|---|---|---|
+| `r` | Listar ofertas activas | ✔︎ | ✔︎ | ✔︎ |
+
+### Comandos de verificación (smoke manual)
+
+```bash
+# listado de ofertas activas
+curl "$API_BASE/api/v1/offers?page=1&pageSize=10" \
+  -H "Authorization: Bearer $ADMIN_JWT" | jq '.'
+
+# listado de productos con resumen de oferta
+curl "$API_BASE/api/v1/products?page=1&pageSize=10" \
+  -H "Authorization: Bearer $VIEWER_JWT" | jq '.'
 ```
 
 ## Settings (Negocio)

@@ -29,6 +29,16 @@ try {
           delete: notImplemented,
           deleteMany: notImplemented
         };
+        this.offer = {
+          findUnique: notImplemented,
+          findFirst: notImplemented,
+          findMany: notImplemented,
+          count: notImplemented,
+          create: notImplemented,
+          update: notImplemented,
+          delete: notImplemented,
+          deleteMany: notImplemented
+        };
         this.rolePermission = {
           findUnique: notImplemented
         };

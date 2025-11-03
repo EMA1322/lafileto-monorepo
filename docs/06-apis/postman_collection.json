@@ -735,6 +735,38 @@
             ]
         },
         {
+            "name": "Offers",
+            "item": [
+                {
+                    "name": "GET /offers",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/offers?page=1&pageSize=10&orderBy=price&orderDir=asc",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "offers"
+                            ],
+                            "query": [
+                                { "key": "page", "value": "1" },
+                                { "key": "pageSize", "value": "10" },
+                                { "key": "orderBy", "value": "price" },
+                                { "key": "orderDir", "value": "asc" }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
             "name": "Settings",
             "item": [
                 {

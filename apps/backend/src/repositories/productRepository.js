@@ -2,7 +2,7 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '../config/prisma.js';
 
-const baseSelect = {
+export const productBaseSelect = {
   id: true,
   name: true,
   slug: true,
@@ -106,19 +106,19 @@ export const productRepository = {
   findById: (id) =>
     prisma.product.findUnique({
       where: { id },
-      select: baseSelect
+      select: productBaseSelect
     }),
 
   findBySlug: (slug) =>
     prisma.product.findUnique({
       where: { slug },
-      select: baseSelect
+      select: productBaseSelect
     }),
 
   findBySku: (sku) =>
     prisma.product.findUnique({
       where: { sku },
-      select: baseSelect
+      select: productBaseSelect
     }),
 
   async list({
@@ -141,7 +141,7 @@ export const productRepository = {
       const items = await prisma.product.findMany({
         where,
         orderBy: order,
-        select: baseSelect
+        select: productBaseSelect
       });
       return { items, total: items.length };
     }
@@ -154,7 +154,7 @@ export const productRepository = {
         orderBy: order,
         skip,
         take: pageSize,
-        select: baseSelect
+        select: productBaseSelect
       }),
       prisma.product.count({ where })
     ]);
@@ -165,21 +165,21 @@ export const productRepository = {
   create: (data) =>
     prisma.product.create({
       data,
-      select: baseSelect
+      select: productBaseSelect
     }),
 
   update: (id, data) =>
     prisma.product.update({
       where: { id },
       data,
-      select: baseSelect
+      select: productBaseSelect
     }),
 
   updateStatus: (id, status) =>
     prisma.product.update({
       where: { id },
       data: { status },
-      select: baseSelect
+      select: productBaseSelect
     }),
 
   deleteById: (id) => prisma.product.delete({ where: { id } })

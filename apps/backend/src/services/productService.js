@@ -1,8 +1,10 @@
 // Servicio de productos: listados, detalle y mutaciones
 import { productRepository } from '../repositories/productRepository.js';
+import { offerRepository } from '../repositories/offerRepository.js';
 import { categoryRepository } from '../repositories/categoryRepository.js';
 import { createError } from '../utils/errors.js';
 import { normalizePage, normalizePageSize } from '../utils/pagination.js';
+import { buildOfferSummary } from '../utils/offers.js';
 
 let PrismaClientKnownRequestError;
 
@@ -73,7 +75,7 @@ function sanitizeDescription(value) {
   return trimmed.length > 0 ? trimmed : null;
 }
 
-function sanitizeProduct(row) {
+export function sanitizeProduct(row) {
   if (!row) return null;
   const toNumber = (value) => {
     if (typeof value === 'number') return Math.round(value * 100) / 100;
@@ -101,6 +103,25 @@ function sanitizeProduct(row) {
     createdAt: row.createdAt,
     updatedAt: row.updatedAt
   };
+}
+
+async function attachActiveOfferSummaries(products, { now } = {}) {
+  const reference = now instanceof Date ? now : new Date();
+  const list = Array.isArray(products) ? products : [];
+  if (list.length === 0) {
+    return list.map((product) => ({
+      ...product,
+      offer: buildOfferSummary(null, product?.price ?? 0, { now: reference })
+    }));
+  }
+
+  const ids = list.map((item) => item?.id).filter((id) => typeof id === 'string' && id.length > 0);
+  const offersMap = await offerRepository.findActiveByProductIds(ids, { now: reference });
+
+  return list.map((product) => ({
+    ...product,
+    offer: buildOfferSummary(offersMap.get(product.id), product.price, { now: reference })
+  }));
 }
 
 function isUniqueConstraintError(err) {
@@ -178,6 +199,8 @@ export const productService = {
       priceMax: Number.isFinite(max) ? max : undefined
     };
 
+    const referenceNow = new Date();
+
     if (normalizedAll) {
       const { items, total } = await productRepository.list({
         page: DEFAULT_PAGE,
@@ -188,10 +211,11 @@ export const productService = {
         all: true
       });
       const sanitized = items.map(sanitizeProduct);
+      const enriched = await attachActiveOfferSummaries(sanitized, { now: referenceNow });
       const effectiveTotal = Number.isFinite(total) ? total : sanitized.length;
       const pageCount = Math.max(1, Math.ceil(effectiveTotal / normalizedPageSize));
       return {
-        items: sanitized,
+        items: enriched,
         meta: {
           page: 1,
           pageSize: normalizedPageSize,
@@ -213,8 +237,11 @@ export const productService = {
     const safeTotal = Number.isFinite(total) ? total : items.length;
     const pageCount = Math.max(1, Math.ceil(safeTotal / normalizedPageSize));
 
+    const sanitizedItems = items.map(sanitizeProduct);
+    const enrichedItems = await attachActiveOfferSummaries(sanitizedItems, { now: referenceNow });
+
     return {
-      items: items.map(sanitizeProduct),
+      items: enrichedItems,
       meta: {
         page: normalizedPage,
         pageSize: normalizedPageSize,
@@ -235,7 +262,13 @@ export const productService = {
       throw createError('RESOURCE_NOT_FOUND', 'El producto indicado no existe.');
     }
 
-    return sanitizeProduct(product);
+    const sanitized = sanitizeProduct(product);
+    const referenceNow = new Date();
+    const activeOffer = await offerRepository.findActiveByProductId(productId, { now: referenceNow });
+    return {
+      ...sanitized,
+      offer: buildOfferSummary(activeOffer, sanitized?.price ?? 0, { now: referenceNow })
+    };
   },
 
   async createProduct(payload) {

@@ -171,6 +171,25 @@
       }
     },
     {
+      "name": "Offers — GET",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{AUTH_TOKEN}}", "type": "text" },
+          { "key": "X-Request-Id", "value": "{{$guid}}" }
+        ],
+        "url": {
+          "raw": "{{API_BASE}}/offers?page=1&pageSize=10",
+          "host": ["{{API_BASE}}"],
+          "path": ["offers"],
+          "query": [
+            { "key": "page", "value": "1" },
+            { "key": "pageSize", "value": "10" }
+          ]
+        }
+      }
+    },
+    {
       "name": "Auth — Login (wrong password) → 401",
       "request": {
         "method": "POST",
