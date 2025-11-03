@@ -117,5 +117,4 @@ model Offer {
 
   @@unique([productId])
   @@index([startAt, endAt])
-  @@check(discountPct_gte_0_lte_100, discountPct >= 0 && discountPct <= 100)
 }
