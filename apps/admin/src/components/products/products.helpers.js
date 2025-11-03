@@ -125,17 +125,85 @@ export function normalizeFeatured(value) {
   return 'all';
 }
 
+function pickNumber(...values) {
+  for (const value of values) {
+    const num = Number(value);
+    if (Number.isFinite(num)) return num;
+  }
+  return null;
+}
+
+function normalizeOffer(rawOffer, basePrice) {
+  if (!rawOffer || typeof rawOffer !== 'object') return null;
+
+  const isActiveRaw =
+    rawOffer.isActive ?? rawOffer.active ?? rawOffer.enabled ?? rawOffer.status === 'active';
+
+  const finalPrice = pickNumber(
+    rawOffer.finalPrice,
+    rawOffer.final_price,
+    rawOffer.priceWithDiscount,
+    rawOffer.price_with_discount,
+    rawOffer.discountPrice,
+    rawOffer.discount_price,
+    rawOffer.offerPrice,
+    rawOffer.price,
+  );
+
+  let normalizedFinal = Number.isFinite(finalPrice) ? finalPrice : null;
+  if (Number.isFinite(normalizedFinal) && normalizedFinal < 0) {
+    normalizedFinal = 0;
+  }
+
+  let normalizedPercent = pickNumber(
+    rawOffer.discountPercent,
+    rawOffer.discountPercentage,
+    rawOffer.discount_percent,
+    rawOffer.discount_percentage,
+    rawOffer.percentOff,
+    rawOffer.percent_off,
+    rawOffer.percentage,
+  );
+
+  if (Number.isFinite(normalizedPercent)) {
+    normalizedPercent = Math.max(0, Math.min(100, Math.round(normalizedPercent)));
+  } else if (Number.isFinite(normalizedFinal) && Number.isFinite(basePrice) && basePrice > 0) {
+    const rawPercent = Math.round((1 - normalizedFinal / basePrice) * 100);
+    normalizedPercent = Math.max(0, Math.min(100, rawPercent));
+  } else {
+    normalizedPercent = null;
+  }
+
+  const hasRelevantData =
+    Boolean(isActiveRaw) || Number.isFinite(normalizedFinal) || Number.isFinite(normalizedPercent);
+
+  if (!hasRelevantData) return null;
+
+  return {
+    id: rawOffer.id ?? rawOffer.offerId ?? null,
+    name: rawOffer.name ?? rawOffer.title ?? '',
+    label: rawOffer.label ?? rawOffer.badge ?? '',
+    isActive: Boolean(isActiveRaw),
+    finalPrice: Number.isFinite(normalizedFinal) ? normalizedFinal : null,
+    discountPercent: Number.isFinite(normalizedPercent) ? normalizedPercent : null,
+    startsAt: rawOffer.startsAt ?? rawOffer.startDate ?? rawOffer.start_at ?? null,
+    endsAt: rawOffer.endsAt ?? rawOffer.endDate ?? rawOffer.end_at ?? null,
+  };
+}
+
 export function mapProductFromApi(raw) {
   if (!raw || typeof raw !== 'object') return null;
   const price = Number(raw.price);
   const stock = Number(raw.stock);
+  const normalizedPrice = Number.isFinite(price) ? price : 0;
+  const offer = normalizeOffer(raw.offer ?? raw.currentOffer ?? raw.activeOffer, normalizedPrice);
   return {
     id: raw.id ?? raw._id ?? null,
     name: raw.name ?? '',
     slug: raw.slug ?? '',
     sku: raw.sku ?? '',
     description: raw.description ?? '',
-    price: Number.isFinite(price) ? price : 0,
+    price: normalizedPrice,
     currency: raw.currency || 'ARS',
     stock: Number.isFinite(stock) ? stock : 0,
     status: STATUS_VALUES.includes(raw.status) ? raw.status : 'draft',
@@ -145,6 +213,56 @@ export function mapProductFromApi(raw) {
     imageUrl: raw.imageUrl ?? raw.image_url ?? raw.image ?? null,
     updatedAt: raw.updatedAt ?? raw.updated_at ?? null,
     createdAt: raw.createdAt ?? raw.created_at ?? null,
+    offer,
+  };
+}
+
+export function resolveOfferPricing(product) {
+  const basePrice = Number.isFinite(Number(product?.price)) ? Number(product.price) : 0;
+  const offer = product?.offer;
+  if (!offer || offer.isActive !== true) {
+    return {
+      hasActiveOffer: false,
+      originalPrice: basePrice,
+      finalPrice: basePrice,
+      discountPercent: null,
+    };
+  }
+
+  let finalPrice = Number.isFinite(Number(offer.finalPrice)) ? Number(offer.finalPrice) : null;
+  if (!Number.isFinite(finalPrice)) {
+    finalPrice = basePrice;
+  }
+  if (Number.isFinite(finalPrice) && finalPrice < 0) {
+    finalPrice = 0;
+  }
+
+  let discountPercent = Number.isFinite(Number(offer.discountPercent))
+    ? Number(offer.discountPercent)
+    : null;
+
+  if (discountPercent != null) {
+    discountPercent = Math.max(0, Math.min(100, Math.round(discountPercent)));
+  } else if (Number.isFinite(basePrice) && basePrice > 0 && Number.isFinite(finalPrice)) {
+    discountPercent = Math.max(0, Math.min(100, Math.round((1 - finalPrice / basePrice) * 100)));
+  }
+
+  const isValidDiscount = Number.isFinite(finalPrice) && finalPrice < basePrice;
+
+  if (!isValidDiscount) {
+    return {
+      hasActiveOffer: false,
+      originalPrice: basePrice,
+      finalPrice: basePrice,
+      discountPercent: null,
+    };
+  }
+
+  return {
+    hasActiveOffer: true,
+    originalPrice: basePrice,
+    finalPrice,
+    discountPercent: Number.isFinite(discountPercent) && discountPercent > 0 ? discountPercent : null,
   };
 }
 
