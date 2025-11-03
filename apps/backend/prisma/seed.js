@@ -65,6 +65,12 @@ const RBAC_MODULES = [
     viewerFlags: { r: true, w: false, u: false, d: false, changeStatus: false }
   },
   {
+    key: 'offers',
+    name: 'Ofertas',
+    supervisorFlags: { r: true, w: false, u: false, d: false },
+    viewerFlags: { r: true, w: false, u: false, d: false }
+  },
+  {
     key: 'categories',
     name: 'Categorías',
     supervisorFlags: { r: true, w: true, u: true, d: false },
