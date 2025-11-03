@@ -46,6 +46,7 @@ function normalizeServerPerms(map) {
       w: !!perms.w,
       u: !!perms.u,
       d: !!perms.d,
+      changeStatus: !!(perms.changeStatus ?? perms.change_status ?? perms['change-status']),
     };
   }
   return normalized;
@@ -129,6 +130,7 @@ function normalizeSeedToMap(seed) {
         w: !!it.w,
         u: !!it.u,
         d: !!it.d,
+        changeStatus: !!(it.changeStatus ?? it.change_status ?? it['change-status']),
       };
     }
     return out;
@@ -140,7 +142,13 @@ function normalizeSeedToMap(seed) {
       out[roleId] ||= {};
       if (!mods || typeof mods !== 'object') continue;
       for (const [mod, p] of Object.entries(mods)) {
-        out[roleId][mod] = { r: !!p.r, w: !!p.w, u: !!p.u, d: !!p.d };
+        out[roleId][mod] = {
+          r: !!p.r,
+          w: !!p.w,
+          u: !!p.u,
+          d: !!p.d,
+          changeStatus: !!(p.changeStatus ?? p.change_status ?? p['change-status']),
+        };
       }
     }
   }
@@ -166,6 +174,7 @@ function buildPermMapForRole(roleId, seed, overrides) {
       w: o.w ?? !!b.w,
       u: o.u ?? !!b.u,
       d: o.d ?? !!b.d,
+      changeStatus: o.changeStatus ?? o.change_status ?? o['change-status'] ?? !!b.changeStatus,
     };
   }
   return out;
@@ -314,6 +323,35 @@ export function canDelete(moduleKey) {
   return Boolean(perm && perm.d);
 }
 
+export function canChangeStatus(moduleKey) {
+  const perm = resolvePermission(moduleKey);
+  return Boolean(perm && perm.changeStatus);
+}
+
+export function can(moduleKey, action = 'r') {
+  const normalizedAction = String(action || '').toLowerCase();
+  switch (normalizedAction) {
+    case 'r':
+    case 'read':
+      return canRead(moduleKey);
+    case 'w':
+    case 'write':
+      return canWrite(moduleKey);
+    case 'u':
+    case 'update':
+      return canUpdate(moduleKey);
+    case 'd':
+    case 'delete':
+      return canDelete(moduleKey);
+    case 'changestatus':
+    case 'change-status':
+    case 'change_status':
+      return canChangeStatus(moduleKey);
+    default:
+      return false;
+  }
+}
+
 function normalizeDatasetValue(value) {
   return String(value || '')
     .trim()
@@ -384,6 +422,7 @@ export function applyRBAC(root) {
     write: hasPermission(canWrite),
     update: hasPermission(canUpdate),
     delete: hasPermission(canDelete),
+    changeStatus: hasPermission(canChangeStatus),
   };
 
   let roleId = normalizeDatasetValue(base.dataset.rbacRoleId);
@@ -507,6 +546,9 @@ export function applyRBAC(root) {
     else if (action === 'write') allowedByAction = perms.write;
     else if (action === 'update') allowedByAction = perms.update;
     else if (action === 'delete') allowedByAction = perms.delete;
+    else if (action === 'changestatus' || action === 'change-status') {
+      allowedByAction = perms.changeStatus;
+    }
 
     let allowed = allowedByRole && allowedByAction;
 
