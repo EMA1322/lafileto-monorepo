@@ -512,7 +512,9 @@ test('GET /products/:id devuelve el detalle', async () => {
   assert.equal(res.body?.data?.id, 'prod-001');
   assert.equal(res.body?.data?.price, 2500);
   assert.equal(res.body?.data?.offer?.isActive, true);
+  assert.equal(res.body?.data?.offer?.discountPercent, 10);
   assert.equal(res.body?.data?.offer?.discountPct, 10);
+  assert.equal(res.body?.data?.offer?.finalPrice, 2250);
   assert.equal(res.body?.data?.offer?.priceFinal, 2250);
 });
 
@@ -666,7 +668,7 @@ test('GET /products?all=1 retorna todos con meta normalizada', async () => {
   });
 });
 
-test('GET /products incluye resumen de oferta con priceFinal según vigencia', async () => {
+test('GET /products incluye resumen de oferta con finalPrice según vigencia', async () => {
   const req = {
     validated: {
       query: {
@@ -701,28 +703,35 @@ test('GET /products incluye resumen de oferta con priceFinal según vigencia', a
 
   const horno = map.get('prod-001');
   assert.equal(horno.offer?.isActive, true);
+  assert.equal(horno.offer?.discountPercent, 10);
   assert.equal(horno.offer?.discountPct, 10);
+  assert.equal(horno.offer?.finalPrice, 2250);
   assert.equal(horno.offer?.priceFinal, 2250);
 
   const parrilla = map.get('prod-002');
   assert.equal(parrilla.offer?.isActive, true);
+  assert.equal(parrilla.offer?.finalPrice, 1680);
   assert.equal(parrilla.offer?.priceFinal, 1680);
 
   const milanesa = map.get('prod-003');
   assert.equal(milanesa.offer?.isActive, true);
+  assert.equal(milanesa.offer?.finalPrice, 1615);
   assert.equal(milanesa.offer?.priceFinal, 1615);
 
   const pizza = map.get('prod-004');
   assert.equal(pizza.offer?.isActive, true);
+  assert.equal(pizza.offer?.finalPrice, 3135);
   assert.equal(pizza.offer?.priceFinal, 3135);
 
   const ensalada = map.get('prod-005');
   assert.equal(ensalada.offer?.isActive, false);
+  assert.equal(ensalada.offer?.finalPrice, 1500);
   assert.equal(ensalada.offer?.priceFinal, 1500);
   assert.equal(ensalada.offer?.id, undefined);
 
   const lasana = map.get('prod-006');
   assert.equal(lasana.offer?.isActive, false);
+  assert.equal(lasana.offer?.finalPrice, 2800);
   assert.equal(lasana.offer?.priceFinal, 2800);
 });
 
@@ -764,6 +773,7 @@ test('GET /offers devuelve sólo productos con ofertas activas', async () => {
   assert.ok(!ids.includes('prod-006'));
 
   const offerSummary = items.find((item) => item.id === 'prod-001');
+  assert.equal(offerSummary.offer.finalPrice, 2250);
   assert.equal(offerSummary.offer.priceFinal, 2250);
   assert.equal(res.body?.data?.meta?.total, items.length);
 });

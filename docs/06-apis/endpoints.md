@@ -251,10 +251,12 @@ Accept: application/json
         "updatedAt": "2024-01-05T12:00:00.000Z",
         "offer": {
           "id": "offer-001",
+          "discountPercent": 10,
           "discountPct": 10,
           "startAt": "2024-01-01T00:00:00.000Z",
           "endAt": "2026-01-01T00:00:00.000Z",
           "isActive": true,
+          "finalPrice": 2250,
           "priceFinal": 2250
         }
       }
@@ -338,8 +340,9 @@ Content-Type: application/json
 }
 ```
 
-> **Campo `offer`** (nuevo): cada item incluye `{ id?, discountPct?, startAt?, endAt?, isActive, priceFinal }`.
-> `priceFinal = price * (1 - discountPct/100)` cuando `isActive=true`, caso contrario se devuelve el precio base.
+> **Campo `offer`** (nuevo): cada item incluye `{ id?, discountPercent?, discountPct?, startAt?, endAt?, isActive, finalPrice, priceFinal }`.
+> `finalPrice = price * (1 - discountPercent/100)` cuando `isActive=true`, caso contrario se devuelve el precio base.
+> `discountPct` y `priceFinal` se mantienen como alias legacy (sólo lectura) para clientes existentes.
 > Una oferta está activa si:
 > - tiene `startAt` y `endAt` y se cumple `startAt ≤ now ≤ endAt`;
 > - sólo `startAt` y `startAt ≤ now`;
@@ -405,7 +408,7 @@ curl -X PATCH "$API_BASE/api/v1/products/prod-001/status" \
 | `orderDir` | enum | `asc` | `asc` o `desc`. |
 | `all` | boolean | `false` | Devuelve todo el conjunto (sin paginar) respetando `pageSize` normalizado. |
 
-> Respuesta: `{ ok:true, data:{ items[{ ...Producto, offer{ id?,discountPct?,startAt?,endAt?,isActive,priceFinal } }], meta{ page,pageSize,total,pageCount } } }`.
+> Respuesta: `{ ok:true, data:{ items[{ ...Producto, offer{ id?,discountPercent?,discountPct?,startAt?,endAt?,isActive,finalPrice,priceFinal } }], meta{ page,pageSize,total,pageCount } } }`.
 > Sólo se incluyen productos cuya oferta está activa al momento del request (`offer.isActive=true`).
 
 | Método | Path | Permiso | Query | 200 (data) |
@@ -441,10 +444,12 @@ Accept: application/json
         "updatedAt": "2024-01-05T10:00:00.000Z",
         "offer": {
           "id": "offer-002",
+          "discountPercent": 20,
           "discountPct": 20,
           "startAt": "2024-02-01T00:00:00.000Z",
           "endAt": null,
           "isActive": true,
+          "finalPrice": 1680,
           "priceFinal": 1680
         }
       }

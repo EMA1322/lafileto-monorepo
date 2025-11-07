@@ -567,7 +567,8 @@
                                 { "key": "all", "value": "false" }
                             ]
                         }
-                    }
+                    },
+                    "description": "Listado paginado con resumen de oferta. Cada item expone `offer.discountPercent` y `offer.finalPrice`; se conservan los alias legacy `discountPct` y `priceFinal` como solo lectura."
                 },
                 {
                     "name": "GET /products/:id",
@@ -762,7 +763,8 @@
                                 { "key": "orderDir", "value": "asc" }
                             ]
                         }
-                    }
+                    },
+                    "description": "Retorna solo productos con ofertas activas. La oferta expone `discountPercent`/`finalPrice` y mantiene los alias `discountPct`/`priceFinal` hasta migrar clientes legacy."
                 }
             ]
         },
