@@ -38,7 +38,11 @@ const discountPercentSchema = z
       return Number.isFinite(parsed) ? parsed : value;
     }
     return value;
-  }, z.number({ required_error: 'Ingresá el porcentaje de descuento.' }).min(1, 'El descuento debe ser mayor a 0.').max(100, 'El descuento no puede superar 100.'))
+  },
+  z
+    .number({ required_error: 'Ingresá el porcentaje de descuento.' })
+    .min(0, 'El descuento debe ser mayor o igual a 0.')
+    .max(100, 'El descuento no puede superar 100.'))
   .transform((val) => Math.round(val));
 
 function validateDateRange(data, ctx) {

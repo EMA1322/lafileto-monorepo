@@ -2,7 +2,7 @@
     "info": {
         "name": "La Fileto API v1",
         "_postman_id": "placeholder-la-fileto-api-v1",
-        "description": "Colecci\u00f3n base con variables y carpetas por m\u00f3dulo. Alinear con /docs/06-apis/endpoints.md.",
+        "description": "Colección base con variables y carpetas por módulo. Alinear con /docs/06-apis/endpoints.md.",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
     "variable": [
@@ -21,6 +21,10 @@
         {
             "key": "productId",
             "value": "<replace-with-product-id>"
+        },
+        {
+            "key": "offerId",
+            "value": "<replace-with-offer-id>"
         }
     ],
     "item": [
@@ -546,7 +550,7 @@
                             }
                         ],
                         "url": {
-                            "raw": "{{baseUrl}}/products?page=1&pageSize=10&q=pollo&status=active&categoryId={{categoryId}}&isFeatured=true&priceMin=2000&priceMax=2600&orderBy=price&orderDir=desc&all=false",
+                            "raw": "{{baseUrl}}/products?page=1&pageSize=10&q=pollo&status=active&categoryId={{categoryId}}&priceMin=2000&priceMax=2600&orderBy=price&orderDir=desc&all=false",
                             "host": [
                                 "{{baseUrl}}"
                             ],
@@ -554,17 +558,46 @@
                                 "products"
                             ],
                             "query": [
-                                { "key": "page", "value": "1" },
-                                { "key": "pageSize", "value": "10" },
-                                { "key": "q", "value": "pollo" },
-                                { "key": "status", "value": "active" },
-                                { "key": "categoryId", "value": "{{categoryId}}" },
-                                { "key": "isFeatured", "value": "true" },
-                                { "key": "priceMin", "value": "2000" },
-                                { "key": "priceMax", "value": "2600" },
-                                { "key": "orderBy", "value": "price" },
-                                { "key": "orderDir", "value": "desc" },
-                                { "key": "all", "value": "false" }
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "pageSize",
+                                    "value": "10"
+                                },
+                                {
+                                    "key": "q",
+                                    "value": "pollo"
+                                },
+                                {
+                                    "key": "status",
+                                    "value": "active"
+                                },
+                                {
+                                    "key": "categoryId",
+                                    "value": "{{categoryId}}"
+                                },
+                                {
+                                    "key": "priceMin",
+                                    "value": "2000"
+                                },
+                                {
+                                    "key": "priceMax",
+                                    "value": "2600"
+                                },
+                                {
+                                    "key": "orderBy",
+                                    "value": "price"
+                                },
+                                {
+                                    "key": "orderDir",
+                                    "value": "desc"
+                                },
+                                {
+                                    "key": "all",
+                                    "value": "false"
+                                }
                             ]
                         }
                     }
@@ -616,7 +649,7 @@
                         },
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"name\":\"Ravioles de espinaca\",\"slug\":\"ravioles-de-espinaca\",\"sku\":\"RAV-010\",\"price\":1850.5,\"stock\":30,\"status\":\"draft\",\"categoryId\":\"{{categoryId}}\"}"
+                            "raw": "{\"name\":\"Ravioles de espinaca\",\"description\":\"Con salsa rosa\",\"imageUrl\":\"https://cdn.test/products/ravioles.png\",\"price\":1850.5,\"stock\":30,\"status\":\"draft\",\"categoryId\":\"{{categoryId}}\"}"
                         }
                     }
                 },
@@ -646,7 +679,7 @@
                         },
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"price\":1990.75,\"stock\":12,\"isFeatured\":true}"
+                            "raw": "{\"price\":1990.75,\"stock\":12,\"imageUrl\":\"https://cdn.test/products/prod-002-updated.png\"}"
                         }
                     }
                 },
@@ -704,7 +737,7 @@
                     }
                 },
                 {
-                    "name": "POST /products (slug conflict → 409)",
+                    "name": "POST /products (duplicado → 409)",
                     "request": {
                         "method": "POST",
                         "header": [
@@ -728,7 +761,7 @@
                         },
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"name\":\"Pollo BBQ\",\"slug\":\"pollo-al-horno\",\"sku\":\"POL-999\",\"price\":2100,\"stock\":5,\"status\":\"draft\",\"categoryId\":\"{{categoryId}}\"}"
+                            "raw": "{\"name\":\"Pollo al Horno\",\"price\":2100,\"stock\":5,\"status\":\"draft\",\"categoryId\":\"{{categoryId}}\"}"
                         }
                     }
                 }
@@ -756,11 +789,133 @@
                                 "offers"
                             ],
                             "query": [
-                                { "key": "page", "value": "1" },
-                                { "key": "pageSize", "value": "10" },
-                                { "key": "orderBy", "value": "price" },
-                                { "key": "orderDir", "value": "asc" }
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "pageSize",
+                                    "value": "10"
+                                },
+                                {
+                                    "key": "orderBy",
+                                    "value": "price"
+                                },
+                                {
+                                    "key": "orderDir",
+                                    "value": "asc"
+                                }
                             ]
+                        }
+                    }
+                },
+                {
+                    "name": "POST /offers",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/offers",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "offers"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"productId\":\"{{productId}}\",\"discountPercent\":20,\"startsAt\":\"2024-01-01T00:00:00.000Z\",\"endsAt\":null}"
+                        }
+                    }
+                },
+                {
+                    "name": "PUT /offers/:id",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/offers/{{offerId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "offers",
+                                "{{offerId}}"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"discountPercent\":15,\"endsAt\":\"2024-12-31T23:59:59.000Z\"}"
+                        }
+                    }
+                },
+                {
+                    "name": "DELETE /offers/:id",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/offers/{{offerId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "offers",
+                                "{{offerId}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "POST /offers (conflicto → 409)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/offers",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "offers"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"productId\":\"{{productId}}\",\"discountPercent\":10}"
                         }
                     }
                 }

@@ -28,7 +28,7 @@ function buildOfferData({ productId, discountPercent, startsAt, endsAt }) {
     const normalized = normalizeDiscount(discountPercent);
     if (normalized === undefined) {
       throw createError('VALIDATION_ERROR', 'El descuento es inválido.', {
-        fields: [{ path: 'discountPercent', message: 'Ingresá un porcentaje válido (1 a 100).' }]
+        fields: [{ path: 'discountPercent', message: 'Ingresá un porcentaje válido (0 a 100).' }]
       });
     }
     data.discountPct = normalized;

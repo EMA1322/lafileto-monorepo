@@ -79,7 +79,7 @@ export const offerRepository = {
     });
     const map = new Map();
     for (const row of rows) {
-      if (!row?.productId) continue;
+      if (!row || !row.productId) continue;
       if (!map.has(row.productId)) {
         map.set(row.productId, row);
       }

@@ -58,18 +58,27 @@ export function applyDiscount(price, discountPct) {
 export function buildOfferSummary(offer, price, { now } = {}) {
   const basePrice = roundCurrency(normalizePrice(price));
   if (!offer) {
-    return { isActive: false, priceFinal: basePrice };
+    return {
+      isActive: false,
+      finalPrice: basePrice,
+      priceFinal: basePrice,
+      discountPercent: null,
+      discountPct: undefined
+    };
   }
   const reference = now instanceof Date ? now : new Date();
   const active = isOfferActive(offer, reference);
   const finalPrice = active ? applyDiscount(basePrice, offer.discountPct) : basePrice;
+  const discountPercent = Number.isFinite(offer.discountPct) ? offer.discountPct : null;
 
   return {
     id: offer.id ?? undefined,
+    discountPercent,
     discountPct: offer.discountPct ?? undefined,
     startAt: offer.startAt ?? undefined,
     endAt: offer.endAt ?? undefined,
     isActive: active,
+    finalPrice,
     priceFinal: finalPrice
   };
 }

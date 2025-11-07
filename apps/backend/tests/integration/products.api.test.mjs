@@ -9,8 +9,6 @@ const { categoryRepository } = await import('../../src/repositories/categoryRepo
 const { offerRepository } = await import('../../src/repositories/offerRepository.js');
 const { productsController } = await import('../../src/controllers/productsController.js');
 const { offersController } = await import('../../src/controllers/offersController.js');
-const { errorHandler } = await import('../../src/middlewares/errorHandler.js');
-
 const originalProductRepository = { ...productRepository };
 const originalCategoryRepository = { ...categoryRepository };
 const originalOfferRepository = { ...offerRepository };
@@ -351,6 +349,105 @@ offerRepository.findActiveByProductIds = async (productIds = [], { now } = {}) =
   return map;
 };
 
+offerRepository.findByProductId = async (productId) => {
+  if (!productId) return null;
+  const offer = offers.get(productId);
+  return offer ? cloneOffer(offer) : null;
+};
+
+offerRepository.findById = async (id) => {
+  if (!id) return null;
+  for (const offer of offers.values()) {
+    if (offer.id === id) {
+      const product = products.find((item) => item.id === offer.productId);
+      return {
+        ...cloneOffer(offer),
+        product: product ? cloneProduct(product) : undefined
+      };
+    }
+  }
+  return null;
+};
+
+offerRepository.create = async (data) => {
+  const now = new Date();
+  const id = data.id || `offer-${String(offers.size + 1).padStart(3, '0')}`;
+  const created = {
+    id,
+    productId: data.productId,
+    discountPct: data.discountPct,
+    startAt: data.startAt ?? null,
+    endAt: data.endAt ?? null,
+    createdAt: now,
+    updatedAt: now
+  };
+  offers.set(created.productId, created);
+  const product = products.find((item) => item.id === created.productId);
+  return {
+    ...cloneOffer(created),
+    product: product ? cloneProduct(product) : undefined
+  };
+};
+
+offerRepository.update = async (id, data) => {
+  if (!id) {
+    throw Object.assign(new Error('Not found'), { code: 'P2025' });
+  }
+  let currentEntry = null;
+  for (const offer of offers.values()) {
+    if (offer.id === id) {
+      currentEntry = offer;
+      break;
+    }
+  }
+  if (!currentEntry) {
+    throw Object.assign(new Error('Not found'), { code: 'P2025' });
+  }
+
+  const next = {
+    ...currentEntry,
+    productId: data.productId ?? currentEntry.productId,
+    discountPct:
+      data.discountPct !== undefined ? data.discountPct : currentEntry.discountPct,
+    startAt: data.startAt !== undefined ? data.startAt : currentEntry.startAt,
+    endAt: data.endAt !== undefined ? data.endAt : currentEntry.endAt,
+    updatedAt: new Date()
+  };
+
+  if (next.productId !== currentEntry.productId) {
+    offers.delete(currentEntry.productId);
+  }
+  offers.set(next.productId, next);
+
+  const product = products.find((item) => item.id === next.productId);
+  return {
+    ...cloneOffer(next),
+    product: product ? cloneProduct(product) : undefined
+  };
+};
+
+offerRepository.delete = async (id) => {
+  if (!id) {
+    throw Object.assign(new Error('Not found'), { code: 'P2025' });
+  }
+  let removed = null;
+  for (const [key, offer] of offers.entries()) {
+    if (offer.id === id) {
+      removed = offer;
+      offers.delete(key);
+      break;
+    }
+  }
+  if (!removed) {
+    throw Object.assign(new Error('Not found'), { code: 'P2025' });
+  }
+  const product = products.find((item) => item.id === removed.productId);
+  return {
+    ...cloneOffer(removed),
+    product: product ? cloneProduct(product) : undefined
+  };
+};
+
 offerRepository.listActiveOffers = async ({
   page = 1,
   pageSize = 10,
@@ -512,8 +609,8 @@ test('GET /products/:id devuelve el detalle', async () => {
   assert.equal(res.body?.data?.id, 'prod-001');
   assert.equal(res.body?.data?.price, 2500);
   assert.equal(res.body?.data?.offer?.isActive, true);
-  assert.equal(res.body?.data?.offer?.discountPct, 10);
-  assert.equal(res.body?.data?.offer?.priceFinal, 2250);
+  assert.equal(res.body?.data?.offer?.discountPercent, 10);
+  assert.equal(res.body?.data?.offer?.finalPrice, 2250);
 });
 
 test('PUT /products/:id actualiza datos principales', async () => {
@@ -666,7 +763,7 @@ test('GET /products?all=1 retorna todos con meta normalizada', async () => {
   });
 });
 
-test('GET /products incluye resumen de oferta con priceFinal según vigencia', async () => {
+test('GET /products incluye resumen de oferta con finalPrice según vigencia', async () => {
   const req = {
     validated: {
       query: {
@@ -701,28 +798,34 @@ test('GET /products incluye resumen de oferta con priceFinal según vigencia', a
 
   const horno = map.get('prod-001');
   assert.equal(horno.offer?.isActive, true);
-  assert.equal(horno.offer?.discountPct, 10);
+  assert.equal(horno.offer?.discountPercent, 10);
+  assert.equal(horno.offer?.finalPrice, 2250);
   assert.equal(horno.offer?.priceFinal, 2250);
 
   const parrilla = map.get('prod-002');
   assert.equal(parrilla.offer?.isActive, true);
+  assert.equal(parrilla.offer?.finalPrice, 1680);
   assert.equal(parrilla.offer?.priceFinal, 1680);
 
   const milanesa = map.get('prod-003');
   assert.equal(milanesa.offer?.isActive, true);
+  assert.equal(milanesa.offer?.finalPrice, 1615);
   assert.equal(milanesa.offer?.priceFinal, 1615);
 
   const pizza = map.get('prod-004');
   assert.equal(pizza.offer?.isActive, true);
+  assert.equal(pizza.offer?.finalPrice, 3135);
   assert.equal(pizza.offer?.priceFinal, 3135);
 
   const ensalada = map.get('prod-005');
   assert.equal(ensalada.offer?.isActive, false);
+  assert.equal(ensalada.offer?.finalPrice, 1500);
   assert.equal(ensalada.offer?.priceFinal, 1500);
   assert.equal(ensalada.offer?.id, undefined);
 
   const lasana = map.get('prod-006');
   assert.equal(lasana.offer?.isActive, false);
+  assert.equal(lasana.offer?.finalPrice, 2800);
   assert.equal(lasana.offer?.priceFinal, 2800);
 });
 
@@ -764,6 +867,90 @@ test('GET /offers devuelve sólo productos con ofertas activas', async () => {
   assert.ok(!ids.includes('prod-006'));
 
   const offerSummary = items.find((item) => item.id === 'prod-001');
+  assert.equal(offerSummary.offer.finalPrice, 2250);
   assert.equal(offerSummary.offer.priceFinal, 2250);
   assert.equal(res.body?.data?.meta?.total, items.length);
+});
+
+test('POST /offers crea una oferta nueva y devuelve el producto actualizado', async () => {
+  const req = {
+    validated: {
+      body: {
+        productId: 'prod-006',
+        discountPercent: 25,
+        startsAt: new Date('2020-04-01T00:00:00.000Z'),
+        endsAt: null
+      }
+    }
+  };
+  const res = createResponse();
+  let error = null;
+
+  await offersController.create(req, res, (err) => {
+    error = err;
+  });
+
+  assert.equal(error, null);
+  assert.equal(res.statusCode, 201);
+  assert.equal(res.body?.ok, true);
+  assert.equal(res.body?.data?.id, 'prod-006');
+  assert.equal(res.body?.data?.offer?.discountPercent, 25);
+  assert.equal(res.body?.data?.offer?.finalPrice, 2100);
+  assert.equal(res.body?.data?.offer?.isActive, true);
+
+  const stored = offers.get('prod-006');
+  assert.ok(stored);
+  assert.equal(stored.discountPct, 25);
+});
+
+test('PUT /offers/:id actualiza porcentaje y fechas conservando el contrato', async () => {
+  const req = {
+    validated: {
+      params: { id: 'offer-001' },
+      body: {
+        discountPercent: 5,
+        endsAt: new Date('2026-12-31T23:59:59.000Z')
+      }
+    }
+  };
+  const res = createResponse();
+  let error = null;
+
+  await offersController.update(req, res, (err) => {
+    error = err;
+  });
+
+  assert.equal(error, null);
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body?.ok, true);
+  assert.equal(res.body?.data?.id, 'prod-001');
+  assert.equal(res.body?.data?.offer?.discountPercent, 5);
+  assert.equal(res.body?.data?.offer?.finalPrice, 2375);
+  assert.equal(res.body?.data?.offer?.isActive, true);
+
+  const stored = offers.get('prod-001');
+  assert.ok(stored);
+  assert.equal(stored.discountPct, 5);
+  assert.deepEqual(stored.endAt, new Date('2026-12-31T23:59:59.000Z'));
+});
+
+test('DELETE /offers/:id elimina la oferta y recalcula precios', async () => {
+  const req = { validated: { params: { id: 'offer-002' } } };
+  const res = createResponse();
+  let error = null;
+
+  await offersController.remove(req, res, (err) => {
+    error = err;
+  });
+
+  assert.equal(error, null);
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body?.ok, true);
+  assert.equal(res.body?.data?.id, 'prod-002');
+  assert.equal(res.body?.data?.offer?.isActive, false);
+  assert.equal(res.body?.data?.offer?.discountPercent, null);
+  assert.equal(res.body?.data?.offer?.finalPrice, 2100);
+
+  const stored = offers.get('prod-002');
+  assert.equal(stored, undefined);
 });
