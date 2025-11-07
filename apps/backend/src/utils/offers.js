@@ -60,22 +60,21 @@ export function buildOfferSummary(offer, price, { now } = {}) {
   if (!offer) {
     return {
       isActive: false,
-      discountPercent: undefined,
-      discountPct: undefined,
       finalPrice: basePrice,
-      priceFinal: basePrice
+      priceFinal: basePrice,
+      discountPercent: null,
+      discountPct: undefined
     };
   }
   const reference = now instanceof Date ? now : new Date();
   const active = isOfferActive(offer, reference);
-  const discountPercent =
-    offer.discountPercent ?? offer.discountPct ?? undefined;
-  const finalPrice = active ? applyDiscount(basePrice, discountPercent) : basePrice;
+  const finalPrice = active ? applyDiscount(basePrice, offer.discountPct) : basePrice;
+  const discountPercent = Number.isFinite(offer.discountPct) ? offer.discountPct : null;
 
   return {
     id: offer.id ?? undefined,
     discountPercent,
-    discountPct: discountPercent,
+    discountPct: offer.discountPct ?? undefined,
     startAt: offer.startAt ?? undefined,
     endAt: offer.endAt ?? undefined,
     isActive: active,

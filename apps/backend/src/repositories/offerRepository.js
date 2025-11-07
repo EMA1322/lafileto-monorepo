@@ -36,7 +36,24 @@ const offerSelect = {
   updatedAt: true
 };
 
+const offerWithProductSelect = {
+  ...offerSelect,
+  product: { select: productBaseSelect }
+};
+
 export const offerRepository = {
+  findById: (id) =>
+    prisma.offer.findUnique({
+      where: { id },
+      select: offerWithProductSelect
+    }),
+
+  findByProductId: (productId) =>
+    prisma.offer.findUnique({
+      where: { productId },
+      select: offerSelect
+    }),
+
   async findActiveByProductId(productId, { now } = {}) {
     if (!productId) return null;
     const reference = now instanceof Date ? now : new Date();
@@ -62,7 +79,7 @@ export const offerRepository = {
     });
     const map = new Map();
     for (const row of rows) {
-      if (!row?.productId) continue;
+      if (!row || !row.productId) continue;
       if (!map.has(row.productId)) {
         map.set(row.productId, row);
       }
@@ -123,6 +140,26 @@ export const offerRepository = {
     ]);
 
     return { items, total };
+  },
+
+  create: (data) =>
+    prisma.offer.create({
+      data,
+      select: offerWithProductSelect
+    }),
+
+  update: (id, data) =>
+    prisma.offer.update({
+      where: { id },
+      data,
+      select: offerWithProductSelect
+    }),
+
+  delete: (id) =>
+    prisma.offer.delete({
+      where: { id },
+      select: offerWithProductSelect
+    })
   }
 };
 

@@ -4,8 +4,12 @@ import { ok } from '../utils/envelope.js';
 
 const stripLegacyProductFields = (data) => {
   if (!data || typeof data !== 'object') return {};
-  const { slug: _slug, sku: _sku, currency: _currency, isFeatured: _isFeatured, ...rest } = data;
-  return rest;
+  const cleaned = { ...data };
+  delete cleaned.slug;
+  delete cleaned.sku;
+  delete cleaned.currency;
+  delete cleaned.isFeatured;
+  return cleaned;
 };
 
 export const productsController = {
