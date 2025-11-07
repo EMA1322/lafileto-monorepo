@@ -600,7 +600,8 @@
                                 }
                             ]
                         }
-                    }
+                    },
+                    "description": "Listado paginado con resumen de oferta. Cada item expone `offer.discountPercent` y `offer.finalPrice`; se conservan los alias legacy `discountPct` y `priceFinal` como solo lectura."
                 },
                 {
                     "name": "GET /products/:id",
