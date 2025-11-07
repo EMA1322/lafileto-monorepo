@@ -199,6 +199,14 @@
               "pm.test('productos sin campos legacy', () => {",
               "  const items = Array.isArray(json?.data?.items) ? json.data.items : [];",
               "  pm.expect(items.every((item) => item.slug === undefined && item.sku === undefined && item.currency === undefined && item.isFeatured === undefined)).to.be.true;",
+              "});",
+              "pm.test('oferta expone discountPercent/finalPrice', () => {",
+              "  const items = Array.isArray(json?.data?.items) ? json.data.items : [];",
+              "  pm.expect(items.every((item) => item.offer?.discountPercent !== undefined && item.offer?.finalPrice !== undefined)).to.be.true;",
+              "});",
+              "pm.test('oferta mantiene alias legacy', () => {",
+              "  const items = Array.isArray(json?.data?.items) ? json.data.items : [];",
+              "  pm.expect(items.every((item) => item.offer?.discountPct === item.offer?.discountPercent && item.offer?.priceFinal === item.offer?.finalPrice)).to.be.true;",
               "});"
             ]
           }
