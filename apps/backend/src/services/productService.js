@@ -62,6 +62,13 @@ function sanitizeDescription(value) {
   return trimmed.length > 0 ? trimmed : null;
 }
 
+function sanitizeImageUrl(value) {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+  const trimmed = String(value).trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
 export function sanitizeProduct(row) {
   if (!row) return null;
   const toNumber = (value) => {
@@ -79,6 +86,7 @@ export function sanitizeProduct(row) {
     id: row.id,
     name: row.name,
     description: row.description ?? null,
+    imageUrl: row.imageUrl ?? null,
     price: toNumber(row.price),
     stock: row.stock,
     status,
@@ -236,6 +244,7 @@ export const productService = {
   async createProduct(payload) {
     const name = typeof payload.name === 'string' ? payload.name.trim() : '';
     const description = sanitizeDescription(payload.description);
+    const imageUrl = sanitizeImageUrl(payload.imageUrl);
     const price = toPriceInput(payload.price);
     const stock = Number(payload.stock ?? 0);
     const statusInput = normalizeStatusInput(payload.status, { required: false }) ?? 'DRAFT';
@@ -262,6 +271,7 @@ export const productService = {
     const created = await productRepository.create({
       name,
       description,
+      imageUrl: imageUrl ?? null,
       price,
       stock,
       status: statusInput,
@@ -295,6 +305,10 @@ export const productService = {
 
     if (payload.description !== undefined) {
       data.description = sanitizeDescription(payload.description);
+    }
+
+    if (payload.imageUrl !== undefined) {
+      data.imageUrl = sanitizeImageUrl(payload.imageUrl);
     }
 
     if (payload.price !== undefined) {

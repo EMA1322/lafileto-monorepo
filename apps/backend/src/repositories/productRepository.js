@@ -6,6 +6,7 @@ export const productBaseSelect = {
   id: true,
   name: true,
   description: true,
+  imageUrl: true,
   price: true,
   stock: true,
   status: true,

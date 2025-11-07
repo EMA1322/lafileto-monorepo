@@ -165,6 +165,34 @@ const descriptionUpdateSchema = descriptionInput
     return val;
   });
 
+function preprocessImageUrl(value) {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+  const trimmed = String(value).trim();
+  if (!trimmed) return null;
+  return trimmed;
+}
+
+const absoluteImageUrl = z
+  .string()
+  .trim()
+  .min(1, 'La URL es obligatoria.')
+  .max(2048, 'La URL es demasiado larga.')
+  .url('La URL debe ser válida.')
+  .refine((val) => {
+    try {
+      const parsed = new URL(val);
+      return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+    } catch (_err) {
+      return false;
+    }
+  }, { message: 'La URL debe ser absoluta (http/https).' });
+
+const optionalImageUrl = z.preprocess(
+  preprocessImageUrl,
+  z.union([absoluteImageUrl, z.null()]).optional()
+);
+
 const priceSchema = z
   .preprocess((value) => {
     if (value === undefined || value === null) return value;
@@ -213,6 +241,7 @@ export const productCreateSchema = z
   .object({
     name: nameSchema,
     description: descriptionCreateSchema,
+    imageUrl: optionalImageUrl.transform((val) => (val === undefined ? null : val)),
     price: priceSchema,
     stock: stockSchema,
     status: statusSchema.optional().transform((val) => val ?? 'draft'),
@@ -225,6 +254,7 @@ export const productUpdateSchema = z
   .object({
     name: nameSchema.optional(),
     description: descriptionUpdateSchema,
+    imageUrl: optionalImageUrl,
     price: priceSchema.optional(),
     stock: stockSchema.optional(),
     status: statusSchema.optional(),
