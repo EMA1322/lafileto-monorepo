@@ -25,6 +25,7 @@ const initialProducts = [
     id: 'prod-001',
     name: 'Pollo al Horno',
     description: 'Clásico de la casa',
+    imageUrl: 'https://cdn.test/products/prod-001.png',
     price: 2500,
     stock: 15,
     status: 'ACTIVE',
@@ -36,6 +37,7 @@ const initialProducts = [
     id: 'prod-002',
     name: 'Pollo a la Parrilla',
     description: 'Servido con papas rústicas',
+    imageUrl: null,
     price: 2100,
     stock: 12,
     status: 'ACTIVE',
@@ -47,6 +49,7 @@ const initialProducts = [
     id: 'prod-003',
     name: 'Milanesa Napolitana',
     description: 'Con puré de papas',
+    imageUrl: 'https://cdn.test/products/prod-003.png',
     price: 1900,
     stock: 20,
     status: 'DRAFT',
@@ -58,6 +61,7 @@ const initialProducts = [
     id: 'prod-004',
     name: 'Pizza Napolitana',
     description: 'Con tomate y mozzarella',
+    imageUrl: 'https://cdn.test/products/prod-004.png',
     price: 3300,
     stock: 8,
     status: 'ARCHIVED',
@@ -69,6 +73,7 @@ const initialProducts = [
     id: 'prod-005',
     name: 'Ensalada César',
     description: 'Lechuga, pollo y crutones',
+    imageUrl: null,
     price: 1500,
     stock: 10,
     status: 'ACTIVE',
@@ -80,6 +85,7 @@ const initialProducts = [
     id: 'prod-006',
     name: 'Lasaña Boloñesa',
     description: 'Capas de pasta y carne',
+    imageUrl: 'https://cdn.test/products/prod-006.png',
     price: 2800,
     stock: 6,
     status: 'ACTIVE',
@@ -247,6 +253,7 @@ productRepository.create = async (data) => {
     id: data.id || `prod-${String(products.length + 1).padStart(3, '0')}`,
     name: data.name,
     description: data.description ?? null,
+    imageUrl: data.imageUrl ?? null,
     price: Number.parseFloat(data.price),
     stock: data.stock,
     status: data.status,
@@ -267,6 +274,7 @@ productRepository.update = async (id, data) => {
   const next = {
     ...current,
     ...data,
+    imageUrl: data.imageUrl !== undefined ? data.imageUrl : current.imageUrl,
     price: data.price !== undefined ? Number.parseFloat(data.price) : current.price,
     stock: data.stock !== undefined ? Number(data.stock) : current.stock,
     updatedAt: new Date()
@@ -457,6 +465,7 @@ test('POST /products crea un producto nuevo', async () => {
       body: {
         name: 'Ravioles de espinaca',
         description: 'Con salsa rosa',
+        imageUrl: 'https://cdn.test/products/ravioles.png',
         price: 1850.5,
         stock: 30,
         status: 'active',
@@ -480,6 +489,7 @@ test('POST /products crea un producto nuevo', async () => {
   assert.equal(res.body?.ok, true);
   assert.equal(res.body?.data?.price, 1850.5);
   assert.equal(res.body?.data?.status, 'active');
+  assert.equal(res.body?.data?.imageUrl, 'https://cdn.test/products/ravioles.png');
   assert.equal(res.body?.data?.slug, undefined);
   assert.equal(res.body?.data?.sku, undefined);
   assert.equal(res.body?.data?.currency, undefined);
@@ -513,7 +523,8 @@ test('PUT /products/:id actualiza datos principales', async () => {
       body: {
         name: 'Pollo a la Parrilla Especial',
         price: 2250.75,
-        stock: 18
+        stock: 18,
+        imageUrl: 'https://cdn.test/products/prod-002-updated.png'
       }
     }
   };
@@ -529,6 +540,7 @@ test('PUT /products/:id actualiza datos principales', async () => {
   assert.equal(res.body?.ok, true);
   assert.equal(res.body?.data?.name, 'Pollo a la Parrilla Especial');
   assert.equal(res.body?.data?.price, 2250.75);
+  assert.equal(res.body?.data?.imageUrl, 'https://cdn.test/products/prod-002-updated.png');
 });
 
 test('DELETE /products/:id elimina el producto', async () => {

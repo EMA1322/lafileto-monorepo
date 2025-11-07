@@ -60,6 +60,7 @@ function resetProducts() {
         id: 'prod-001',
         name: 'Pollo al Horno',
         description: 'Clásico de la casa',
+        imageUrl: 'https://cdn.test/products/prod-001.png',
         price: 2500,
         stock: 15,
         status: 'ACTIVE',
@@ -177,6 +178,7 @@ prisma.product.create = async ({ data, select } = {}) => {
     id,
     name: data.name,
     description: data.description ?? null,
+    imageUrl: data.imageUrl ?? null,
     price: Number.parseFloat(data.price),
     stock: data.stock,
     status: data.status,
@@ -206,6 +208,7 @@ prisma.product.update = async ({ where = {}, data = {}, select } = {}) => {
   const updated = {
     ...current,
     ...data,
+    imageUrl: data.imageUrl !== undefined ? data.imageUrl : current.imageUrl,
     price: data.price !== undefined ? Number.parseFloat(data.price) : current.price,
     stock: data.stock !== undefined ? Number(data.stock) : current.stock,
     updatedAt: new Date()

@@ -86,6 +86,7 @@ model Product {
   id          String        @id @default(cuid()) @db.VarChar(191)
   name        String        @db.VarChar(80)
   description String?       @db.VarChar(1024)
+  imageUrl    String?       @db.VarChar(2048)
   price       Decimal       @db.Decimal(10, 2)
   stock       Int           @default(0)
   status      ProductStatus @default(DRAFT)
@@ -93,7 +94,7 @@ model Product {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
-  category Category @relation(fields: [categoryId], references: [id])
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   offer    Offer?
 
   @@index([categoryId])
