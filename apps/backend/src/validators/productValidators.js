@@ -9,7 +9,11 @@ const stripLegacyProductFields = (data) => {
   if (!data || typeof data !== 'object') return data;
 
   // Campos legacy que serán eliminados en próximas migraciones.
-  const { slug: _slug, sku: _sku, currency: _currency, isFeatured: _isFeatured, ...rest } = data;
+  const rest = { ...data };
+  delete rest.slug;
+  delete rest.sku;
+  delete rest.currency;
+  delete rest.isFeatured;
   return rest;
 };
 
@@ -183,7 +187,7 @@ const absoluteImageUrl = z
     try {
       const parsed = new URL(val);
       return parsed.protocol === 'http:' || parsed.protocol === 'https:';
-    } catch (_err) {
+    } catch {
       return false;
     }
   }, { message: 'La URL debe ser absoluta (http/https).' });

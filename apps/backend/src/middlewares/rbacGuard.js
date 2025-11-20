@@ -43,4 +43,3 @@ export function rbacGuard(moduleKey, action = 'r', options = {}) {
     }
   };
 }
-

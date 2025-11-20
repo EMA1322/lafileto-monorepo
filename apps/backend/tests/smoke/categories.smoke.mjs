@@ -42,7 +42,7 @@ async function run() {
   let id = null;
 
   console.log('> Admin list…');
-  const { data: listA, meta } = await apiFetch(`/admin/categories?page=1&pageSize=20&orderBy=name&orderDir=asc`, { token });
+  const { data: listA } = await apiFetch(`/admin/categories?page=1&pageSize=20&orderBy=name&orderDir=asc`, { token });
   assert(Array.isArray(listA), 'admin list returns array');
 
   console.log('> Create…');
@@ -72,7 +72,7 @@ async function run() {
   assert(restored.status === 'active' && !restored.deletedAt, 'restored active');
 
   console.log('> Public list…');
-  const { data: listP, meta: metaP } = await apiFetch(`/categories?page=1&pageSize=50&q=${encodeURIComponent('SMOKE_')}`);
+  const { data: listP } = await apiFetch(`/categories?page=1&pageSize=50&q=${encodeURIComponent('SMOKE_')}`);
   assert(listP.some(x => x.id === id), 'public list shows restored active');
 
   console.log('> Cleanup (soft-delete again)…');

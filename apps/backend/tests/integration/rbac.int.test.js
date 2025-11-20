@@ -141,5 +141,7 @@ test("PUT /rbac/roles/:roleId/permissions → 200 sin auditoría", async () => {
 // Limpieza (borra el rol y sus permisos)
 test("cleanup test role", async () => {
   await prisma.rolePermission.deleteMany({ where: { roleId } });
-  await prisma.role.delete({ where: { roleId } }).catch(() => {});
+  try {
+    await prisma.role.delete({ where: { roleId } });
+  } catch {}
 });
