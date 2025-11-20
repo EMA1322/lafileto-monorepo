@@ -2,7 +2,7 @@
 <link rel="stylesheet" href="/src/styles/products.css" />
 
 <section
-  class="products"
+  class="products page"
   id="products-module"
   data-rbac-module="products"
   aria-labelledby="products-title"
@@ -15,7 +15,7 @@
     <div class="products__header-actions">
       <button
         id="product-create"
-        class="products__button products__button--primary"
+        class="btn btn--primary"
         type="button"
         data-action="create"
         data-rbac-hide
@@ -32,7 +32,7 @@
       <label class="products__label" for="filter-q">Buscar</label>
       <input
         id="filter-q"
-        class="products__input"
+        class="form-control form-control--dense products__input"
         type="search"
         name="q"
         placeholder="Buscar por nombre"
@@ -43,14 +43,14 @@
 
     <div class="products__filters-group">
       <label class="products__label" for="filter-category">Categoría</label>
-      <select id="filter-category" class="products__select" name="category">
+      <select id="filter-category" class="form-control form-control--dense products__select" name="category">
         <option value="all">Todas las categorías</option>
       </select>
     </div>
 
     <div class="products__filters-group">
       <label class="products__label" for="filter-status">Estado</label>
-      <select id="filter-status" class="products__select" name="status">
+      <select id="filter-status" class="form-control form-control--dense products__select" name="status">
         <option value="all">Todos</option>
         <option value="draft">Borrador</option>
         <option value="active">Activo</option>
@@ -60,7 +60,7 @@
 
     <div class="products__filters-group">
       <label class="products__label" for="filter-order-by">Ordenar por</label>
-      <select id="filter-order-by" class="products__select" name="orderBy">
+      <select id="filter-order-by" class="form-control form-control--dense products__select" name="orderBy">
         <option value="updatedAt">Última actualización</option>
         <option value="name">Nombre</option>
         <option value="price">Precio</option>
@@ -69,7 +69,7 @@
 
     <div class="products__filters-group">
       <label class="products__label" for="filter-order-dir">Dirección</label>
-      <select id="filter-order-dir" class="products__select" name="orderDir">
+      <select id="filter-order-dir" class="form-control form-control--dense products__select" name="orderDir">
         <option value="desc">Descendente</option>
         <option value="asc">Ascendente</option>
       </select>
@@ -77,7 +77,7 @@
 
     <div class="products__filters-group">
       <label class="products__label" for="filter-page-size">Resultados por página</label>
-      <select id="filter-page-size" class="products__select" name="pageSize">
+      <select id="filter-page-size" class="form-control form-control--dense products__select" name="pageSize">
         <option value="10">10</option>
         <option value="20">20</option>
         <option value="50">50</option>
@@ -85,9 +85,7 @@
     </div>
 
     <div class="products__filters-group products__filters-group--actions">
-      <button id="filter-clear" class="products__button products__button--ghost" type="reset">
-        Limpiar filtros
-      </button>
+      <button id="filter-clear" class="btn btn--ghost btn--sm" type="reset">Limpiar filtros</button>
     </div>
   </form>
 
@@ -99,18 +97,16 @@
 
     <div class="products__state products__state--error" id="products-error" role="alert" hidden>
       <p id="products-error-message">No pudimos cargar los productos. Intentá nuevamente.</p>
-      <button id="products-retry" class="products__button products__button--ghost" type="button">Reintentar</button>
+      <button id="products-retry" class="btn btn--ghost btn--sm" type="button">Reintentar</button>
     </div>
 
     <div class="products__state products__state--empty" id="products-empty" role="status" hidden>
       <p>No encontramos productos con estos filtros.</p>
-      <button id="products-empty-clear" class="products__button products__button--ghost" type="button">
-        Limpiar filtros
-      </button>
+      <button id="products-empty-clear" class="btn btn--ghost btn--sm" type="button">Limpiar filtros</button>
     </div>
 
-    <div class="products__table-wrapper" id="products-table-wrapper" hidden>
-      <table class="products__table" aria-describedby="products-meta">
+    <div class="table-wrapper products__table-wrapper" id="products-table-wrapper" hidden>
+      <table class="data-table products__table" aria-describedby="products-meta">
         <thead>
           <tr>
             <th scope="col" class="products__cell-image">Imagen</th>
@@ -132,11 +128,11 @@
   <footer class="products__footer">
     <div class="products__meta" id="products-meta" role="status" aria-live="polite">—</div>
     <nav class="products__pagination" aria-label="Paginación de productos">
-      <button id="page-first" class="products__pager" type="button" aria-label="Primera página">«</button>
-      <button id="page-prev" class="products__pager" type="button" aria-label="Página anterior">‹</button>
+      <button id="page-first" class="btn btn--ghost btn--sm" type="button" aria-label="Primera página">«</button>
+      <button id="page-prev" class="btn btn--ghost btn--sm" type="button" aria-label="Página anterior">‹</button>
       <ol class="products__page-list" id="products-page-list" aria-live="polite"></ol>
-      <button id="page-next" class="products__pager" type="button" aria-label="Página siguiente">›</button>
-      <button id="page-last" class="products__pager" type="button" aria-label="Última página">»</button>
+      <button id="page-next" class="btn btn--ghost btn--sm" type="button" aria-label="Página siguiente">›</button>
+      <button id="page-last" class="btn btn--ghost btn--sm" type="button" aria-label="Última página">»</button>
     </nav>
   </footer>
 </section>
