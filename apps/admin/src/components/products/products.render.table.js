@@ -4,7 +4,7 @@
 // Comentarios en español, código y nombres en inglés.
 // ============================================================================
 
-import { applyRBAC } from '@/utils/rbac.js';
+import { applyRBAC } from '../../utils/rbac.js';
 
 import {
   STATUS_LABELS,
@@ -23,7 +23,6 @@ function getRefs(container) {
     searchInput: container.querySelector('#filter-q'),
     categorySelect: container.querySelector('#filter-category'),
     statusSelect: container.querySelector('#filter-status'),
-    featuredToggle: container.querySelector('#filter-featured'),
     orderBySelect: container.querySelector('#filter-order-by'),
     orderDirSelect: container.querySelector('#filter-order-dir'),
     pageSizeSelect: container.querySelector('#filter-page-size'),
@@ -303,11 +302,6 @@ function renderFilters(snapshot, refs) {
   if (refs.pageSizeSelect) {
     refs.pageSizeSelect.value = String(filters.pageSize || DEFAULT_PAGE_SIZE);
   }
-  if (refs.featuredToggle) {
-    const isActive = filters.isFeatured === true;
-    refs.featuredToggle.setAttribute('aria-checked', isActive ? 'true' : 'false');
-    refs.featuredToggle.classList.toggle('is-active', isActive);
-  }
   if (refs.categorySelect) {
     const value = filters.categoryId || 'all';
     refs.categorySelect.value = value;
@@ -336,7 +330,6 @@ export function renderProductsView(snapshot, root = document.querySelector('#pro
   const status = view.status || REQUEST_STATUS.IDLE;
   const isInitial = status === REQUEST_STATUS.IDLE;
   const isLoading = status === REQUEST_STATUS.LOADING;
-  const showLoading = isInitial || isLoading;
   const isError = status === REQUEST_STATUS.ERROR;
   const isEmpty = status === REQUEST_STATUS.EMPTY;
   const hasData = status === REQUEST_STATUS.SUCCESS;
@@ -345,11 +338,24 @@ export function renderProductsView(snapshot, root = document.querySelector('#pro
   const meta = view.meta || { page: 1, pageSize: DEFAULT_PAGE_SIZE, pageCount: 1, total: 0 };
   const categories = Array.isArray(view.categories) ? view.categories : [];
 
-  if (refs.loadingState) refs.loadingState.hidden = !showLoading;
-  if (refs.errorState) refs.errorState.hidden = !isError;
-  if (refs.emptyState) refs.emptyState.hidden = !isEmpty;
-  if (refs.tableWrapper) refs.tableWrapper.hidden = !hasData;
-  if (refs.cardsWrapper) refs.cardsWrapper.hidden = !hasData;
+  const showLoading = isInitial || isLoading;
+
+  if (refs.loadingState) refs.loadingState.hidden = true;
+  if (refs.errorState) refs.errorState.hidden = true;
+  if (refs.emptyState) refs.emptyState.hidden = true;
+  if (refs.tableWrapper) refs.tableWrapper.hidden = true;
+  if (refs.cardsWrapper) refs.cardsWrapper.hidden = true;
+
+  if (showLoading && !isError && !isEmpty && !hasData) {
+    if (refs.loadingState) refs.loadingState.hidden = false;
+  } else if (isError) {
+    if (refs.errorState) refs.errorState.hidden = false;
+  } else if (isEmpty) {
+    if (refs.emptyState) refs.emptyState.hidden = false;
+  } else if (hasData) {
+    if (refs.tableWrapper) refs.tableWrapper.hidden = false;
+    if (refs.cardsWrapper) refs.cardsWrapper.hidden = false;
+  }
 
   const content = container.querySelector('.products__content');
   if (content) {

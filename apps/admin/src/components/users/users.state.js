@@ -1,5 +1,6 @@
-import { toast } from '@/utils/toast.js';
-import { apiFetch } from '@/utils/api.js';
+import { toast } from '../../utils/toast.js';
+import { apiFetch } from '../../utils/api.js';
+import { computePageCount } from '../../utils/helpers.js';
 
 import { computeIsAdmin, mapErrorToMessage } from './users.helpers.js';
 
@@ -26,14 +27,6 @@ const defaultFilters = {
   orderDir: 'asc',
 };
 
-function computePageCount(total, pageSize = DEFAULT_PAGE_SIZE) {
-  const numericTotal = Number(total);
-  const safeTotal = Number.isFinite(numericTotal) && numericTotal >= 0 ? numericTotal : 0;
-  const numericSize = Number(pageSize);
-  const safeSize = Number.isFinite(numericSize) && numericSize > 0 ? numericSize : DEFAULT_PAGE_SIZE;
-  return Math.max(1, Math.ceil(safeTotal / safeSize));
-}
-
 function syncUsersMeta(partial = {}) {
   const base = usersState.meta ?? {
     page: 1,
@@ -56,7 +49,7 @@ function syncUsersMeta(partial = {}) {
   const pageCountNumber = Number(partial.pageCount);
   const normalizedPageCount = Number.isFinite(pageCountNumber) && pageCountNumber > 0
     ? Math.floor(pageCountNumber)
-    : computePageCount(normalizedTotal, normalizedPageSize);
+    : computePageCount(normalizedTotal, normalizedPageSize, DEFAULT_PAGE_SIZE);
 
   const clampedPage = Math.min(Math.max(1, rawPage), Math.max(1, normalizedPageCount));
 
@@ -184,7 +177,7 @@ function normalizeUsersResponse(data) {
   const safeTotal = metaTotal !== null && metaTotal >= 0 ? metaTotal : items.length;
   const computedPageCount = metaPageCount !== null && metaPageCount > 0
     ? Math.floor(metaPageCount)
-    : computePageCount(safeTotal, safePageSize);
+    : computePageCount(safeTotal, safePageSize, DEFAULT_PAGE_SIZE);
   const safePage = metaPage !== null && metaPage > 0 ? Math.min(Math.floor(metaPage), computedPageCount) : 1;
 
   return {

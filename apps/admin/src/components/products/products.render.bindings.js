@@ -4,9 +4,9 @@
 // Comentarios en español, código y nombres en inglés.
 // ============================================================================
 
-import { can } from '@/utils/rbac.js';
-import { showSnackbar } from '@/utils/snackbar.js';
-import { debounce } from '@/utils/helpers.js';
+import { can } from '../../utils/rbac.js';
+import { showSnackbar } from '../../utils/snackbar.js';
+import { debounce } from '../../utils/helpers.js';
 
 import {
   state,
@@ -17,7 +17,6 @@ import {
   fetchProducts,
   notify,
 } from './products.state.js';
-import { normalizeFeatured } from './products.helpers.js';
 import { openProductModal, openProductViewModal, openDeleteModal } from './products.modals.js';
 
 function getRefs(container) {
@@ -26,7 +25,6 @@ function getRefs(container) {
     searchInput: container.querySelector('#filter-q'),
     categorySelect: container.querySelector('#filter-category'),
     statusSelect: container.querySelector('#filter-status'),
-    featuredToggle: container.querySelector('#filter-featured'),
     orderBySelect: container.querySelector('#filter-order-by'),
     orderDirSelect: container.querySelector('#filter-order-dir'),
     pageSizeSelect: container.querySelector('#filter-page-size'),
@@ -89,19 +87,6 @@ export function bindProductsBindings(container) {
 
   attach(refs.statusSelect, 'change', (event) => {
     setFilters({ status: event.target.value || 'all' });
-    setPage(1);
-    notify(container);
-    void reloadProducts(container);
-  }, listeners);
-
-  attach(refs.featuredToggle, 'click', (event) => {
-    const current = state.filters.isFeatured;
-    const next = current === true ? 'all' : true;
-    setFilters({ isFeatured: normalizeFeatured(next) });
-    if (event.currentTarget) {
-      event.currentTarget.setAttribute('aria-checked', next === true ? 'true' : 'false');
-      event.currentTarget.classList.toggle('is-active', next === true);
-    }
     setPage(1);
     notify(container);
     void reloadProducts(container);

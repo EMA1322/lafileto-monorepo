@@ -4,7 +4,7 @@
 // Comentarios en español, código y nombres en inglés.
 // ============================================================================
 
-import { formatMoney as sharedFormatMoney } from '@/utils/helpers.js';
+import { computePageCount, formatMoney as sharedFormatMoney } from '../../utils/helpers.js';
 
 export const MODULE_KEY = 'products';
 export const DEFAULT_PAGE_SIZE = 10;
@@ -23,14 +23,12 @@ export const DEFAULT_FILTERS = {
   q: '',
   categoryId: 'all',
   status: 'all',
-  isFeatured: 'all',
   priceMin: '',
   priceMax: '',
   orderBy: 'updatedAt',
   orderDir: 'desc',
   page: 1,
   pageSize: DEFAULT_PAGE_SIZE,
-  all: 0,
 };
 
 /** Serializa filtros a params aceptados por la API */
@@ -46,10 +44,6 @@ export function buildQuery(filters = {}) {
 
   if (source.status && source.status !== 'all' && STATUS_VALUES.includes(source.status)) {
     params.status = source.status;
-  }
-
-  if (source.isFeatured === true || source.isFeatured === 'true') {
-    params.isFeatured = true;
   }
 
   const rawMin = source.priceMin;
@@ -87,10 +81,6 @@ export function buildQuery(filters = {}) {
     ? pageSize
     : DEFAULT_FILTERS.pageSize;
 
-  if (source.all === 1 || source.all === true || source.all === '1') {
-    params.all = 1;
-  }
-
   return params;
 }
 
@@ -102,13 +92,6 @@ export function formatMoney(value, options = {}) {
     minimumFractionDigits: 2,
     ...options,
   });
-}
-
-/** Normaliza bool featured desde controles UI */
-export function normalizeFeatured(value) {
-  if (value === true || value === 'true' || value === 1 || value === '1') return true;
-  if (value === false || value === 'false' || value === 0 || value === '0') return false;
-  return 'all';
 }
 
 function pickNumber(...values) {
@@ -125,16 +108,7 @@ function normalizeOffer(rawOffer, basePrice) {
   const isActiveRaw =
     rawOffer.isActive ?? rawOffer.active ?? rawOffer.enabled ?? rawOffer.status === 'active';
 
-  const finalPrice = pickNumber(
-    rawOffer.finalPrice,
-    rawOffer.final_price,
-    rawOffer.priceWithDiscount,
-    rawOffer.price_with_discount,
-    rawOffer.discountPrice,
-    rawOffer.discount_price,
-    rawOffer.offerPrice,
-    rawOffer.price,
-  );
+  const finalPrice = pickNumber(rawOffer.finalPrice, rawOffer.final_price);
 
   let normalizedFinal = Number.isFinite(finalPrice) ? finalPrice : null;
   if (Number.isFinite(normalizedFinal) && normalizedFinal < 0) {
@@ -146,9 +120,6 @@ function normalizeOffer(rawOffer, basePrice) {
     rawOffer.discountPercentage,
     rawOffer.discount_percent,
     rawOffer.discount_percentage,
-    rawOffer.percentOff,
-    rawOffer.percent_off,
-    rawOffer.percentage,
   );
 
   if (Number.isFinite(normalizedPercent)) {
@@ -165,11 +136,12 @@ function normalizeOffer(rawOffer, basePrice) {
 
   if (!hasRelevantData) return null;
 
+  const isActive =
+    isActiveRaw != null ? Boolean(isActiveRaw) : normalizedPercent !== null || normalizedFinal !== null;
+
   return {
     id: rawOffer.id ?? rawOffer.offerId ?? null,
-    name: rawOffer.name ?? rawOffer.title ?? '',
-    label: rawOffer.label ?? rawOffer.badge ?? '',
-    isActive: Boolean(isActiveRaw),
+    isActive,
     finalPrice: Number.isFinite(normalizedFinal) ? normalizedFinal : null,
     discountPercent: Number.isFinite(normalizedPercent) ? normalizedPercent : null,
     startsAt: rawOffer.startsAt ?? rawOffer.startDate ?? rawOffer.start_at ?? null,
@@ -186,14 +158,10 @@ export function mapProductFromApi(raw) {
   return {
     id: raw.id ?? raw._id ?? null,
     name: raw.name ?? '',
-    slug: raw.slug ?? '',
-    sku: raw.sku ?? '',
     description: raw.description ?? '',
     price: normalizedPrice,
-    currency: raw.currency || 'ARS',
     stock: Number.isFinite(stock) ? stock : 0,
     status: STATUS_VALUES.includes(raw.status) ? raw.status : 'draft',
-    isFeatured: Boolean(raw.isFeatured ?? raw.featured),
     categoryId: raw.categoryId ?? raw.category?.id ?? null,
     categoryName: raw.category?.name ?? raw.categoryName ?? '',
     imageUrl: raw.imageUrl ?? raw.image_url ?? raw.image ?? null,
@@ -216,6 +184,9 @@ export function resolveOfferPricing(product) {
   }
 
   let finalPrice = Number.isFinite(Number(offer.finalPrice)) ? Number(offer.finalPrice) : null;
+  if (!Number.isFinite(finalPrice) && Number.isFinite(basePrice) && Number.isFinite(offer.discountPercent)) {
+    finalPrice = basePrice * (1 - Number(offer.discountPercent) / 100);
+  }
   if (!Number.isFinite(finalPrice)) {
     finalPrice = basePrice;
   }
@@ -334,3 +305,5 @@ export function formatCategoryName(product) {
   }
   return '—';
 }
+
+export { computePageCount };
