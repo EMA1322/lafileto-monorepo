@@ -36,7 +36,24 @@ const offerSelect = {
   updatedAt: true
 };
 
+const offerWithProductSelect = {
+  ...offerSelect,
+  product: { select: productBaseSelect }
+};
+
 export const offerRepository = {
+  findById: (id) =>
+    prisma.offer.findUnique({
+      where: { id },
+      select: offerWithProductSelect
+    }),
+
+  findByProductId: (productId) =>
+    prisma.offer.findUnique({
+      where: { productId },
+      select: offerWithProductSelect
+    }),
+
   async findActiveByProductId(productId, { now } = {}) {
     if (!productId) return null;
     const reference = now instanceof Date ? now : new Date();
@@ -70,7 +87,7 @@ export const offerRepository = {
     return map;
   },
 
-  async listActiveOffers({
+  async list({
     page,
     pageSize,
     q,
@@ -81,11 +98,12 @@ export const offerRepository = {
     orderBy,
     orderDirection,
     all = false,
-    now
+    now,
+    activeOnly = false
   } = {}) {
     const reference = now instanceof Date ? now : new Date();
     const productWhere = buildProductWhere({ q, status, categoryId, priceMin, priceMax });
-    const offerWhere = buildActiveOfferWhere(reference);
+    const offerWhere = activeOnly ? buildActiveOfferWhere(reference) : {};
 
     const where = {
       ...offerWhere,
@@ -98,10 +116,7 @@ export const offerRepository = {
       const items = await prisma.offer.findMany({
         where,
         orderBy: [{ product: order }, { createdAt: 'desc' }],
-        select: {
-          ...offerSelect,
-          product: { select: productBaseSelect }
-        }
+        select: offerWithProductSelect
       });
       return { items, total: items.length };
     }
@@ -114,16 +129,28 @@ export const offerRepository = {
         orderBy: [{ product: order }, { createdAt: 'desc' }],
         skip,
         take: pageSize,
-        select: {
-          ...offerSelect,
-          product: { select: productBaseSelect }
-        }
+        select: offerWithProductSelect
       }),
       prisma.offer.count({ where })
     ]);
 
     return { items, total };
-  }
+  },
+
+  create: (data) =>
+    prisma.offer.create({
+      data,
+      select: offerWithProductSelect
+    }),
+
+  update: (id, data) =>
+    prisma.offer.update({
+      where: { id },
+      data,
+      select: offerWithProductSelect
+    }),
+
+  deleteById: (id) => prisma.offer.delete({ where: { id } })
 };
 
 export function buildOfferActiveWhere(now = new Date()) {

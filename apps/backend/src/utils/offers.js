@@ -27,6 +27,14 @@ function roundCurrency(value) {
   return Math.round(value * 100) / 100;
 }
 
+export function normalizeDiscountPercent(value) {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return null;
+  const rounded = Math.round(num);
+  if (rounded < 1 || rounded > 100) return null;
+  return rounded;
+}
+
 export function isOfferActive(offer, referenceDate = new Date()) {
   if (!offer) return false;
   const now = referenceDate instanceof Date && !Number.isNaN(referenceDate.getTime())
@@ -57,29 +65,22 @@ export function applyDiscount(price, discountPct) {
 
 export function buildOfferSummary(offer, price, { now } = {}) {
   const basePrice = roundCurrency(normalizePrice(price));
-  if (!offer) {
-    return {
-      isActive: false,
-      discountPercent: undefined,
-      discountPct: undefined,
-      finalPrice: basePrice,
-      priceFinal: basePrice
-    };
+  const discountPercent = normalizeDiscountPercent(
+    offer?.discountPercent ?? offer?.discountPct ?? undefined
+  );
+  if (!offer || !discountPercent) {
+    return null;
   }
   const reference = now instanceof Date ? now : new Date();
-  const active = isOfferActive(offer, reference);
-  const discountPercent =
-    offer.discountPercent ?? offer.discountPct ?? undefined;
-  const finalPrice = active ? applyDiscount(basePrice, discountPercent) : basePrice;
+  const isActiveNow = isOfferActive(offer, reference);
+  const finalPrice = applyDiscount(basePrice, discountPercent);
 
   return {
     id: offer.id ?? undefined,
     discountPercent,
-    discountPct: discountPercent,
     startAt: offer.startAt ?? undefined,
     endAt: offer.endAt ?? undefined,
-    isActive: active,
-    finalPrice,
-    priceFinal: finalPrice
+    isActive: isActiveNow,
+    finalPrice
   };
 }
