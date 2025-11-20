@@ -4,7 +4,7 @@
 // Comentarios en español, código y nombres en inglés.
 // ============================================================================
 
-import { applyRBAC } from '@/utils/rbac.js';
+import { applyRBAC } from '../../utils/rbac.js';
 
 import {
   STATUS_LABELS,
@@ -23,7 +23,6 @@ function getRefs(container) {
     searchInput: container.querySelector('#filter-q'),
     categorySelect: container.querySelector('#filter-category'),
     statusSelect: container.querySelector('#filter-status'),
-    featuredToggle: container.querySelector('#filter-featured'),
     orderBySelect: container.querySelector('#filter-order-by'),
     orderDirSelect: container.querySelector('#filter-order-dir'),
     pageSizeSelect: container.querySelector('#filter-page-size'),
@@ -302,11 +301,6 @@ function renderFilters(snapshot, refs) {
   }
   if (refs.pageSizeSelect) {
     refs.pageSizeSelect.value = String(filters.pageSize || DEFAULT_PAGE_SIZE);
-  }
-  if (refs.featuredToggle) {
-    const isActive = filters.isFeatured === true;
-    refs.featuredToggle.setAttribute('aria-checked', isActive ? 'true' : 'false');
-    refs.featuredToggle.classList.toggle('is-active', isActive);
   }
   if (refs.categorySelect) {
     const value = filters.categoryId || 'all';

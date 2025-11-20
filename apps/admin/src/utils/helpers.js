@@ -8,7 +8,7 @@
 import {
   formatCurrency as sharedFormatCurrency,
   normalizeText as sharedNormalizeText,
-} from '@shared-utils';
+} from '../../../../packages/shared-utils/src/index.js';
 
 /**
  * Devuelve un número formateado como moneda según la localización.
@@ -41,6 +41,20 @@ export function formatPercent(value) {
   const num = Number(value);
   if (isNaN(num)) return '';
   return `${num}%`;
+}
+
+/**
+ * Calcula la cantidad de páginas para paginación.
+ * @param {number} total
+ * @param {number} pageSize
+ * @param {number} [fallbackPageSize=10]
+ * @returns {number}
+ */
+export function computePageCount(total, pageSize, fallbackPageSize = 10) {
+  const safeTotal = Number.isFinite(Number(total)) && Number(total) >= 0 ? Number(total) : 0;
+  const sizeNumber = Number(pageSize);
+  const safeSize = Number.isFinite(sizeNumber) && sizeNumber > 0 ? sizeNumber : fallbackPageSize;
+  return Math.max(1, Math.ceil(safeTotal / safeSize));
 }
 
 /**

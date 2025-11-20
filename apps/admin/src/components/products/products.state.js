@@ -4,8 +4,9 @@
 // Comentarios en español, código y nombres en inglés.
 // ============================================================================
 
-import { productsApi, categoriesApi } from '@/utils/apis.js';
-import { showSnackbar } from '@/utils/snackbar.js';
+import { productsApi, categoriesApi } from '../../utils/apis.js';
+import { showSnackbar } from '../../utils/snackbar.js';
+import { computePageCount } from '../../utils/helpers.js';
 
 import {
   DEFAULT_FILTERS,
@@ -31,11 +32,6 @@ export const REQUEST_STATUS = {
 let activeProductsController = null;
 let requestSequence = 0;
 
-function normalizeBoolean(value) {
-  if (value === true || value === 'true' || value === 1 || value === '1') return true;
-  return 'all';
-}
-
 function sanitizeFilters(input = {}) {
   const source = { ...DEFAULT_FILTERS, ...(input || {}) };
   const filters = { ...DEFAULT_FILTERS };
@@ -45,8 +41,6 @@ function sanitizeFilters(input = {}) {
 
   const statusValue = typeof source.status === 'string' ? source.status : DEFAULT_FILTERS.status;
   filters.status = STATUS_VALUES.includes(statusValue) ? statusValue : 'all';
-
-  filters.isFeatured = normalizeBoolean(source.isFeatured);
 
   const priceMinRaw = source.priceMin;
   if (priceMinRaw !== '' && priceMinRaw !== null && priceMinRaw !== undefined) {
@@ -78,8 +72,6 @@ function sanitizeFilters(input = {}) {
     ? pageSizeValue
     : DEFAULT_PAGE_SIZE;
 
-  filters.all = source.all === 1 || source.all === true || source.all === '1' ? 1 : 0;
-
   return filters;
 }
 
@@ -93,12 +85,6 @@ export const state = {
   selectedId: null,
   status: REQUEST_STATUS.IDLE,
 };
-
-function computePageCount(total, pageSize) {
-  const safeTotal = Number.isFinite(Number(total)) ? Number(total) : 0;
-  const size = Number.isFinite(Number(pageSize)) && Number(pageSize) > 0 ? Number(pageSize) : DEFAULT_PAGE_SIZE;
-  return Math.max(1, Math.ceil(safeTotal / size));
-}
 
 export function subscribe(callback) {
   if (typeof callback !== 'function') return () => {};
@@ -156,14 +142,12 @@ export function parseFiltersFromHash(hashString = '') {
   if (params.has('q')) raw.q = params.get('q') || '';
   if (params.has('categoryId')) raw.categoryId = params.get('categoryId') || 'all';
   if (params.has('status')) raw.status = params.get('status') || 'all';
-  if (params.has('isFeatured')) raw.isFeatured = params.get('isFeatured');
   if (params.has('priceMin')) raw.priceMin = params.get('priceMin');
   if (params.has('priceMax')) raw.priceMax = params.get('priceMax');
   if (params.has('orderBy')) raw.orderBy = params.get('orderBy');
   if (params.has('orderDir')) raw.orderDir = params.get('orderDir');
   if (params.has('page')) raw.page = params.get('page');
   if (params.has('pageSize')) raw.pageSize = params.get('pageSize');
-  if (params.has('all')) raw.all = params.get('all');
 
   return sanitizeFilters(raw);
 }
@@ -175,7 +159,6 @@ export function getFiltersQuery(filters = state.filters) {
   if (data.q) params.set('q', data.q);
   if (data.categoryId && data.categoryId !== 'all') params.set('categoryId', data.categoryId);
   if (data.status && data.status !== 'all') params.set('status', data.status);
-  if (data.isFeatured === true) params.set('isFeatured', 'true');
   if (data.priceMin !== '' && data.priceMin !== null && data.priceMin !== undefined) {
     params.set('priceMin', String(data.priceMin));
   }
@@ -186,7 +169,6 @@ export function getFiltersQuery(filters = state.filters) {
   if (data.orderDir && data.orderDir !== DEFAULT_FILTERS.orderDir) params.set('orderDir', data.orderDir);
   if (Number(data.page) > 1) params.set('page', String(data.page));
   if (Number(data.pageSize) !== DEFAULT_FILTERS.pageSize) params.set('pageSize', String(data.pageSize));
-  if (data.all === 1) params.set('all', '1');
 
   return params.toString();
 }
@@ -212,7 +194,7 @@ export function upsertProduct(product) {
   } else {
     state.items.unshift(normalized);
     state.meta.total += 1;
-    state.meta.pageCount = computePageCount(state.meta.total, state.meta.pageSize);
+    state.meta.pageCount = computePageCount(state.meta.total, state.meta.pageSize, DEFAULT_PAGE_SIZE);
   }
 }
 
@@ -222,7 +204,7 @@ export function removeProduct(id) {
   if (nextItems.length === state.items.length) return;
   state.items = nextItems;
   state.meta.total = Math.max(0, state.meta.total - 1);
-  state.meta.pageCount = computePageCount(state.meta.total, state.meta.pageSize);
+  state.meta.pageCount = computePageCount(state.meta.total, state.meta.pageSize, DEFAULT_PAGE_SIZE);
 }
 
 function deriveMeta(meta, totalFallback = 0) {
@@ -238,7 +220,7 @@ function deriveMeta(meta, totalFallback = 0) {
   }
 
   if (!Number.isFinite(result.pageCount) || result.pageCount <= 0) {
-    result.pageCount = computePageCount(result.total, result.pageSize);
+    result.pageCount = computePageCount(result.total, result.pageSize, DEFAULT_PAGE_SIZE);
   }
 
   const maxPage = Math.max(1, result.pageCount);

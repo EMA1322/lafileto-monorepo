@@ -4,8 +4,8 @@
 // Comentarios en español, código y nombres en inglés.
 // ============================================================================
 
-import { ensureRbacLoaded, can } from '@/utils/rbac.js';
-import { showSnackbar } from '@/utils/snackbar.js';
+import { ensureRbacLoaded, can } from '../../utils/rbac.js';
+import { showSnackbar } from '../../utils/snackbar.js';
 
 import { renderProductsView } from './products.render.table.js';
 import { bindProductsBindings } from './products.render.bindings.js';

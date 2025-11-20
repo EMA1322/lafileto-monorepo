@@ -4,10 +4,10 @@
 // Comentarios en español, código y nombres en inglés.
 // ============================================================================
 
-import { openModal, closeModal } from '@/utils/modals.js';
-import { showSnackbar } from '@/utils/snackbar.js';
+import { openModal, closeModal } from '../../utils/modals.js';
+import { showSnackbar } from '../../utils/snackbar.js';
 
-import { productsApi, offersApi } from '@/utils/apis.js';
+import { productsApi, offersApi } from '../../utils/apis.js';
 
 import {
   STATUS_LABELS,
@@ -91,7 +91,7 @@ function mapErrorField(field) {
   if (normalized === 'category_id' || normalized === 'categoryid') return 'categoryId';
   if (normalized === 'image_url' || normalized === 'imageurl' || normalized === 'image') return 'imageUrl';
   if (normalized === 'discountpercent' || normalized === 'discount_percentage' || normalized === 'discount') {
-    return 'offerDiscountPct';
+    return 'offerDiscountPercent';
   }
   if (normalized === 'startsat' || normalized === 'start_at' || normalized === 'start') {
     return 'offerStartAt';
@@ -150,13 +150,13 @@ function parseDateTimeLocal(value) {
 function buildOfferFormState(formData) {
   return {
     enabled: formData.get('offerEnabled') === 'on',
-    discount: formData.get('offerDiscountPct')?.toString().trim() ?? '',
+    discount: formData.get('offerDiscountPercent')?.toString().trim() ?? '',
     startAt: formData.get('offerStartAt')?.toString().trim() ?? '',
     endAt: formData.get('offerEndAt')?.toString().trim() ?? '',
   };
 }
 
-function validateOfferForm(offerState) {
+export function validateOfferForm(offerState) {
   const errors = [];
   const normalized = {
     enabled: offerState.enabled === true,
@@ -171,16 +171,22 @@ function validateOfferForm(offerState) {
 
   const discountString = String(offerState.discount ?? '').trim();
   if (discountString === '') {
-    errors.push({ field: 'offerDiscountPct', message: 'Ingresá el porcentaje de descuento.' });
+    errors.push({ field: 'offerDiscountPercent', message: 'Ingresá el porcentaje de descuento.' });
   } else {
     const discountNumber = Number(discountString);
     if (!Number.isFinite(discountNumber)) {
-      errors.push({ field: 'offerDiscountPct', message: 'Ingresá un porcentaje válido (0 a 100).' });
+      errors.push({ field: 'offerDiscountPercent', message: 'Ingresá un porcentaje válido (1 a 100).' });
     } else {
-      const clamped = Math.min(100, Math.max(0, discountNumber));
-      normalized.discountPercent = Number.isInteger(clamped)
-        ? clamped
-        : Number(clamped.toFixed(2));
+      if (discountNumber <= 0) {
+        errors.push({ field: 'offerDiscountPercent', message: 'El descuento debe ser al menos 1%.' });
+      } else if (discountNumber > 100) {
+        errors.push({ field: 'offerDiscountPercent', message: 'El descuento no puede superar el 100%.' });
+      } else {
+        const clamped = Math.min(100, Math.max(1, discountNumber));
+        normalized.discountPercent = Number.isInteger(clamped)
+          ? clamped
+          : Number(clamped.toFixed(2));
+      }
     }
   }
 
@@ -252,7 +258,7 @@ async function syncOfferForProduct(product, offerPayload, originalOffer) {
   const shouldEnable = offerPayload.enabled === true;
 
   if (!shouldEnable && !previousOfferId) {
-    return product;
+    return { ...product, offer: null };
   }
 
   if (!shouldEnable && previousOfferId) {
@@ -442,9 +448,9 @@ function buildProductFormHTML({ mode, product }) {
             <label for="field-offer-discount">Descuento (%)</label>
             <input
               id="field-offer-discount"
-              name="offerDiscountPct"
+              name="offerDiscountPercent"
               type="number"
-              min="0"
+              min="1"
               max="100"
               step="0.01"
               inputmode="decimal"

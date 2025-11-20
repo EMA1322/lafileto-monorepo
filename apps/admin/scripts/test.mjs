@@ -1,3 +1,24 @@
-// Placeholder test hook to keep CI green until Vitest or Playwright is configured.
-// Update this once the admin SPA gets real automated coverage.
-console.log('[admin] test placeholder: add Vitest/Playwright suites when ready.');
+import { runProductsContractTests } from '../test/products.contract.test.mjs';
+
+const suites = [
+  { name: 'products contract helpers', runner: runProductsContractTests },
+];
+
+let hasError = false;
+
+for (const suite of suites) {
+  try {
+    suite.runner();
+    console.log(`[admin][test] ✓ ${suite.name}`);
+  } catch (error) {
+    hasError = true;
+    console.error(`[admin][test] ✕ ${suite.name}`);
+    console.error(error);
+  }
+}
+
+if (hasError) {
+  process.exit(1);
+} else {
+  console.log('[admin][test] All suites passed');
+}

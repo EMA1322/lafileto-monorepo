@@ -1,7 +1,8 @@
 // // Admin / Categorías — reactive state + API
 // // Comentarios en español, código en inglés.
 
-import { apiFetch } from '@/utils/api.js';
+import { apiFetch } from '../../utils/api.js';
+import { computePageCount } from '../../utils/helpers.js';
 import {
   MODULE_KEY,
   DEFAULT_PAGE_SIZE,
@@ -100,12 +101,6 @@ function buildQuery() {
   return params;
 }
 
-function computePageCount(total, pageSize) {
-  const safeTotal = Number.isFinite(Number(total)) ? Number(total) : 0;
-  const safeSize = Number.isFinite(Number(pageSize)) && Number(pageSize) > 0 ? Number(pageSize) : DEFAULT_PAGE_SIZE;
-  return Math.max(1, Math.ceil(safeTotal / safeSize));
-}
-
 /** GET categorías y actualiza estado. */
 export async function fetchCategories({ silentToast = false } = {}) {
   const params = buildQuery();
@@ -156,7 +151,7 @@ export async function fetchCategories({ silentToast = false } = {}) {
       nextMeta.total = items.length;
     }
 
-    nextMeta.pageCount = computePageCount(nextMeta.total, nextMeta.pageSize);
+    nextMeta.pageCount = computePageCount(nextMeta.total, nextMeta.pageSize, DEFAULT_PAGE_SIZE);
     if (!Number.isFinite(Number(nextMeta.page)) || Number(nextMeta.page) < 1) {
       nextMeta.page = 1;
     }
@@ -205,7 +200,7 @@ export async function createCategory(payload) {
   }
   const total = Number(state.meta.total || 0) + 1;
   state.meta.total = total;
-  state.meta.pageCount = computePageCount(total, state.meta.pageSize);
+  state.meta.pageCount = computePageCount(total, state.meta.pageSize, DEFAULT_PAGE_SIZE);
   return created;
 }
 
@@ -276,7 +271,7 @@ export async function deleteCategory(id) {
     state.items.splice(idx, 1);
     const total = Math.max(0, (state.meta.total || 1) - 1);
     state.meta.total = total;
-    state.meta.pageCount = computePageCount(total, state.meta.pageSize);
+    state.meta.pageCount = computePageCount(total, state.meta.pageSize, DEFAULT_PAGE_SIZE);
   }
   return true;
 }
