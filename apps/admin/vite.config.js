@@ -4,6 +4,7 @@ import { visualizer } from 'rollup-plugin-visualizer';
 
 export default defineConfig(() => {
   const shouldAnalyze = Boolean(process.env.ANALYZE_BUNDLE) && process.env.ANALYZE_BUNDLE !== 'false';
+  const backendTarget = process.env.VITE_API_PROXY_TARGET || 'http://localhost:3000';
 
   return {
     plugins: shouldAnalyze
@@ -29,7 +30,7 @@ export default defineConfig(() => {
       // Proxy para /api -> backend local; así evitamos CORS en desarrollo.
       proxy: {
         '/api': {
-          target: 'http://localhost:3000',
+          target: backendTarget,
           changeOrigin: true,
           secure: false,
           // Importante: no reescribimos el prefijo /api porque el backend expone /api/v1/*.

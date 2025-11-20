@@ -75,8 +75,8 @@ function testOfferValidation() {
   });
   assert.equal(valid.errors.length, 0);
   assert.equal(valid.payload.discountPercent, 10);
-  assert.equal(valid.payload.startsAt, '2024-01-01T00:00:00.000Z');
-  assert.equal(valid.payload.endsAt, '2024-02-01T00:00:00.000Z');
+  assert.equal(valid.payload.startsAt, new Date('2024-01-01T00:00').toISOString());
+  assert.equal(valid.payload.endsAt, new Date('2024-02-01T00:00').toISOString());
 }
 
 function testOfferPricingFromSummary() {

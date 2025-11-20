@@ -330,7 +330,6 @@ export function renderProductsView(snapshot, root = document.querySelector('#pro
   const status = view.status || REQUEST_STATUS.IDLE;
   const isInitial = status === REQUEST_STATUS.IDLE;
   const isLoading = status === REQUEST_STATUS.LOADING;
-  const showLoading = isInitial || isLoading;
   const isError = status === REQUEST_STATUS.ERROR;
   const isEmpty = status === REQUEST_STATUS.EMPTY;
   const hasData = status === REQUEST_STATUS.SUCCESS;
@@ -339,11 +338,24 @@ export function renderProductsView(snapshot, root = document.querySelector('#pro
   const meta = view.meta || { page: 1, pageSize: DEFAULT_PAGE_SIZE, pageCount: 1, total: 0 };
   const categories = Array.isArray(view.categories) ? view.categories : [];
 
-  if (refs.loadingState) refs.loadingState.hidden = !showLoading;
-  if (refs.errorState) refs.errorState.hidden = !isError;
-  if (refs.emptyState) refs.emptyState.hidden = !isEmpty;
-  if (refs.tableWrapper) refs.tableWrapper.hidden = !hasData;
-  if (refs.cardsWrapper) refs.cardsWrapper.hidden = !hasData;
+  const showLoading = isInitial || isLoading;
+
+  if (refs.loadingState) refs.loadingState.hidden = true;
+  if (refs.errorState) refs.errorState.hidden = true;
+  if (refs.emptyState) refs.emptyState.hidden = true;
+  if (refs.tableWrapper) refs.tableWrapper.hidden = true;
+  if (refs.cardsWrapper) refs.cardsWrapper.hidden = true;
+
+  if (showLoading && !isError && !isEmpty && !hasData) {
+    if (refs.loadingState) refs.loadingState.hidden = false;
+  } else if (isError) {
+    if (refs.errorState) refs.errorState.hidden = false;
+  } else if (isEmpty) {
+    if (refs.emptyState) refs.emptyState.hidden = false;
+  } else if (hasData) {
+    if (refs.tableWrapper) refs.tableWrapper.hidden = false;
+    if (refs.cardsWrapper) refs.cardsWrapper.hidden = false;
+  }
 
   const content = container.querySelector('.products__content');
   if (content) {
