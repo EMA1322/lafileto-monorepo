@@ -102,7 +102,7 @@ async function attachActiveOfferSummaries(products, { now } = {}) {
   if (list.length === 0) {
     return list.map((product) => ({
       ...product,
-      offer: buildOfferSummary(null, product?.price ?? 0, { now: reference })
+      offer: null
     }));
   }
 
@@ -111,7 +111,10 @@ async function attachActiveOfferSummaries(products, { now } = {}) {
 
   return list.map((product) => ({
     ...product,
-    offer: buildOfferSummary(offersMap.get(product.id), product.price, { now: reference })
+    offer: (() => {
+      const summary = buildOfferSummary(offersMap.get(product.id), product.price, { now: reference });
+      return summary?.isActive ? summary : null;
+    })()
   }));
 }
 
@@ -237,7 +240,10 @@ export const productService = {
     const activeOffer = await offerRepository.findActiveByProductId(productId, { now: referenceNow });
     return {
       ...sanitized,
-      offer: buildOfferSummary(activeOffer, sanitized?.price ?? 0, { now: referenceNow })
+      offer: (() => {
+        const summary = buildOfferSummary(activeOffer, sanitized?.price ?? 0, { now: referenceNow });
+        return summary?.isActive ? summary : null;
+      })()
     };
   },
 
