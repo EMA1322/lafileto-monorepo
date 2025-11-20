@@ -9,7 +9,6 @@ const { categoryRepository } = await import('../../src/repositories/categoryRepo
 const { offerRepository } = await import('../../src/repositories/offerRepository.js');
 const { productsController } = await import('../../src/controllers/productsController.js');
 const { offersController } = await import('../../src/controllers/offersController.js');
-const { errorHandler } = await import('../../src/middlewares/errorHandler.js');
 
 const originalProductRepository = { ...productRepository };
 const originalCategoryRepository = { ...categoryRepository };

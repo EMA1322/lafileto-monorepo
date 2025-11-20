@@ -27,7 +27,7 @@ const absoluteUrl = z
     try {
       const parsed = new URL(val);
       return parsed.protocol === 'http:' || parsed.protocol === 'https:';
-    } catch (_err) {
+    } catch {
       return false;
     }
   }, { message: 'La URL debe ser absoluta (http/https).' });
