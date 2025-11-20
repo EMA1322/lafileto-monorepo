@@ -9,6 +9,9 @@ const { categoryRepository } = await import('../../src/repositories/categoryRepo
 const { offerRepository } = await import('../../src/repositories/offerRepository.js');
 const { productsController } = await import('../../src/controllers/productsController.js');
 const { offersController } = await import('../../src/controllers/offersController.js');
+const { validator } = await import('../../src/middlewares/validator.js');
+const { productCreateSchema, productUpdateSchema } = await import('../../src/validators/productValidators.js');
+const { ApiError } = await import('../../src/utils/errors.js');
 
 const originalProductRepository = { ...productRepository };
 const originalCategoryRepository = { ...categoryRepository };
@@ -530,22 +533,31 @@ function createResponse() {
   };
 }
 
+async function runValidator(schema, where, payload) {
+  return await new Promise((resolve) => {
+    const req = { body: payload, query: payload, params: payload };
+    const res = {};
+    validator(schema, where)(req, res, (err) => {
+      resolve({ err, req });
+    });
+  });
+}
+
 test('POST /products crea un producto nuevo', async () => {
+  const { err: validationError, req: validatedReq } = await runValidator(productCreateSchema, 'body', {
+    name: 'Ravioles de espinaca',
+    description: 'Con salsa rosa',
+    imageUrl: 'https://cdn.test/products/ravioles.png',
+    price: 1850.5,
+    stock: 30,
+    status: 'active',
+    categoryId: 'cat-001'
+  });
+  assert.equal(validationError, undefined);
+
   const req = {
     validated: {
-      body: {
-        name: 'Ravioles de espinaca',
-        description: 'Con salsa rosa',
-        imageUrl: 'https://cdn.test/products/ravioles.png',
-        price: 1850.5,
-        stock: 30,
-        status: 'active',
-        categoryId: 'cat-001',
-        slug: 'legacy-ravioles',
-        sku: 'RAV-010',
-        currency: 'USD',
-        isFeatured: true
-      }
+      body: validatedReq.validated.body
     }
   };
   const res = createResponse();
@@ -561,11 +573,32 @@ test('POST /products crea un producto nuevo', async () => {
   assert.equal(res.body?.data?.price, 1850.5);
   assert.equal(res.body?.data?.status, 'active');
   assert.equal(res.body?.data?.imageUrl, 'https://cdn.test/products/ravioles.png');
-  assert.equal(res.body?.data?.slug, undefined);
-  assert.equal(res.body?.data?.sku, undefined);
-  assert.equal(res.body?.data?.currency, undefined);
-  assert.equal(res.body?.data?.isFeatured, undefined);
+  assert.equal(res.body?.data?.offer, null);
   assert.equal(products.length, initialProducts.length + 1);
+});
+
+test('productCreateSchema rechaza imageUrl sin protocolo http/https', async () => {
+  const { err } = await runValidator(productCreateSchema, 'body', {
+    name: 'Producto sin protocolo',
+    price: 1200,
+    stock: 5,
+    status: 'active',
+    categoryId: 'cat-001',
+    imageUrl: 'ftp://cdn.test/products/prod-invalid.png'
+  });
+
+  assert.ok(err instanceof ApiError);
+  assert.equal(err.code, 'VALIDATION_ERROR');
+  assert.ok(err.details?.fields?.some((field) => field.path === 'imageUrl'));
+});
+
+test('productUpdateSchema valida límite de longitud de imageUrl', async () => {
+  const veryLongUrl = `https://cdn.test/${'a'.repeat(2050)}.png`;
+  const { err } = await runValidator(productUpdateSchema, 'body', { imageUrl: veryLongUrl });
+
+  assert.ok(err instanceof ApiError);
+  assert.equal(err.code, 'VALIDATION_ERROR');
+  assert.ok(err.details?.fields?.some((field) => field.path === 'imageUrl'));
 });
 
 test('GET /products/:id devuelve el detalle', async () => {
@@ -586,8 +619,6 @@ test('GET /products/:id devuelve el detalle', async () => {
   assert.equal(offer?.isActive, true);
   assert.equal(offer?.discountPercent, 10);
   assert.equal(offer?.finalPrice, 2250);
-  assert.equal(offer?.discountPct, undefined);
-  assert.equal(offer?.priceFinal, undefined);
 });
 
 test('PUT /products/:id actualiza datos principales', async () => {
@@ -776,7 +807,6 @@ test('GET /products incluye resumen de oferta con finalPrice según vigencia', a
   const horno = map.get('prod-001');
   assert.equal(horno.offer?.isActive, true);
   assert.equal(horno.offer?.discountPercent, 10);
-  assert.equal(horno.offer?.discountPct, undefined);
   assert.equal(horno.offer?.finalPrice, 2250);
 
   const parrilla = map.get('prod-002');
@@ -831,7 +861,7 @@ test('GET /offers devuelve ofertas con nombres normalizados', async () => {
   const items = res.body?.data?.items ?? [];
   assert.ok(items.length > 0);
   assert.ok(items.every((item) => item.isActive === true));
-  assert.ok(items.every((item) => item.discountPct === undefined));
+  assert.ok(items.every((item) => typeof item.discountPercent === 'number'));
 
   const ids = items.map((item) => item.productId);
   assert.ok(!ids.includes('prod-005'));
@@ -842,4 +872,127 @@ test('GET /offers devuelve ofertas con nombres normalizados', async () => {
   assert.equal(hornoOffer.discountPercent, 10);
   assert.equal(hornoOffer.product.id, 'prod-001');
   assert.equal(res.body?.data?.meta?.total, items.length);
+});
+
+test('POST /offers crea oferta y se refleja en productos', async () => {
+  const req = {
+    validated: {
+      body: {
+        productId: 'prod-006',
+        discountPercent: 25,
+        startAt: new Date('2024-01-01T00:00:00.000Z'),
+        endAt: new Date('2030-01-01T00:00:00.000Z')
+      }
+    }
+  };
+  const res = createResponse();
+  let error = null;
+
+  await offersController.create(req, res, (err) => {
+    error = err;
+  });
+
+  assert.equal(error, null);
+  assert.equal(res.statusCode, 201);
+  assert.equal(res.body?.ok, true);
+  assert.equal(res.body?.data?.discountPercent, 25);
+  assert.equal(res.body?.data?.productId, 'prod-006');
+
+  const productRes = createResponse();
+  await productsController.show({ validated: { params: { id: 'prod-006' } } }, productRes, () => {});
+
+  assert.equal(productRes.statusCode, 200);
+  assert.equal(productRes.body?.data?.offer?.discountPercent, 25);
+  assert.equal(productRes.body?.data?.offer?.finalPrice, 2100);
+});
+
+test('POST /offers valida rango de descuento (inferior)', async () => {
+  const req = {
+    validated: {
+      body: {
+        productId: 'prod-006',
+        discountPercent: 0,
+        startAt: new Date('2024-01-01T00:00:00.000Z'),
+        endAt: new Date('2030-01-01T00:00:00.000Z')
+      }
+    }
+  };
+  const res = createResponse();
+  let error = null;
+
+  await offersController.create(req, res, (err) => {
+    error = err;
+  });
+
+  assert.ok(error instanceof ApiError);
+  assert.equal(error.code, 'VALIDATION_ERROR');
+});
+
+test('PUT /offers/:id actualiza porcentaje y fechas', async () => {
+  const req = {
+    validated: {
+      params: { id: 'offer-003' },
+      body: {
+        discountPercent: 40,
+        startAt: new Date('2024-01-01T00:00:00.000Z'),
+        endAt: new Date('2030-12-31T23:59:59.000Z')
+      }
+    }
+  };
+  const res = createResponse();
+  let error = null;
+
+  await offersController.update(req, res, (err) => {
+    error = err;
+  });
+
+  assert.equal(error, null);
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body?.data?.discountPercent, 40);
+  assert.equal(res.body?.data?.isActive, true);
+
+  const productRes = createResponse();
+  await productsController.show({ validated: { params: { id: 'prod-003' } } }, productRes, () => {});
+
+  assert.equal(productRes.body?.data?.offer?.discountPercent, 40);
+  assert.equal(productRes.body?.data?.offer?.finalPrice, 1140);
+});
+
+test('PUT /offers/:id valida rango de descuento (superior)', async () => {
+  const req = {
+    validated: {
+      params: { id: 'offer-003' },
+      body: {
+        discountPercent: 101
+      }
+    }
+  };
+  const res = createResponse();
+  let error = null;
+
+  await offersController.update(req, res, (err) => {
+    error = err;
+  });
+
+  assert.ok(error instanceof ApiError);
+  assert.equal(error.code, 'VALIDATION_ERROR');
+});
+
+test('DELETE /offers/:id elimina la oferta y la oculta en productos', async () => {
+  const req = { validated: { params: { id: 'offer-001' } } };
+  const res = createResponse();
+  let error = null;
+
+  await offersController.remove(req, res, (err) => {
+    error = err;
+  });
+
+  assert.equal(error, null);
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body?.ok, true);
+
+  const productRes = createResponse();
+  await productsController.show({ validated: { params: { id: 'prod-001' } } }, productRes, () => {});
+
+  assert.equal(productRes.body?.data?.offer, null);
 });

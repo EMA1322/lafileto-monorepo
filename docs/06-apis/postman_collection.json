@@ -21,6 +21,10 @@
         {
             "key": "productId",
             "value": "<replace-with-product-id>"
+        },
+        {
+            "key": "offerId",
+            "value": "<replace-with-offer-id>"
         }
     ],
     "item": [
@@ -546,7 +550,7 @@
                             }
                         ],
                         "url": {
-                            "raw": "{{baseUrl}}/products?page=1&pageSize=10&q=pollo&status=active&categoryId={{categoryId}}&isFeatured=true&priceMin=2000&priceMax=2600&orderBy=price&orderDir=desc&all=false",
+                            "raw": "{{baseUrl}}/products?page=1&pageSize=10&q=pollo&status=active&categoryId={{categoryId}}&priceMin=2000&priceMax=2600&orderBy=price&orderDir=desc&all=false",
                             "host": [
                                 "{{baseUrl}}"
                             ],
@@ -559,7 +563,6 @@
                                 { "key": "q", "value": "pollo" },
                                 { "key": "status", "value": "active" },
                                 { "key": "categoryId", "value": "{{categoryId}}" },
-                                { "key": "isFeatured", "value": "true" },
                                 { "key": "priceMin", "value": "2000" },
                                 { "key": "priceMax", "value": "2600" },
                                 { "key": "orderBy", "value": "price" },
@@ -568,7 +571,7 @@
                             ]
                         }
                     },
-                    "description": "Listado paginado con resumen de oferta. Cada item expone `offer.discountPercent` y `offer.finalPrice`; se conservan los alias legacy `discountPct` y `priceFinal` como solo lectura."
+                    "description": "Listado paginado con resumen de oferta activa (discountPercent + finalPrice)."
                 },
                 {
                     "name": "GET /products/:id",
@@ -617,7 +620,7 @@
                         },
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"name\":\"Ravioles de espinaca\",\"slug\":\"ravioles-de-espinaca\",\"sku\":\"RAV-010\",\"price\":1850.5,\"stock\":30,\"status\":\"draft\",\"categoryId\":\"{{categoryId}}\"}"
+                            "raw": "{\"name\":\"Ravioles de espinaca\",\"description\":\"Con salsa rosa\",\"imageUrl\":\"https://cdn.test/products/ravioles.png\",\"price\":1850.5,\"stock\":30,\"status\":\"draft\",\"categoryId\":\"{{categoryId}}\"}"
                         }
                     }
                 },
@@ -647,7 +650,7 @@
                         },
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"price\":1990.75,\"stock\":12,\"isFeatured\":true}"
+                            "raw": "{\"price\":1990.75,\"stock\":12,\"imageUrl\":\"https://cdn.test/products/prod-002.png\"}"
                         }
                     }
                 },
@@ -704,34 +707,6 @@
                         }
                     }
                 },
-                {
-                    "name": "POST /products (slug conflict → 409)",
-                    "request": {
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{token}}"
-                            },
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{baseUrl}}/products",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "products"
-                            ]
-                        },
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\"name\":\"Pollo BBQ\",\"slug\":\"pollo-al-horno\",\"sku\":\"POL-999\",\"price\":2100,\"stock\":5,\"status\":\"draft\",\"categoryId\":\"{{categoryId}}\"}"
-                        }
-                    }
                 }
             ]
         },
@@ -764,7 +739,88 @@
                             ]
                         }
                     },
-                    "description": "Retorna solo productos con ofertas activas. La oferta expone `discountPercent`/`finalPrice` y mantiene los alias `discountPct`/`priceFinal` hasta migrar clientes legacy."
+                    "description": "Listado paginado de ofertas; usar `activeOnly=true` para traer sólo vigentes."
+                },
+                {
+                    "name": "POST /offers",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/offers",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "offers"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"productId\":\"{{productId}}\",\"discountPercent\":25,\"startAt\":\"2024-03-01T00:00:00.000Z\",\"endAt\":\"2025-03-01T00:00:00.000Z\"}"
+                        }
+                    }
+                },
+                {
+                    "name": "PUT /offers/:id",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/offers/{{offerId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "offers",
+                                "{{offerId}}"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"discountPercent\":15,\"endAt\":\"2025-12-31T23:59:59.000Z\"}"
+                        }
+                    }
+                },
+                {
+                    "name": "DELETE /offers/:id",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/offers/{{offerId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "offers",
+                                "{{offerId}}"
+                            ]
+                        }
+                    }
                 }
             ]
         },
