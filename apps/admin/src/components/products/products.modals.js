@@ -370,17 +370,17 @@ function buildProductFormHTML({ mode, product }) {
   const previewImageHidden = imageUrl ? '' : 'hidden';
   return `
     <form id="products-form" class="products__form" novalidate>
-      <h3>${isEdit ? 'Editar producto' : 'Crear producto'}</h3>
+      <h3 class="products__form-title">${isEdit ? 'Editar producto' : 'Crear producto'}</h3>
       <div class="products__form-grid">
         <div class="products__field">
           <label for="field-name">Nombre</label>
-          <input id="field-name" name="name" type="text" required maxlength="120" value="${escapeHTML(
+          <input id="field-name" name="name" class="form-control form-control--dense" type="text" required maxlength="120" value="${escapeHTML(
             product.name ?? '',
           )}" />
         </div>
         <div class="products__field">
           <label for="field-description">Descripción</label>
-          <textarea id="field-description" name="description" rows="3">${escapeHTML(
+          <textarea id="field-description" name="description" class="form-control form-control--dense" rows="3">${escapeHTML(
             descriptionValue,
           )}</textarea>
         </div>
@@ -389,6 +389,7 @@ function buildProductFormHTML({ mode, product }) {
           <input
             id="field-image-url"
             name="imageUrl"
+            class="form-control form-control--dense"
             type="url"
             inputmode="url"
             placeholder="https://…"
@@ -411,15 +412,15 @@ function buildProductFormHTML({ mode, product }) {
         </div>
         <div class="products__field">
           <label for="field-price">Precio</label>
-          <input id="field-price" name="price" type="number" min="0" step="0.01" value="${priceValue}" />
+          <input id="field-price" name="price" class="form-control form-control--dense" type="number" min="0" step="0.01" value="${priceValue}" />
         </div>
         <div class="products__field">
           <label for="field-stock">Stock</label>
-          <input id="field-stock" name="stock" type="number" min="0" step="1" value="${stockValue}" />
+          <input id="field-stock" name="stock" class="form-control form-control--dense" type="number" min="0" step="1" value="${stockValue}" />
         </div>
         <div class="products__field">
           <label for="field-status">Estado</label>
-          <select id="field-status" name="status">
+          <select id="field-status" name="status" class="form-control form-control--dense">
             ${STATUS_VALUES.map((status) => {
               const selected = status === statusValue ? 'selected' : '';
               return `<option value="${status}" ${selected}>${escapeHTML(STATUS_LABELS[status])}</option>`;
@@ -428,7 +429,7 @@ function buildProductFormHTML({ mode, product }) {
         </div>
         <div class="products__field">
           <label for="field-category">Categoría</label>
-          <select id="field-category" name="categoryId" required>${categoriesOptions}</select>
+          <select id="field-category" name="categoryId" class="form-control form-control--dense" required>${categoriesOptions}</select>
         </div>
       </div>
       <section class="products__section" aria-labelledby="products-offer-title">
@@ -449,6 +450,7 @@ function buildProductFormHTML({ mode, product }) {
             <input
               id="field-offer-discount"
               name="offerDiscountPercent"
+              class="form-control form-control--dense"
               type="number"
               min="1"
               max="100"
@@ -459,21 +461,21 @@ function buildProductFormHTML({ mode, product }) {
           </div>
           <div class="products__field">
             <label for="field-offer-start">Inicio (opcional)</label>
-            <input id="field-offer-start" name="offerStartAt" type="datetime-local" value="${escapeHTML(
+            <input id="field-offer-start" name="offerStartAt" class="form-control form-control--dense" type="datetime-local" value="${escapeHTML(
               startValue,
             )}" />
           </div>
           <div class="products__field">
             <label for="field-offer-end">Fin (opcional)</label>
-            <input id="field-offer-end" name="offerEndAt" type="datetime-local" value="${escapeHTML(
+            <input id="field-offer-end" name="offerEndAt" class="form-control form-control--dense" type="datetime-local" value="${escapeHTML(
               endValue,
             )}" />
           </div>
         </div>
       </section>
       <div class="products__form-actions">
-        <button type="button" class="products__button products__button--ghost" data-close-modal>Cancelar</button>
-        <button type="submit" class="products__button products__button--primary">${
+        <button type="button" class="btn btn--ghost" data-close-modal>Cancelar</button>
+        <button type="submit" class="btn btn--primary">${
           isEdit ? 'Guardar' : 'Crear'
         }</button>
       </div>
@@ -634,9 +636,9 @@ export function openDeleteModal(product, container) {
     <div class="products__delete-modal">
       <h3>Eliminar producto</h3>
       <p>Esta acción es definitiva. ¿Querés eliminar “${escapeHTML(product.name ?? '')}”?</p>
-      <div class="products__form-actions">
-        <button type="button" class="products__button products__button--ghost" data-close-modal>Cancelar</button>
-        <button type="button" id="confirm-delete" class="products__button products__button--danger">Eliminar</button>
+        <div class="products__form-actions">
+        <button type="button" class="btn btn--ghost" data-close-modal>Cancelar</button>
+        <button type="button" id="confirm-delete" class="btn btn--primary">Eliminar</button>
       </div>
     </div>
   `;
@@ -739,8 +741,8 @@ function buildProductViewHTML(product = {}) {
           </div>
         </dl>
       </section>
-      <div class="products__form-actions">
-        <button type="button" class="products__button products__button--primary" data-close-modal id="product-view-close">Cerrar</button>
+        <div class="products__form-actions">
+        <button type="button" class="btn btn--primary" data-close-modal id="product-view-close">Cerrar</button>
       </div>
     </div>
   `;

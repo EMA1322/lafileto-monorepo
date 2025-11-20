@@ -57,7 +57,17 @@ function renderOfferBadge(pricing, { ariaHidden = false } = {}) {
   const hasPercent = Number.isFinite(rawPercent) && rawPercent > 0;
   const label = hasPercent ? `-${Math.round(rawPercent)}% OFF` : '% OFF';
   const aria = ariaHidden ? ' aria-hidden="true"' : '';
-  return `<span class="products__badge products__badge--offer"${aria}>${escapeHTML(label)}</span>`;
+  return `<span class="badge badge--error products__badge products__badge--offer"${aria}>${escapeHTML(label)}</span>`;
+}
+
+function renderStatusBadge(status, label) {
+  const variant =
+    status === 'active'
+      ? 'badge--success'
+      : status === 'archived'
+        ? 'badge--neutral'
+        : 'badge--warning';
+  return `<span class="badge ${variant} products__status">${escapeHTML(label)}</span>`;
 }
 
 function renderProductPrice(pricing) {
@@ -126,6 +136,7 @@ function renderTable(items, refs, categories) {
       const imageMarkup = renderProductImage(item, pricing);
       const hasImage = Boolean(item?.imageUrl);
       const priceMarkup = renderProductPrice(pricing);
+      const statusBadge = renderStatusBadge(status, statusLabel);
       return `
         <tr data-id="${idAttr}">
           <td class="products__cell-image"${hasImage ? '' : ' aria-label="Sin imagen"'}>
@@ -134,26 +145,26 @@ function renderTable(items, refs, categories) {
           <td>${escapeHTML(item.name ?? '—')}</td>
           <td class="products__cell--numeric">${priceMarkup}</td>
           <td class="products__cell--numeric">${Number(item.stock ?? 0)}</td>
-          <td><span class="products__row-status products__row-status--${escapeHTML(status)}">${escapeHTML(statusLabel)}</span></td>
+          <td>${statusBadge}</td>
           <td>${escapeHTML(resolveCategoryName(item.categoryId, categories))}</td>
           <td>
             <div class="products__actions">
               <button
-                class="products__action-btn"
+                class="btn btn--ghost btn--sm products__action-btn"
                 type="button"
                 data-action="view"
                 data-id="${idAttr}"
                 data-rbac-action="read"
               >Ver</button>
               <button
-                class="products__action-btn"
+                class="btn btn--ghost btn--sm products__action-btn"
                 type="button"
                 data-action="edit"
                 data-id="${idAttr}"
                 data-rbac-action="update"
               >Editar</button>
               <button
-                class="products__action-btn"
+                class="btn btn--ghost btn--sm products__action-btn products__action-btn--danger"
                 type="button"
                 data-action="delete"
                 data-id="${idAttr}"
@@ -178,14 +189,15 @@ function renderCards(items, refs, categories) {
       const pricing = resolveOfferPricing(item);
       const imageMarkup = renderProductImage(item, pricing);
       const priceMarkup = renderProductPrice(pricing);
+      const statusBadge = renderStatusBadge(status, statusLabel);
       return `
-        <article class="products__card" data-id="${idAttr}">
+        <article class="card products__card" data-id="${idAttr}">
           <div class="products__card-media">
             ${imageMarkup}
           </div>
           <header class="products__card-header">
             <h3 class="products__card-title">${escapeHTML(item.name ?? '—')}</h3>
-            <span class="products__row-status products__row-status--${escapeHTML(status)}">${escapeHTML(statusLabel)}</span>
+            ${statusBadge}
           </header>
           <dl class="products__card-meta">
             <div class="products__card-row">
@@ -207,21 +219,21 @@ function renderCards(items, refs, categories) {
           </dl>
           <div class="products__actions">
             <button
-              class="products__action-btn"
+              class="btn btn--ghost btn--sm products__action-btn"
               type="button"
               data-action="view"
               data-id="${idAttr}"
               data-rbac-action="read"
             >Ver</button>
             <button
-              class="products__action-btn"
+              class="btn btn--ghost btn--sm products__action-btn"
               type="button"
               data-action="edit"
               data-id="${idAttr}"
               data-rbac-action="update"
             >Editar</button>
             <button
-              class="products__action-btn"
+              class="btn btn--ghost btn--sm products__action-btn products__action-btn--danger"
               type="button"
               data-action="delete"
               data-id="${idAttr}"
@@ -260,7 +272,7 @@ function renderPagination(meta, refs) {
   for (let current = start; current <= end; current += 1) {
     const isCurrent = current === page;
     items.push(
-      `<li><button class="products__page-item" type="button" data-page="${current}" ${
+      `<li><button class="btn btn--ghost btn--sm products__page-item" type="button" data-page="${current}" ${
         isCurrent ? "aria-current='page'" : ''
       }>${current}</button></li>`,
     );
