@@ -11,7 +11,7 @@ scope: Tabla sincronizada con OpenAPI v1; filtros/paginación/orden/búsqueda co
 ## Parámetros comunes
 - `page` (>=1), `pageSize` (1..100, **default 10**), `sort` (`field:asc|desc`[, ...]), `q` (texto).
 - `all=1` en `/users` devuelve todos los registros (sin paginar).
-- Filtros de **Products**: `q`, `status`, `categoryId`, `isFeatured`, `priceMin`, `priceMax`, `orderBy`, `orderDir`, `all`.
+- Filtros de **Products**: `q`, `status`, `categoryId`, `priceMin`, `priceMax`, `orderBy`, `orderDir`, `all`.
 
 
 ## Health
@@ -198,12 +198,11 @@ curl -s -X DELETE -H "Authorization: Bearer $ADMIN_JWT" \
 |-----------|------|---------|-------------|
 | `page` | number | `1` | Página actual (`>=1`). |
 | `pageSize` | number | `10` | Límite por página (`5..100`). |
-| `q` | string | — | Búsqueda parcial por `name`, `slug` o `sku` (case-insensitive). |
+| `q` | string | — | Búsqueda parcial por `name` o `description` (case-insensitive). |
 | `status` | enum | `all` | `all`, `draft`, `active`, `archived`. |
 | `categoryId` | string | — | Filtra por categoría asociada. |
-| `isFeatured` | boolean | `false` | Si está presente, filtra por destacados. |
-| `priceMin` | number | — | Precio mínimo (>=0). |
-| `priceMax` | number | — | Precio máximo (>= `priceMin`). |
+| `priceMin` | number | — | Precio base mínimo (>=0). |
+| `priceMax` | number | — | Precio base máximo (>= `priceMin`). |
 | `orderBy` | enum | `name` | `name`, `price`, `updatedAt`. |
 | `orderDir` | enum | `asc` | `asc` o `desc`. |
 | `all` | boolean | `false` | Si es `true`, fuerza `page=1` y `pageSize=100`. |
@@ -212,20 +211,23 @@ curl -s -X DELETE -H "Authorization: Bearer $ADMIN_JWT" \
 
 | Método | Path | Permiso | Body / Query | 200 (data) |
 |---|---|---|---|---|
-| GET | `/api/v1/products` | `products:r` | Query arriba | `{ ok:true, data:{ items[{ id,name,slug,sku,description?,price,currency,stock,status,isFeatured,categoryId,createdAt,updatedAt }], meta{ page,pageSize,total,pageCount } } }` |
-| GET | `/api/v1/products/:id` | `products:r` | — | `{ ok:true, data:{ id,name,slug,sku,description?,price,currency,stock,status,isFeatured,categoryId,createdAt,updatedAt } }` |
-| POST | `/api/v1/products` | `products:w` | `{ name, slug, sku, price, currency?, stock, status?, isFeatured?, description?, categoryId }` | `{ ok:true, data:Product }` (201) |
-| PUT | `/api/v1/products/:id` | `products:u` | `{ name?, slug?, sku?, price?, currency?, stock?, status?, isFeatured?, description?, categoryId? }` | `{ ok:true, data:Product }` |
+| GET | `/api/v1/products` | `products:r` | Query arriba | `{ ok:true, data:{ items[{ id,name,description?,imageUrl,price,stock,status,categoryId,createdAt,updatedAt,offer?{ id?,discountPercent,startAt?,endAt?,isActive,finalPrice } }], meta{ page,pageSize,total,pageCount } } }` |
+| GET | `/api/v1/products/:id` | `products:r` | — | `{ ok:true, data:{ id,name,description?,imageUrl,price,stock,status,categoryId,createdAt,updatedAt,offer?{ id?,discountPercent,startAt?,endAt?,isActive,finalPrice } } }` |
+| POST | `/api/v1/products` | `products:w` | `{ name, description?, imageUrl?, price, stock, status?, categoryId }` | `{ ok:true, data:ProductConOferta? }` (201) |
+| PUT | `/api/v1/products/:id` | `products:u` | `{ name?, description?, imageUrl?, price?, stock?, status?, categoryId? }` | `{ ok:true, data:ProductConOferta? }` |
 | PATCH | `/api/v1/products/:id/status` | `products:changeStatus` | `{ status:"draft|active|archived" }` | `{ ok:true, data:Product }` |
 | DELETE | `/api/v1/products/:id` | `products:d` | — | `{ ok:true, data:{ id, deleted:true } }` |
 
-> `price` se almacena como `Decimal(10,2)` pero se serializa como número (`float`) en el envelope. `slug` (kebab-case) y `sku` (A–Z, 0–9, `-`, `_`) son únicos.
+> `imageUrl` es opcional y debe ser una URL absoluta `http`/`https` (máx. 2048 caracteres). Si no se envía, queda en `null`.
+> `offer` aparece únicamente cuando existe una oferta vigente para el producto (`discountPercent`, `startAt?`, `endAt?`, `isActive`, `finalPrice`). Si no hay oferta activa se devuelve `offer: null`.
+> `finalPrice = price * (1 - discountPercent/100)` redondeado a 2 decimales cuando la oferta está activa; caso contrario el precio expuesto es el base.
+> Filtros soportados: `q`, `status`, `categoryId`, `priceMin`, `priceMax`, `orderBy`, `orderDir`, `all`. No existen filtros `slug`, `sku`, `currency` ni `isFeatured`.
 
 ### Ejemplos
 
 **GET con filtros y orden**
 ```http
-GET /api/v1/products?q=pollo&status=active&categoryId=cat-001&isFeatured=true&priceMin=2000&priceMax=2600&orderBy=price&orderDir=desc&page=1&pageSize=1
+GET /api/v1/products?q=pollo&status=active&categoryId=cat-001&priceMin=2000&priceMax=2600&orderBy=price&orderDir=desc&page=1&pageSize=1
 Authorization: Bearer <token_admin>
 Accept: application/json
 ```
@@ -238,26 +240,20 @@ Accept: application/json
       {
         "id": "prod-001",
         "name": "Pollo al Horno",
-        "slug": "pollo-al-horno",
-        "sku": "POL-001",
         "description": "Clásico de la casa",
         "price": 2500,
-        "currency": "ARS",
         "stock": 15,
         "status": "active",
-        "isFeatured": true,
         "categoryId": "cat-001",
         "createdAt": "2024-01-01T10:00:00.000Z",
         "updatedAt": "2024-01-05T12:00:00.000Z",
         "offer": {
           "id": "offer-001",
           "discountPercent": 10,
-          "discountPct": 10,
           "startAt": "2024-01-01T00:00:00.000Z",
           "endAt": "2026-01-01T00:00:00.000Z",
           "isActive": true,
-          "finalPrice": 2250,
-          "priceFinal": 2250
+          "finalPrice": 2250
         }
       }
     ],
@@ -279,8 +275,8 @@ Content-Type: application/json
 
 {
   "name": "Ravioles de espinaca",
-  "slug": "ravioles-de-espinaca",
-  "sku": "RAV-010",
+  "description": "Con salsa rosa",
+  "imageUrl": "https://cdn.example.com/products/ravioles.png",
   "price": 1850.5,
   "stock": 30,
   "status": "draft",
@@ -294,17 +290,15 @@ Content-Type: application/json
   "data": {
     "id": "prod-xyz123",
     "name": "Ravioles de espinaca",
-    "slug": "ravioles-de-espinaca",
-    "sku": "RAV-010",
-    "description": null,
+    "description": "Con salsa rosa",
+    "imageUrl": "https://cdn.example.com/products/ravioles.png",
     "price": 1850.5,
-    "currency": "ARS",
     "stock": 30,
     "status": "draft",
-    "isFeatured": false,
     "categoryId": "cat-001",
     "createdAt": "2025-03-20T15:12:00.000Z",
-    "updatedAt": "2025-03-20T15:12:00.000Z"
+    "updatedAt": "2025-03-20T15:12:00.000Z",
+    "offer": null
   }
 }
 ```
@@ -329,20 +323,6 @@ Content-Type: application/json
 }
 ```
 
-**Error 409 (slug o SKU duplicado)**
-```json
-{
-  "ok": false,
-  "error": {
-    "code": "RESOURCE_CONFLICT",
-    "message": "El slug ya está en uso."
-  }
-}
-```
-
-> **Campo `offer`** (nuevo): cada item incluye `{ id?, discountPercent?, discountPct?, startAt?, endAt?, isActive, finalPrice, priceFinal }`.
-> `finalPrice = price * (1 - discountPercent/100)` cuando `isActive=true`, caso contrario se devuelve el precio base.
-> `discountPct` y `priceFinal` se mantienen como alias legacy (sólo lectura) para clientes existentes.
 > Una oferta está activa si:
 > - tiene `startAt` y `endAt` y se cumple `startAt ≤ now ≤ endAt`;
 > - sólo `startAt` y `startAt ≤ now`;
@@ -364,8 +344,7 @@ Content-Type: application/json
 | Código | HTTP | Descripción | Acción recomendada |
 |---|---|---|---|
 | `RESOURCE_NOT_FOUND` | 404 | Producto inexistente o ID inválido. | Confirmar `id` antes de invocar GET/PUT/PATCH/DELETE. |
-| `RESOURCE_CONFLICT` | 409 | `slug` o `sku` duplicados (`P2002`). | Ajustar valores únicos antes de reintentar. |
-| `VALIDATION_ERROR` | 422 | Campos fuera de rango (precio <0, stock <0, slug inválido, categoría inexistente). | Validar datos en UI; verificar categoría. |
+| `VALIDATION_ERROR` | 422 | Campos fuera de rango (precio <0, stock <0, URL inválida, categoría inexistente). | Validar datos en UI; verificar categoría. |
 | `PERMISSION_DENIED` | 403 | Falta del permiso (`products:w/u/d/changeStatus`). | Revisar rol y seeds. |
 
 ### Comandos de verificación (smoke manual)
@@ -374,16 +353,11 @@ Content-Type: application/json
 # crear producto
 curl -X POST "$API_BASE/api/v1/products" \
   -H "Authorization: Bearer $TOKEN_ADMIN" -H "Content-Type: application/json" \
-  -d '{"name":"Pollo al horno","slug":"pollo-al-horno","sku":"POL-001","price":2500.00,"stock":10,"status":"active","categoryId":"cat-001"}' | jq '.'
+  -d '{"name":"Pollo al horno","description":"Clásico", "imageUrl":"https://cdn.example.com/prod/pollo.png","price":2500.00,"stock":10,"status":"active","categoryId":"cat-001"}' | jq '.'
 
 # listar con filtros
 curl "$API_BASE/api/v1/products?q=pollo&page=1&pageSize=10&orderBy=updatedAt&orderDir=desc" \
  -H "Authorization: Bearer $TOKEN_VIEWER" | jq '.'
-
-# duplicado de slug → 409
-curl -X POST "$API_BASE/api/v1/products" \
- -H "Authorization: Bearer $TOKEN_ADMIN" -H "Content-Type: application/json" \
- -d '{"name":"Pollo BBQ","slug":"pollo-al-horno","sku":"POL-999","price":2100,"stock":5,"status":"draft","categoryId":"cat-001"}' | jq '.'
 
 # cambiar status
 curl -X PATCH "$API_BASE/api/v1/products/prod-001/status" \
@@ -399,21 +373,23 @@ curl -X PATCH "$API_BASE/api/v1/products/prod-001/status" \
 |-----------|------|---------|-------------|
 | `page` | number | `1` | Página actual (`>=1`). |
 | `pageSize` | number | `10` | Límite por página (`5..100`). |
-| `q` | string | — | Búsqueda parcial por nombre/slug/SKU (case-insensitive). |
+| `q` | string | — | Búsqueda parcial por `product.name` o `product.description` (case-insensitive). |
 | `status` | enum | `all` | Reutiliza filtro de productos (`draft`, `active`, `archived`, `all`). |
 | `categoryId` | string | — | Filtra por categoría exacta. |
-| `isFeatured` | boolean | — | Filtra destacados. |
 | `priceMin` / `priceMax` | number | — | Rango de precio base. |
 | `orderBy` | enum | `name` | `name`, `price`, `updatedAt`. |
 | `orderDir` | enum | `asc` | `asc` o `desc`. |
+| `activeOnly` | boolean | `false` | Si es `true`, sólo devuelve ofertas vigentes a la fecha del request. |
 | `all` | boolean | `false` | Devuelve todo el conjunto (sin paginar) respetando `pageSize` normalizado. |
 
-> Respuesta: `{ ok:true, data:{ items[{ ...Producto, offer{ id?,discountPercent?,discountPct?,startAt?,endAt?,isActive,finalPrice,priceFinal } }], meta{ page,pageSize,total,pageCount } } }`.
-> Sólo se incluyen productos cuya oferta está activa al momento del request (`offer.isActive=true`).
+> Respuesta: `{ ok:true, data:{ items[{ id,productId,discountPercent,startAt?,endAt?,isActive,finalPrice,product{ id,name,description?,imageUrl,price,stock,status,categoryId,createdAt,updatedAt } }], meta{ page,pageSize,total,pageCount } } }`.
 
-| Método | Path | Permiso | Query | 200 (data) |
+| Método | Path | Permiso | Query/Body | 200 (data) |
 |---|---|---|---|---|
-| GET | `/api/v1/offers` | `offers:r` | Query arriba | Lista paginada con productos + `offer` activo |
+| GET | `/api/v1/offers` | `offers:r` | Query arriba | Lista paginada de ofertas (incluye `product` embebido). |
+| POST | `/api/v1/offers` | `offers:w` | `{ productId, discountPercent, startAt?, endAt? }` | `{ ok:true, data:Offer }` (201) |
+| PUT | `/api/v1/offers/:id` | `offers:u` | `{ discountPercent?, startAt?, endAt? }` | `{ ok:true, data:Offer }` |
+| DELETE | `/api/v1/offers/:id` | `offers:d` | — | `{ ok:true, data:{ id, deleted:true } }` |
 
 **Ejemplo**
 
@@ -429,28 +405,24 @@ Accept: application/json
   "data": {
     "items": [
       {
-        "id": "prod-002",
-        "name": "Pollo a la Parrilla",
-        "slug": "pollo-a-la-parrilla",
-        "sku": "POL-002",
-        "description": "Servido con papas rústicas",
-        "price": 2100,
-        "currency": "ARS",
-        "stock": 12,
-        "status": "active",
-        "isFeatured": true,
-        "categoryId": "cat-001",
-        "createdAt": "2024-01-05T10:00:00.000Z",
-        "updatedAt": "2024-01-05T10:00:00.000Z",
-        "offer": {
-          "id": "offer-002",
-          "discountPercent": 20,
-          "discountPct": 20,
-          "startAt": "2024-02-01T00:00:00.000Z",
-          "endAt": null,
-          "isActive": true,
-          "finalPrice": 1680,
-          "priceFinal": 1680
+        "id": "offer-002",
+        "productId": "prod-002",
+        "discountPercent": 20,
+        "startAt": "2024-02-01T00:00:00.000Z",
+        "endAt": null,
+        "isActive": true,
+        "finalPrice": 1680,
+        "product": {
+          "id": "prod-002",
+          "name": "Pollo a la Parrilla",
+          "description": "Servido con papas rústicas",
+          "imageUrl": null,
+          "price": 2100,
+          "stock": 12,
+          "status": "active",
+          "categoryId": "cat-001",
+          "createdAt": "2024-01-05T10:00:00.000Z",
+          "updatedAt": "2024-01-05T10:00:00.000Z"
         }
       }
     ],
@@ -464,11 +436,57 @@ Accept: application/json
 }
 ```
 
+**POST /offers**
+
+```http
+POST /api/v1/offers
+Authorization: Bearer <token_admin>
+Content-Type: application/json
+
+{ "productId": "prod-001", "discountPercent": 15, "startAt": "2024-03-01T00:00:00.000Z", "endAt": "2025-03-01T00:00:00.000Z" }
+```
+
+```json
+{
+  "ok": true,
+  "data": {
+    "id": "offer-010",
+    "productId": "prod-001",
+    "discountPercent": 15,
+    "startAt": "2024-03-01T00:00:00.000Z",
+    "endAt": "2025-03-01T00:00:00.000Z",
+    "isActive": true,
+    "finalPrice": 2125,
+    "product": {
+      "id": "prod-001",
+      "name": "Pollo al Horno",
+      "price": 2500,
+      "stock": 15,
+      "status": "active",
+      "categoryId": "cat-001",
+      "createdAt": "2024-01-01T10:00:00.000Z",
+      "updatedAt": "2024-01-05T12:00:00.000Z"
+    }
+  }
+}
+```
+
+**Reglas de validación**
+
+- `discountPercent` entero `1..100`.
+- `startAt` / `endAt` aceptan `null` o fechas válidas; si ambos están presentes se exige `startAt <= endAt`.
+- Cada producto sólo puede tener **una** oferta vigente a la vez (`CONFLICT` cuando ya existe una oferta para `productId`).
+- El producto asociado debe existir.
+- `activeOnly=1` en el listado devuelve únicamente ofertas que cumplen la ventana de vigencia. Las ofertas activas se reflejan automáticamente en `/products` como resumen (`offer.discountPercent`, `offer.finalPrice`, fechas e `isActive`). Al eliminar o expirar la oferta el resumen vuelve a `null`.
+
 ### RBAC (moduleKey=`offers`)
 
 | Acción | Descripción | `role-admin` | `role-supervisor` (seed) | `role-viewer` |
 |---|---|---|---|---|
-| `r` | Listar ofertas activas | ✔︎ | ✔︎ | ✔︎ |
+| `r` | Listar ofertas (paginado, con `product` embebido) | ✔︎ | ✔︎ | ✔︎ |
+| `w` | Crear ofertas | ✔︎ | ✔︎ | ✖︎ |
+| `u` | Editar ofertas | ✔︎ | ✔︎ | ✖︎ |
+| `d` | Eliminar ofertas | ✔︎ | ✖︎ | ✖︎ |
 
 ### Comandos de verificación (smoke manual)
 
@@ -477,7 +495,12 @@ Accept: application/json
 curl "$API_BASE/api/v1/offers?page=1&pageSize=10" \
   -H "Authorization: Bearer $ADMIN_JWT" | jq '.'
 
-# listado de productos con resumen de oferta
+# crear oferta
+curl -X POST "$API_BASE/api/v1/offers" \
+  -H "Authorization: Bearer $ADMIN_JWT" -H "Content-Type: application/json" \
+  -d '{"productId":"prod-001","discountPercent":25,"startAt":"2024-03-01T00:00:00.000Z","endAt":"2025-03-01T00:00:00.000Z"}' | jq '.'
+
+# listado de productos con resumen de oferta embebido
 curl "$API_BASE/api/v1/products?page=1&pageSize=10" \
   -H "Authorization: Bearer $VIEWER_JWT" | jq '.'
 ```
