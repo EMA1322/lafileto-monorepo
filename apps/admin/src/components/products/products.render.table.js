@@ -6,13 +6,7 @@
 
 import { applyRBAC } from '../../utils/rbac.js';
 
-import {
-  STATUS_LABELS,
-  DEFAULT_PAGE_SIZE,
-  escapeHTML,
-  formatMoney,
-  resolveOfferPricing,
-} from './products.helpers.js';
+import { STATUS_LABELS, DEFAULT_PAGE_SIZE, escapeHTML, formatMoney, resolveOfferPricing } from './products.helpers.js';
 import { REQUEST_STATUS } from './products.state.js';
 
 function getRefs(container) {
@@ -58,13 +52,10 @@ function renderOfferBadge(pricing, { ariaHidden = false } = {}) {
   return `<span class="badge badge--error products__badge products__badge--offer"${aria}>${escapeHTML(label)}</span>`;
 }
 
-function renderStatusBadge(status, label) {
-  const variant =
-    status === 'active'
-      ? 'badge--success'
-      : status === 'archived'
-        ? 'badge--neutral'
-        : 'badge--warning';
+function renderStatusBadge(status) {
+  const isActive = status === 'active';
+  const label = isActive ? STATUS_LABELS.active : STATUS_LABELS.draft;
+  const variant = isActive ? 'badge--success' : 'badge--warning';
   return `<span class="badge ${variant} products__status">${escapeHTML(label)}</span>`;
 }
 
@@ -129,7 +120,7 @@ function renderTable(items, refs, categories) {
     .map((item) => {
       const idAttr = escapeHTML(item.id ?? '');
       const status = item.status || 'draft';
-      const statusLabel = STATUS_LABELS[status] || '—';
+      const statusLabel = status === 'active' ? STATUS_LABELS.active : STATUS_LABELS.draft;
       const pricing = resolveOfferPricing(item);
       const imageMarkup = renderProductImage(item, pricing);
       const hasImage = Boolean(item?.imageUrl);

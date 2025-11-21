@@ -12,12 +12,17 @@ export const PAGE_SIZE_OPTIONS = [10, 20, 50];
 export const ORDER_FIELDS = ['name', 'price', 'updatedAt'];
 export const ORDER_DIRECTIONS = ['asc', 'desc'];
 export const STATUS_VALUES = ['draft', 'active', 'archived'];
-
+// UI simplifica estados a Activo/Inactivo. Draft y archived se presentan como "Inactivo".
 export const STATUS_LABELS = {
-  draft: 'Borrador',
+  draft: 'Inactivo',
   active: 'Activo',
-  archived: 'Archivado',
+  archived: 'Inactivo',
 };
+export const STATUS_FORM_OPTIONS = [
+  { value: 'active', label: STATUS_LABELS.active },
+  { value: 'draft', label: STATUS_LABELS.draft },
+];
+export const FILTER_STATUS_VALUES = ['all', 'active', 'inactive'];
 
 export const DEFAULT_FILTERS = {
   q: '',
@@ -42,8 +47,13 @@ export function buildQuery(filters = {}) {
     params.categoryId = source.categoryId;
   }
 
-  if (source.status && source.status !== 'all' && STATUS_VALUES.includes(source.status)) {
-    params.status = source.status;
+  if (source.status && source.status !== 'all') {
+    if (source.status === 'inactive') {
+      // Se envía draft al backend; archived se presenta como inactivo en la UI.
+      params.status = 'draft';
+    } else if (STATUS_VALUES.includes(source.status)) {
+      params.status = source.status;
+    }
   }
 
   const rawMin = source.priceMin;
@@ -252,18 +262,18 @@ export function validateProductPayload(payload = {}) {
 
   const imageUrl = String(payload.imageUrl || payload.image_url || '').trim();
   if (imageUrl) {
-    const isValidHttps = /^https:\/\//i.test(imageUrl);
+    const isValidHttp = /^https?:\/\//i.test(imageUrl);
     let isValidUrl = false;
-    if (isValidHttps) {
+    if (isValidHttp) {
       try {
         const parsed = new URL(imageUrl);
-        isValidUrl = parsed.protocol === 'https:' && Boolean(parsed.hostname);
+        isValidUrl = (parsed.protocol === 'https:' || parsed.protocol === 'http:') && Boolean(parsed.hostname);
       } catch {
         isValidUrl = false;
       }
     }
-    if (!isValidHttps || !isValidUrl) {
-      errors.push({ field: 'imageUrl', message: 'Ingresá una URL https válida.' });
+    if (!isValidHttp || !isValidUrl) {
+      errors.push({ field: 'imageUrl', message: 'Ingresá una URL http(s) válida.' });
     }
   }
 

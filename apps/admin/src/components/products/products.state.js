@@ -14,7 +14,7 @@ import {
   PAGE_SIZE_OPTIONS,
   ORDER_FIELDS,
   ORDER_DIRECTIONS,
-  STATUS_VALUES,
+  FILTER_STATUS_VALUES,
   buildQuery,
   mapProductFromApi,
 } from './products.helpers.js';
@@ -39,8 +39,15 @@ function sanitizeFilters(input = {}) {
   filters.q = typeof source.q === 'string' ? source.q.trim() : '';
   filters.categoryId = source.categoryId && source.categoryId !== 'all' ? String(source.categoryId) : 'all';
 
-  const statusValue = typeof source.status === 'string' ? source.status : DEFAULT_FILTERS.status;
-  filters.status = STATUS_VALUES.includes(statusValue) ? statusValue : 'all';
+  const statusValue = typeof source.status === 'string' ? source.status.trim() : DEFAULT_FILTERS.status;
+  if (statusValue === 'active') {
+    filters.status = 'active';
+  } else if (statusValue === 'inactive' || statusValue === 'draft' || statusValue === 'archived') {
+    // Archived se muestra como Inactivo pero no se envía como filtro separado aún.
+    filters.status = 'inactive';
+  } else {
+    filters.status = 'all';
+  }
 
   const priceMinRaw = source.priceMin;
   if (priceMinRaw !== '' && priceMinRaw !== null && priceMinRaw !== undefined) {
@@ -158,7 +165,9 @@ export function getFiltersQuery(filters = state.filters) {
 
   if (data.q) params.set('q', data.q);
   if (data.categoryId && data.categoryId !== 'all') params.set('categoryId', data.categoryId);
-  if (data.status && data.status !== 'all') params.set('status', data.status);
+  if (FILTER_STATUS_VALUES.includes(data.status) && data.status !== 'all') {
+    params.set('status', data.status);
+  }
   if (data.priceMin !== '' && data.priceMin !== null && data.priceMin !== undefined) {
     params.set('priceMin', String(data.priceMin));
   }

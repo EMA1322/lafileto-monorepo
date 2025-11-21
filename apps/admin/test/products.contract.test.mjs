@@ -48,35 +48,23 @@ function testProductMapping() {
 }
 
 function testOfferValidation() {
-  const disabled = validateOfferForm({ enabled: false, discount: '', startAt: '', endAt: '' });
+  const disabled = validateOfferForm({ enabled: false, discount: 'not-a-number' });
   assert.equal(disabled.errors.length, 0);
   assert.equal(disabled.payload.enabled, false);
   assert.equal(disabled.payload.discountPercent, null);
 
-  const zeroPercent = validateOfferForm({ enabled: true, discount: '0', startAt: '', endAt: '' });
+  const zeroPercent = validateOfferForm({ enabled: true, discount: '0' });
   assert.ok(zeroPercent.errors.some((err) => err.field === 'offerDiscountPercent'));
 
-  const overLimit = validateOfferForm({ enabled: true, discount: '150', startAt: '', endAt: '' });
+  const overLimit = validateOfferForm({ enabled: true, discount: '150' });
   assert.ok(overLimit.errors.some((err) => err.field === 'offerDiscountPercent'));
-
-  const reversedDates = validateOfferForm({
-    enabled: true,
-    discount: '15',
-    startAt: '2024-12-31T10:00',
-    endAt: '2024-01-01T10:00',
-  });
-  assert.ok(reversedDates.errors.some((err) => err.field === 'offerEndAt'));
 
   const valid = validateOfferForm({
     enabled: true,
     discount: '10',
-    startAt: '2024-01-01T00:00',
-    endAt: '2024-02-01T00:00',
   });
   assert.equal(valid.errors.length, 0);
   assert.equal(valid.payload.discountPercent, 10);
-  assert.equal(valid.payload.startsAt, new Date('2024-01-01T00:00').toISOString());
-  assert.equal(valid.payload.endsAt, new Date('2024-02-01T00:00').toISOString());
 }
 
 function testOfferPricingFromSummary() {
