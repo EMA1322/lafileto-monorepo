@@ -36,7 +36,6 @@ function getRefs(container) {
     pagePrev: container.querySelector('#page-prev'),
     pageNext: container.querySelector('#page-next'),
     pageLast: container.querySelector('#page-last'),
-    cardsWrapper: container.querySelector('#products-cards'),
     tableBody: container.querySelector('#products-table-body'),
   };
 }
@@ -184,7 +183,6 @@ export function bindProductsBindings(container) {
   };
 
   attach(refs.tableBody, 'click', actionHandler, listeners);
-  attach(refs.cardsWrapper, 'click', actionHandler, listeners);
 
   return () => {
     listeners.forEach((off) => off());

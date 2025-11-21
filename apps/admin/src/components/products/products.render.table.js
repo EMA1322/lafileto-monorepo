@@ -1,6 +1,6 @@
 // ============================================================================
 // /admin/src/components/products/products.render.table.js
-// Renderizado de tabla y tarjetas del módulo Products.
+// Renderizado de la tabla del módulo Products.
 // Comentarios en español, código y nombres en inglés.
 // ============================================================================
 
@@ -11,7 +11,6 @@ import {
   DEFAULT_PAGE_SIZE,
   escapeHTML,
   formatMoney,
-  formatStatusLabel,
   resolveOfferPricing,
 } from './products.helpers.js';
 import { REQUEST_STATUS } from './products.state.js';
@@ -35,7 +34,6 @@ function getRefs(container) {
     emptyClear: container.querySelector('#products-empty-clear'),
     tableWrapper: container.querySelector('#products-table-wrapper'),
     tableBody: container.querySelector('#products-table-body'),
-    cardsWrapper: container.querySelector('#products-cards'),
     meta: container.querySelector('#products-meta'),
     pagination: container.querySelector('#products-page-list'),
     pageFirst: container.querySelector('#page-first'),
@@ -179,74 +177,6 @@ function renderTable(items, refs, categories) {
   refs.tableBody.innerHTML = rows;
 }
 
-function renderCards(items, refs, categories) {
-  if (!refs.cardsWrapper) return;
-  const cards = items
-    .map((item) => {
-      const idAttr = escapeHTML(item.id ?? '');
-      const status = item.status || 'draft';
-      const statusLabel = formatStatusLabel(status);
-      const pricing = resolveOfferPricing(item);
-      const imageMarkup = renderProductImage(item, pricing);
-      const priceMarkup = renderProductPrice(pricing);
-      const statusBadge = renderStatusBadge(status, statusLabel);
-      return `
-        <article class="card products__card" data-id="${idAttr}">
-          <div class="products__card-media">
-            ${imageMarkup}
-          </div>
-          <header class="products__card-header">
-            <h3 class="products__card-title">${escapeHTML(item.name ?? '—')}</h3>
-            ${statusBadge}
-          </header>
-          <dl class="products__card-meta">
-            <div class="products__card-row">
-              <span class="products__card-label">Precio</span>
-              <span class="products__card-price">${priceMarkup}</span>
-            </div>
-            <div class="products__card-row">
-              <span class="products__card-label">Stock</span>
-              <span>${Number(item.stock ?? 0)}</span>
-            </div>
-            <div class="products__card-row">
-              <span class="products__card-label">Categoría</span>
-              <span>${escapeHTML(resolveCategoryName(item.categoryId, categories))}</span>
-            </div>
-            <div class="products__card-row">
-              <span class="products__card-label">Estado</span>
-              <span>${escapeHTML(statusLabel)}</span>
-            </div>
-          </dl>
-          <div class="products__actions">
-            <button
-              class="btn btn--ghost btn--sm products__action-btn"
-              type="button"
-              data-action="view"
-              data-id="${idAttr}"
-              data-rbac-action="read"
-            >Ver</button>
-            <button
-              class="btn btn--ghost btn--sm products__action-btn"
-              type="button"
-              data-action="edit"
-              data-id="${idAttr}"
-              data-rbac-action="update"
-            >Editar</button>
-            <button
-              class="btn btn--ghost btn--sm products__action-btn products__action-btn--danger"
-              type="button"
-              data-action="delete"
-              data-id="${idAttr}"
-              data-rbac-action="delete"
-            >Eliminar</button>
-          </div>
-        </article>
-      `;
-    })
-    .join('');
-  refs.cardsWrapper.innerHTML = cards;
-}
-
 function renderMeta(meta, refs) {
   if (!refs.meta) return;
   const total = Number(meta?.total) || 0;
@@ -356,7 +286,6 @@ export function renderProductsView(snapshot, root = document.querySelector('#pro
   if (refs.errorState) refs.errorState.hidden = true;
   if (refs.emptyState) refs.emptyState.hidden = true;
   if (refs.tableWrapper) refs.tableWrapper.hidden = true;
-  if (refs.cardsWrapper) refs.cardsWrapper.hidden = true;
 
   if (showLoading && !isError && !isEmpty && !hasData) {
     if (refs.loadingState) refs.loadingState.hidden = false;
@@ -366,7 +295,6 @@ export function renderProductsView(snapshot, root = document.querySelector('#pro
     if (refs.emptyState) refs.emptyState.hidden = false;
   } else if (hasData) {
     if (refs.tableWrapper) refs.tableWrapper.hidden = false;
-    if (refs.cardsWrapper) refs.cardsWrapper.hidden = false;
   }
 
   const content = container.querySelector('.products__content');
@@ -385,13 +313,10 @@ export function renderProductsView(snapshot, root = document.querySelector('#pro
 
   if (showLoading) {
     if (refs.tableBody) refs.tableBody.innerHTML = '';
-    if (refs.cardsWrapper) refs.cardsWrapper.innerHTML = '';
   } else if (hasData) {
     renderTable(items, refs, categories);
-    renderCards(items, refs, categories);
   } else {
     if (refs.tableBody) refs.tableBody.innerHTML = '';
-    if (refs.cardsWrapper) refs.cardsWrapper.innerHTML = '';
   }
 
   if (!isLoading || isInitial) {
