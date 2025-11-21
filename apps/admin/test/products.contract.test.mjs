@@ -23,8 +23,6 @@ function testProductMapping() {
       id: 'o-1',
       discountPercent: 25,
       finalPrice: 750,
-      startsAt: '2024-01-01T00:00:00Z',
-      endsAt: '2024-02-01T00:00:00Z',
     },
   };
 
@@ -39,8 +37,8 @@ function testProductMapping() {
   assert.ok(mapped.offer);
   assert.equal(mapped.offer.discountPercent, 25);
   assert.equal(mapped.offer.finalPrice, 750);
-  assert.equal(mapped.offer.startsAt, '2024-01-01T00:00:00Z');
-  assert.equal(mapped.offer.endsAt, '2024-02-01T00:00:00Z');
+  assert.equal(mapped.offer.startsAt, undefined);
+  assert.equal(mapped.offer.endsAt, undefined);
   assert.ok(!('slug' in mapped));
   assert.ok(!('sku' in mapped));
   assert.ok(!('currency' in mapped));

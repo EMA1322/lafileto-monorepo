@@ -78,8 +78,8 @@ export function buildProductWhere({ q, status, categoryId, priceMin, priceMax } 
     const trimmed = q.trim();
     if (trimmed) {
       where.OR = [
-        { name: { contains: trimmed, mode: 'insensitive' } },
-        { description: { contains: trimmed, mode: 'insensitive' } }
+        { name: { contains: trimmed } },
+        { description: { contains: trimmed } }
       ];
     }
   }
