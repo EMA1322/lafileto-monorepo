@@ -78,6 +78,35 @@
   gap: var(--space-4);
 }
 
+.products__content [hidden] {
+  display: none !important;
+}
+
+.products__content .products__state,
+.products__content .products__table-wrapper {
+  display: none;
+}
+
+.products__content.is-loading .products__state--loading,
+.products__content[data-status='loading'] .products__state--loading {
+  display: grid;
+}
+
+.products__content.has-error .products__state--error,
+.products__content[data-status='error'] .products__state--error {
+  display: grid;
+}
+
+.products__content.is-empty .products__state--empty,
+.products__content[data-status='empty'] .products__state--empty {
+  display: grid;
+}
+
+.products__content.has-success .products__table-wrapper,
+.products__content[data-status='success'] .products__table-wrapper {
+  display: block;
+}
+
 .products__state {
   display: grid;
   place-items: center;

@@ -281,6 +281,24 @@ export function renderProductsView(snapshot, root = document.querySelector('#pro
   const categories = Array.isArray(view.categories) ? view.categories : [];
 
   const showLoading = isInitial || isLoading;
+  const content = container.querySelector('.products__content');
+
+  const statusName = (() => {
+    if (showLoading && !isError && !isEmpty && !hasData) return 'loading';
+    if (isError) return 'error';
+    if (isEmpty) return 'empty';
+    if (hasData) return 'success';
+    return 'idle';
+  })();
+
+  if (content) {
+    content.dataset.status = statusName;
+    content.classList.toggle('is-loading', statusName === 'loading');
+    content.classList.toggle('has-error', statusName === 'error');
+    content.classList.toggle('is-empty', statusName === 'empty');
+    content.classList.toggle('has-success', statusName === 'success');
+    content.setAttribute('aria-busy', showLoading ? 'true' : 'false');
+  }
 
   if (refs.loadingState) refs.loadingState.hidden = true;
   if (refs.errorState) refs.errorState.hidden = true;
@@ -295,11 +313,6 @@ export function renderProductsView(snapshot, root = document.querySelector('#pro
     if (refs.emptyState) refs.emptyState.hidden = false;
   } else if (hasData) {
     if (refs.tableWrapper) refs.tableWrapper.hidden = false;
-  }
-
-  const content = container.querySelector('.products__content');
-  if (content) {
-    content.setAttribute('aria-busy', showLoading ? 'true' : 'false');
   }
 
   if (error && refs.errorMessage) {
