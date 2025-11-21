@@ -434,27 +434,24 @@ export function openProductModal({ mode = 'create', product = {}, container } = 
 
   syncOfferVisibility(offerToggle?.checked ?? false);
 
-  const showPlaceholder = () => {
-    if (previewEmpty) previewEmpty.hidden = false;
+  const togglePreview = ({ showImage }) => {
     if (previewImage) {
-      previewImage.hidden = true;
-      previewImage.src = '';
+      previewImage.hidden = !showImage;
+      if (!showImage) {
+        previewImage.src = '';
+      }
     }
-  };
-
-  const showImage = () => {
-    if (previewImage) {
-      previewImage.hidden = false;
+    if (previewEmpty) {
+      previewEmpty.hidden = showImage;
     }
-    if (previewEmpty) previewEmpty.hidden = true;
   };
 
   if (previewImage) {
     previewImage.addEventListener('load', () => {
-      showImage();
+      togglePreview({ showImage: true });
     });
     previewImage.addEventListener('error', () => {
-      showPlaceholder();
+      togglePreview({ showImage: false });
     });
   }
 
@@ -470,13 +467,13 @@ export function openProductModal({ mode = 'create', product = {}, container } = 
     const isHttp = /^https?:\/\//i.test(value);
 
     if (!isHttp || !value) {
-      showPlaceholder();
+      togglePreview({ showImage: false });
       return;
     }
 
     if (previewImage) {
       previewImage.src = value;
-      showImage();
+      togglePreview({ showImage: true });
     }
   };
 
