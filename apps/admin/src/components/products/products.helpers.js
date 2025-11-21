@@ -154,8 +154,6 @@ function normalizeOffer(rawOffer, basePrice) {
     isActive,
     finalPrice: Number.isFinite(normalizedFinal) ? normalizedFinal : null,
     discountPercent: Number.isFinite(normalizedPercent) ? normalizedPercent : null,
-    startsAt: rawOffer.startsAt ?? rawOffer.startDate ?? rawOffer.start_at ?? null,
-    endsAt: rawOffer.endsAt ?? rawOffer.endDate ?? rawOffer.end_at ?? null,
   };
 }
 

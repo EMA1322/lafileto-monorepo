@@ -16,7 +16,6 @@ import {
   escapeHTML,
   resolveOfferPricing,
   formatMoney,
-  formatDate,
   formatCategoryName,
 } from './products.helpers.js';
 import { state, fetchProducts, upsertProduct, removeProduct, notify } from './products.state.js';
@@ -301,8 +300,8 @@ function buildProductFormHTML({ mode, product }) {
   const stockValue = Number.isFinite(Number(product.stock)) ? Number(product.stock) : 0;
   const statusValue = product.status === 'active' ? 'active' : 'draft';
   const descriptionValue = product.description ?? '';
-  const previewPlaceholderHidden = imageUrl ? 'hidden' : '';
-  const previewImageHidden = imageUrl ? '' : 'hidden';
+  const previewPlaceholderHidden = '';
+  const previewImageHidden = 'hidden';
   return `
     <form id="products-form" class="products__form" novalidate>
       <h3 class="products__form-title">${isEdit ? 'Editar producto' : 'Crear producto'}</h3>
@@ -421,6 +420,7 @@ export function openProductModal({ mode = 'create', product = {}, container } = 
   const imageInput = form.querySelector('#field-image-url');
   const previewImage = form.querySelector('[data-image-preview-img]');
   const previewEmpty = form.querySelector('[data-image-preview-empty]');
+  let previewRequestId = 0;
 
   const syncOfferVisibility = (checked) => {
     if (offerFields) {
@@ -434,24 +434,21 @@ export function openProductModal({ mode = 'create', product = {}, container } = 
 
   syncOfferVisibility(offerToggle?.checked ?? false);
 
-  const togglePreview = ({ showImage }) => {
-    if (previewImage) {
-      previewImage.hidden = !showImage;
-      if (!showImage) {
-        previewImage.src = '';
-      }
-    }
-    if (previewEmpty) {
-      previewEmpty.hidden = showImage;
-    }
-  };
-
   if (previewImage) {
     previewImage.addEventListener('load', () => {
-      togglePreview({ showImage: true });
+      if (previewImage.dataset.previewRequestId !== String(previewRequestId)) return;
+      previewImage.hidden = false;
+      if (previewEmpty) {
+        previewEmpty.hidden = true;
+      }
     });
     previewImage.addEventListener('error', () => {
-      togglePreview({ showImage: false });
+      if (previewImage.dataset.previewRequestId !== String(previewRequestId)) return;
+      previewImage.src = '';
+      previewImage.hidden = true;
+      if (previewEmpty) {
+        previewEmpty.hidden = false;
+      }
     });
   }
 
@@ -463,18 +460,23 @@ export function openProductModal({ mode = 'create', product = {}, container } = 
   }
 
   const updateImagePreview = (rawValue) => {
+    if (!previewImage || !previewEmpty) return;
+
+    previewRequestId += 1;
+    const currentRequestId = String(previewRequestId);
     const value = (rawValue || '').toString().trim();
     const isHttp = /^https?:\/\//i.test(value);
 
+    previewImage.dataset.previewRequestId = currentRequestId;
+    previewImage.hidden = true;
+    previewEmpty.hidden = false;
+    previewImage.src = '';
+
     if (!isHttp || !value) {
-      togglePreview({ showImage: false });
       return;
     }
 
-    if (previewImage) {
-      previewImage.src = value;
-      togglePreview({ showImage: true });
-    }
+    previewImage.src = value;
   };
 
   updateImagePreview(imageInput?.value || '');
@@ -614,8 +616,6 @@ function buildProductViewHTML(product = {}) {
   const discountLabel = Number.isFinite(discountNumber)
     ? `${discountNumber % 1 === 0 ? discountNumber : discountNumber.toFixed(2)}%`
     : '—';
-  const startLabel = offer?.startsAt ? formatDate(offer.startsAt) : '—';
-  const endLabel = offer?.endsAt ? formatDate(offer.endsAt) : '—';
   const priceLabel = formatMoney(product?.price ?? pricing.originalPrice ?? 0);
   const finalPriceLabel = formatMoney(pricing.finalPrice ?? pricing.originalPrice ?? 0);
   const stockNumber = Number(product?.stock);
@@ -672,14 +672,6 @@ function buildProductViewHTML(product = {}) {
           <div class="products__view-row">
             <dt class="products__view-label">Descuento</dt>
             <dd class="products__view-value">${escapeHTML(discountLabel)}</dd>
-          </div>
-          <div class="products__view-row">
-            <dt class="products__view-label">Inicio</dt>
-            <dd class="products__view-value">${escapeHTML(startLabel)}</dd>
-          </div>
-          <div class="products__view-row">
-            <dt class="products__view-label">Fin</dt>
-            <dd class="products__view-value">${escapeHTML(endLabel)}</dd>
           </div>
         </dl>
       </section>
