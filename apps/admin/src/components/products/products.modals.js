@@ -10,8 +10,8 @@ import { showSnackbar } from '../../utils/snackbar.js';
 import { productsApi, offersApi } from '../../utils/apis.js';
 
 import {
+  STATUS_FORM_OPTIONS,
   STATUS_LABELS,
-  STATUS_VALUES,
   validateProductPayload,
   escapeHTML,
   resolveOfferPricing,
@@ -93,12 +93,6 @@ function mapErrorField(field) {
   if (normalized === 'discountpercent' || normalized === 'discount_percentage' || normalized === 'discount') {
     return 'offerDiscountPercent';
   }
-  if (normalized === 'startsat' || normalized === 'start_at' || normalized === 'start') {
-    return 'offerStartAt';
-  }
-  if (normalized === 'endsat' || normalized === 'end_at' || normalized === 'end') {
-    return 'offerEndAt';
-  }
   return value;
 }
 
@@ -115,44 +109,10 @@ function getCategoriesOptions(selectedId) {
     .join('');
 }
 
-function formatDateTimeLocalInput(value) {
-  if (!value) return '';
-  try {
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return '';
-    const pad = (input) => String(input).padStart(2, '0');
-    const year = date.getFullYear();
-    const month = pad(date.getMonth() + 1);
-    const day = pad(date.getDate());
-    const hours = pad(date.getHours());
-    const minutes = pad(date.getMinutes());
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
-  } catch {
-    return '';
-  }
-}
-
-function parseDateTimeLocal(value) {
-  if (!value) {
-    return { iso: null, isValid: true, date: null };
-  }
-  const trimmed = String(value).trim();
-  if (!trimmed) {
-    return { iso: null, isValid: true, date: null };
-  }
-  const date = new Date(trimmed);
-  if (Number.isNaN(date.getTime())) {
-    return { iso: null, isValid: false, date: null };
-  }
-  return { iso: date.toISOString(), isValid: true, date };
-}
-
 function buildOfferFormState(formData) {
   return {
     enabled: formData.get('offerEnabled') === 'on',
     discount: formData.get('offerDiscountPercent')?.toString().trim() ?? '',
-    startAt: formData.get('offerStartAt')?.toString().trim() ?? '',
-    endAt: formData.get('offerEndAt')?.toString().trim() ?? '',
   };
 }
 
@@ -160,9 +120,8 @@ export function validateOfferForm(offerState) {
   const errors = [];
   const normalized = {
     enabled: offerState.enabled === true,
+    // Admin no gestiona ventanas temporales de oferta en esta fase.
     discountPercent: null,
-    startsAt: null,
-    endsAt: null,
   };
 
   if (!normalized.enabled) {
@@ -187,28 +146,6 @@ export function validateOfferForm(offerState) {
           ? clamped
           : Number(clamped.toFixed(2));
       }
-    }
-  }
-
-  const startResult = parseDateTimeLocal(offerState.startAt);
-  if (offerState.startAt && !startResult.isValid) {
-    errors.push({ field: 'offerStartAt', message: 'Ingresá una fecha de inicio válida.' });
-  } else {
-    normalized.startsAt = startResult.iso;
-  }
-
-  const endResult = parseDateTimeLocal(offerState.endAt);
-  if (offerState.endAt && !endResult.isValid) {
-    errors.push({ field: 'offerEndAt', message: 'Ingresá una fecha de fin válida.' });
-  } else {
-    normalized.endsAt = endResult.iso;
-  }
-
-  if (normalized.startsAt && normalized.endsAt) {
-    const startDate = startResult.date ?? new Date(normalized.startsAt);
-    const endDate = endResult.date ?? new Date(normalized.endsAt);
-    if (startDate.getTime() > endDate.getTime()) {
-      errors.push({ field: 'offerEndAt', message: 'La fecha de fin debe ser posterior a la de inicio.' });
     }
   }
 
@@ -273,8 +210,6 @@ async function syncOfferForProduct(product, offerPayload, originalOffer) {
   const payload = {
     productId: product.id,
     discountPercent: offerPayload.discountPercent,
-    startsAt: offerPayload.startsAt || null,
-    endsAt: offerPayload.endsAt || null,
   };
 
   let response;
@@ -339,12 +274,14 @@ function handleFormError(error, form) {
 
 function buildProductPayload(formData) {
   const imageValue = formData.get('imageUrl')?.toString().trim() ?? '';
+  const rawStatus = formData.get('status')?.toString() ?? 'draft';
+  const status = rawStatus === 'active' ? 'active' : 'draft'; // "Inactivo" en UI agrupa draft/archived.
   return {
     name: formData.get('name')?.toString().trim() ?? '',
     description: formData.get('description')?.toString().trim() ?? '',
     price: Number(formData.get('price')),
     stock: Number(formData.get('stock')),
-    status: formData.get('status')?.toString() ?? 'draft',
+    status,
     categoryId: formData.get('categoryId')?.toString() ?? '',
     imageUrl: imageValue ? imageValue : null,
   };
@@ -360,11 +297,9 @@ function buildProductFormHTML({ mode, product }) {
     offer && offer.discountPercent != null && offer.discountPercent !== ''
       ? String(offer.discountPercent)
       : '';
-  const startValue = formatDateTimeLocalInput(offer?.startsAt);
-  const endValue = formatDateTimeLocalInput(offer?.endsAt);
   const priceValue = Number.isFinite(Number(product.price)) ? Number(product.price) : 0;
   const stockValue = Number.isFinite(Number(product.stock)) ? Number(product.stock) : 0;
-  const statusValue = STATUS_VALUES.includes(product.status) ? product.status : 'draft';
+  const statusValue = product.status === 'active' ? 'active' : 'draft';
   const descriptionValue = product.description ?? '';
   const previewPlaceholderHidden = imageUrl ? 'hidden' : '';
   const previewImageHidden = imageUrl ? '' : 'hidden';
@@ -408,7 +343,7 @@ function buildProductFormHTML({ mode, product }) {
               ${previewImageHidden}
             />
           </div>
-          <p class="products__help-text">Ingresá una URL que comience con https://</p>
+          <p class="products__help-text">Ingresá una URL que comience con http:// o https://</p>
         </div>
         <div class="products__field">
           <label for="field-price">Precio</label>
@@ -421,9 +356,9 @@ function buildProductFormHTML({ mode, product }) {
         <div class="products__field">
           <label for="field-status">Estado</label>
           <select id="field-status" name="status" class="form-control form-control--dense">
-            ${STATUS_VALUES.map((status) => {
-              const selected = status === statusValue ? 'selected' : '';
-              return `<option value="${status}" ${selected}>${escapeHTML(STATUS_LABELS[status])}</option>`;
+            ${STATUS_FORM_OPTIONS.map(({ value, label }) => {
+              const selected = value === statusValue ? 'selected' : '';
+              return `<option value="${value}" ${selected}>${escapeHTML(label)}</option>`;
             }).join('')}
           </select>
         </div>
@@ -458,18 +393,6 @@ function buildProductFormHTML({ mode, product }) {
               inputmode="decimal"
               value="${discountValue ? escapeHTML(discountValue) : ''}"
             />
-          </div>
-          <div class="products__field">
-            <label for="field-offer-start">Inicio (opcional)</label>
-            <input id="field-offer-start" name="offerStartAt" class="form-control form-control--dense" type="datetime-local" value="${escapeHTML(
-              startValue,
-            )}" />
-          </div>
-          <div class="products__field">
-            <label for="field-offer-end">Fin (opcional)</label>
-            <input id="field-offer-end" name="offerEndAt" class="form-control form-control--dense" type="datetime-local" value="${escapeHTML(
-              endValue,
-            )}" />
           </div>
         </div>
       </section>
@@ -511,6 +434,30 @@ export function openProductModal({ mode = 'create', product = {}, container } = 
 
   syncOfferVisibility(offerToggle?.checked ?? false);
 
+  const showPlaceholder = () => {
+    if (previewEmpty) previewEmpty.hidden = false;
+    if (previewImage) {
+      previewImage.hidden = true;
+      previewImage.src = '';
+    }
+  };
+
+  const showImage = () => {
+    if (previewImage) {
+      previewImage.hidden = false;
+    }
+    if (previewEmpty) previewEmpty.hidden = true;
+  };
+
+  if (previewImage) {
+    previewImage.addEventListener('load', () => {
+      showImage();
+    });
+    previewImage.addEventListener('error', () => {
+      showPlaceholder();
+    });
+  }
+
   if (offerToggle) {
     offerToggle.addEventListener('change', (event) => {
       const checked = Boolean(event?.currentTarget?.checked);
@@ -520,18 +467,16 @@ export function openProductModal({ mode = 'create', product = {}, container } = 
 
   const updateImagePreview = (rawValue) => {
     const value = (rawValue || '').toString().trim();
-    const isHttps = /^https:\/\//i.test(value);
-    if (previewImage) {
-      if (isHttps) {
-        previewImage.src = value;
-        previewImage.hidden = false;
-      } else {
-        previewImage.hidden = true;
-        previewImage.removeAttribute('src');
-      }
+    const isHttp = /^https?:\/\//i.test(value);
+
+    if (!isHttp || !value) {
+      showPlaceholder();
+      return;
     }
-    if (previewEmpty) {
-      previewEmpty.hidden = isHttps;
+
+    if (previewImage) {
+      previewImage.src = value;
+      showImage();
     }
   };
 
