@@ -89,7 +89,12 @@
     </div>
   </form>
 
-  <section class="products__content" aria-live="polite" aria-busy="false">
+  <section
+    class="products__content is-loading"
+    aria-live="polite"
+    aria-busy="false"
+    data-status="loading"
+  >
     <div class="products__state products__state--loading" id="products-loading" role="status">
       <span class="products__spinner" aria-hidden="true"></span>
       <p>Cargando productos…</p>
