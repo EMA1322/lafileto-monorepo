@@ -198,7 +198,7 @@ curl -s -X DELETE -H "Authorization: Bearer $ADMIN_JWT" \
 |-----------|------|---------|-------------|
 | `page` | number | `1` | Página actual (`>=1`). |
 | `pageSize` | number | `10` | Límite por página (`5..100`). |
-| `q` | string | — | Búsqueda parcial por `name` o `description` (case-insensitive). |
+| `q` | string | — | Búsqueda parcial por `name` o `description` (case-insensitive según collation de la DB). |
 | `status` | enum | `all` | `all`, `draft`, `active`, `archived`. |
 | `categoryId` | string | — | Filtra por categoría asociada. |
 | `priceMin` | number | — | Precio base mínimo (>=0). |
