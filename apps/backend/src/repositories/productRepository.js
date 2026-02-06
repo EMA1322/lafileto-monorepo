@@ -74,14 +74,12 @@ export function buildProductWhere({ q, status, categoryId, priceMin, priceMax } 
     where.price = priceFilter;
   }
 
-  if (typeof q === 'string') {
-    const trimmed = q.trim();
-    if (trimmed) {
-      where.OR = [
-        { name: { contains: trimmed } },
-        { description: { contains: trimmed } }
-      ];
-    }
+  const normalizedQuery = typeof q === 'string' ? q.trim() : '';
+  if (normalizedQuery) {
+    where.OR = [
+      { name: { contains: normalizedQuery } },
+      { description: { contains: normalizedQuery } }
+    ];
   }
 
   return where;

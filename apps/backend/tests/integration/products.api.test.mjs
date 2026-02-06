@@ -94,6 +94,18 @@ const initialProducts = [
     categoryId: 'cat-002',
     createdAt: new Date('2024-03-10T10:00:00.000Z'),
     updatedAt: new Date('2024-03-10T10:00:00.000Z')
+  },
+  {
+    id: 'prod-007',
+    name: 'Coca Cola',
+    description: 'Bebida gaseosa clásica',
+    imageUrl: null,
+    price: 900,
+    stock: 40,
+    status: 'ACTIVE',
+    categoryId: 'cat-002',
+    createdAt: new Date('2024-03-15T10:00:00.000Z'),
+    updatedAt: new Date('2024-03-15T10:00:00.000Z')
   }
 ];
 
@@ -732,6 +744,38 @@ test('GET /products?q=pollo es case-insensitive', async () => {
   assert.equal(res.body?.ok, true);
   assert.equal(res.body?.data?.items?.length, 2);
   assert.ok(res.body.data.items.every((item) => item.name.toLowerCase().includes('pollo')));
+});
+
+test('GET /products?q=coc encuentra Coca Cola (case-insensitive)', async () => {
+  const req = {
+    validated: {
+      query: {
+        page: 1,
+        pageSize: 10,
+        q: 'cOc',
+        status: 'all',
+        categoryId: undefined,
+        priceMin: undefined,
+        priceMax: undefined,
+        orderBy: 'name',
+        orderDir: 'asc',
+        orderDirection: undefined,
+        all: false
+      }
+    }
+  };
+  const res = createResponse();
+  let error = null;
+
+  await productsController.list(req, res, (err) => {
+    error = err;
+  });
+
+  assert.equal(error, null);
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body?.ok, true);
+  assert.equal(res.body?.data?.items?.length, 1);
+  assert.equal(res.body?.data?.items?.[0]?.name, 'Coca Cola');
 });
 
 test('GET /products?all=1 retorna todos con meta normalizada', async () => {
