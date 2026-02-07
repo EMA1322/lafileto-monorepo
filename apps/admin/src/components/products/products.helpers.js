@@ -49,8 +49,8 @@ export function buildQuery(filters = {}) {
 
   if (source.status && source.status !== 'all') {
     if (source.status === 'inactive') {
-      // Se envía draft al backend; archived se presenta como inactivo en la UI.
-      params.status = 'draft';
+      // Se envía inactive al backend; resolved en draft + archived.
+      params.status = 'inactive';
     } else if (STATUS_VALUES.includes(source.status)) {
       params.status = source.status;
     }

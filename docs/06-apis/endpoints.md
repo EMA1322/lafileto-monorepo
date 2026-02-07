@@ -199,7 +199,7 @@ curl -s -X DELETE -H "Authorization: Bearer $ADMIN_JWT" \
 | `page` | number | `1` | Página actual (`>=1`). |
 | `pageSize` | number | `10` | Límite por página (`5..100`). |
 | `q` | string | — | Búsqueda parcial por `name` o `description` (case-insensitive según collation de la DB). |
-| `status` | enum | `all` | `all`, `draft`, `active`, `archived`. |
+| `status` | enum | `all` | `all`, `active`, `draft`, `archived`, `inactive` (alias UI para `draft` + `archived`). |
 | `categoryId` | string | — | Filtra por categoría asociada. |
 | `priceMin` | number | — | Precio base mínimo (>=0). |
 | `priceMax` | number | — | Precio base máximo (>= `priceMin`). |
@@ -221,6 +221,7 @@ curl -s -X DELETE -H "Authorization: Bearer $ADMIN_JWT" \
 > `imageUrl` es opcional y debe ser una URL absoluta `http`/`https` (máx. 2048 caracteres). Si no se envía, queda en `null`.
 > `offer` aparece únicamente cuando existe una oferta vigente para el producto (`discountPercent`, `startAt?`, `endAt?`, `isActive`, `finalPrice`). Si no hay oferta activa se devuelve `offer: null`.
 > `finalPrice = price * (1 - discountPercent/100)` redondeado a 2 decimales cuando la oferta está activa; caso contrario el precio expuesto es el base.
+> `status=inactive` agrupa `draft` + `archived` para la UI de Admin.
 > Filtros soportados: `q`, `status`, `categoryId`, `priceMin`, `priceMax`, `orderBy`, `orderDir`, `all`. No existen filtros `slug`, `sku`, `currency` ni `isFeatured`.
 
 ### Ejemplos

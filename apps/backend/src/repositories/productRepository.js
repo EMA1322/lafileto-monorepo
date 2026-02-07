@@ -26,6 +26,9 @@ const STATUS_MAP = new Map([
 function normalizeStatus(status) {
   if (!status || status === 'all') return undefined;
   const lookup = typeof status === 'string' ? status.trim().toLowerCase() : '';
+  if (lookup === 'inactive') {
+    return { in: ['DRAFT', 'ARCHIVED'] };
+  }
   return STATUS_MAP.get(lookup);
 }
 
