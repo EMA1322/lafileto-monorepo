@@ -237,8 +237,13 @@ productRepository.list = async function list({
   }
 
   if (typeof status === 'string' && status !== 'all') {
-    const target = status.trim().toUpperCase();
-    filtered = filtered.filter((item) => item.status === target);
+    const normalizedStatus = status.trim().toLowerCase();
+    if (normalizedStatus === 'inactive') {
+      filtered = filtered.filter((item) => item.status === 'DRAFT' || item.status === 'ARCHIVED');
+    } else {
+      const target = normalizedStatus.toUpperCase();
+      filtered = filtered.filter((item) => item.status === target);
+    }
   }
 
   if (typeof categoryId === 'string' && categoryId.trim().length > 0) {
@@ -712,6 +717,39 @@ test('GET /products con filtros combinados retorna meta coherente', async () => 
     total: 2,
     pageCount: 2
   });
+});
+
+test('GET /products?status=inactive incluye draft y archived', async () => {
+  const req = {
+    validated: {
+      query: {
+        page: 1,
+        pageSize: 10,
+        q: undefined,
+        status: 'inactive',
+        categoryId: undefined,
+        priceMin: undefined,
+        priceMax: undefined,
+        orderBy: 'name',
+        orderDir: 'asc',
+        orderDirection: undefined,
+        all: false
+      }
+    }
+  };
+  const res = createResponse();
+  let error = null;
+
+  await productsController.list(req, res, (err) => {
+    error = err;
+  });
+
+  assert.equal(error, null);
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body?.ok, true);
+  assert.equal(res.body?.data?.items?.length, 2);
+  const statuses = res.body?.data?.items?.map((item) => item.status).sort();
+  assert.deepEqual(statuses, ['archived', 'draft']);
 });
 
 test('GET /products?q=pollo es case-insensitive', async () => {

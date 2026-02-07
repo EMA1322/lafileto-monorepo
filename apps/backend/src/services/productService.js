@@ -18,7 +18,7 @@ const STATUS_INPUT_MAP = new Map([
   ['archived', 'ARCHIVED']
 ]);
 
-const ALLOWED_STATUS_FILTERS = new Set(['all', 'draft', 'active', 'archived']);
+const ALLOWED_STATUS_FILTERS = new Set(['all', 'draft', 'active', 'archived', 'inactive']);
 const ALLOWED_ORDER_FIELDS = new Set(['name', 'price', 'updatedAt']);
 
 function normalizeOrderBy(value) {

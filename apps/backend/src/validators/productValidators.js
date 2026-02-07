@@ -76,8 +76,10 @@ const statusParam = z
     if (value === undefined || value === null) return undefined;
     const normalized = String(value).trim().toLowerCase();
     if (!normalized) return undefined;
-    return STATUS_VALUES.includes(normalized) || normalized === 'all' ? normalized : undefined;
-  }, z.enum(['all', ...STATUS_VALUES]).optional())
+    return STATUS_VALUES.includes(normalized) || normalized === 'all' || normalized === 'inactive'
+      ? normalized
+      : undefined;
+  }, z.enum(['all', ...STATUS_VALUES, 'inactive']).optional())
   .transform((val) => val ?? 'all');
 
 const searchParam = z

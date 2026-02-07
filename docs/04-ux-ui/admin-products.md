@@ -3,7 +3,7 @@
 ## Resumen
 - Vista SPA en `#/products` con filtros persistidos en el hash.
 - Tabla responsiva + tarjetas móviles para listar `name`, `sku`, `price`, `stock`, `status`, `category`, `updatedAt`.
-- Acciones CRUD: crear, editar, cambiar estado (`draft`, `active`, `archived`) y eliminar definitivo con confirmación.
+- Acciones CRUD: crear, editar, cambiar estado (Activo/Inactivo, donde Inactivo agrupa `draft` + `archived`) y eliminar definitivo con confirmación.
 - RBAC UI: controles visibles/activos según `can('products', permiso)`.
 - Estados remotos: loading, empty, error, paginación con `meta.pageCount` y actualizaciones optimistas al cambiar estado.
 
@@ -15,7 +15,7 @@
 |-----------|-------------|
 | `q` | Búsqueda por nombre o SKU (debounce 300 ms). |
 | `category` | Selector de categoría (cargado desde `/categories?all=1`). |
-| `status` | Filtro de estado (`draft`, `active`, `archived`). |
+| `status` | Filtro de estado (Activo/Inactivo). |
 | `isFeatured` | Toggle para productos destacados. |
 | `orderBy` / `orderDir` | Ordenamiento por `name`, `price`, `updatedAt` asc/desc. |
 | `page` / `pageSize` | Paginación con sincronización en hash. |
@@ -48,7 +48,7 @@ Los filtros se reflejan y restauran desde la URL (`#/products?...`) para mantene
 1. **Listado + filtros:** cambiar cada filtro (`q`, `category`, `status`, `isFeatured`, `orderBy`, `orderDir`, `page`, `pageSize`) y validar petición `GET /products` con parámetros correctos y restauración al volver desde otra ruta.
 2. **Crear producto:** completar el formulario modal, enviar `POST /products` y verificar aparición inmediata en listado.
 3. **Editar:** modificar un registro existente, confirmar `PUT /products/:id` y ver cambios reflejados.
-4. **Cambiar estado:** probar `draft → active → archived`, confirmar `PATCH /products/:id/status` y respuesta optimista.
+4. **Cambiar estado:** probar `inactive → active`, confirmar `PATCH /products/:id/status` y respuesta optimista.
 5. **Eliminar:** confirmar modal, enviar `DELETE /products/:id` y validar que desaparece y que `GET /products/:id` devuelve 404.
 6. **Conflictos 409:** intentar crear/editar con slug o SKU duplicados para ver toast y marcado del campo.
 7. **RBAC:** probar cuenta sin permisos `w`, `u`, `d`, `changeStatus` y validar visibilidad/disabled.
