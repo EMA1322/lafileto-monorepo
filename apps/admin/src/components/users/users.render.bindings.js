@@ -35,6 +35,11 @@ export default function renderBindings(
   const container = root instanceof Element ? root : document.querySelector('.users');
   if (!container) return;
 
+  const abortController = new AbortController();
+  const { signal } = abortController;
+  container._usersBindingsAbort?.abort();
+  container._usersBindingsAbort = abortController;
+
   const {
     tabUsers,
     tabRoles,
@@ -67,24 +72,24 @@ export default function renderBindings(
     } else if (requested === 'users') {
       switchTab('users');
     }
-  });
+  }, { signal });
 
   tabUsers?.addEventListener('click', () => {
     switchTab('users');
     applyRBAC(container);
-  });
+  }, { signal });
 
   tabRoles?.addEventListener('click', () => {
     if (!state.rbac.isAdmin) return;
     switchTab('roles');
     applyRBAC(container);
-  });
+  }, { signal });
 
   btnNew?.addEventListener('click', () => {
     const canWrite = guardAction('write', { roleId: state.rbac.roleId, snackWarn });
     if (!canWrite) return;
     openCreateUserModal();
-  });
+  }, { signal });
 
   btnRoleNew?.addEventListener('click', () => {
     if (!state.rbac.isAdmin) {
@@ -92,7 +97,7 @@ export default function renderBindings(
       return;
     }
     openRoleFormModal({ mode: 'create' });
-  });
+  }, { signal });
 
   const notifyFiltersChange = () => {
     if (typeof onFiltersChange === 'function') onFiltersChange();
@@ -103,46 +108,46 @@ export default function renderBindings(
     setPage(1);
     notifyFiltersChange();
     debouncedReload();
-  });
+  }, { signal });
 
   orderBySelect?.addEventListener('change', (event) => {
     setFilters({ orderBy: event.target.value });
     setPage(1);
     notifyFiltersChange();
     void reloadUsers({ onUsersStatus: renderUsersStatus, onUsersTable: renderUsersTable });
-  });
+  }, { signal });
 
   orderDirSelect?.addEventListener('change', (event) => {
     setFilters({ orderDir: event.target.value });
     setPage(1);
     notifyFiltersChange();
     void reloadUsers({ onUsersStatus: renderUsersStatus, onUsersTable: renderUsersTable });
-  });
+  }, { signal });
 
   pageSizeSelect?.addEventListener('change', (event) => {
     setPageSize(event.target.value);
     setPage(1);
     notifyFiltersChange();
     void reloadUsers({ onUsersStatus: renderUsersStatus, onUsersTable: renderUsersTable });
-  });
+  }, { signal });
 
   clearFiltersButton?.addEventListener('click', (event) => {
     event.preventDefault();
     resetFilters();
     notifyFiltersChange();
     void reloadUsers({ onUsersStatus: renderUsersStatus, onUsersTable: renderUsersTable });
-  });
+  }, { signal });
 
   retryButton?.addEventListener('click', () => {
     void reloadUsers({ onUsersStatus: renderUsersStatus, onUsersTable: renderUsersTable });
-  });
+  }, { signal });
 
   emptyClearButton?.addEventListener('click', (event) => {
     event.preventDefault();
     resetFilters();
     notifyFiltersChange();
     void reloadUsers({ onUsersStatus: renderUsersStatus, onUsersTable: renderUsersTable });
-  });
+  }, { signal });
 
   const paginationHandler = (event) => {
     const button = event.target.closest('button[data-page]');
@@ -154,11 +159,11 @@ export default function renderBindings(
     void reloadUsers({ onUsersStatus: renderUsersStatus, onUsersTable: renderUsersTable });
   };
 
-  pagination?.addEventListener('click', paginationHandler);
-  pageFirst?.addEventListener('click', paginationHandler);
-  pagePrev?.addEventListener('click', paginationHandler);
-  pageNext?.addEventListener('click', paginationHandler);
-  pageLast?.addEventListener('click', paginationHandler);
+  pagination?.addEventListener('click', paginationHandler, { signal });
+  pageFirst?.addEventListener('click', paginationHandler, { signal });
+  pagePrev?.addEventListener('click', paginationHandler, { signal });
+  pageNext?.addEventListener('click', paginationHandler, { signal });
+  pageLast?.addEventListener('click', paginationHandler, { signal });
 
   tbodyRoles?.addEventListener('click', async (ev) => {
     const btn = ev.target.closest('[data-action]');
@@ -196,7 +201,7 @@ export default function renderBindings(
         renderRolesStatus('No se pudo abrir la matriz de permisos.', 'error', container);
       }
     }
-  });
+  }, { signal });
 
   tbodyUsers?.addEventListener('click', async (ev) => {
     const btn = ev.target.closest('[data-action]');
@@ -249,5 +254,5 @@ export default function renderBindings(
         btn.disabled = false;
       }
     }
-  });
+  }, { signal });
 }

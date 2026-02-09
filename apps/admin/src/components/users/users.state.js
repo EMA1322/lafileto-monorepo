@@ -109,6 +109,8 @@ export const state = {
   filters: sanitizeFilters(defaultFilters),
 };
 
+let usersRequestSeq = 0;
+
 Object.defineProperty(state, 'users', {
   enumerable: true,
   configurable: false,
@@ -318,7 +320,8 @@ function mapUserFromApi(user) {
   return normalized;
 }
 
-export async function fetchUsers() {
+export async function fetchUsers({ requestId } = {}) {
+  const activeRequestId = requestId ?? ++usersRequestSeq;
   state.ui.loadingUsers = true;
   state.ui.errorUsers = null;
 
@@ -333,6 +336,7 @@ export async function fetchUsers() {
   }
 
   const res = await apiFetch('/users', { params, showErrorToast: false });
+  if (activeRequestId !== usersRequestSeq) return;
   const { items, meta } = normalizeUsersResponse(res?.data || {});
 
   const mapped = items
@@ -348,7 +352,9 @@ export async function fetchUsers() {
     page: usersState.meta.page,
     pageSize: usersState.meta.pageSize,
   });
-  state.ui.loadingUsers = false;
+  if (activeRequestId === usersRequestSeq) {
+    state.ui.loadingUsers = false;
+  }
 }
 
 function upsertUserInState(user) {
@@ -536,6 +542,7 @@ export async function fetchData({
   onUsersTable,
   onRolesView,
 } = {}) {
+  const requestId = ++usersRequestSeq;
   const notifyUsersStatus = onUsersStatus || (() => {});
   const notifyRolesStatus = onRolesStatus || (() => {});
   const renderUsersTable = onUsersTable || (() => {});
@@ -555,15 +562,19 @@ export async function fetchData({
   state.session.userId = getCurrentUserIdFromSession();
 
   try {
-    await fetchUsers();
-    renderUsersTable();
-    notifyUsersStatus('');
+    await fetchUsers({ requestId });
+    if (requestId === usersRequestSeq) {
+      renderUsersTable();
+      notifyUsersStatus('');
+    }
   } catch (err) {
-    state.ui.loadingUsers = false;
-    state.ui.errorUsers = 'No se pudieron cargar los usuarios.';
-    notifyUsersStatus(state.ui.errorUsers, 'error');
-    renderUsersTable();
-    snackErr(mapErrorToMessage(err, state.ui.errorUsers), err?.code);
+    if (requestId === usersRequestSeq) {
+      state.ui.loadingUsers = false;
+      state.ui.errorUsers = 'No se pudieron cargar los usuarios.';
+      notifyUsersStatus(state.ui.errorUsers, 'error');
+      renderUsersTable();
+      snackErr(mapErrorToMessage(err, state.ui.errorUsers), err?.code);
+    }
   }
 
   try {
@@ -579,6 +590,7 @@ export async function fetchData({
 }
 
 export async function reloadUsers({ onUsersStatus, onUsersTable } = {}) {
+  const requestId = ++usersRequestSeq;
   const notifyStatus = onUsersStatus || (() => {});
   const renderTable = onUsersTable || (() => {});
 
@@ -588,10 +600,12 @@ export async function reloadUsers({ onUsersStatus, onUsersTable } = {}) {
   renderTable();
 
   try {
-    await fetchUsers();
+    await fetchUsers({ requestId });
+    if (requestId !== usersRequestSeq) return;
     renderTable();
     notifyStatus('');
   } catch (err) {
+    if (requestId !== usersRequestSeq) return;
     state.ui.loadingUsers = false;
     state.ui.errorUsers = 'No se pudieron cargar los usuarios.';
     notifyStatus(state.ui.errorUsers, 'error');

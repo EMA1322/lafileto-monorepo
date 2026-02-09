@@ -2,7 +2,6 @@ import { state, DEFAULT_PAGE_SIZE } from './users.state.js';
 import { escapeHTML, createButtonTemplate } from './users.helpers.js';
 
 import { renderUsersStatus } from './users.render.status.js';
-import { els } from './users.dom.js';
 import { applyRBAC } from '@/utils/rbac.js';
 import { mountIcons } from '@/utils/icons.js';
 
@@ -135,12 +134,11 @@ function renderPagination(meta, refs) {
   }
 }
 
-export function renderUsersTable(root = document.querySelector('.users')) {
+const MAX_RENDER_RETRIES = 5;
+
+export function renderUsersTable(root = document.querySelector('.users'), attempt = 0) {
   const container = root instanceof Element ? root : document.querySelector('.users');
   if (!container) return;
-
-  const { tbodyUsers } = els(container);
-  if (!tbodyUsers) return;
 
   const refs = getRefs(container);
 
@@ -178,21 +176,30 @@ export function renderUsersTable(root = document.querySelector('.users')) {
     content.setAttribute('aria-busy', isLoading ? 'true' : 'false');
   }
 
-  if (refs.loadingState) refs.loadingState.hidden = true;
-  if (refs.errorState) refs.errorState.hidden = true;
-  if (refs.emptyState) refs.emptyState.hidden = true;
-  if (refs.tableWrapper) refs.tableWrapper.hidden = true;
-  if (refs.footer) refs.footer.hidden = true;
+  const setViewStatus = (status) => {
+    if (refs.loadingState) refs.loadingState.hidden = true;
+    if (refs.errorState) refs.errorState.hidden = true;
+    if (refs.emptyState) refs.emptyState.hidden = true;
+    if (refs.tableWrapper) refs.tableWrapper.hidden = true;
+    if (refs.footer) refs.footer.hidden = true;
+
+    if (status === 'loading' && refs.loadingState) refs.loadingState.hidden = false;
+    if (status === 'error' && refs.errorState) refs.errorState.hidden = false;
+    if (status === 'empty' && refs.emptyState) refs.emptyState.hidden = false;
+    if (status === 'success') {
+      if (refs.tableWrapper) refs.tableWrapper.hidden = false;
+      if (refs.footer) refs.footer.hidden = false;
+    }
+  };
 
   if (isLoading) {
-    if (refs.loadingState) refs.loadingState.hidden = false;
+    setViewStatus('loading');
   } else if (isError) {
-    if (refs.errorState) refs.errorState.hidden = false;
+    setViewStatus('error');
   } else if (isEmpty) {
-    if (refs.emptyState) refs.emptyState.hidden = false;
+    setViewStatus('empty');
   } else if (hasData) {
-    if (refs.tableWrapper) refs.tableWrapper.hidden = false;
-    if (refs.footer) refs.footer.hidden = false;
+    setViewStatus('success');
   }
 
   if (refs.errorMessage) {
@@ -211,8 +218,17 @@ export function renderUsersTable(root = document.querySelector('.users')) {
 
   renderFilters(refs);
 
+  if (!refs.tableBody) {
+    if (attempt < MAX_RENDER_RETRIES) {
+      setTimeout(() => {
+        renderUsersTable(container, attempt + 1);
+      }, 50);
+    }
+    return;
+  }
+
   if (hasData) {
-    tbodyUsers.innerHTML = users
+    refs.tableBody.innerHTML = users
       .filter(Boolean)
       .map((user) => {
         const phoneMissing = isMissingPhone(user.phone);
@@ -242,7 +258,7 @@ export function renderUsersTable(root = document.querySelector('.users')) {
       })
       .join('');
   } else {
-    tbodyUsers.innerHTML = '';
+    refs.tableBody.innerHTML = '';
   }
 
   const meta = state.users?.meta || { page: 1, pageSize: DEFAULT_PAGE_SIZE, pageCount: 1, total: 0 };

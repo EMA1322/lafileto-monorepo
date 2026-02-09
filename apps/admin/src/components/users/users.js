@@ -94,13 +94,7 @@ export async function initUsers(attempt = 0) {
     return;
   }
 
-  if (container.dataset.usersInit === 'true') {
-    renderUsersTable(container);
-    applyRBAC(container);
-    mountIcons(container);
-    return;
-  }
-
+  const alreadyInitialized = container.dataset.usersInit === 'true';
   container.dataset.usersInit = 'true';
 
   const initialFilters = parseFiltersFromHash(typeof window !== 'undefined' ? window.location.hash : '');
@@ -117,12 +111,16 @@ export async function initUsers(attempt = 0) {
   container.dataset.rbacAlias = MODULE_KEY_ALIAS;
   container.dataset.rbacAdminRoles = ADMIN_ROLE_IDS.join(',');
 
-  await fetchData({
-    onUsersStatus: renderUsersStatus,
-    onRolesStatus: renderRolesStatus,
-    onUsersTable: renderUsersTable,
-    onRolesView: renderRolesView,
-  });
+  if (!alreadyInitialized) {
+    await fetchData({
+      onUsersStatus: renderUsersStatus,
+      onRolesStatus: renderRolesStatus,
+      onUsersTable: renderUsersTable,
+      onRolesView: renderRolesView,
+    });
+  } else {
+    renderUsersTable(container);
+  }
 
   container.dataset.rbacModule = MODULE_KEY;
   container.dataset.rbacAlias = MODULE_KEY_ALIAS;
