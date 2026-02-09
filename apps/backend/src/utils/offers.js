@@ -1,15 +1,4 @@
-// Utilidades para ofertas (cálculo de vigencia y precios)
-
-function toDate(value) {
-  if (value instanceof Date) {
-    return Number.isNaN(value.getTime()) ? null : value;
-  }
-  if (typeof value === 'string' || typeof value === 'number') {
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? null : date;
-  }
-  return null;
-}
+// Utilidades para ofertas (cálculo de precios)
 
 function normalizePrice(value) {
   if (typeof value === 'number') {
@@ -35,23 +24,6 @@ export function normalizeDiscountPercent(value) {
   return rounded;
 }
 
-export function isOfferActive(offer, referenceDate = new Date()) {
-  if (!offer) return false;
-  const now = referenceDate instanceof Date && !Number.isNaN(referenceDate.getTime())
-    ? referenceDate
-    : new Date();
-  const start = toDate(offer.startAt);
-  const end = toDate(offer.endAt);
-
-  if (start && now < start) {
-    return false;
-  }
-  if (end && now > end) {
-    return false;
-  }
-  return true;
-}
-
 export function applyDiscount(price, discountPct) {
   const normalizedPrice = normalizePrice(price);
   const pct = Number.isFinite(discountPct) ? discountPct : Number(discountPct);
@@ -71,16 +43,12 @@ export function buildOfferSummary(offer, price, { now } = {}) {
   if (!offer || !discountPercent) {
     return null;
   }
-  const reference = now instanceof Date ? now : new Date();
-  const isActiveNow = isOfferActive(offer, reference);
   const finalPrice = applyDiscount(basePrice, discountPercent);
 
   return {
     id: offer.id ?? undefined,
     discountPercent,
-    startAt: offer.startAt ?? undefined,
-    endAt: offer.endAt ?? undefined,
-    isActive: isActiveNow,
+    isActive: true,
     finalPrice
   };
 }

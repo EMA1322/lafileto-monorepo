@@ -37,8 +37,6 @@ function testProductMapping() {
   assert.ok(mapped.offer);
   assert.equal(mapped.offer.discountPercent, 25);
   assert.equal(mapped.offer.finalPrice, 750);
-  assert.equal(mapped.offer.startsAt, undefined);
-  assert.equal(mapped.offer.endsAt, undefined);
   assert.ok(!('slug' in mapped));
   assert.ok(!('sku' in mapped));
   assert.ok(!('currency' in mapped));

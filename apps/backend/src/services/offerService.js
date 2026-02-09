@@ -28,22 +28,6 @@ function isUniqueConstraintError(err) {
   return err instanceof PrismaClientKnownRequestError && err.code === 'P2002';
 }
 
-function parseDateInput(value) {
-  if (value === undefined) return undefined;
-  if (value === null || value === '') return null;
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return 'invalid';
-  return parsed;
-}
-
-function validateDateRange(startAt, endAt) {
-  if (startAt instanceof Date && endAt instanceof Date && startAt > endAt) {
-    throw createError('VALIDATION_ERROR', 'La fecha de inicio debe ser anterior a la de fin.', {
-      fields: [{ path: 'startAt', message: 'La fecha de inicio debe ser anterior a la de fin.' }]
-    });
-  }
-}
-
 async function ensureProductExists(productId) {
   const product = await productRepository.findById(productId);
   if (!product) {
@@ -70,8 +54,6 @@ function sanitizeOffer(row, { now, productFallback } = {}) {
     id: row.id,
     productId: row.productId,
     discountPercent: discountPercent ?? null,
-    startAt: row.startAt ?? null,
-    endAt: row.endAt ?? null,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     isActive: summary?.isActive ?? false,
@@ -163,8 +145,6 @@ export const offerService = {
   async createOffer(payload) {
     const productId = typeof payload.productId === 'string' ? payload.productId.trim() : '';
     const discountPercent = normalizeDiscountPercent(payload.discountPercent ?? payload.discountPct);
-    const startAtInput = parseDateInput(payload.startAt);
-    const endAtInput = parseDateInput(payload.endAt);
 
     if (!productId || !discountPercent) {
       throw createError('VALIDATION_ERROR', 'Datos incompletos para crear la oferta.', {
@@ -175,28 +155,12 @@ export const offerService = {
       });
     }
 
-    if (startAtInput === 'invalid') {
-      throw createError('VALIDATION_ERROR', 'Fecha de inicio inválida.', {
-        fields: [{ path: 'startAt', message: 'Usá un formato de fecha válido.' }]
-      });
-    }
-
-    if (endAtInput === 'invalid') {
-      throw createError('VALIDATION_ERROR', 'Fecha de fin inválida.', {
-        fields: [{ path: 'endAt', message: 'Usá un formato de fecha válido.' }]
-      });
-    }
-
-    validateDateRange(startAtInput ?? null, endAtInput ?? null);
-
     const product = await ensureProductExists(productId);
 
     try {
       const created = await offerRepository.create({
         productId,
-        discountPct: discountPercent,
-        startAt: startAtInput ?? null,
-        endAt: endAtInput ?? null
+        discountPct: discountPercent
       });
       return sanitizeOffer(created, { now: new Date(), productFallback: product });
     } catch (err) {
@@ -233,30 +197,6 @@ export const offerService = {
       }
       data.discountPct = discountPercent;
     }
-
-    const startAtInput = parseDateInput(payload.startAt);
-    if (startAtInput !== undefined) {
-      if (startAtInput === 'invalid') {
-        throw createError('VALIDATION_ERROR', 'Fecha de inicio inválida.', {
-          fields: [{ path: 'startAt', message: 'Usá un formato de fecha válido.' }]
-        });
-      }
-      data.startAt = startAtInput;
-    }
-
-    const endAtInput = parseDateInput(payload.endAt);
-    if (endAtInput !== undefined) {
-      if (endAtInput === 'invalid') {
-        throw createError('VALIDATION_ERROR', 'Fecha de fin inválida.', {
-          fields: [{ path: 'endAt', message: 'Usá un formato de fecha válido.' }]
-        });
-      }
-      data.endAt = endAtInput;
-    }
-
-    const effectiveStart = data.startAt === undefined ? existing.startAt : data.startAt;
-    const effectiveEnd = data.endAt === undefined ? existing.endAt : data.endAt;
-    validateDateRange(effectiveStart, effectiveEnd);
 
     if (Object.keys(data).length === 0) {
       return sanitizeOffer(existing, { now: new Date() });

@@ -115,37 +115,27 @@ const initialOffers = [
   {
     id: 'offer-001',
     productId: 'prod-001',
-    discountPct: 10,
-    startAt: new Date('2024-01-01T00:00:00.000Z'),
-    endAt: new Date('2026-01-01T00:00:00.000Z')
+    discountPct: 10
   },
   {
     id: 'offer-002',
     productId: 'prod-002',
-    discountPct: 20,
-    startAt: new Date('2024-02-01T00:00:00.000Z'),
-    endAt: null
+    discountPct: 20
   },
   {
     id: 'offer-003',
     productId: 'prod-003',
-    discountPct: 15,
-    startAt: null,
-    endAt: new Date('2026-12-31T23:59:59.000Z')
+    discountPct: 15
   },
   {
     id: 'offer-004',
     productId: 'prod-004',
-    discountPct: 5,
-    startAt: null,
-    endAt: null
+    discountPct: 5
   },
   {
     id: 'offer-005',
     productId: 'prod-005',
-    discountPct: 30,
-    startAt: new Date('2035-01-01T00:00:00.000Z'),
-    endAt: null
+    discountPct: 30
   }
 ];
 
@@ -170,8 +160,6 @@ function resetProducts() {
 function cloneOffer(offer) {
   return {
     ...offer,
-    startAt: offer.startAt ? new Date(offer.startAt) : null,
-    endAt: offer.endAt ? new Date(offer.endAt) : null,
     createdAt: offer.createdAt ? new Date(offer.createdAt) : undefined,
     updatedAt: offer.updatedAt ? new Date(offer.updatedAt) : undefined
   };
@@ -331,16 +319,6 @@ productRepository.deleteById = async (id) => {
   return { id };
 };
 
-function isOfferActiveStub(offer, reference = new Date()) {
-  if (!offer) return false;
-  const now = reference instanceof Date && !Number.isNaN(reference.getTime()) ? reference : new Date();
-  const start = offer.startAt ? new Date(offer.startAt) : null;
-  const end = offer.endAt ? new Date(offer.endAt) : null;
-  if (start && now < start) return false;
-  if (end && now > end) return false;
-  return true;
-}
-
 function sortOfferEntries(entries, orderBy = 'name', orderDirection = 'asc') {
   const sorted = [...entries];
   sorted.sort((a, b) => {
@@ -378,16 +356,14 @@ offerRepository.findActiveByProductId = async (productId, { now } = {}) => {
   if (!productId) return null;
   const offer = findOfferByProductId(productId);
   if (!offer) return null;
-  const reference = now instanceof Date ? now : new Date();
-  return isOfferActiveStub(offer, reference) ? cloneOffer(offer) : null;
+  return cloneOffer(offer);
 };
 
 offerRepository.findActiveByProductIds = async (productIds = [], { now } = {}) => {
   const map = new Map();
-  const reference = now instanceof Date ? now : new Date();
   for (const id of productIds) {
     const offer = findOfferByProductId(id);
-    if (offer && isOfferActiveStub(offer, reference)) {
+    if (offer) {
       map.set(id, cloneOffer(offer));
     }
   }
@@ -408,11 +384,9 @@ offerRepository.list = async ({
   now,
   activeOnly = false
 } = {}) => {
-  const reference = now instanceof Date ? now : new Date();
   const entries = [];
 
   for (const offer of offers.values()) {
-    if (activeOnly && !isOfferActiveStub(offer, reference)) continue;
     const product = products.find((item) => item.id === offer.productId);
     if (!product) continue;
     entries.push({ offer: cloneOffer(offer), product: cloneProduct(product) });
@@ -483,8 +457,6 @@ offerRepository.create = async (data) => {
     id: data.id || `offer-${String(offers.size + 1).padStart(3, '0')}`,
     productId: data.productId,
     discountPct: data.discountPct,
-    startAt: data.startAt ?? null,
-    endAt: data.endAt ?? null,
     createdAt: now,
     updatedAt: now
   };
@@ -504,8 +476,6 @@ offerRepository.update = async (id, data) => {
     ...existing,
     ...data,
     discountPct: data.discountPct === undefined ? existing.discountPct : data.discountPct,
-    startAt: data.startAt === undefined ? existing.startAt : data.startAt,
-    endAt: data.endAt === undefined ? existing.endAt : data.endAt,
     updatedAt: new Date()
   };
   offers.set(id, updated);
@@ -853,7 +823,7 @@ test('GET /products?all=1 retorna todos con meta normalizada', async () => {
   });
 });
 
-test('GET /products incluye resumen de oferta con finalPrice según vigencia', async () => {
+test('GET /products incluye resumen de oferta con finalPrice', async () => {
   const req = {
     validated: {
       query: {
@@ -904,7 +874,8 @@ test('GET /products incluye resumen de oferta con finalPrice según vigencia', a
   assert.equal(pizza.offer?.finalPrice, 3135);
 
   const ensalada = map.get('prod-005');
-  assert.equal(ensalada.offer, null);
+  assert.equal(ensalada.offer?.isActive, true);
+  assert.equal(ensalada.offer?.finalPrice, 1050);
 
   const lasana = map.get('prod-006');
   assert.equal(lasana.offer, null);
@@ -946,7 +917,6 @@ test('GET /offers devuelve ofertas con nombres normalizados', async () => {
   assert.ok(items.every((item) => typeof item.discountPercent === 'number'));
 
   const ids = items.map((item) => item.productId);
-  assert.ok(!ids.includes('prod-005'));
   assert.ok(!ids.includes('prod-006'));
 
   const hornoOffer = items.find((item) => item.productId === 'prod-001');
@@ -961,9 +931,7 @@ test('POST /offers crea oferta y se refleja en productos', async () => {
     validated: {
       body: {
         productId: 'prod-006',
-        discountPercent: 25,
-        startAt: new Date('2024-01-01T00:00:00.000Z'),
-        endAt: new Date('2030-01-01T00:00:00.000Z')
+        discountPercent: 25
       }
     }
   };
@@ -993,9 +961,7 @@ test('POST /offers valida rango de descuento (inferior)', async () => {
     validated: {
       body: {
         productId: 'prod-006',
-        discountPercent: 0,
-        startAt: new Date('2024-01-01T00:00:00.000Z'),
-        endAt: new Date('2030-01-01T00:00:00.000Z')
+        discountPercent: 0
       }
     }
   };
@@ -1010,14 +976,12 @@ test('POST /offers valida rango de descuento (inferior)', async () => {
   assert.equal(error.code, 'VALIDATION_ERROR');
 });
 
-test('PUT /offers/:id actualiza porcentaje y fechas', async () => {
+test('PUT /offers/:id actualiza porcentaje', async () => {
   const req = {
     validated: {
       params: { id: 'offer-003' },
       body: {
-        discountPercent: 40,
-        startAt: new Date('2024-01-01T00:00:00.000Z'),
-        endAt: new Date('2030-12-31T23:59:59.000Z')
+        discountPercent: 40
       }
     }
   };
