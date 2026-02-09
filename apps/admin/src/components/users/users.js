@@ -71,6 +71,7 @@ function handleHashChange(container) {
   if (skipHashSync) return;
   const next = parseFiltersFromHash(window.location.hash);
   if (!next) return;
+  lastHashValue = window.location.hash;
   replaceFilters(next);
   renderUsersTable(container);
   void reloadUsers({
@@ -92,6 +93,15 @@ export async function initUsers(attempt = 0) {
     toast.error('No se encontró la vista de usuarios.', { duration: 4000 });
     return;
   }
+
+  if (container.dataset.usersInit === 'true') {
+    renderUsersTable(container);
+    applyRBAC(container);
+    mountIcons(container);
+    return;
+  }
+
+  container.dataset.usersInit = 'true';
 
   const initialFilters = parseFiltersFromHash(typeof window !== 'undefined' ? window.location.hash : '');
   if (initialFilters) {
@@ -127,6 +137,9 @@ export async function initUsers(attempt = 0) {
   mountIcons(container);
 
   if (typeof window !== 'undefined') {
+    if (hashChangeHandler) {
+      window.removeEventListener('hashchange', hashChangeHandler);
+    }
     hashChangeHandler = () => handleHashChange(container);
     window.addEventListener('hashchange', hashChangeHandler);
     syncHashWithState();

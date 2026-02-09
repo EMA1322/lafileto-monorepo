@@ -548,6 +548,7 @@ export async function fetchData({
 
   notifyUsersStatus('Cargando usuarios…');
   notifyRolesStatus('Cargando roles…');
+  renderUsersTable();
 
   state.rbac.roleId = getCurrentRoleIdFromSession();
   state.rbac.isAdmin = computeIsAdmin({ roleId: state.rbac.roleId });
@@ -561,6 +562,7 @@ export async function fetchData({
     state.ui.loadingUsers = false;
     state.ui.errorUsers = 'No se pudieron cargar los usuarios.';
     notifyUsersStatus(state.ui.errorUsers, 'error');
+    renderUsersTable();
     snackErr(mapErrorToMessage(err, state.ui.errorUsers), err?.code);
   }
 
@@ -583,6 +585,7 @@ export async function reloadUsers({ onUsersStatus, onUsersTable } = {}) {
   state.ui.loadingUsers = true;
   state.ui.errorUsers = null;
   notifyStatus('Cargando usuarios…');
+  renderTable();
 
   try {
     await fetchUsers();
@@ -592,6 +595,7 @@ export async function reloadUsers({ onUsersStatus, onUsersTable } = {}) {
     state.ui.loadingUsers = false;
     state.ui.errorUsers = 'No se pudieron cargar los usuarios.';
     notifyStatus(state.ui.errorUsers, 'error');
+    renderTable();
     snackErr(mapErrorToMessage(err, state.ui.errorUsers), err?.code);
   }
 }

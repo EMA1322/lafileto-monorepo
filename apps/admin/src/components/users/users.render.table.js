@@ -21,6 +21,7 @@ function getRefs(container) {
     emptyState: container.querySelector('#users-empty'),
     tableWrapper: container.querySelector('#users-table-wrapper'),
     tableBody: container.querySelector('#users-tbody'),
+    footer: container.querySelector('#users-footer'),
     meta: container.querySelector('#users-meta'),
     pagination: container.querySelector('#users-page-list'),
     pageFirst: container.querySelector('#users-page-first'),
@@ -181,6 +182,7 @@ export function renderUsersTable(root = document.querySelector('.users')) {
   if (refs.errorState) refs.errorState.hidden = true;
   if (refs.emptyState) refs.emptyState.hidden = true;
   if (refs.tableWrapper) refs.tableWrapper.hidden = true;
+  if (refs.footer) refs.footer.hidden = true;
 
   if (isLoading) {
     if (refs.loadingState) refs.loadingState.hidden = false;
@@ -190,6 +192,7 @@ export function renderUsersTable(root = document.querySelector('.users')) {
     if (refs.emptyState) refs.emptyState.hidden = false;
   } else if (hasData) {
     if (refs.tableWrapper) refs.tableWrapper.hidden = false;
+    if (refs.footer) refs.footer.hidden = false;
   }
 
   if (refs.errorMessage) {

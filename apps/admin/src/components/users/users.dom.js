@@ -27,6 +27,7 @@ export function els(root = document) {
     tableWrapper: scope.querySelector('#users-table-wrapper'),
     tableUsers: scope.querySelector('#users-table'),
     tbodyUsers: scope.querySelector('#users-tbody'),
+    footer: scope.querySelector('#users-footer'),
     meta: scope.querySelector('#users-meta'),
     pagination: scope.querySelector('#users-page-list'),
     pageFirst: scope.querySelector('#users-page-first'),

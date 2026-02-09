@@ -119,6 +119,55 @@ describe('admin users module', () => {
     expect(pageButtons.length).toBeGreaterThan(0);
   });
 
+  it('renderUsersTable oculta estados en éxito', () => {
+    state.users = [
+      {
+        id: 'user-3',
+        fullName: 'Katherine Johnson',
+        email: 'kj@example.com',
+        phone: '33333333',
+        roleId: 'role-1',
+        status: 'active',
+      },
+    ];
+
+    renderUsersTable();
+
+    expect(document.querySelector('#users-loading')?.hasAttribute('hidden')).toBe(true);
+    expect(document.querySelector('#users-error')?.hasAttribute('hidden')).toBe(true);
+    expect(document.querySelector('#users-empty')?.hasAttribute('hidden')).toBe(true);
+    expect(document.querySelector('#users-table-wrapper')?.hasAttribute('hidden')).toBe(false);
+    expect(document.querySelector('#users-footer')?.hasAttribute('hidden')).toBe(false);
+  });
+
+  it('renderUsersTable muestra solo error si falla', () => {
+    state.ui.loadingUsers = false;
+    state.ui.errorUsers = 'No se pudieron cargar los usuarios.';
+    state.users = [];
+
+    renderUsersTable();
+
+    expect(document.querySelector('#users-loading')?.hasAttribute('hidden')).toBe(true);
+    expect(document.querySelector('#users-error')?.hasAttribute('hidden')).toBe(false);
+    expect(document.querySelector('#users-empty')?.hasAttribute('hidden')).toBe(true);
+    expect(document.querySelector('#users-table-wrapper')?.hasAttribute('hidden')).toBe(true);
+    expect(document.querySelector('#users-footer')?.hasAttribute('hidden')).toBe(true);
+  });
+
+  it('renderUsersTable muestra solo vacío si no hay datos', () => {
+    state.ui.loadingUsers = false;
+    state.ui.errorUsers = null;
+    state.users = [];
+
+    renderUsersTable();
+
+    expect(document.querySelector('#users-loading')?.hasAttribute('hidden')).toBe(true);
+    expect(document.querySelector('#users-error')?.hasAttribute('hidden')).toBe(true);
+    expect(document.querySelector('#users-empty')?.hasAttribute('hidden')).toBe(false);
+    expect(document.querySelector('#users-table-wrapper')?.hasAttribute('hidden')).toBe(true);
+    expect(document.querySelector('#users-footer')?.hasAttribute('hidden')).toBe(true);
+  });
+
   it('buildRolePermsMap normaliza estructura mixta', () => {
     const seed = {
       role_permissions: {
