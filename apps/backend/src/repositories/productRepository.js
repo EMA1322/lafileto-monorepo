@@ -1,5 +1,4 @@
 // Acceso a productos (Prisma directo)
-import { Prisma } from '@prisma/client';
 import { prisma } from '../config/prisma.js';
 
 export const productBaseSelect = {
@@ -33,11 +32,8 @@ function normalizeStatus(status) {
 }
 
 function toDecimal(value) {
-  if (value instanceof Prisma.Decimal) {
-    return value;
-  }
   if (typeof value === 'string' || typeof value === 'number') {
-    return new Prisma.Decimal(value);
+    return value;
   }
   return undefined;
 }
@@ -94,6 +90,26 @@ export const productRepository = {
       where: { id },
       select: productBaseSelect
     }),
+
+  async countByCategoryIds(categoryIds = []) {
+    if (!Array.isArray(categoryIds) || categoryIds.length === 0) {
+      return new Map();
+    }
+
+    const rows = await prisma.product.groupBy({
+      by: ['categoryId'],
+      where: {
+        categoryId: {
+          in: categoryIds
+        }
+      },
+      _count: {
+        _all: true
+      }
+    });
+
+    return new Map(rows.map((row) => [row.categoryId, row._count?._all ?? 0]));
+  },
 
   async list({
     page,

@@ -5,9 +5,11 @@ process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-secret';
 
 const { categoryRepository } = await import('../../src/repositories/categoryRepository.js');
+const { productRepository } = await import('../../src/repositories/productRepository.js');
 const { categoryController } = await import('../../src/controllers/categoryController.js');
 const { errorHandler } = await import('../../src/middlewares/errorHandler.js');
 const originalRepository = { ...categoryRepository };
+const originalProductRepository = { ...productRepository };
 
 const initialSnapshot = [
   {
@@ -37,6 +39,7 @@ const initialSnapshot = [
 ];
 
 let categories = [];
+let productCounts = new Map();
 
 function cloneRow(row) {
   return {
@@ -52,6 +55,11 @@ function resetCategories() {
     createdAt: new Date(item.createdAt),
     updatedAt: new Date(item.updatedAt)
   }));
+  productCounts = new Map([
+    ['cat-001', 2],
+    ['cat-002', 0],
+    ['cat-003', 5]
+  ]);
 }
 
 resetCategories();
@@ -153,12 +161,21 @@ categoryRepository.deleteById = async (id) => {
   return { id };
 };
 
+productRepository.countByCategoryIds = async (categoryIds = []) => {
+  const map = new Map();
+  categoryIds.forEach((id) => {
+    map.set(id, productCounts.get(id) ?? 0);
+  });
+  return map;
+};
+
 test.beforeEach(() => {
   resetCategories();
 });
 
 test.after(() => {
   Object.assign(categoryRepository, originalRepository);
+  Object.assign(productRepository, originalProductRepository);
 });
 
 function createResponse() {
@@ -203,6 +220,11 @@ test('GET /categories?status=all → incluye meta', async () => {
   assert.ok(res.body?.data?.meta);
   assert.equal(res.body.data.meta.total, initialSnapshot.length);
   assert.equal(res.body.data.meta.pageSize, 5);
+  const counts = new Map(
+    res.body.data.items.map((item) => [item.id, item.productCount])
+  );
+  assert.equal(counts.get('cat-001'), 2);
+  assert.equal(counts.get('cat-003'), 5);
 });
 
 test('GET /categories?q=... → búsqueda case-insensitive', async () => {
@@ -328,4 +350,25 @@ test('GET /categories/:id inexistente → 404', async () => {
   assert.equal(errorRes.statusCode, 404);
   assert.equal(errorRes.body?.ok, false);
   assert.equal(errorRes.body?.error?.code, 'CATEGORY_NOT_FOUND');
+});
+
+test('GET /categories/:id → incluye productCount', async () => {
+  const req = {
+    validated: {
+      params: {
+        id: 'cat-003'
+      }
+    }
+  };
+  const res = createResponse();
+  let error = null;
+  await categoryController.show(req, res, (err) => {
+    error = err;
+  });
+
+  assert.equal(error, null);
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body?.ok, true);
+  assert.equal(res.body?.data?.id, 'cat-003');
+  assert.equal(res.body?.data?.productCount, 5);
 });

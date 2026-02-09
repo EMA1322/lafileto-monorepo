@@ -75,7 +75,7 @@ function renderRow(item) {
     <tr data-id="${idAttr}">
       <td class="categories__cell-name">${name}</td>
       <td class="categories__cell-image">${imageCell}</td>
-      <td class="categories__cell-count" title="Se activará cuando Products backend exponga conteo">${productLabel}</td>
+      <td class="categories__cell-count">${productLabel}</td>
       <td class="categories__cell-status">${renderStatusBadge(item.active)}</td>
       <td class="categories__cell-actions" data-column="actions">${actions}</td>
     </tr>
