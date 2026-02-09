@@ -21,6 +21,7 @@ export const state = {
   orderBy: 'name', // por ahora ordenamos por nombre
   orderDir: 'asc', // 'asc' | 'desc'
   loading: false,
+  loaded: false,
   error: null,
 };
 
@@ -57,6 +58,7 @@ export function getSnapshot() {
       pageCount: meta.pageCount ?? 1,
     },
     loading: Boolean(state.loading),
+    loaded: Boolean(state.loaded),
     error: state.error,
     q: state.q,
     status: state.status,
@@ -162,6 +164,7 @@ export async function fetchCategories({ silentToast = false } = {}) {
     state.items = items;
     state.meta = nextMeta;
     state.loading = false;
+    state.loaded = true;
     state.error = null;
 
     notify();
@@ -172,6 +175,7 @@ export async function fetchCategories({ silentToast = false } = {}) {
       err.message = 'No tenés permisos para ver esta sección.';
     }
     state.loading = false;
+    state.loaded = true;
     state.error = err;
     notify();
     throw err;

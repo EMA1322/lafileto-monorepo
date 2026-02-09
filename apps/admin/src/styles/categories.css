@@ -126,13 +126,37 @@
   --btn-color: var(--c-error);
 }
 
-.categories__empty {
-  display: none;
-  margin: 0;
-  padding: var(--space-4);
-  text-align: center;
+/* =========================
+   Estados (loading / error / empty)
+   ========================= */
+.categories__content {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.categories__state {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: start;
+  padding: var(--space-3);
+  border: 1px dashed var(--c-border);
+  border-radius: var(--radius-md);
+  background: var(--c-surface-muted);
   color: var(--c-text-muted);
-  font-size: var(--fs-base);
+  font-size: 0.95rem;
+}
+
+.categories__spinner {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--c-border) 70%, transparent);
+  border-top-color: var(--c-primary);
+  animation: categories-spin 0.8s linear infinite;
+}
+
+@keyframes categories-spin {
+  to { transform: rotate(360deg); }
 }
 
 .categories__footer {
@@ -351,30 +375,18 @@
   cursor: not-allowed;
 }
 
-.categories.is-loading .categories__tableWrap {
+.categories__content.is-loading .categories__tableWrap {
   opacity: .6;
   pointer-events: none;
 }
 
-.categories.is-loading .categories__status {
-  color: var(--c-text-muted);
-}
-
-.categories.has-error .table-wrapper {
+.categories__content.has-error .table-wrapper {
   border-color: color-mix(in srgb, var(--c-error) 45%, var(--c-border));
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--c-error) 25%, transparent);
 }
 
-.categories.has-error .categories__status {
-  color: var(--c-error);
-}
-
-.categories.is-empty .table-wrapper {
+.categories__content.is-empty .table-wrapper {
   border-style: dashed;
-}
-
-.categories.is-empty .categories__empty {
-  display: block;
 }
 
 @media (min-width: 768px) {
