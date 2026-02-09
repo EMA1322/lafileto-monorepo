@@ -105,13 +105,10 @@ model Offer {
   id          String   @id @default(cuid()) @db.VarChar(191)
   productId   String   @db.VarChar(191)
   discountPct Int      @db.UnsignedTinyInt
-  startAt     DateTime?
-  endAt       DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   product Product @relation(fields: [productId], references: [id])
 
   @@unique([productId])
-  @@index([startAt, endAt])
 }

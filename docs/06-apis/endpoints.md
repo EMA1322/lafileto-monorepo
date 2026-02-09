@@ -211,15 +211,15 @@ curl -s -X DELETE -H "Authorization: Bearer $ADMIN_JWT" \
 
 | Método | Path | Permiso | Body / Query | 200 (data) |
 |---|---|---|---|---|
-| GET | `/api/v1/products` | `products:r` | Query arriba | `{ ok:true, data:{ items[{ id,name,description?,imageUrl,price,stock,status,categoryId,createdAt,updatedAt,offer?{ id?,discountPercent,startAt?,endAt?,isActive,finalPrice } }], meta{ page,pageSize,total,pageCount } } }` |
-| GET | `/api/v1/products/:id` | `products:r` | — | `{ ok:true, data:{ id,name,description?,imageUrl,price,stock,status,categoryId,createdAt,updatedAt,offer?{ id?,discountPercent,startAt?,endAt?,isActive,finalPrice } } }` |
+| GET | `/api/v1/products` | `products:r` | Query arriba | `{ ok:true, data:{ items[{ id,name,description?,imageUrl,price,stock,status,categoryId,createdAt,updatedAt,offer?{ id?,discountPercent,isActive,finalPrice } }], meta{ page,pageSize,total,pageCount } } }` |
+| GET | `/api/v1/products/:id` | `products:r` | — | `{ ok:true, data:{ id,name,description?,imageUrl,price,stock,status,categoryId,createdAt,updatedAt,offer?{ id?,discountPercent,isActive,finalPrice } } }` |
 | POST | `/api/v1/products` | `products:w` | `{ name, description?, imageUrl?, price, stock, status?, categoryId }` | `{ ok:true, data:ProductConOferta? }` (201) |
 | PUT | `/api/v1/products/:id` | `products:u` | `{ name?, description?, imageUrl?, price?, stock?, status?, categoryId? }` | `{ ok:true, data:ProductConOferta? }` |
 | PATCH | `/api/v1/products/:id/status` | `products:changeStatus` | `{ status:"draft|active|archived" }` | `{ ok:true, data:Product }` |
 | DELETE | `/api/v1/products/:id` | `products:d` | — | `{ ok:true, data:{ id, deleted:true } }` |
 
 > `imageUrl` es opcional y debe ser una URL absoluta `http`/`https` (máx. 2048 caracteres). Si no se envía, queda en `null`.
-> `offer` aparece únicamente cuando existe una oferta vigente para el producto (`discountPercent`, `startAt?`, `endAt?`, `isActive`, `finalPrice`). Si no hay oferta activa se devuelve `offer: null`.
+> `offer` aparece únicamente cuando existe una oferta activa para el producto (`discountPercent`, `isActive`, `finalPrice`). Si no hay oferta activa se devuelve `offer: null`.
 > `finalPrice = price * (1 - discountPercent/100)` redondeado a 2 decimales cuando la oferta está activa; caso contrario el precio expuesto es el base.
 > `status=inactive` agrupa `draft` + `archived` para la UI de Admin.
 > Filtros soportados: `q`, `status`, `categoryId`, `priceMin`, `priceMax`, `orderBy`, `orderDir`, `all`. No existen filtros `slug`, `sku`, `currency` ni `isFeatured`.
@@ -251,8 +251,6 @@ Accept: application/json
         "offer": {
           "id": "offer-001",
           "discountPercent": 10,
-          "startAt": "2024-01-01T00:00:00.000Z",
-          "endAt": "2026-01-01T00:00:00.000Z",
           "isActive": true,
           "finalPrice": 2250
         }
@@ -324,11 +322,7 @@ Content-Type: application/json
 }
 ```
 
-> Una oferta está activa si:
-> - tiene `startAt` y `endAt` y se cumple `startAt ≤ now ≤ endAt`;
-> - sólo `startAt` y `startAt ≤ now`;
-> - sólo `endAt` y `now ≤ endAt`;
-> - ninguna de las fechas (vigente siempre).
+> Una oferta está activa mientras esté registrada para el producto y tenga un `discountPercent` válido.
 
 ### RBAC (moduleKey=`products`)
 
@@ -380,16 +374,16 @@ curl -X PATCH "$API_BASE/api/v1/products/prod-001/status" \
 | `priceMin` / `priceMax` | number | — | Rango de precio base. |
 | `orderBy` | enum | `name` | `name`, `price`, `updatedAt`. |
 | `orderDir` | enum | `asc` | `asc` o `desc`. |
-| `activeOnly` | boolean | `false` | Si es `true`, sólo devuelve ofertas vigentes a la fecha del request. |
+| `activeOnly` | boolean | `false` | Flag legacy (no filtra por fechas). |
 | `all` | boolean | `false` | Devuelve todo el conjunto (sin paginar) respetando `pageSize` normalizado. |
 
-> Respuesta: `{ ok:true, data:{ items[{ id,productId,discountPercent,startAt?,endAt?,isActive,finalPrice,product{ id,name,description?,imageUrl,price,stock,status,categoryId,createdAt,updatedAt } }], meta{ page,pageSize,total,pageCount } } }`.
+> Respuesta: `{ ok:true, data:{ items[{ id,productId,discountPercent,isActive,finalPrice,product{ id,name,description?,imageUrl,price,stock,status,categoryId,createdAt,updatedAt } }], meta{ page,pageSize,total,pageCount } } }`.
 
 | Método | Path | Permiso | Query/Body | 200 (data) |
 |---|---|---|---|---|
 | GET | `/api/v1/offers` | `offers:r` | Query arriba | Lista paginada de ofertas (incluye `product` embebido). |
-| POST | `/api/v1/offers` | `offers:w` | `{ productId, discountPercent, startAt?, endAt? }` | `{ ok:true, data:Offer }` (201) |
-| PUT | `/api/v1/offers/:id` | `offers:u` | `{ discountPercent?, startAt?, endAt? }` | `{ ok:true, data:Offer }` |
+| POST | `/api/v1/offers` | `offers:w` | `{ productId, discountPercent }` | `{ ok:true, data:Offer }` (201) |
+| PUT | `/api/v1/offers/:id` | `offers:u` | `{ discountPercent? }` | `{ ok:true, data:Offer }` |
 | DELETE | `/api/v1/offers/:id` | `offers:d` | — | `{ ok:true, data:{ id, deleted:true } }` |
 
 **Ejemplo**
@@ -409,8 +403,6 @@ Accept: application/json
         "id": "offer-002",
         "productId": "prod-002",
         "discountPercent": 20,
-        "startAt": "2024-02-01T00:00:00.000Z",
-        "endAt": null,
         "isActive": true,
         "finalPrice": 1680,
         "product": {
@@ -444,7 +436,7 @@ POST /api/v1/offers
 Authorization: Bearer <token_admin>
 Content-Type: application/json
 
-{ "productId": "prod-001", "discountPercent": 15, "startAt": "2024-03-01T00:00:00.000Z", "endAt": "2025-03-01T00:00:00.000Z" }
+{ "productId": "prod-001", "discountPercent": 15 }
 ```
 
 ```json
@@ -454,8 +446,6 @@ Content-Type: application/json
     "id": "offer-010",
     "productId": "prod-001",
     "discountPercent": 15,
-    "startAt": "2024-03-01T00:00:00.000Z",
-    "endAt": "2025-03-01T00:00:00.000Z",
     "isActive": true,
     "finalPrice": 2125,
     "product": {
@@ -475,10 +465,9 @@ Content-Type: application/json
 **Reglas de validación**
 
 - `discountPercent` entero `1..100`.
-- `startAt` / `endAt` aceptan `null` o fechas válidas; si ambos están presentes se exige `startAt <= endAt`.
 - Cada producto sólo puede tener **una** oferta vigente a la vez (`CONFLICT` cuando ya existe una oferta para `productId`).
 - El producto asociado debe existir.
-- `activeOnly=1` en el listado devuelve únicamente ofertas que cumplen la ventana de vigencia. Las ofertas activas se reflejan automáticamente en `/products` como resumen (`offer.discountPercent`, `offer.finalPrice`, fechas e `isActive`). Al eliminar o expirar la oferta el resumen vuelve a `null`.
+- `activeOnly=1` no filtra por fechas. Las ofertas activas se reflejan automáticamente en `/products` como resumen (`offer.discountPercent`, `offer.finalPrice`, `isActive`). Al eliminar la oferta el resumen vuelve a `null`.
 
 ### RBAC (moduleKey=`offers`)
 
@@ -499,7 +488,7 @@ curl "$API_BASE/api/v1/offers?page=1&pageSize=10" \
 # crear oferta
 curl -X POST "$API_BASE/api/v1/offers" \
   -H "Authorization: Bearer $ADMIN_JWT" -H "Content-Type: application/json" \
-  -d '{"productId":"prod-001","discountPercent":25,"startAt":"2024-03-01T00:00:00.000Z","endAt":"2025-03-01T00:00:00.000Z"}' | jq '.'
+  -d '{"productId":"prod-001","discountPercent":25}' | jq '.'
 
 # listado de productos con resumen de oferta embebido
 curl "$API_BASE/api/v1/products?page=1&pageSize=10" \

@@ -6,32 +6,10 @@ import {
   productBaseSelect
 } from './productRepository.js';
 
-function buildActiveOfferWhere(now = new Date()) {
-  const reference = now instanceof Date && !Number.isNaN(now.getTime()) ? now : new Date();
-  return {
-    AND: [
-      {
-        OR: [
-          { startAt: null },
-          { startAt: { lte: reference } }
-        ]
-      },
-      {
-        OR: [
-          { endAt: null },
-          { endAt: { gte: reference } }
-        ]
-      }
-    ]
-  };
-}
-
 const offerSelect = {
   id: true,
   productId: true,
   discountPct: true,
-  startAt: true,
-  endAt: true,
   createdAt: true,
   updatedAt: true
 };
@@ -56,13 +34,10 @@ export const offerRepository = {
 
   async findActiveByProductId(productId, { now } = {}) {
     if (!productId) return null;
-    const reference = now instanceof Date ? now : new Date();
     return prisma.offer.findFirst({
       where: {
-        productId,
-        ...buildActiveOfferWhere(reference)
-      },
-      orderBy: { createdAt: 'desc' }
+        productId
+      }
     });
   },
 
@@ -70,11 +45,9 @@ export const offerRepository = {
     if (!Array.isArray(productIds) || productIds.length === 0) {
       return new Map();
     }
-    const reference = now instanceof Date ? now : new Date();
     const rows = await prisma.offer.findMany({
       where: {
-        productId: { in: productIds },
-        ...buildActiveOfferWhere(reference)
+        productId: { in: productIds }
       }
     });
     const map = new Map();
@@ -101,12 +74,9 @@ export const offerRepository = {
     now,
     activeOnly = false
   } = {}) {
-    const reference = now instanceof Date ? now : new Date();
     const productWhere = buildProductWhere({ q, status, categoryId, priceMin, priceMax });
-    const offerWhere = activeOnly ? buildActiveOfferWhere(reference) : {};
 
     const where = {
-      ...offerWhere,
       ...(Object.keys(productWhere).length > 0 ? { product: productWhere } : {})
     };
 
@@ -154,5 +124,5 @@ export const offerRepository = {
 };
 
 export function buildOfferActiveWhere(now = new Date()) {
-  return buildActiveOfferWhere(now);
+  return {};
 }

@@ -766,7 +766,7 @@
                         },
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"productId\":\"{{productId}}\",\"discountPercent\":25,\"startAt\":\"2024-03-01T00:00:00.000Z\",\"endAt\":\"2025-03-01T00:00:00.000Z\"}"
+                            "raw": "{\"productId\":\"{{productId}}\",\"discountPercent\":25}"
                         }
                     }
                 },
@@ -796,7 +796,7 @@
                         },
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"discountPercent\":15,\"endAt\":\"2025-12-31T23:59:59.000Z\"}"
+                            "raw": "{\"discountPercent\":15}"
                         }
                     }
                 },

@@ -22,8 +22,7 @@ scope: RF y RNF, reglas de negocio, supuestos, criterios de aceptación.
 
 ## Reglas de negocio
 - `discount ∈ [0,100]`; `offerPrice` es **derivado** (no persistido).
-- Vigencia de oferta: activa si `(startAt && endAt && startAt ≤ now ≤ endAt)` o si sólo `startAt` y `startAt ≤ now`, o
-  si sólo `endAt` y `now ≤ endAt`; sin fechas → siempre activa.
+- Vigencia de oferta: activa mientras exista una oferta registrada con descuento válido para el producto.
 - Si `settings.isOpen=false`, CTA de compra deshabilitados.
 
 ## Supuestos / dependencias

@@ -106,14 +106,6 @@ const discountPercentSchema = z
     .min(1, 'El descuento debe ser al menos 1%.')
     .max(100, 'El descuento no puede superar el 100%.'));
 
-const dateFieldSchema = z.preprocess((value) => {
-  if (value === undefined) return undefined;
-  if (value === null || value === '') return null;
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return value;
-  return parsed;
-}, z.union([z.date(), z.null()]).optional());
-
 export const offerListQuerySchema = z
   .object({
     page: pageParam,
@@ -151,29 +143,21 @@ export const offerCreateSchema = z
       .string({ required_error: 'El producto es obligatorio.' })
       .trim()
       .min(1, 'El producto es obligatorio.'),
-    discountPercent: discountPercentSchema,
-    startAt: dateFieldSchema,
-    endAt: dateFieldSchema
+    discountPercent: discountPercentSchema
   })
   .passthrough()
   .transform((values) => ({
     productId: values.productId,
-    discountPercent: values.discountPercent,
-    startAt: values.startAt,
-    endAt: values.endAt
+    discountPercent: values.discountPercent
   }));
 
 export const offerUpdateSchema = z
   .object({
-    discountPercent: discountPercentSchema.optional(),
-    startAt: dateFieldSchema,
-    endAt: dateFieldSchema
+    discountPercent: discountPercentSchema.optional()
   })
   .passthrough()
   .transform((values) => ({
-    discountPercent: values.discountPercent,
-    startAt: values.startAt,
-    endAt: values.endAt
+    discountPercent: values.discountPercent
   }));
 
 export const offerIdParamSchema = z.object({
