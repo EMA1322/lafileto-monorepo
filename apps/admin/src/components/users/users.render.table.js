@@ -16,10 +16,21 @@ function formatStatus(status) {
   return `<span class="badge badge--muted">${escapeHTML(String(status || 'Desconocido'))}</span>`;
 }
 
-function statusSwitchMarkup(user) {
+function isMissingPhone(phone) {
+  if (phone === null || phone === undefined) return true;
+  const normalized = String(phone).trim();
+  if (!normalized) return true;
+  return normalized === '0000000000';
+}
+
+function statusSwitchMarkup(user, { phoneMissing = false } = {}) {
   const isActive = String(user.status).toUpperCase() === 'ACTIVE';
   const label = isActive ? 'Activo' : 'Inactivo';
   const stateClass = isActive ? 'is-active' : 'is-inactive';
+  const disabledReason = 'Para cambiar el estado necesitás cargar un teléfono';
+  const disabledAttrs = phoneMissing ? ' disabled aria-disabled="true"' : '';
+  const titleAttr = phoneMissing ? ` title="${escapeHTML(disabledReason)}"` : '';
+  const srHint = phoneMissing ? `<span class="sr-only">${escapeHTML(disabledReason)}</span>` : '';
   return `
     <button
       class="users__status-toggle ${stateClass}"
@@ -28,8 +39,8 @@ function statusSwitchMarkup(user) {
       data-rbac-action="update"
       data-next-status="${isActive ? 'INACTIVE' : 'ACTIVE'}"
       aria-pressed="${isActive}"
-      aria-label="Cambiar estado a ${isActive ? 'Inactivo' : 'Activo'}"
-    >${label}</button>
+      aria-label="Cambiar estado a ${isActive ? 'Inactivo' : 'Activo'}"${disabledAttrs}${titleAttr}
+    >${label}${srHint}</button>
   `;
 }
 
@@ -77,14 +88,15 @@ export function renderUsersTable(root = document.querySelector('.users')) {
   tbodyUsers.innerHTML = users
     .filter(Boolean)
     .map((user) => {
-      const phone = user.phone && user.phone !== '0000000000' ? escapeHTML(user.phone) : '-';
+      const phoneMissing = isMissingPhone(user.phone);
+      const phone = phoneMissing ? '-' : escapeHTML(user.phone);
       const roleId = escapeHTML(user.roleId || '');
       const actions = `
         <div class="users__row-actions" role="group" aria-label="Acciones">
           <button class="btn btn-secondary btn--sm" type="button" data-action="user-edit" data-rbac-action="update" data-rbac-hide>
             ${createButtonTemplate({ label: 'Editar', iconName: 'edit', iconSize: 'sm' })}
           </button>
-          ${statusSwitchMarkup(user)}
+          ${statusSwitchMarkup(user, { phoneMissing })}
           <button class="btn btn-danger btn--sm" type="button" data-action="user-delete" data-rbac-action="delete">
             ${createButtonTemplate({ label: 'Eliminar', iconName: 'trash', iconSize: 'sm' })}
           </button>
