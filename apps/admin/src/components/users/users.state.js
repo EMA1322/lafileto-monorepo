@@ -6,7 +6,10 @@ import { computeIsAdmin, mapErrorToMessage } from './users.helpers.js';
 
 export const PHONE_REGEX = /^[0-9()+\s-]{7,20}$/;
 
-const DEFAULT_PAGE_SIZE = 10;
+export const DEFAULT_PAGE_SIZE = 10;
+export const PAGE_SIZE_OPTIONS = [10, 20, 50];
+export const ORDER_FIELDS = ['fullName', 'email', 'status', 'createdAt'];
+export const ORDER_DIRECTIONS = ['asc', 'desc'];
 
 const usersState = {
   items: [],
@@ -26,6 +29,27 @@ const defaultFilters = {
   orderBy: 'fullName',
   orderDir: 'asc',
 };
+
+function sanitizeFilters(input = {}) {
+  const source = { ...defaultFilters, ...(input || {}) };
+  const filters = { ...defaultFilters };
+
+  filters.q = typeof source.q === 'string' ? source.q.trim() : '';
+
+  const orderBy = typeof source.orderBy === 'string' ? source.orderBy : defaultFilters.orderBy;
+  filters.orderBy = ORDER_FIELDS.includes(orderBy) ? orderBy : defaultFilters.orderBy;
+
+  const orderDir = typeof source.orderDir === 'string' ? source.orderDir : defaultFilters.orderDir;
+  filters.orderDir = ORDER_DIRECTIONS.includes(orderDir) ? orderDir : defaultFilters.orderDir;
+
+  const pageValue = Number(source.page);
+  filters.page = Number.isFinite(pageValue) && pageValue > 0 ? Math.floor(pageValue) : defaultFilters.page;
+
+  const pageSizeValue = Number(source.pageSize);
+  filters.pageSize = PAGE_SIZE_OPTIONS.includes(pageSizeValue) ? pageSizeValue : DEFAULT_PAGE_SIZE;
+
+  return filters;
+}
 
 function syncUsersMeta(partial = {}) {
   const base = usersState.meta ?? {
@@ -82,7 +106,7 @@ export const state = {
     errorUsers: null,
     errorRoles: null,
   },
-  filters: { ...defaultFilters },
+  filters: sanitizeFilters(defaultFilters),
 };
 
 Object.defineProperty(state, 'users', {
@@ -191,6 +215,60 @@ function normalizeUsersResponse(data) {
   };
 }
 
+export function setFilters(partial) {
+  const next = sanitizeFilters({ ...state.filters, ...(partial || {}) });
+  state.filters = next;
+  syncUsersMeta({ page: next.page, pageSize: next.pageSize });
+}
+
+export function resetFilters() {
+  state.filters = sanitizeFilters(defaultFilters);
+  syncUsersMeta({ page: state.filters.page, pageSize: state.filters.pageSize });
+}
+
+export function replaceFilters(nextFilters) {
+  state.filters = sanitizeFilters(nextFilters);
+  syncUsersMeta({ page: state.filters.page, pageSize: state.filters.pageSize });
+}
+
+export function setPage(page) {
+  setFilters({ page });
+}
+
+export function setPageSize(pageSize) {
+  setFilters({ pageSize });
+}
+
+export function parseFiltersFromHash(hashString = '') {
+  if (typeof hashString !== 'string') return null;
+  const trimmed = hashString.replace(/^#/, '');
+  const [path, query = ''] = trimmed.split('?');
+  if (path && path !== 'users') return null;
+  const params = new URLSearchParams(query);
+  const raw = { ...defaultFilters };
+
+  if (params.has('q')) raw.q = params.get('q') || '';
+  if (params.has('orderBy')) raw.orderBy = params.get('orderBy');
+  if (params.has('orderDir')) raw.orderDir = params.get('orderDir');
+  if (params.has('page')) raw.page = params.get('page');
+  if (params.has('pageSize')) raw.pageSize = params.get('pageSize');
+
+  return sanitizeFilters(raw);
+}
+
+export function getFiltersQuery(filters = state.filters) {
+  const data = sanitizeFilters(filters);
+  const params = new URLSearchParams();
+
+  if (data.q) params.set('q', data.q);
+  if (data.orderBy && data.orderBy !== defaultFilters.orderBy) params.set('orderBy', data.orderBy);
+  if (data.orderDir && data.orderDir !== defaultFilters.orderDir) params.set('orderDir', data.orderDir);
+  if (Number(data.page) > 1) params.set('page', String(data.page));
+  if (Number(data.pageSize) !== defaultFilters.pageSize) params.set('pageSize', String(data.pageSize));
+
+  return params.toString();
+}
+
 const TOAST_DEFAULT = 3200;
 const TOAST_ERROR = 4600;
 
@@ -245,7 +323,7 @@ export async function fetchUsers() {
   state.ui.errorUsers = null;
 
   const params = {
-    all: 1,
+    page: state.filters.page,
     pageSize: state.filters.pageSize,
     orderBy: state.filters.orderBy,
     orderDir: state.filters.orderDir,
@@ -265,6 +343,11 @@ export async function fetchUsers() {
   usersState.items = mapped;
   usersState.total = Number(meta.total) || mapped.length;
   syncUsersMeta({ ...meta, total: usersState.total });
+  state.filters = sanitizeFilters({
+    ...state.filters,
+    page: usersState.meta.page,
+    pageSize: usersState.meta.pageSize,
+  });
   state.ui.loadingUsers = false;
 }
 

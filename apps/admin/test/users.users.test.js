@@ -82,6 +82,43 @@ describe('admin users module', () => {
     );
   });
 
+  it('incluye filtros y paginación en el template', () => {
+    expect(document.querySelector('#users-filter-q')).not.toBeNull();
+    expect(document.querySelector('#users-filter-order-by')).not.toBeNull();
+    expect(document.querySelector('#users-filter-order-dir')).not.toBeNull();
+    expect(document.querySelector('#users-filter-page-size')).not.toBeNull();
+    expect(document.querySelector('#users-filter-clear')).not.toBeNull();
+    expect(document.querySelector('#users-page-list')).not.toBeNull();
+    expect(document.querySelector('#users-page-next')).not.toBeNull();
+  });
+
+  it('renderUsersTable muestra meta y paginación', () => {
+    state.users = {
+      items: [
+        {
+          id: 'user-2',
+          fullName: 'Grace Hopper',
+          email: 'grace@example.com',
+          phone: '22222222',
+          roleId: 'role-1',
+          status: 'active',
+        },
+      ],
+      meta: {
+        page: 2,
+        pageSize: 10,
+        total: 25,
+        pageCount: 3,
+      },
+    };
+
+    renderUsersTable();
+
+    expect(document.querySelector('#users-meta')?.textContent).toBe('11–20 de 25 usuarios');
+    const pageButtons = document.querySelectorAll('#users-page-list button');
+    expect(pageButtons.length).toBeGreaterThan(0);
+  });
+
   it('buildRolePermsMap normaliza estructura mixta', () => {
     const seed = {
       role_permissions: {

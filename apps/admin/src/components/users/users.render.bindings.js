@@ -3,6 +3,11 @@ import {
   snackWarn,
   snackErr,
   snackOk,
+  setFilters,
+  resetFilters,
+  setPage,
+  setPageSize,
+  reloadUsers,
   toggleUserStatus,
   findUserById,
 } from './users.state.js';
@@ -17,12 +22,16 @@ import {
   openRoleDeleteModal,
 } from './users.modals.js';
 import renderUsersTable from './users.render.table.js';
-import { renderRolesStatus } from './users.render.status.js';
+import { renderRolesStatus, renderUsersStatus } from './users.render.status.js';
 import { applyRBAC } from '@/utils/rbac.js';
+import { debounce } from '@/utils/helpers.js';
 import { els } from './users.dom.js';
 import switchTab from './users.render.tabs.js';
 
-export default function renderBindings(root = document.querySelector('.users')) {
+export default function renderBindings(
+  root = document.querySelector('.users'),
+  { onFiltersChange } = {},
+) {
   const container = root instanceof Element ? root : document.querySelector('.users');
   if (!container) return;
 
@@ -32,8 +41,24 @@ export default function renderBindings(root = document.querySelector('.users')) 
     tbodyRoles,
     tbodyUsers,
     btnNew,
-    btnRoleNew
+    btnRoleNew,
+    searchInput,
+    orderBySelect,
+    orderDirSelect,
+    pageSizeSelect,
+    clearFiltersButton,
+    retryButton,
+    emptyClearButton,
+    pagination,
+    pageFirst,
+    pagePrev,
+    pageNext,
+    pageLast,
   } = els(container);
+
+  const debouncedReload = debounce(() => {
+    void reloadUsers({ onUsersStatus: renderUsersStatus, onUsersTable: renderUsersTable });
+  }, 300);
 
   container.addEventListener('users:tab-enforce', (event) => {
     const requested = event?.detail?.tab;
@@ -68,6 +93,72 @@ export default function renderBindings(root = document.querySelector('.users')) 
     }
     openRoleFormModal({ mode: 'create' });
   });
+
+  const notifyFiltersChange = () => {
+    if (typeof onFiltersChange === 'function') onFiltersChange();
+  };
+
+  searchInput?.addEventListener('input', (event) => {
+    setFilters({ q: event.target.value || '' });
+    setPage(1);
+    notifyFiltersChange();
+    debouncedReload();
+  });
+
+  orderBySelect?.addEventListener('change', (event) => {
+    setFilters({ orderBy: event.target.value });
+    setPage(1);
+    notifyFiltersChange();
+    void reloadUsers({ onUsersStatus: renderUsersStatus, onUsersTable: renderUsersTable });
+  });
+
+  orderDirSelect?.addEventListener('change', (event) => {
+    setFilters({ orderDir: event.target.value });
+    setPage(1);
+    notifyFiltersChange();
+    void reloadUsers({ onUsersStatus: renderUsersStatus, onUsersTable: renderUsersTable });
+  });
+
+  pageSizeSelect?.addEventListener('change', (event) => {
+    setPageSize(event.target.value);
+    setPage(1);
+    notifyFiltersChange();
+    void reloadUsers({ onUsersStatus: renderUsersStatus, onUsersTable: renderUsersTable });
+  });
+
+  clearFiltersButton?.addEventListener('click', (event) => {
+    event.preventDefault();
+    resetFilters();
+    notifyFiltersChange();
+    void reloadUsers({ onUsersStatus: renderUsersStatus, onUsersTable: renderUsersTable });
+  });
+
+  retryButton?.addEventListener('click', () => {
+    void reloadUsers({ onUsersStatus: renderUsersStatus, onUsersTable: renderUsersTable });
+  });
+
+  emptyClearButton?.addEventListener('click', (event) => {
+    event.preventDefault();
+    resetFilters();
+    notifyFiltersChange();
+    void reloadUsers({ onUsersStatus: renderUsersStatus, onUsersTable: renderUsersTable });
+  });
+
+  const paginationHandler = (event) => {
+    const button = event.target.closest('button[data-page]');
+    if (!button) return;
+    const nextPage = Number(button.dataset.page);
+    if (!Number.isFinite(nextPage)) return;
+    setPage(nextPage);
+    notifyFiltersChange();
+    void reloadUsers({ onUsersStatus: renderUsersStatus, onUsersTable: renderUsersTable });
+  };
+
+  pagination?.addEventListener('click', paginationHandler);
+  pageFirst?.addEventListener('click', paginationHandler);
+  pagePrev?.addEventListener('click', paginationHandler);
+  pageNext?.addEventListener('click', paginationHandler);
+  pageLast?.addEventListener('click', paginationHandler);
 
   tbodyRoles?.addEventListener('click', async (ev) => {
     const btn = ev.target.closest('[data-action]');

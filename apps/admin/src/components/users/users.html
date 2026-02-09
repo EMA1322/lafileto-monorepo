@@ -65,24 +65,103 @@
       </div>
     </header>
 
+    <form class="users__filters" id="users-filters" novalidate>
+      <div class="users__filters-group" role="group" aria-label="Buscar">
+        <label class="users__label" for="users-filter-q">Buscar</label>
+        <input
+          id="users-filter-q"
+          class="form-control form-control--dense users__input"
+          type="search"
+          name="q"
+          placeholder="Buscar por nombre o email"
+          inputmode="search"
+          autocomplete="off"
+        />
+      </div>
+
+      <div class="users__filters-group">
+        <label class="users__label" for="users-filter-order-by">Ordenar por</label>
+        <select id="users-filter-order-by" class="form-control form-control--dense users__select" name="orderBy">
+          <option value="fullName">Nombre</option>
+          <option value="email">Email</option>
+          <option value="status">Estado</option>
+          <option value="createdAt">Fecha de alta</option>
+        </select>
+      </div>
+
+      <div class="users__filters-group">
+        <label class="users__label" for="users-filter-order-dir">Dirección</label>
+        <select id="users-filter-order-dir" class="form-control form-control--dense users__select" name="orderDir">
+          <option value="asc">Ascendente</option>
+          <option value="desc">Descendente</option>
+        </select>
+      </div>
+
+      <div class="users__filters-group">
+        <label class="users__label" for="users-filter-page-size">Resultados por página</label>
+        <select id="users-filter-page-size" class="form-control form-control--dense users__select" name="pageSize">
+          <option value="10">10</option>
+          <option value="20">20</option>
+          <option value="50">50</option>
+        </select>
+      </div>
+
+      <div class="users__filters-group users__filters-group--actions">
+        <button id="users-filter-clear" class="btn btn--ghost btn--sm" type="reset">Limpiar filtros</button>
+      </div>
+    </form>
+
     <div id="users-status" class="users__status" aria-live="polite"></div>
 
-    <div class="table-wrapper users__table-wrap">
-      <table id="users-table" class="data-table users__table" role="table">
-        <caption class="sr-only">Listado de usuarios</caption>
-        <thead class="users__thead">
-          <tr>
-            <th scope="col">Nombre completo</th>
-            <th scope="col">Email</th>
-            <th scope="col">Teléfono</th>
-            <th scope="col">Rol</th>
-            <th scope="col">Estado</th>
-            <th scope="col" class="users__th-actions">Acciones</th>
-          </tr>
-        </thead>
-        <tbody id="users-tbody" class="users__tbody"></tbody>
-      </table>
-    </div>
+    <section
+      class="users__content is-loading"
+      aria-live="polite"
+      aria-busy="false"
+      data-status="loading"
+    >
+      <div class="users__state users__state--loading" id="users-loading" role="status">
+        <span class="users__spinner" aria-hidden="true"></span>
+        <p>Cargando usuarios…</p>
+      </div>
+
+      <div class="users__state users__state--error" id="users-error" role="alert" hidden>
+        <p id="users-error-message">No pudimos cargar los usuarios. Intentá nuevamente.</p>
+        <button id="users-retry" class="btn btn--ghost btn--sm" type="button">Reintentar</button>
+      </div>
+
+      <div class="users__state users__state--empty" id="users-empty" role="status" hidden>
+        <p>No encontramos usuarios con estos filtros.</p>
+        <button id="users-empty-clear" class="btn btn--ghost btn--sm" type="button">Limpiar filtros</button>
+      </div>
+
+      <div class="table-wrapper users__table-wrap" id="users-table-wrapper" hidden>
+        <table id="users-table" class="data-table users__table" role="table">
+          <caption class="sr-only">Listado de usuarios</caption>
+          <thead class="users__thead">
+            <tr>
+              <th scope="col">Nombre completo</th>
+              <th scope="col">Email</th>
+              <th scope="col">Teléfono</th>
+              <th scope="col">Rol</th>
+              <th scope="col">Estado</th>
+              <th scope="col" class="users__th-actions">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="users-tbody" class="users__tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer class="users__footer">
+      <div class="users__meta" id="users-meta" role="status" aria-live="polite">—</div>
+      <nav class="users__pagination" aria-label="Paginación de usuarios">
+        <button id="users-page-first" class="btn btn--ghost btn--sm" type="button" aria-label="Primera página">«</button>
+        <button id="users-page-prev" class="btn btn--ghost btn--sm" type="button" aria-label="Página anterior">‹</button>
+        <ol class="users__page-list" id="users-page-list" aria-live="polite"></ol>
+        <button id="users-page-next" class="btn btn--ghost btn--sm" type="button" aria-label="Página siguiente">›</button>
+        <button id="users-page-last" class="btn btn--ghost btn--sm" type="button" aria-label="Última página">»</button>
+      </nav>
+    </footer>
   </section>
 
   <section
