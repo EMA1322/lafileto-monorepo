@@ -8,7 +8,14 @@ import {
   MODULE_KEY_ALIAS,
   ADMIN_ROLE_IDS,
 } from './users.helpers.js';
-import { state, fetchData } from './users.state.js';
+import {
+  state,
+  fetchData,
+  parseFiltersFromHash,
+  replaceFilters,
+  getFiltersQuery,
+  reloadUsers,
+} from './users.state.js';
 import {
   renderUsersTable,
   renderRolesView,
@@ -16,6 +23,10 @@ import {
   renderRolesStatus,
   renderBindings,
 } from './users.views.js';
+
+let hashChangeHandler = null;
+let skipHashSync = false;
+let lastHashValue = null;
 
 function setupToolbarButtons(container) {
   const btnUserNew = container.querySelector('#btn-user-new');
@@ -39,6 +50,36 @@ function setupToolbarButtons(container) {
   }
 }
 
+function syncHashWithState() {
+  if (typeof window === 'undefined') return;
+  const filtersQuery = getFiltersQuery(state.filters);
+  const target = filtersQuery ? `#users?${filtersQuery}` : '#users';
+  if (window.location.hash === target || lastHashValue === target) {
+    lastHashValue = target;
+    return;
+  }
+  lastHashValue = target;
+  skipHashSync = true;
+  window.location.hash = target;
+  queueMicrotask(() => {
+    skipHashSync = false;
+  });
+}
+
+function handleHashChange(container) {
+  if (typeof window === 'undefined') return;
+  if (skipHashSync) return;
+  const next = parseFiltersFromHash(window.location.hash);
+  if (!next) return;
+  lastHashValue = window.location.hash;
+  replaceFilters(next);
+  renderUsersTable(container);
+  void reloadUsers({
+    onUsersStatus: renderUsersStatus,
+    onUsersTable: renderUsersTable,
+  });
+}
+
 export async function initUsers(attempt = 0) {
   const container = document.querySelector('.users');
   if (!container) {
@@ -53,6 +94,14 @@ export async function initUsers(attempt = 0) {
     return;
   }
 
+  const alreadyInitialized = container.dataset.usersInit === 'true';
+  container.dataset.usersInit = 'true';
+
+  const initialFilters = parseFiltersFromHash(typeof window !== 'undefined' ? window.location.hash : '');
+  if (initialFilters) {
+    replaceFilters(initialFilters);
+  }
+
   setupToolbarButtons(container);
   mountIcons(container);
 
@@ -62,12 +111,16 @@ export async function initUsers(attempt = 0) {
   container.dataset.rbacAlias = MODULE_KEY_ALIAS;
   container.dataset.rbacAdminRoles = ADMIN_ROLE_IDS.join(',');
 
-  await fetchData({
-    onUsersStatus: renderUsersStatus,
-    onRolesStatus: renderRolesStatus,
-    onUsersTable: renderUsersTable,
-    onRolesView: renderRolesView,
-  });
+  if (!alreadyInitialized) {
+    await fetchData({
+      onUsersStatus: renderUsersStatus,
+      onRolesStatus: renderRolesStatus,
+      onUsersTable: renderUsersTable,
+      onRolesView: renderRolesView,
+    });
+  } else {
+    renderUsersTable(container);
+  }
 
   container.dataset.rbacModule = MODULE_KEY;
   container.dataset.rbacAlias = MODULE_KEY_ALIAS;
@@ -77,7 +130,16 @@ export async function initUsers(attempt = 0) {
   container.dataset.rbacUserId = state.session.userId != null ? String(state.session.userId) : '';
   container.dataset.rbacActiveTab = state.ui.activeTab;
 
-  renderBindings(container);
+  renderBindings(container, { onFiltersChange: syncHashWithState });
   applyRBAC(container);
   mountIcons(container);
+
+  if (typeof window !== 'undefined') {
+    if (hashChangeHandler) {
+      window.removeEventListener('hashchange', hashChangeHandler);
+    }
+    hashChangeHandler = () => handleHashChange(container);
+    window.addEventListener('hashchange', hashChangeHandler);
+    syncHashWithState();
+  }
 }

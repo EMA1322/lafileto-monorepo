@@ -6,7 +6,10 @@ import { computeIsAdmin, mapErrorToMessage } from './users.helpers.js';
 
 export const PHONE_REGEX = /^[0-9()+\s-]{7,20}$/;
 
-const DEFAULT_PAGE_SIZE = 10;
+export const DEFAULT_PAGE_SIZE = 10;
+export const PAGE_SIZE_OPTIONS = [10, 20, 50];
+export const ORDER_FIELDS = ['fullName', 'email', 'status', 'createdAt'];
+export const ORDER_DIRECTIONS = ['asc', 'desc'];
 
 const usersState = {
   items: [],
@@ -26,6 +29,27 @@ const defaultFilters = {
   orderBy: 'fullName',
   orderDir: 'asc',
 };
+
+function sanitizeFilters(input = {}) {
+  const source = { ...defaultFilters, ...(input || {}) };
+  const filters = { ...defaultFilters };
+
+  filters.q = typeof source.q === 'string' ? source.q.trim() : '';
+
+  const orderBy = typeof source.orderBy === 'string' ? source.orderBy : defaultFilters.orderBy;
+  filters.orderBy = ORDER_FIELDS.includes(orderBy) ? orderBy : defaultFilters.orderBy;
+
+  const orderDir = typeof source.orderDir === 'string' ? source.orderDir : defaultFilters.orderDir;
+  filters.orderDir = ORDER_DIRECTIONS.includes(orderDir) ? orderDir : defaultFilters.orderDir;
+
+  const pageValue = Number(source.page);
+  filters.page = Number.isFinite(pageValue) && pageValue > 0 ? Math.floor(pageValue) : defaultFilters.page;
+
+  const pageSizeValue = Number(source.pageSize);
+  filters.pageSize = PAGE_SIZE_OPTIONS.includes(pageSizeValue) ? pageSizeValue : DEFAULT_PAGE_SIZE;
+
+  return filters;
+}
 
 function syncUsersMeta(partial = {}) {
   const base = usersState.meta ?? {
@@ -82,8 +106,10 @@ export const state = {
     errorUsers: null,
     errorRoles: null,
   },
-  filters: { ...defaultFilters },
+  filters: sanitizeFilters(defaultFilters),
 };
+
+let usersRequestSeq = 0;
 
 Object.defineProperty(state, 'users', {
   enumerable: true,
@@ -191,6 +217,60 @@ function normalizeUsersResponse(data) {
   };
 }
 
+export function setFilters(partial) {
+  const next = sanitizeFilters({ ...state.filters, ...(partial || {}) });
+  state.filters = next;
+  syncUsersMeta({ page: next.page, pageSize: next.pageSize });
+}
+
+export function resetFilters() {
+  state.filters = sanitizeFilters(defaultFilters);
+  syncUsersMeta({ page: state.filters.page, pageSize: state.filters.pageSize });
+}
+
+export function replaceFilters(nextFilters) {
+  state.filters = sanitizeFilters(nextFilters);
+  syncUsersMeta({ page: state.filters.page, pageSize: state.filters.pageSize });
+}
+
+export function setPage(page) {
+  setFilters({ page });
+}
+
+export function setPageSize(pageSize) {
+  setFilters({ pageSize });
+}
+
+export function parseFiltersFromHash(hashString = '') {
+  if (typeof hashString !== 'string') return null;
+  const trimmed = hashString.replace(/^#/, '');
+  const [path, query = ''] = trimmed.split('?');
+  if (path && path !== 'users') return null;
+  const params = new URLSearchParams(query);
+  const raw = { ...defaultFilters };
+
+  if (params.has('q')) raw.q = params.get('q') || '';
+  if (params.has('orderBy')) raw.orderBy = params.get('orderBy');
+  if (params.has('orderDir')) raw.orderDir = params.get('orderDir');
+  if (params.has('page')) raw.page = params.get('page');
+  if (params.has('pageSize')) raw.pageSize = params.get('pageSize');
+
+  return sanitizeFilters(raw);
+}
+
+export function getFiltersQuery(filters = state.filters) {
+  const data = sanitizeFilters(filters);
+  const params = new URLSearchParams();
+
+  if (data.q) params.set('q', data.q);
+  if (data.orderBy && data.orderBy !== defaultFilters.orderBy) params.set('orderBy', data.orderBy);
+  if (data.orderDir && data.orderDir !== defaultFilters.orderDir) params.set('orderDir', data.orderDir);
+  if (Number(data.page) > 1) params.set('page', String(data.page));
+  if (Number(data.pageSize) !== defaultFilters.pageSize) params.set('pageSize', String(data.pageSize));
+
+  return params.toString();
+}
+
 const TOAST_DEFAULT = 3200;
 const TOAST_ERROR = 4600;
 
@@ -240,12 +320,13 @@ function mapUserFromApi(user) {
   return normalized;
 }
 
-export async function fetchUsers() {
+export async function fetchUsers({ requestId } = {}) {
+  const activeRequestId = requestId ?? ++usersRequestSeq;
   state.ui.loadingUsers = true;
   state.ui.errorUsers = null;
 
   const params = {
-    all: 1,
+    page: state.filters.page,
     pageSize: state.filters.pageSize,
     orderBy: state.filters.orderBy,
     orderDir: state.filters.orderDir,
@@ -255,6 +336,7 @@ export async function fetchUsers() {
   }
 
   const res = await apiFetch('/users', { params, showErrorToast: false });
+  if (activeRequestId !== usersRequestSeq) return;
   const { items, meta } = normalizeUsersResponse(res?.data || {});
 
   const mapped = items
@@ -265,7 +347,14 @@ export async function fetchUsers() {
   usersState.items = mapped;
   usersState.total = Number(meta.total) || mapped.length;
   syncUsersMeta({ ...meta, total: usersState.total });
-  state.ui.loadingUsers = false;
+  state.filters = sanitizeFilters({
+    ...state.filters,
+    page: usersState.meta.page,
+    pageSize: usersState.meta.pageSize,
+  });
+  if (activeRequestId === usersRequestSeq) {
+    state.ui.loadingUsers = false;
+  }
 }
 
 function upsertUserInState(user) {
@@ -453,6 +542,7 @@ export async function fetchData({
   onUsersTable,
   onRolesView,
 } = {}) {
+  const requestId = ++usersRequestSeq;
   const notifyUsersStatus = onUsersStatus || (() => {});
   const notifyRolesStatus = onRolesStatus || (() => {});
   const renderUsersTable = onUsersTable || (() => {});
@@ -465,20 +555,26 @@ export async function fetchData({
 
   notifyUsersStatus('Cargando usuarios…');
   notifyRolesStatus('Cargando roles…');
+  renderUsersTable();
 
   state.rbac.roleId = getCurrentRoleIdFromSession();
   state.rbac.isAdmin = computeIsAdmin({ roleId: state.rbac.roleId });
   state.session.userId = getCurrentUserIdFromSession();
 
   try {
-    await fetchUsers();
-    renderUsersTable();
-    notifyUsersStatus('');
+    await fetchUsers({ requestId });
+    if (requestId === usersRequestSeq) {
+      renderUsersTable();
+      notifyUsersStatus('');
+    }
   } catch (err) {
-    state.ui.loadingUsers = false;
-    state.ui.errorUsers = 'No se pudieron cargar los usuarios.';
-    notifyUsersStatus(state.ui.errorUsers, 'error');
-    snackErr(mapErrorToMessage(err, state.ui.errorUsers), err?.code);
+    if (requestId === usersRequestSeq) {
+      state.ui.loadingUsers = false;
+      state.ui.errorUsers = 'No se pudieron cargar los usuarios.';
+      notifyUsersStatus(state.ui.errorUsers, 'error');
+      renderUsersTable();
+      snackErr(mapErrorToMessage(err, state.ui.errorUsers), err?.code);
+    }
   }
 
   try {
@@ -494,21 +590,26 @@ export async function fetchData({
 }
 
 export async function reloadUsers({ onUsersStatus, onUsersTable } = {}) {
+  const requestId = ++usersRequestSeq;
   const notifyStatus = onUsersStatus || (() => {});
   const renderTable = onUsersTable || (() => {});
 
   state.ui.loadingUsers = true;
   state.ui.errorUsers = null;
   notifyStatus('Cargando usuarios…');
+  renderTable();
 
   try {
-    await fetchUsers();
+    await fetchUsers({ requestId });
+    if (requestId !== usersRequestSeq) return;
     renderTable();
     notifyStatus('');
   } catch (err) {
+    if (requestId !== usersRequestSeq) return;
     state.ui.loadingUsers = false;
     state.ui.errorUsers = 'No se pudieron cargar los usuarios.';
     notifyStatus(state.ui.errorUsers, 'error');
+    renderTable();
     snackErr(mapErrorToMessage(err, state.ui.errorUsers), err?.code);
   }
 }

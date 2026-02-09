@@ -3,6 +3,11 @@ import {
   snackWarn,
   snackErr,
   snackOk,
+  setFilters,
+  resetFilters,
+  setPage,
+  setPageSize,
+  reloadUsers,
   toggleUserStatus,
   findUserById,
 } from './users.state.js';
@@ -17,14 +22,23 @@ import {
   openRoleDeleteModal,
 } from './users.modals.js';
 import renderUsersTable from './users.render.table.js';
-import { renderRolesStatus } from './users.render.status.js';
+import { renderRolesStatus, renderUsersStatus } from './users.render.status.js';
 import { applyRBAC } from '@/utils/rbac.js';
+import { debounce } from '@/utils/helpers.js';
 import { els } from './users.dom.js';
 import switchTab from './users.render.tabs.js';
 
-export default function renderBindings(root = document.querySelector('.users')) {
+export default function renderBindings(
+  root = document.querySelector('.users'),
+  { onFiltersChange } = {},
+) {
   const container = root instanceof Element ? root : document.querySelector('.users');
   if (!container) return;
+
+  const abortController = new AbortController();
+  const { signal } = abortController;
+  container._usersBindingsAbort?.abort();
+  container._usersBindingsAbort = abortController;
 
   const {
     tabUsers,
@@ -32,8 +46,24 @@ export default function renderBindings(root = document.querySelector('.users')) 
     tbodyRoles,
     tbodyUsers,
     btnNew,
-    btnRoleNew
+    btnRoleNew,
+    searchInput,
+    orderBySelect,
+    orderDirSelect,
+    pageSizeSelect,
+    clearFiltersButton,
+    retryButton,
+    emptyClearButton,
+    pagination,
+    pageFirst,
+    pagePrev,
+    pageNext,
+    pageLast,
   } = els(container);
+
+  const debouncedReload = debounce(() => {
+    void reloadUsers({ onUsersStatus: renderUsersStatus, onUsersTable: renderUsersTable });
+  }, 300);
 
   container.addEventListener('users:tab-enforce', (event) => {
     const requested = event?.detail?.tab;
@@ -42,24 +72,24 @@ export default function renderBindings(root = document.querySelector('.users')) 
     } else if (requested === 'users') {
       switchTab('users');
     }
-  });
+  }, { signal });
 
   tabUsers?.addEventListener('click', () => {
     switchTab('users');
     applyRBAC(container);
-  });
+  }, { signal });
 
   tabRoles?.addEventListener('click', () => {
     if (!state.rbac.isAdmin) return;
     switchTab('roles');
     applyRBAC(container);
-  });
+  }, { signal });
 
   btnNew?.addEventListener('click', () => {
     const canWrite = guardAction('write', { roleId: state.rbac.roleId, snackWarn });
     if (!canWrite) return;
     openCreateUserModal();
-  });
+  }, { signal });
 
   btnRoleNew?.addEventListener('click', () => {
     if (!state.rbac.isAdmin) {
@@ -67,7 +97,73 @@ export default function renderBindings(root = document.querySelector('.users')) 
       return;
     }
     openRoleFormModal({ mode: 'create' });
-  });
+  }, { signal });
+
+  const notifyFiltersChange = () => {
+    if (typeof onFiltersChange === 'function') onFiltersChange();
+  };
+
+  searchInput?.addEventListener('input', (event) => {
+    setFilters({ q: event.target.value || '' });
+    setPage(1);
+    notifyFiltersChange();
+    debouncedReload();
+  }, { signal });
+
+  orderBySelect?.addEventListener('change', (event) => {
+    setFilters({ orderBy: event.target.value });
+    setPage(1);
+    notifyFiltersChange();
+    void reloadUsers({ onUsersStatus: renderUsersStatus, onUsersTable: renderUsersTable });
+  }, { signal });
+
+  orderDirSelect?.addEventListener('change', (event) => {
+    setFilters({ orderDir: event.target.value });
+    setPage(1);
+    notifyFiltersChange();
+    void reloadUsers({ onUsersStatus: renderUsersStatus, onUsersTable: renderUsersTable });
+  }, { signal });
+
+  pageSizeSelect?.addEventListener('change', (event) => {
+    setPageSize(event.target.value);
+    setPage(1);
+    notifyFiltersChange();
+    void reloadUsers({ onUsersStatus: renderUsersStatus, onUsersTable: renderUsersTable });
+  }, { signal });
+
+  clearFiltersButton?.addEventListener('click', (event) => {
+    event.preventDefault();
+    resetFilters();
+    notifyFiltersChange();
+    void reloadUsers({ onUsersStatus: renderUsersStatus, onUsersTable: renderUsersTable });
+  }, { signal });
+
+  retryButton?.addEventListener('click', () => {
+    void reloadUsers({ onUsersStatus: renderUsersStatus, onUsersTable: renderUsersTable });
+  }, { signal });
+
+  emptyClearButton?.addEventListener('click', (event) => {
+    event.preventDefault();
+    resetFilters();
+    notifyFiltersChange();
+    void reloadUsers({ onUsersStatus: renderUsersStatus, onUsersTable: renderUsersTable });
+  }, { signal });
+
+  const paginationHandler = (event) => {
+    const button = event.target.closest('button[data-page]');
+    if (!button) return;
+    const nextPage = Number(button.dataset.page);
+    if (!Number.isFinite(nextPage)) return;
+    setPage(nextPage);
+    notifyFiltersChange();
+    void reloadUsers({ onUsersStatus: renderUsersStatus, onUsersTable: renderUsersTable });
+  };
+
+  pagination?.addEventListener('click', paginationHandler, { signal });
+  pageFirst?.addEventListener('click', paginationHandler, { signal });
+  pagePrev?.addEventListener('click', paginationHandler, { signal });
+  pageNext?.addEventListener('click', paginationHandler, { signal });
+  pageLast?.addEventListener('click', paginationHandler, { signal });
 
   tbodyRoles?.addEventListener('click', async (ev) => {
     const btn = ev.target.closest('[data-action]');
@@ -105,7 +201,7 @@ export default function renderBindings(root = document.querySelector('.users')) 
         renderRolesStatus('No se pudo abrir la matriz de permisos.', 'error', container);
       }
     }
-  });
+  }, { signal });
 
   tbodyUsers?.addEventListener('click', async (ev) => {
     const btn = ev.target.closest('[data-action]');
@@ -158,5 +254,5 @@ export default function renderBindings(root = document.querySelector('.users')) 
         btn.disabled = false;
       }
     }
-  });
+  }, { signal });
 }

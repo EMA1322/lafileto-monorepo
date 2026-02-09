@@ -22,11 +22,12 @@ export const userRepository = {
     }),
 
   async list({ page, pageSize, q, orderBy = 'fullName', orderDirection = 'asc', all = false }) {
-    const where = q
+    const query = typeof q === 'string' ? q.trim() : '';
+    const where = query
       ? {
           OR: [
-            { fullName: { contains: q, mode: 'insensitive' } },
-            { email: { contains: q, mode: 'insensitive' } }
+            { fullName: { contains: query } },
+            { email: { contains: query } }
           ]
         }
       : undefined;
