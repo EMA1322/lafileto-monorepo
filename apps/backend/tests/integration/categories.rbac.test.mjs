@@ -159,6 +159,11 @@ prisma.category.deleteMany = async ({ where }) => {
   return { count: 0 };
 };
 
+prisma.product.groupBy = async ({ where = {} } = {}) => {
+  const ids = Array.isArray(where?.categoryId?.in) ? where.categoryId.in : [];
+  return ids.map((id) => ({ categoryId: id, _count: { _all: 0 } }));
+};
+
 prisma.rolePermission.findUnique = async () => null;
 
 test.beforeEach(() => {

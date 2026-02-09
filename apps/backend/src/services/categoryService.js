@@ -1,5 +1,6 @@
 // Servicio de categorías: listados y mutaciones con reglas básicas
 import { categoryRepository } from '../repositories/categoryRepository.js';
+import { productRepository } from '../repositories/productRepository.js';
 import { createError } from '../utils/errors.js';
 import { normalizePage, normalizePageSize } from '../utils/pagination.js';
 
@@ -78,6 +79,15 @@ function sanitizeCategory(row) {
   };
 }
 
+async function attachProductCounts(items) {
+  const ids = items.map((item) => item.id).filter(Boolean);
+  const counts = await productRepository.countByCategoryIds(ids);
+  return items.map((item) => ({
+    ...sanitizeCategory(item),
+    productCount: counts.get(item.id) ?? 0
+  }));
+}
+
 function isUniqueConstraintError(err) {
   return err instanceof PrismaClientKnownRequestError && err.code === 'P2002';
 }
@@ -117,7 +127,7 @@ export const categoryService = {
         orderDirection: direction,
       });
 
-      const sanitized = items.map(sanitizeCategory);
+      const sanitized = await attachProductCounts(items);
       const effectiveTotal = Number.isFinite(total) ? total : sanitized.length;
       const pageCount = Math.max(1, Math.ceil(effectiveTotal / normalizedPageSize));
       return {
@@ -144,8 +154,10 @@ export const categoryService = {
     const safeTotal = Number.isFinite(total) ? total : items.length;
     const pageCount = Math.max(1, Math.ceil(safeTotal / normalizedPageSize));
 
+    const withCounts = await attachProductCounts(items);
+
     return {
-      items: items.map(sanitizeCategory),
+      items: withCounts,
       meta: {
         page: normalizedPage,
         pageSize: normalizedPageSize,
@@ -200,7 +212,11 @@ export const categoryService = {
       throw createError('CATEGORY_NOT_FOUND', 'La categoría indicada no existe.');
     }
 
-    return sanitizeCategory(existing);
+    const counts = await productRepository.countByCategoryIds([existing.id]);
+    return {
+      ...sanitizeCategory(existing),
+      productCount: counts.get(existing.id) ?? 0
+    };
   },
 
   async updateCategory(id, payload) {
