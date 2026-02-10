@@ -62,6 +62,9 @@ function filterCategories(where = {}) {
   }
 
   if (where.name && typeof where.name.contains === 'string') {
+    if (Object.prototype.hasOwnProperty.call(where.name, 'mode')) {
+      throw new Error('Unknown argument `mode`. Did you mean `lte`?');
+    }
     const needle = where.name.contains.toLowerCase();
     items = items.filter((item) => item.name.toLowerCase().includes(needle));
   }
@@ -237,6 +240,34 @@ test('GET /api/v1/categories → 200 for supervisor with read-only permissions',
   assert.equal(res.payload?.ok, true);
   assert.ok(Array.isArray(res.payload?.data?.items));
   assert.equal(res.payload.data.items.length >= 1, true);
+});
+
+test('GET /api/v1/categories?q=asf → 200 without Prisma mode for MySQL', { concurrency: false }, async () => {
+  const req = {
+    user: { ...supervisorUser },
+    validated: {
+      query: {
+        q: 'asf',
+        status: 'all',
+        page: '1',
+        pageSize: '10',
+        all: false,
+        orderBy: 'name',
+        orderDir: 'asc',
+      },
+    },
+  };
+  const res = createMockResponse();
+  await runMiddleware(attachUser(supervisorUser), req, res);
+  await runMiddleware(rbacGuard('categories', 'r'), req, res);
+  await runMiddleware((request, response, next) => categoryController.list(request, response, next), req, res);
+
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.payload?.ok, true);
+  assert.ok(Array.isArray(res.payload?.data?.items));
+  assert.equal(res.payload?.data?.meta?.total, 0);
+  assert.equal(res.payload?.data?.meta?.page, 1);
+  assert.equal(res.payload?.data?.meta?.pageSize, 10);
 });
 
 test('GET /api/v1/categories/:id → 200 for supervisor with read-only permissions', { concurrency: false }, async () => {
