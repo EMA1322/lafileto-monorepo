@@ -137,4 +137,168 @@
       <button id="page-last" class="btn btn--ghost btn--sm" type="button" aria-label="Última página">»</button>
     </nav>
   </footer>
+
+  <template id="tpl-product-form">
+    <div class="products__modal">
+      <header class="products__modal-header">
+        <h3 id="products-form-title" class="products__modal-title">Producto</h3>
+      </header>
+      <div class="products__modal-body">
+        <form id="products-form" class="products__form" novalidate>
+          <div class="products__form-grid">
+            <div class="products__field">
+              <label for="field-name">Nombre</label>
+              <input id="field-name" name="name" class="form-control form-control--dense" type="text" required maxlength="120" />
+            </div>
+            <div class="products__field">
+              <label for="field-description">Descripción</label>
+              <textarea id="field-description" name="description" class="form-control form-control--dense" rows="3"></textarea>
+            </div>
+            <div class="products__field products__field--image">
+              <label for="field-image-url">Imagen (URL)</label>
+              <input
+                id="field-image-url"
+                name="imageUrl"
+                class="form-control form-control--dense"
+                type="url"
+                inputmode="url"
+                placeholder="https://…"
+                autocomplete="off"
+              />
+              <div class="products__image-preview" data-image-preview>
+                <div class="products__image-preview-placeholder" data-image-preview-empty>
+                  Sin vista previa
+                </div>
+                <img
+                  data-image-preview-img
+                  alt="Vista previa de la imagen del producto"
+                  class="products__image-preview-img"
+                  hidden
+                />
+              </div>
+              <p class="products__help-text">Ingresá una URL que comience con http:// o https://</p>
+            </div>
+            <div class="products__field">
+              <label for="field-price">Precio</label>
+              <input id="field-price" name="price" class="form-control form-control--dense" type="number" min="0" step="0.01" />
+            </div>
+            <div class="products__field">
+              <label for="field-stock">Stock</label>
+              <input id="field-stock" name="stock" class="form-control form-control--dense" type="number" min="0" step="1" />
+            </div>
+            <div class="products__field">
+              <label for="field-status">Estado</label>
+              <select id="field-status" name="status" class="form-control form-control--dense"></select>
+            </div>
+            <div class="products__field">
+              <label for="field-category">Categoría</label>
+              <select id="field-category" name="categoryId" class="form-control form-control--dense" required></select>
+            </div>
+          </div>
+
+          <section class="products__section" aria-labelledby="products-offer-title">
+            <div class="products__section-header">
+              <h4 id="products-offer-title" class="products__section-title">Oferta</h4>
+              <label class="products__switch">
+                <input id="field-offer-enabled" name="offerEnabled" type="checkbox" />
+                <span>Habilitar oferta</span>
+              </label>
+            </div>
+            <div class="products__section-body" data-offer-fields hidden aria-hidden="true">
+              <div class="products__field">
+                <label for="field-offer-discount">Descuento (%)</label>
+                <input
+                  id="field-offer-discount"
+                  name="offerDiscountPercent"
+                  class="form-control form-control--dense"
+                  type="number"
+                  min="1"
+                  max="100"
+                  step="0.01"
+                  inputmode="decimal"
+                />
+              </div>
+            </div>
+          </section>
+
+          <footer class="products__form-actions">
+            <button type="button" class="btn btn--ghost" data-close-modal>Cancelar</button>
+            <button type="submit" class="btn btn--primary" id="products-form-submit">Guardar</button>
+          </footer>
+        </form>
+      </div>
+    </div>
+  </template>
+
+  <template id="tpl-product-delete">
+    <div class="products__modal products__delete-modal">
+      <header class="products__modal-header">
+        <h3 class="products__modal-title">Eliminar producto</h3>
+      </header>
+      <div class="products__modal-body">
+        <p id="product-delete-message">Esta acción es definitiva.</p>
+      </div>
+      <footer class="products__form-actions">
+        <button type="button" class="btn btn--ghost" data-close-modal>Cancelar</button>
+        <button type="button" id="confirm-delete" class="btn btn--primary">Eliminar</button>
+      </footer>
+    </div>
+  </template>
+
+  <template id="tpl-product-view">
+    <div class="products__modal products__view-modal">
+      <header class="products__modal-header">
+        <h3 class="products__modal-title products__view-title" id="product-view-title">Producto</h3>
+      </header>
+      <div class="products__modal-body">
+        <div class="products__view-body">
+          <div class="products__view-media" data-view-image-wrapper>
+            <img data-view-image alt="" class="products__image-preview-img" hidden />
+            <div class="products__image-preview-placeholder products__image-preview-placeholder--static" data-view-image-empty>Sin imagen</div>
+          </div>
+          <dl class="products__view-grid">
+            <div class="products__view-row">
+              <dt class="products__view-label">Precio base</dt>
+              <dd class="products__view-value" data-field="price">—</dd>
+            </div>
+            <div class="products__view-row">
+              <dt class="products__view-label">Stock</dt>
+              <dd class="products__view-value" data-field="stock">—</dd>
+            </div>
+            <div class="products__view-row">
+              <dt class="products__view-label">Estado</dt>
+              <dd class="products__view-value" data-field="status">—</dd>
+            </div>
+            <div class="products__view-row">
+              <dt class="products__view-label">Categoría</dt>
+              <dd class="products__view-value" data-field="category">—</dd>
+            </div>
+          </dl>
+        </div>
+        <div class="products__view-description">
+          <h4>Descripción</h4>
+          <p data-field="description">—</p>
+        </div>
+        <section class="products__view-section" aria-labelledby="product-offer-details-title">
+          <div class="products__view-section-header">
+            <h4 id="product-offer-details-title" class="products__section-title">Oferta</h4>
+            <span class="products__view-tag" data-field="offer-status">Sin oferta activa</span>
+          </div>
+          <dl class="products__view-grid products__view-grid--compact">
+            <div class="products__view-row">
+              <dt class="products__view-label">Precio final</dt>
+              <dd class="products__view-value" data-field="final-price">—</dd>
+            </div>
+            <div class="products__view-row">
+              <dt class="products__view-label">Descuento</dt>
+              <dd class="products__view-value" data-field="discount">—</dd>
+            </div>
+          </dl>
+        </section>
+      </div>
+      <footer class="products__form-actions">
+        <button type="button" class="btn btn--primary" data-close-modal id="product-view-close">Cerrar</button>
+      </footer>
+    </div>
+  </template>
 </section>
