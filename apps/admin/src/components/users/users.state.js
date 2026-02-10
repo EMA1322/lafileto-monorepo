@@ -1,6 +1,7 @@
 import { toast } from '../../utils/toast.js';
 import { apiFetch } from '../../utils/api.js';
 import { computePageCount } from '../../utils/helpers.js';
+import { userApiStatusToUi, uiToUserApiStatus } from '../../utils/status.helpers.js';
 
 import { computeIsAdmin, mapErrorToMessage } from './users.helpers.js';
 
@@ -162,7 +163,7 @@ function normalizeUserEntry(entry) {
   const phoneRaw = entry.phone || entry.telephone || entry.tel || null;
   const phone = typeof phoneRaw === 'string' && phoneRaw !== '0000000000' ? phoneRaw : null;
   const roleId = entry.roleId || entry.role_id || entry.role || '';
-  const statusRaw = entry.status || entry.state || 'UNKNOWN';
+  const statusRaw = entry.status || entry.state || 'INACTIVE';
 
   return {
     id,
@@ -170,7 +171,7 @@ function normalizeUserEntry(entry) {
     email,
     phone,
     roleId,
-    status: String(statusRaw || 'UNKNOWN').toUpperCase(),
+    status: userApiStatusToUi(statusRaw),
   };
 }
 
@@ -414,18 +415,24 @@ export async function fetchRolesAndModules() {
 }
 
 export async function createUser(payload) {
+  const body = payload && typeof payload === 'object'
+    ? { ...payload, status: uiToUserApiStatus(payload.status) }
+    : payload;
   const res = await apiFetch('/users', {
     method: 'POST',
-    body: payload,
+    body,
     showErrorToast: false,
   });
   return res?.data || null;
 }
 
 export async function updateUser(userId, payload) {
+  const body = payload && typeof payload === 'object'
+    ? { ...payload, status: uiToUserApiStatus(payload.status) }
+    : payload;
   const res = await apiFetch(`/users/${encodeURIComponent(userId)}`, {
     method: 'PUT',
-    body: payload,
+    body,
     showErrorToast: false,
   });
   return upsertUserInState(res?.data);

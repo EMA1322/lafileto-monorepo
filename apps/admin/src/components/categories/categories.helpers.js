@@ -1,15 +1,23 @@
 // Admin / Categories helpers
 // Comentarios en español, código en inglés.
 
+import {
+  UI_STATUS,
+  getUiStatusLabel,
+  categoryApiActiveToUi,
+  uiToCategoryApiActive,
+  normalizeUiStatus,
+} from '../../utils/status.helpers.js';
+
 export const MODULE_KEY = 'categories';
 export const MODULE_KEY_ALIAS = 'category';
 export const DEFAULT_PAGE_SIZE = 10;
 export const PAGE_SIZE_OPTIONS = [10, 20, 50];
 
 export function renderStatusBadge(active) {
-  return active
-    ? '<span class="badge badge--success">Activo</span>'
-    : '<span class="badge badge--muted">Inactivo</span>';
+  const uiStatus = categoryApiActiveToUi(active);
+  const badgeClass = uiStatus === UI_STATUS.ACTIVE ? 'badge--success' : 'badge--muted';
+  return `<span class="badge ${badgeClass}">${getUiStatusLabel(uiStatus)}</span>`;
 }
 
 /** Escape seguro para inyectar texto en HTML. */
@@ -52,7 +60,7 @@ export function mapCategoryFromApi(entry) {
   const imageUrl = entry.imageUrl ?? entry.image_url ?? entry.thumbnail ?? '';
   const active = typeof entry.active === 'boolean'
     ? entry.active
-    : String(entry.status ?? '').toLowerCase() !== 'inactive';
+    : uiToCategoryApiActive(String(entry.status ?? '').toLowerCase() === 'inactive' ? UI_STATUS.INACTIVE : UI_STATUS.ACTIVE);
   const productCountRaw = entry.productCount ?? entry.productsCount ?? entry.products_count ?? entry.count ?? null;
   const productCount = Number.isFinite(Number(productCountRaw)) ? Number(productCountRaw) : 0;
 
@@ -74,7 +82,7 @@ export function filterItemsByActive(items, filterActive = 'all') {
     return Array.isArray(items) ? items.slice() : [];
   }
 
-  const predicate = filterActive === 'active'
+  const predicate = normalizeUiStatus(filterActive) === UI_STATUS.ACTIVE
     ? (item) => item?.active === true
     : (item) => item?.active === false;
   return items.filter(predicate);
@@ -96,6 +104,8 @@ export function normalizeOrder(order) {
 /** Normaliza el filtro de estado. */
 export function normalizeFilterActive(value) {
   const normalized = String(value || 'all').toLowerCase();
-  if (normalized === 'active' || normalized === 'inactive') return normalized;
+  if (normalized === 'all') return 'all';
+  const uiStatus = normalizeUiStatus(normalized, null);
+  if (uiStatus) return uiStatus;
   return 'all';
 }

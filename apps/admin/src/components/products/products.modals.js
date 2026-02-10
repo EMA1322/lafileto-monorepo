@@ -8,6 +8,7 @@ import { openModal, closeModal } from '../../utils/modals.js';
 import { showSnackbar } from '../../utils/snackbar.js';
 
 import { productsApi, offersApi } from '../../utils/apis.js';
+import { productApiStatusToUi, uiToProductApiStatus } from '../../utils/status.helpers.js';
 
 import {
   STATUS_FORM_OPTIONS,
@@ -273,8 +274,8 @@ function handleFormError(error, form) {
 
 function buildProductPayload(formData) {
   const imageValue = formData.get('imageUrl')?.toString().trim() ?? '';
-  const rawStatus = formData.get('status')?.toString() ?? 'draft';
-  const status = rawStatus === 'active' ? 'active' : 'draft'; // "Inactivo" en UI agrupa draft/archived.
+  const rawStatus = formData.get('status')?.toString() ?? 'inactive';
+  const status = uiToProductApiStatus(rawStatus);
   return {
     name: formData.get('name')?.toString().trim() ?? '',
     description: formData.get('description')?.toString().trim() ?? '',
@@ -298,7 +299,7 @@ function buildProductFormHTML({ mode, product }) {
       : '';
   const priceValue = Number.isFinite(Number(product.price)) ? Number(product.price) : 0;
   const stockValue = Number.isFinite(Number(product.stock)) ? Number(product.stock) : 0;
-  const statusValue = product.status === 'active' ? 'active' : 'draft';
+  const statusValue = productApiStatusToUi(product.status);
   const descriptionValue = product.description ?? '';
   const previewPlaceholderHidden = '';
   const previewImageHidden = 'hidden';

@@ -5,6 +5,15 @@
 // ============================================================================
 
 import { computePageCount, formatMoney as sharedFormatMoney } from '../../utils/helpers.js';
+import {
+  UI_STATUS,
+  UI_STATUS_LABELS,
+  UI_STATUS_FILTER_OPTIONS,
+  getUiStatusLabel,
+  normalizeUiStatus,
+  productApiStatusToUi,
+  uiToProductApiStatus,
+} from '../../utils/status.helpers.js';
 
 export const MODULE_KEY = 'products';
 export const DEFAULT_PAGE_SIZE = 10;
@@ -14,15 +23,15 @@ export const ORDER_DIRECTIONS = ['asc', 'desc'];
 export const STATUS_VALUES = ['draft', 'active', 'archived'];
 // UI simplifica estados a Activo/Inactivo. Draft y archived se presentan como "Inactivo".
 export const STATUS_LABELS = {
-  draft: 'Inactivo',
-  active: 'Activo',
-  archived: 'Inactivo',
+  draft: UI_STATUS_LABELS[UI_STATUS.INACTIVE],
+  active: UI_STATUS_LABELS[UI_STATUS.ACTIVE],
+  archived: UI_STATUS_LABELS[UI_STATUS.INACTIVE],
 };
 export const STATUS_FORM_OPTIONS = [
-  { value: 'active', label: STATUS_LABELS.active },
-  { value: 'draft', label: STATUS_LABELS.draft },
+  { value: UI_STATUS.ACTIVE, label: UI_STATUS_LABELS[UI_STATUS.ACTIVE] },
+  { value: UI_STATUS.INACTIVE, label: UI_STATUS_LABELS[UI_STATUS.INACTIVE] },
 ];
-export const FILTER_STATUS_VALUES = ['all', 'active', 'inactive'];
+export const FILTER_STATUS_VALUES = UI_STATUS_FILTER_OPTIONS.map((option) => option.value);
 
 export const DEFAULT_FILTERS = {
   q: '',
@@ -48,9 +57,11 @@ export function buildQuery(filters = {}) {
   }
 
   if (source.status && source.status !== 'all') {
-    if (source.status === 'inactive') {
+    if (normalizeUiStatus(source.status) === UI_STATUS.INACTIVE) {
       // Se envía inactive al backend; resolved en draft + archived.
       params.status = 'inactive';
+    } else if (normalizeUiStatus(source.status) === UI_STATUS.ACTIVE) {
+      params.status = uiToProductApiStatus(source.status);
     } else if (STATUS_VALUES.includes(source.status)) {
       params.status = source.status;
     }
@@ -288,7 +299,7 @@ export function escapeHTML(value) {
 }
 
 export function formatStatusLabel(status) {
-  return STATUS_LABELS[status] || '—';
+  return getUiStatusLabel(productApiStatusToUi(status));
 }
 
 export function formatDate(value) {

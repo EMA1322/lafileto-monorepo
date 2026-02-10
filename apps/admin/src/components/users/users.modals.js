@@ -21,6 +21,7 @@ import { applyRBAC } from '@/utils/rbac.js';
 import renderUsersTable from './users.render.table.js';
 import renderRolesView from './users.render.roles.js';
 import { renderUsersStatus, renderRolesStatus } from './users.render.status.js';
+import { userApiStatusToUi } from '../../utils/status.helpers.js';
 
 const PHONE_CLIENT_REGEX = PHONE_REGEX;
 
@@ -106,7 +107,7 @@ export function openCreateUserModal() {
     const phone = String(formData.get("phone") || "").trim();
     const password = String(formData.get("password") || "").trim();
     const roleId = String(formData.get("roleId") || "").trim().toLowerCase();
-    const status = String(formData.get("status") || "ACTIVE").toUpperCase();
+    const status = userApiStatusToUi(formData.get("status") || 'INACTIVE');
 
     let hasError = false;
     if (fullName.length < 2) {
@@ -174,7 +175,7 @@ export function openEditUserModal(user) {
   if (inputName) inputName.value = user?.fullName || "";
   if (inputPhone) inputPhone.value = user?.phone || "";
   if (selectRole) selectRole.value = user?.roleId || "";
-  if (selectStatus) selectStatus.value = (user?.status || "ACTIVE").toUpperCase();
+  if (selectStatus) selectStatus.value = userApiStatusToUi(user?.status || 'INACTIVE');
 
   form?.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -186,7 +187,7 @@ export function openEditUserModal(user) {
     const fullName = String(formData.get("fullName") || "").trim();
     const phone = String(formData.get("phone") || "").trim();
     const roleId = String(formData.get("roleId") || "").trim().toLowerCase();
-    const status = String(formData.get("status") || "ACTIVE").toUpperCase();
+    const status = userApiStatusToUi(formData.get("status") || 'INACTIVE');
 
     let hasError = false;
     if (fullName.length < 2) {

@@ -13,6 +13,7 @@ import {
   patchCategoryActive,
 } from './categories.state.js';
 import { MODULE_KEY, MODULE_KEY_ALIAS, escapeHTML, mapErrorToMessage, renderStatusBadge } from './categories.helpers.js';
+import { getUiStatusLabel, categoryApiActiveToUi } from '../../utils/status.helpers.js';
 
 function prepareModalRBAC() {
   const modal = document.getElementById('modal-body');
@@ -366,7 +367,7 @@ export function openViewCategoryModal(categoryId) {
         switchControl.classList.toggle('is-active', nextActive);
         switchControl.classList.toggle('is-inactive', !nextActive);
       }
-      if (switchLabel) switchLabel.textContent = nextActive ? 'Activo' : 'Inactivo';
+      if (switchLabel) switchLabel.textContent = getUiStatusLabel(categoryApiActiveToUi(nextActive));
       if (statusField) statusField.innerHTML = renderStatusBadge(nextActive);
       if (confirmBtn) {
         confirmBtn.disabled = !dirty;
