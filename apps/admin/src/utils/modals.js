@@ -71,10 +71,10 @@ export function initModals() {
 
 /**
  * Abre el modal con contenido HTML proporcionado.
- * - contentHTML: HTML string a inyectar en el cuerpo del modal.
+ * - content: HTML string o Node a montar en el cuerpo del modal.
  * - focusSelector: selector del elemento a enfocar inicialmente (opcional).
  */
-export function openModal(contentHTML = '', focusSelector = '#modal-close') {
+export function openModal(content = '', focusSelector = '#modal-close') {
   if (!modalEl) initModals();
   if (!modalEl) return; // defensa si init falló
 
@@ -82,7 +82,11 @@ export function openModal(contentHTML = '', focusSelector = '#modal-close') {
   lastFocusedEl = document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
   // Inyectar contenido
-  modalBodyEl.innerHTML = contentHTML;
+  if (content instanceof Node) {
+    modalBodyEl.replaceChildren(content);
+  } else {
+    modalBodyEl.innerHTML = String(content ?? '');
+  }
 
   // Mostrar modal y marcar atributos ARIA SOLO en el contenedor
   modalEl.classList.remove('hidden');

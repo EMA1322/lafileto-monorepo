@@ -367,7 +367,7 @@ export function openProductModal({ mode = 'create', product = {}, container } = 
   const originalOffer = snapshot?.offer || null;
   const modalNode = buildProductFormNode({ mode, product: snapshot });
   if (!modalNode) return;
-  openModal(modalNode.outerHTML, '#field-name');
+  openModal(modalNode, '#field-name');
 
   const form = document.getElementById('products-form');
   if (!form) return;
