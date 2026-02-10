@@ -24,7 +24,7 @@ import {
 import renderUsersTable from './users.render.table.js';
 import { renderRolesStatus, renderUsersStatus } from './users.render.status.js';
 import { applyRBAC } from '@/utils/rbac.js';
-import { debounce } from '@/utils/helpers.js';
+import { debounce, replaceHash } from '@/utils/helpers.js';
 import { els } from './users.dom.js';
 import switchTab from './users.render.tabs.js';
 
@@ -106,16 +106,7 @@ export default function renderBindings(
   const resetUsersHashState = () => {
     if (typeof window === 'undefined') return;
     if (!window.location.hash.startsWith('#users')) return;
-    if (window.location.hash === '#users') return;
-
-    const cleanHash = '#users';
-    if (window.history?.replaceState) {
-      const { pathname, search } = window.location;
-      window.history.replaceState(null, '', `${pathname}${search}${cleanHash}`);
-      return;
-    }
-
-    window.location.hash = cleanHash;
+    replaceHash('users');
   };
 
   searchInput?.addEventListener('input', (event) => {
