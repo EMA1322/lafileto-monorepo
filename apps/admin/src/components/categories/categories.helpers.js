@@ -4,6 +4,7 @@
 export const MODULE_KEY = 'categories';
 export const MODULE_KEY_ALIAS = 'category';
 export const DEFAULT_PAGE_SIZE = 10;
+export const PAGE_SIZE_OPTIONS = [10, 20, 50];
 
 export function renderStatusBadge(active) {
   return active
@@ -84,7 +85,7 @@ export function formatSummary({ total = 0, page = 1, pageSize = DEFAULT_PAGE_SIZ
   const first = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const last = Math.min(total, page * pageSize);
   if (total === 0) return 'Sin resultados';
-  return `Mostrando ${first}–${last} de ${total}`;
+  return `${first}–${last} de ${total}`;
 }
 
 /** Normaliza la dirección de orden. */

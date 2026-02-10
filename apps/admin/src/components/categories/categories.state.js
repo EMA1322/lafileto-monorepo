@@ -6,6 +6,7 @@ import { computePageCount } from '../../utils/helpers.js';
 import {
   MODULE_KEY,
   DEFAULT_PAGE_SIZE,
+  PAGE_SIZE_OPTIONS,
   normalizeFilterActive,
   normalizeOrder,
   mapCategoryFromApi,
@@ -91,6 +92,12 @@ export function setPage(n) {
   }
 }
 
+
+export function setPageSize(value) {
+  const parsed = Number(value);
+  state.meta.pageSize = PAGE_SIZE_OPTIONS.includes(parsed) ? parsed : DEFAULT_PAGE_SIZE;
+}
+
 export function resetFilters() {
   state.q = '';
   state.status = 'all';
@@ -144,10 +151,15 @@ export async function fetchCategories({ silentToast = false } = {}) {
     if (apiMeta && typeof apiMeta === 'object') {
       const metaPage = pickNumber(apiMeta.page);
       const metaPageSize = pickNumber(apiMeta.pageSize);
-      metaTotal = pickNumber(apiMeta.total);
+      const metaTotalCount = pickNumber(apiMeta.totalCount);
+      const metaTotalLegacy = pickNumber(apiMeta.total);
+      const metaPageCount = pickNumber(apiMeta.pageCount);
+
+      metaTotal = metaTotalCount ?? metaTotalLegacy;
 
       if (metaPage !== null) nextMeta.page = metaPage;
       if (metaPageSize !== null) nextMeta.pageSize = metaPageSize;
+      if (metaPageCount !== null) nextMeta.pageCount = metaPageCount;
       if (metaTotal !== null) nextMeta.total = metaTotal;
     }
 
@@ -163,7 +175,13 @@ export async function fetchCategories({ silentToast = false } = {}) {
       nextMeta.total = items.length;
     }
 
-    nextMeta.pageCount = computePageCount(nextMeta.total, nextMeta.pageSize, DEFAULT_PAGE_SIZE);
+    if (!PAGE_SIZE_OPTIONS.includes(Number(nextMeta.pageSize))) {
+      nextMeta.pageSize = DEFAULT_PAGE_SIZE;
+    }
+
+    nextMeta.pageCount = Number.isFinite(Number(nextMeta.pageCount))
+      ? Math.max(1, Number(nextMeta.pageCount))
+      : computePageCount(nextMeta.total, nextMeta.pageSize, DEFAULT_PAGE_SIZE);
     if (!Number.isFinite(Number(nextMeta.page)) || Number(nextMeta.page) < 1) {
       nextMeta.page = 1;
     }

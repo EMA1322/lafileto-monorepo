@@ -94,9 +94,12 @@ export function renderCategoriesTable(snapshot, root = document.querySelector('#
   const tableWrapper = container.querySelector('#categories-table-wrapper');
   const tbody = container.querySelector('#categories-tbody');
   const summary = container.querySelector('#categories-summary');
-  const pageIndicator = container.querySelector('#categories-page-indicator');
+  const pageSizeSelect = container.querySelector('#categories-page-size');
+  const pageList = container.querySelector('#categories-page-list');
+  const btnFirst = container.querySelector('#categories-page-first');
   const btnPrev = container.querySelector('#categories-page-prev');
   const btnNext = container.querySelector('#categories-page-next');
+  const btnLast = container.querySelector('#categories-page-last');
 
   const view = snapshot || {};
   const isLoaded = Boolean(view.loaded);
@@ -162,25 +165,48 @@ export function renderCategoriesTable(snapshot, root = document.querySelector('#
     else summary.textContent = '—';
   }
 
-  if (pageIndicator) {
-    const current = Number(meta.page) || 1;
-    const totalPages = Math.max(1, Number(meta.pageCount) || 1);
-    pageIndicator.textContent = `${current} / ${totalPages}`;
+  if (pageSizeSelect) {
+    pageSizeSelect.value = String(Number(meta.pageSize) || 10);
+    pageSizeSelect.disabled = showLoading || isError;
+  }
+
+  const current = Number(meta.page) || 1;
+  const totalPages = Math.max(1, Number(meta.pageCount) || 1);
+
+  if (pageList) {
+    const maxButtons = 5;
+    const start = Math.max(1, current - Math.floor(maxButtons / 2));
+    const end = Math.min(totalPages, start + maxButtons - 1);
+    const html = [];
+    for (let page = start; page <= end; page += 1) {
+      const isCurrent = page === current;
+      html.push(
+        `<li><button class="btn btn--ghost btn--sm categories__pageItem" type="button" data-page="${page}" ${isCurrent ? "aria-current='page'" : ''}>${page}</button></li>`,
+      );
+    }
+    pageList.innerHTML = html.join('');
+  }
+
+  if (btnFirst) {
+    btnFirst.disabled = showLoading || isError || current <= 1;
+    btnFirst.dataset.page = '1';
   }
 
   if (btnPrev) {
-    const current = Number(meta.page) || 1;
-    const totalPages = Math.max(1, Number(meta.pageCount) || 1);
     const prevPage = current > 1 ? current - 1 : 1;
     btnPrev.disabled = showLoading || isError || current <= 1;
     btnPrev.dataset.page = String(prevPage);
   }
+
   if (btnNext) {
-    const current = Number(meta.page) || 1;
-    const totalPages = Math.max(1, Number(meta.pageCount) || 1);
     const nextPage = current < totalPages ? current + 1 : totalPages;
     btnNext.disabled = showLoading || isError || current >= totalPages;
     btnNext.dataset.page = String(nextPage);
+  }
+
+  if (btnLast) {
+    btnLast.disabled = showLoading || isError || current >= totalPages;
+    btnLast.dataset.page = String(totalPages);
   }
 
   applyRBAC(container);
