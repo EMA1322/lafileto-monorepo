@@ -65,6 +65,31 @@ export function bindCategoriesBindings(container) {
     });
   }
 
+  const $retry = container.querySelector('#categories-retry');
+  if ($retry) {
+    $retry.addEventListener('click', async () => {
+      await refreshAndRender(container);
+    });
+  }
+
+  const $emptyClear = container.querySelector('#categories-empty-clear');
+  if ($emptyClear) {
+    $emptyClear.addEventListener('click', async () => {
+      setSearch('');
+      setFilterActive('all');
+      setOrder('asc');
+      setPage(1);
+
+      if ($search) $search.value = '';
+      const $filter = container.querySelector('#categories-filter-active');
+      if ($filter) $filter.value = 'all';
+      const $order = container.querySelector('#categories-order');
+      if ($order) $order.value = 'asc';
+
+      await refreshAndRender(container);
+    });
+  }
+
   // --- Filtros
   container.addEventListener('change', async (ev) => {
     const el = ev.target;

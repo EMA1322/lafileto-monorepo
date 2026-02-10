@@ -81,25 +81,43 @@
     </div>
   </header>
 
-  <div id="categories-status" class="categories__status" aria-live="polite"></div>
+  <section
+    class="categories__content is-loading"
+    aria-live="polite"
+    aria-busy="false"
+    data-status="loading"
+  >
+    <div class="categories__state categories__state--loading" id="categories-loading" role="status">
+      <span class="categories__spinner" aria-hidden="true"></span>
+      <p>Cargando categorías…</p>
+    </div>
 
-  <div class="table-wrapper categories__tableWrap">
-    <table id="categories-table" class="data-table categories__table" role="table">
-      <caption class="sr-only">Listado de categorías</caption>
-      <thead>
-        <tr>
-          <th scope="col">Nombre</th>
-          <th scope="col">Imagen</th>
-          <th scope="col">Productos</th>
-          <th scope="col">Estado</th>
-          <th scope="col" class="categories__th-actions">Acciones</th>
-        </tr>
-      </thead>
-      <tbody id="categories-tbody" class="categories__tbody"></tbody>
-    </table>
-  </div>
+    <div class="categories__state categories__state--error" id="categories-error" role="alert" hidden>
+      <p id="categories-error-message">No pudimos cargar las categorías. Intentá nuevamente.</p>
+      <button id="categories-retry" class="btn btn--ghost btn--sm" type="button">Reintentar</button>
+    </div>
 
-  <p id="categories-empty" class="categories__empty" hidden>No hay categorías para mostrar.</p>
+    <div class="categories__state categories__state--empty" id="categories-empty" role="status" hidden>
+      <p>No encontramos categorías con estos filtros.</p>
+      <button id="categories-empty-clear" class="btn btn--ghost btn--sm" type="button">Limpiar filtros</button>
+    </div>
+
+    <div class="table-wrapper categories__tableWrap" id="categories-table-wrapper" hidden>
+      <table id="categories-table" class="data-table categories__table" role="table">
+        <caption class="sr-only">Listado de categorías</caption>
+        <thead>
+          <tr>
+            <th scope="col">Nombre</th>
+            <th scope="col">Imagen</th>
+            <th scope="col">Productos</th>
+            <th scope="col">Estado</th>
+            <th scope="col" class="categories__th-actions">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="categories-tbody" class="categories__tbody"></tbody>
+      </table>
+    </div>
+  </section>
 
   <footer class="categories__footer" aria-label="Paginación de categorías">
     <div id="categories-summary" class="categories__summary">—</div>

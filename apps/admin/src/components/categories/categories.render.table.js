@@ -86,58 +86,80 @@ export function renderCategoriesTable(snapshot, root = document.querySelector('#
   const container = root instanceof Element ? root : document.querySelector('#categories-view');
   if (!container) return;
 
+  const content = container.querySelector('.categories__content');
+  const loadingState = container.querySelector('#categories-loading');
+  const errorState = container.querySelector('#categories-error');
+  const errorMessage = container.querySelector('#categories-error-message');
+  const emptyState = container.querySelector('#categories-empty');
+  const tableWrapper = container.querySelector('#categories-table-wrapper');
   const tbody = container.querySelector('#categories-tbody');
-  const empty = container.querySelector('#categories-empty');
-  const status = container.querySelector('#categories-status');
   const summary = container.querySelector('#categories-summary');
   const pageIndicator = container.querySelector('#categories-page-indicator');
   const btnPrev = container.querySelector('#categories-page-prev');
   const btnNext = container.querySelector('#categories-page-next');
 
   const view = snapshot || {};
+  const isLoaded = Boolean(view.loaded);
   const loading = !!view.loading;
   const error = view.error;
   const items = Array.isArray(view.viewItems) ? view.viewItems : [];
   const meta = view.meta || { page: 1, pageCount: 1, total: 0, pageSize: 10 };
-  const ready = (!loading && !error) || container.dataset.categoriesReady === 'true';
-  if (!loading) {
-    container.dataset.categoriesReady = 'true';
+  const showLoading = !isLoaded || loading;
+  const isError = Boolean(error);
+  const isEmpty = isLoaded && !loading && !isError && items.length === 0;
+  const hasData = isLoaded && !loading && !isError && items.length > 0;
+
+  const statusName = (() => {
+    if (showLoading && !isError && !isEmpty && !hasData) return 'loading';
+    if (isError) return 'error';
+    if (isEmpty) return 'empty';
+    if (hasData) return 'success';
+    return 'idle';
+  })();
+
+  if (content) {
+    content.dataset.status = statusName;
+    content.classList.toggle('is-loading', statusName === 'loading');
+    content.classList.toggle('has-error', statusName === 'error');
+    content.classList.toggle('is-empty', statusName === 'empty');
+    content.classList.toggle('has-success', statusName === 'success');
+    content.setAttribute('aria-busy', showLoading ? 'true' : 'false');
   }
-  const isEmpty = ready && !loading && !error && items.length === 0;
 
-  container.classList.toggle('is-loading', loading);
-  container.classList.toggle('has-error', !!error);
-  container.classList.toggle('is-empty', isEmpty);
+  if (loadingState) loadingState.hidden = true;
+  if (errorState) errorState.hidden = true;
+  if (emptyState) emptyState.hidden = true;
+  if (tableWrapper) tableWrapper.hidden = true;
 
-  if (status) {
-    if (loading) {
-      status.textContent = 'Cargando categorías…';
-    } else if (error) {
-      const code = String(error?.code || '').toUpperCase();
-      if (code === 'PERMISSION_DENIED' || code === 'RBAC_FORBIDDEN') {
-        status.textContent = 'No tenés permisos para ver esta sección.';
-      } else {
-        status.textContent = typeof error?.message === 'string' ? error.message : 'No se pudo cargar la información.';
-      }
+  if (statusName === 'loading') {
+    if (loadingState) loadingState.hidden = false;
+  } else if (statusName === 'error') {
+    if (errorState) errorState.hidden = false;
+  } else if (statusName === 'empty') {
+    if (emptyState) emptyState.hidden = false;
+  } else if (statusName === 'success') {
+    if (tableWrapper) tableWrapper.hidden = false;
+  }
+
+  if (errorMessage) {
+    const message = typeof error?.message === 'string' ? error.message : 'No se pudieron cargar las categorías.';
+    errorMessage.textContent = message;
+  }
+
+  if (tbody) {
+    if (showLoading) {
+      tbody.innerHTML = '';
+    } else if (hasData) {
+      tbody.innerHTML = items.map(renderRow).join('');
     } else {
-      status.textContent = '';
+      tbody.innerHTML = '';
     }
   }
 
-  if (tbody && !loading) {
-    tbody.innerHTML = items.map(renderRow).join('');
-  } else if (tbody && loading && !tbody.innerHTML) {
-    tbody.innerHTML = '';
-  }
-
-  if (empty) {
-    empty.hidden = !(isEmpty);
-  }
-
   if (summary) {
-    if (loading) summary.textContent = 'Cargando…';
-    else if (error) summary.textContent = 'No se pudo cargar.';
-    else summary.textContent = formatSummary(meta);
+    if (!showLoading && !isError) summary.textContent = formatSummary(meta);
+    else if (showLoading) summary.textContent = 'Cargando…';
+    else summary.textContent = '—';
   }
 
   if (pageIndicator) {
@@ -150,14 +172,14 @@ export function renderCategoriesTable(snapshot, root = document.querySelector('#
     const current = Number(meta.page) || 1;
     const totalPages = Math.max(1, Number(meta.pageCount) || 1);
     const prevPage = current > 1 ? current - 1 : 1;
-    btnPrev.disabled = loading || current <= 1;
+    btnPrev.disabled = showLoading || isError || current <= 1;
     btnPrev.dataset.page = String(prevPage);
   }
   if (btnNext) {
     const current = Number(meta.page) || 1;
     const totalPages = Math.max(1, Number(meta.pageCount) || 1);
     const nextPage = current < totalPages ? current + 1 : totalPages;
-    btnNext.disabled = loading || current >= totalPages;
+    btnNext.disabled = showLoading || isError || current >= totalPages;
     btnNext.dataset.page = String(nextPage);
   }
 
