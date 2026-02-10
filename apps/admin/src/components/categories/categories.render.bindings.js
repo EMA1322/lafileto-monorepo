@@ -8,6 +8,7 @@ import {
   setFilterActive,
   setOrder,
   setPage,
+  setPageSize,
   setSearch,
 } from './categories.state.js';
 import { renderCategoriesTable } from './categories.render.table.js';
@@ -47,10 +48,12 @@ function applyDefaultFiltersToControls(container) {
   const search = container.querySelector('input[type="search"]');
   const filter = container.querySelector('#categories-filter-active');
   const order = container.querySelector('#categories-order');
+  const pageSize = container.querySelector('#categories-page-size');
 
   if (search) search.value = '';
   if (filter) filter.value = 'all';
   if (order) order.value = 'asc';
+  if (pageSize) pageSize.value = '10';
 }
 
 async function clearAndReload(container) {
@@ -125,6 +128,12 @@ export function bindCategoriesBindings(container) {
       setPage(1);
       await refreshAndRender(container);
       return;
+    }
+
+    if (el.matches('#categories-page-size')) {
+      setPageSize(el.value);
+      setPage(1);
+      await refreshAndRender(container);
     }
   });
 

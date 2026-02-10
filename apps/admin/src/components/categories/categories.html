@@ -121,24 +121,53 @@
   </section>
 
   <footer class="categories__footer" aria-label="Paginación de categorías">
-    <div id="categories-summary" class="categories__summary">—</div>
-    <div class="categories__pager">
+    <div class="categories__footerRow">
+      <div class="categories__pageSize">
+        <label for="categories-page-size" class="categories__pageSizeLabel">Resultados por página</label>
+        <select
+          id="categories-page-size"
+          class="form-control form-control--dense categories__select categories__pageSizeSelect"
+          name="pageSize"
+        >
+          <option value="10">10</option>
+          <option value="20">20</option>
+          <option value="50">50</option>
+        </select>
+      </div>
+      <div id="categories-summary" class="categories__summary" role="status" aria-live="polite">—</div>
+    </div>
+
+    <nav class="categories__pager" aria-label="Controles de paginación">
+      <button
+        id="categories-page-first"
+        class="btn btn--ghost btn--sm"
+        type="button"
+        aria-label="Primera página"
+        data-page="1"
+      >«</button>
       <button
         id="categories-page-prev"
         class="btn btn--ghost btn--sm"
         type="button"
         aria-label="Página anterior"
         data-page="1"
-      >◀</button>
-      <span id="categories-page-indicator" class="categories__page">1 / 1</span>
+      >‹</button>
+      <ol id="categories-page-list" class="categories__pageList" aria-live="polite"></ol>
       <button
         id="categories-page-next"
         class="btn btn--ghost btn--sm"
         type="button"
         aria-label="Página siguiente"
         data-page="1"
-      >▶</button>
-    </div>
+      >›</button>
+      <button
+        id="categories-page-last"
+        class="btn btn--ghost btn--sm"
+        type="button"
+        aria-label="Última página"
+        data-page="1"
+      >»</button>
+    </nav>
   </footer>
 
   <!-- Templates para modales -->
