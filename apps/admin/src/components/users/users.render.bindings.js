@@ -258,7 +258,7 @@ export default function renderBindings(
     if (action === 'user-toggle-status') {
       const canUpdate = guardAction('update', { roleId: state.rbac.roleId, snackWarn });
       if (!canUpdate) return;
-      const nextStatus = btn.dataset.nextStatus || 'INACTIVE';
+      const nextStatus = btn.dataset.nextStatus || 'inactive';
       btn.disabled = true;
       try {
         await toggleUserStatus(userId, nextStatus);

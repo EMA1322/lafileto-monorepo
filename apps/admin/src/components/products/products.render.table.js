@@ -6,7 +6,7 @@
 
 import { applyRBAC } from '../../utils/rbac.js';
 
-import { STATUS_LABELS, DEFAULT_PAGE_SIZE, escapeHTML, formatMoney, resolveOfferPricing } from './products.helpers.js';
+import { DEFAULT_PAGE_SIZE, escapeHTML, formatMoney, formatStatusLabel, resolveOfferPricing } from './products.helpers.js';
 import { REQUEST_STATUS } from './products.state.js';
 
 function getRefs(container) {
@@ -54,7 +54,7 @@ function renderOfferBadge(pricing, { ariaHidden = false } = {}) {
 
 function renderStatusBadge(status) {
   const isActive = status === 'active';
-  const label = isActive ? STATUS_LABELS.active : STATUS_LABELS.draft;
+  const label = formatStatusLabel(status);
   const variant = isActive ? 'badge--success' : 'badge--warning';
   return `<span class="badge ${variant} products__status">${escapeHTML(label)}</span>`;
 }
@@ -120,12 +120,11 @@ function renderTable(items, refs, categories) {
     .map((item) => {
       const idAttr = escapeHTML(item.id ?? '');
       const status = item.status || 'draft';
-      const statusLabel = status === 'active' ? STATUS_LABELS.active : STATUS_LABELS.draft;
       const pricing = resolveOfferPricing(item);
       const imageMarkup = renderProductImage(item, pricing);
       const hasImage = Boolean(item?.imageUrl);
       const priceMarkup = renderProductPrice(pricing);
-      const statusBadge = renderStatusBadge(status, statusLabel);
+      const statusBadge = renderStatusBadge(status);
       return `
         <tr data-id="${idAttr}">
           <td class="products__cell-image"${hasImage ? '' : ' aria-label="Sin imagen"'}>

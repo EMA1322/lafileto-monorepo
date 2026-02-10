@@ -7,6 +7,7 @@
 import { productsApi, categoriesApi } from '../../utils/apis.js';
 import { showSnackbar } from '../../utils/snackbar.js';
 import { computePageCount } from '../../utils/helpers.js';
+import { UI_STATUS, normalizeUiStatus } from '../../utils/status.helpers.js';
 
 import {
   DEFAULT_FILTERS,
@@ -40,13 +41,13 @@ function sanitizeFilters(input = {}) {
   filters.categoryId = source.categoryId && source.categoryId !== 'all' ? String(source.categoryId) : 'all';
 
   const statusValue = typeof source.status === 'string' ? source.status.trim() : DEFAULT_FILTERS.status;
-  if (statusValue === 'active') {
-    filters.status = 'active';
-  } else if (statusValue === 'inactive' || statusValue === 'draft' || statusValue === 'archived') {
-    // Archived se muestra como Inactivo pero no se envía como filtro separado aún.
-    filters.status = 'inactive';
-  } else {
+  if (statusValue === 'all') {
     filters.status = 'all';
+  } else if (statusValue === 'draft' || statusValue === 'archived') {
+    filters.status = UI_STATUS.INACTIVE;
+  } else {
+    const uiStatus = normalizeUiStatus(statusValue, null);
+    filters.status = uiStatus || 'all';
   }
 
   const priceMinRaw = source.priceMin;
