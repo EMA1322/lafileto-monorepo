@@ -109,6 +109,13 @@ function getCategoriesOptions(selectedId) {
     .join('');
 }
 
+function getTemplateNode(templateId) {
+  const template = document.getElementById(templateId);
+  if (!(template instanceof HTMLTemplateElement)) return null;
+  const node = template.content.firstElementChild;
+  return node ? node.cloneNode(true) : null;
+}
+
 function buildOfferFormState(formData) {
   return {
     enabled: formData.get('offerEnabled') === 'on',
@@ -287,8 +294,26 @@ function buildProductPayload(formData) {
   };
 }
 
-function buildProductFormHTML({ mode, product }) {
+function buildProductFormNode({ mode, product }) {
+  const modal = getTemplateNode('tpl-product-form');
+  if (!modal) return null;
+
   const isEdit = mode === 'edit';
+  const title = modal.querySelector('#products-form-title');
+  const submitButton = modal.querySelector('#products-form-submit');
+  const inputName = modal.querySelector('#field-name');
+  const inputDescription = modal.querySelector('#field-description');
+  const inputImage = modal.querySelector('#field-image-url');
+  const inputPrice = modal.querySelector('#field-price');
+  const inputStock = modal.querySelector('#field-stock');
+  const selectStatus = modal.querySelector('#field-status');
+  const selectCategory = modal.querySelector('#field-category');
+  const offerToggle = modal.querySelector('#field-offer-enabled');
+  const offerFields = modal.querySelector('[data-offer-fields]');
+  const offerDiscount = modal.querySelector('#field-offer-discount');
+  const previewImage = modal.querySelector('[data-image-preview-img]');
+  const previewEmpty = modal.querySelector('[data-image-preview-empty]');
+
   const categoriesOptions = getCategoriesOptions(product.categoryId ?? state.categories[0]?.id ?? '');
   const imageUrl = product.imageUrl ?? '';
   const offer = product.offer || null;
@@ -301,116 +326,48 @@ function buildProductFormHTML({ mode, product }) {
   const stockValue = Number.isFinite(Number(product.stock)) ? Number(product.stock) : 0;
   const statusValue = productApiStatusToUi(product.status);
   const descriptionValue = product.description ?? '';
-  const previewPlaceholderHidden = '';
-  const previewImageHidden = 'hidden';
-  return `
-    <form id="products-form" class="products__form" novalidate>
-      <h3 class="products__form-title">${isEdit ? 'Editar producto' : 'Crear producto'}</h3>
-      <div class="products__form-grid">
-        <div class="products__field">
-          <label for="field-name">Nombre</label>
-          <input id="field-name" name="name" class="form-control form-control--dense" type="text" required maxlength="120" value="${escapeHTML(
-            product.name ?? '',
-          )}" />
-        </div>
-        <div class="products__field">
-          <label for="field-description">Descripción</label>
-          <textarea id="field-description" name="description" class="form-control form-control--dense" rows="3">${escapeHTML(
-            descriptionValue,
-          )}</textarea>
-        </div>
-        <div class="products__field products__field--image">
-          <label for="field-image-url">Imagen (URL)</label>
-          <input
-            id="field-image-url"
-            name="imageUrl"
-            class="form-control form-control--dense"
-            type="url"
-            inputmode="url"
-            placeholder="https://…"
-            value="${escapeHTML(imageUrl)}"
-            autocomplete="off"
-          />
-          <div class="products__image-preview" data-image-preview>
-            <div class="products__image-preview-placeholder" data-image-preview-empty ${previewPlaceholderHidden}>
-              Sin vista previa
-            </div>
-            <img
-              data-image-preview-img
-              src="${escapeHTML(imageUrl)}"
-              alt="Vista previa de la imagen del producto"
-              class="products__image-preview-img"
-              ${previewImageHidden}
-            />
-          </div>
-          <p class="products__help-text">Ingresá una URL que comience con http:// o https://</p>
-        </div>
-        <div class="products__field">
-          <label for="field-price">Precio</label>
-          <input id="field-price" name="price" class="form-control form-control--dense" type="number" min="0" step="0.01" value="${priceValue}" />
-        </div>
-        <div class="products__field">
-          <label for="field-stock">Stock</label>
-          <input id="field-stock" name="stock" class="form-control form-control--dense" type="number" min="0" step="1" value="${stockValue}" />
-        </div>
-        <div class="products__field">
-          <label for="field-status">Estado</label>
-          <select id="field-status" name="status" class="form-control form-control--dense">
-            ${STATUS_FORM_OPTIONS.map(({ value, label }) => {
-              const selected = value === statusValue ? 'selected' : '';
-              return `<option value="${value}" ${selected}>${escapeHTML(label)}</option>`;
-            }).join('')}
-          </select>
-        </div>
-        <div class="products__field">
-          <label for="field-category">Categoría</label>
-          <select id="field-category" name="categoryId" class="form-control form-control--dense" required>${categoriesOptions}</select>
-        </div>
-      </div>
-      <section class="products__section" aria-labelledby="products-offer-title">
-        <div class="products__section-header">
-          <h4 id="products-offer-title" class="products__section-title">Oferta</h4>
-          <label class="products__switch">
-            <input id="field-offer-enabled" name="offerEnabled" type="checkbox" ${
-              offerEnabled ? 'checked' : ''
-            } />
-            <span>Habilitar oferta</span>
-          </label>
-        </div>
-        <div class="products__section-body" data-offer-fields ${offerEnabled ? '' : 'hidden'} aria-hidden="${
-    offerEnabled ? 'false' : 'true'
-  }">
-          <div class="products__field">
-            <label for="field-offer-discount">Descuento (%)</label>
-            <input
-              id="field-offer-discount"
-              name="offerDiscountPercent"
-              class="form-control form-control--dense"
-              type="number"
-              min="1"
-              max="100"
-              step="0.01"
-              inputmode="decimal"
-              value="${discountValue ? escapeHTML(discountValue) : ''}"
-            />
-          </div>
-        </div>
-      </section>
-      <div class="products__form-actions">
-        <button type="button" class="btn btn--ghost" data-close-modal>Cancelar</button>
-        <button type="submit" class="btn btn--primary">${
-          isEdit ? 'Guardar' : 'Crear'
-        }</button>
-      </div>
-    </form>
-  `;
+  if (title) title.textContent = isEdit ? 'Editar producto' : 'Crear producto';
+  if (submitButton) submitButton.textContent = isEdit ? 'Guardar' : 'Crear';
+  if (inputName) inputName.value = product.name ?? '';
+  if (inputDescription) inputDescription.value = descriptionValue;
+  if (inputImage) inputImage.value = imageUrl;
+  if (inputPrice) inputPrice.value = String(priceValue);
+  if (inputStock) inputStock.value = String(stockValue);
+  if (selectCategory) selectCategory.innerHTML = categoriesOptions;
+  if (offerToggle) offerToggle.checked = offerEnabled;
+  if (offerFields) {
+    offerFields.hidden = !offerEnabled;
+    offerFields.setAttribute('aria-hidden', offerEnabled ? 'false' : 'true');
+  }
+  if (offerDiscount) {
+    offerDiscount.value = discountValue;
+    offerDiscount.required = offerEnabled;
+  }
+  if (previewImage) {
+    previewImage.src = imageUrl;
+    previewImage.hidden = true;
+  }
+  if (previewEmpty) previewEmpty.hidden = false;
+
+  if (selectStatus) {
+    selectStatus.innerHTML = STATUS_FORM_OPTIONS.map(({ value, label }) => {
+      const option = document.createElement('option');
+      option.value = value;
+      option.textContent = label;
+      if (value === statusValue) option.selected = true;
+      return option.outerHTML;
+    }).join('');
+  }
+
+  return modal;
 }
 
 export function openProductModal({ mode = 'create', product = {}, container } = {}) {
   const snapshot = product && Object.keys(product).length ? product : { ...product };
   const originalOffer = snapshot?.offer || null;
-  const html = buildProductFormHTML({ mode, product: snapshot });
-  openModal(html, '#field-name');
+  const modalNode = buildProductFormNode({ mode, product: snapshot });
+  if (!modalNode) return;
+  openModal(modalNode.outerHTML, '#field-name');
 
   const form = document.getElementById('products-form');
   if (!form) return;
@@ -577,17 +534,14 @@ export function openProductModal({ mode = 'create', product = {}, container } = 
 
 export function openDeleteModal(product, container) {
   if (!product) return;
-  const html = `
-    <div class="products__delete-modal">
-      <h3>Eliminar producto</h3>
-      <p>Esta acción es definitiva. ¿Querés eliminar “${escapeHTML(product.name ?? '')}”?</p>
-        <div class="products__form-actions">
-        <button type="button" class="btn btn--ghost" data-close-modal>Cancelar</button>
-        <button type="button" id="confirm-delete" class="btn btn--primary">Eliminar</button>
-      </div>
-    </div>
-  `;
-  openModal(html, '#confirm-delete');
+  const modalNode = getTemplateNode('tpl-product-delete');
+  if (!modalNode) return;
+  const deleteMessage = modalNode.querySelector('#product-delete-message');
+  if (deleteMessage) {
+    deleteMessage.textContent = `Esta acción es definitiva. ¿Querés eliminar “${product.name ?? ''}”?`;
+  }
+
+  openModal(modalNode.outerHTML, '#confirm-delete');
   const confirm = document.getElementById('confirm-delete');
   if (!confirm) return;
   confirm.addEventListener('click', async () => {
@@ -607,7 +561,10 @@ export function openDeleteModal(product, container) {
   });
 }
 
-function buildProductViewHTML(product = {}) {
+function buildProductViewNode(product = {}) {
+  const modal = getTemplateNode('tpl-product-view');
+  if (!modal) return null;
+
   const statusLabel = STATUS_LABELS[product?.status] || '—';
   const categoryLabel = formatCategoryName(product);
   const pricing = resolveOfferPricing(product);
@@ -621,69 +578,50 @@ function buildProductViewHTML(product = {}) {
   const finalPriceLabel = formatMoney(pricing.finalPrice ?? pricing.originalPrice ?? 0);
   const stockNumber = Number(product?.stock);
   const stockLabel = Number.isFinite(stockNumber) ? String(stockNumber) : '0';
-  const descriptionValue = product?.description ? escapeHTML(product.description).replace(/\n/g, '<br />') : '—';
+  const descriptionValue = product?.description || '—';
   const imageUrl = product?.imageUrl ? String(product.imageUrl) : '';
-  const imageMarkup = imageUrl
-    ? `<img src="${escapeHTML(imageUrl)}" alt="${escapeHTML(
-        product?.name ? `Imagen de ${product.name}` : 'Imagen del producto',
-      )}" class="products__image-preview-img" />`
-    : '<div class="products__image-preview-placeholder products__image-preview-placeholder--static">Sin imagen</div>';
   const offerStatusLabel = offerActive ? 'Activa' : 'Sin oferta activa';
 
-  return `
-    <div class="products__view-modal">
-      <h3 class="products__view-title">${escapeHTML(product?.name ?? 'Producto')}</h3>
-      <div class="products__view-body">
-        <div class="products__view-media">${imageMarkup}</div>
-        <dl class="products__view-grid">
-          <div class="products__view-row">
-            <dt class="products__view-label">Precio base</dt>
-            <dd class="products__view-value">${escapeHTML(priceLabel)}</dd>
-          </div>
-          <div class="products__view-row">
-            <dt class="products__view-label">Stock</dt>
-            <dd class="products__view-value">${escapeHTML(stockLabel)}</dd>
-          </div>
-          <div class="products__view-row">
-            <dt class="products__view-label">Estado</dt>
-            <dd class="products__view-value">${escapeHTML(statusLabel)}</dd>
-          </div>
-          <div class="products__view-row">
-            <dt class="products__view-label">Categoría</dt>
-            <dd class="products__view-value">${escapeHTML(categoryLabel)}</dd>
-          </div>
-        </dl>
-      </div>
-      <div class="products__view-description">
-        <h4>Descripción</h4>
-        <p>${descriptionValue || '—'}</p>
-      </div>
-      <section class="products__view-section" aria-labelledby="product-offer-details-title">
-        <div class="products__view-section-header">
-          <h4 id="product-offer-details-title" class="products__section-title">Oferta</h4>
-          <span class="products__view-tag ${offerActive ? 'products__view-tag--active' : ''}">${escapeHTML(
-            offerStatusLabel,
-          )}</span>
-        </div>
-        <dl class="products__view-grid products__view-grid--compact">
-          <div class="products__view-row">
-            <dt class="products__view-label">Precio final</dt>
-            <dd class="products__view-value">${escapeHTML(finalPriceLabel)}</dd>
-          </div>
-          <div class="products__view-row">
-            <dt class="products__view-label">Descuento</dt>
-            <dd class="products__view-value">${escapeHTML(discountLabel)}</dd>
-          </div>
-        </dl>
-      </section>
-        <div class="products__form-actions">
-        <button type="button" class="btn btn--primary" data-close-modal id="product-view-close">Cerrar</button>
-      </div>
-    </div>
-  `;
+  const title = modal.querySelector('#product-view-title');
+  const image = modal.querySelector('[data-view-image]');
+  const imageEmpty = modal.querySelector('[data-view-image-empty]');
+  const setField = (name, value) => {
+    const element = modal.querySelector(`[data-field="${name}"]`);
+    if (element) element.textContent = value;
+  };
+
+  if (title) title.textContent = product?.name ?? 'Producto';
+  setField('price', priceLabel);
+  setField('stock', stockLabel);
+  setField('status', statusLabel);
+  setField('category', categoryLabel);
+  setField('description', descriptionValue);
+  setField('offer-status', offerStatusLabel);
+  setField('final-price', finalPriceLabel);
+  setField('discount', discountLabel);
+
+  const offerTag = modal.querySelector('[data-field="offer-status"]');
+  if (offerTag) {
+    offerTag.classList.toggle('products__view-tag--active', offerActive);
+  }
+
+  if (image && imageEmpty) {
+    if (imageUrl) {
+      image.src = imageUrl;
+      image.alt = product?.name ? `Imagen de ${product.name}` : 'Imagen del producto';
+      image.hidden = false;
+      imageEmpty.hidden = true;
+    } else {
+      image.hidden = true;
+      imageEmpty.hidden = false;
+    }
+  }
+
+  return modal;
 }
 
 export function openProductViewModal(product = {}) {
-  const html = buildProductViewHTML(product);
-  openModal(html, '#product-view-close');
+  const modalNode = buildProductViewNode(product);
+  if (!modalNode) return;
+  openModal(modalNode.outerHTML, '#product-view-close');
 }
