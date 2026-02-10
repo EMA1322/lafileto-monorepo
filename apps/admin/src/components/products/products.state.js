@@ -91,6 +91,7 @@ export const state = {
   loading: false,
   error: null,
   selectedId: null,
+  pendingStatusIds: [],
   status: REQUEST_STATUS.IDLE,
 };
 
@@ -116,8 +117,22 @@ export function getSnapshot() {
     loading: state.loading,
     error: state.error,
     selectedId: state.selectedId,
+    pendingStatusIds: state.pendingStatusIds.slice(),
     status: state.status,
   };
+}
+
+export function setStatusPending(id, isPending) {
+  const identifier = String(id || '').trim();
+  if (!identifier) return;
+  const has = state.pendingStatusIds.includes(identifier);
+  if (isPending && !has) {
+    state.pendingStatusIds.push(identifier);
+    return;
+  }
+  if (!isPending && has) {
+    state.pendingStatusIds = state.pendingStatusIds.filter((itemId) => itemId !== identifier);
+  }
 }
 
 export function setFilters(partial) {
