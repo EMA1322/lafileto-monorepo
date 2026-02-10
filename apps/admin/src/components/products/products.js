@@ -6,6 +6,7 @@
 
 import { ensureRbacLoaded, can } from '../../utils/rbac.js';
 import { showSnackbar } from '../../utils/snackbar.js';
+import { replaceHash } from '../../utils/helpers.js';
 
 import { renderProductsView } from './products.render.table.js';
 import { bindProductsBindings } from './products.render.bindings.js';
@@ -40,9 +41,8 @@ function syncHashWithState(snapshot) {
     lastHashValue = target;
     return;
   }
-  lastHashValue = target;
+  lastHashValue = replaceHash('products', filtersQuery) || target;
   skipHashSync = true;
-  window.location.hash = target;
   queueMicrotask(() => {
     skipHashSync = false;
   });
@@ -53,6 +53,7 @@ function handleHashChange(container) {
   if (skipHashSync) return;
   const next = parseFiltersFromHash(window.location.hash);
   if (!next) return;
+  lastHashValue = window.location.hash;
   replaceFilters(next, { emit: false });
   notify(container);
   void fetchProducts({ silentToast: true });

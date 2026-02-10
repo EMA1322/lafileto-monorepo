@@ -220,3 +220,30 @@ export function debounce(fn, delay = 300) {
     }, Math.max(0, delay));
   };
 }
+
+/**
+ * Actualiza el hash sin disparar navegación SPA (si history.replaceState está disponible).
+ * Devuelve el hash final objetivo (ej: #products?q=cola).
+ */
+export function replaceHash(route, query = '') {
+  if (typeof window === 'undefined') return '';
+
+  const normalizedRoute = String(route || '').replace(/^#/, '').trim();
+  if (!normalizedRoute) return '';
+
+  const normalizedQuery = String(query || '').replace(/^\?/, '').trim();
+  const targetHash = normalizedQuery ? `#${normalizedRoute}?${normalizedQuery}` : `#${normalizedRoute}`;
+
+  if (window.location.hash === targetHash) {
+    return targetHash;
+  }
+
+  if (window.history?.replaceState) {
+    const { pathname, search } = window.location;
+    window.history.replaceState(window.history.state ?? null, '', `${pathname}${search}${targetHash}`);
+    return targetHash;
+  }
+
+  window.location.hash = targetHash;
+  return targetHash;
+}

@@ -1,6 +1,7 @@
 import { ensureRbacLoaded, applyRBAC } from '@/utils/rbac.js';
 import { mountIcons } from '@/utils/icons.js';
 import { toast } from '@/utils/toast.js';
+import { replaceHash } from '@/utils/helpers.js';
 
 import {
   createButtonTemplate,
@@ -58,9 +59,8 @@ function syncHashWithState() {
     lastHashValue = target;
     return;
   }
-  lastHashValue = target;
+  lastHashValue = replaceHash('users', filtersQuery) || target;
   skipHashSync = true;
-  window.location.hash = target;
   queueMicrotask(() => {
     skipHashSync = false;
   });

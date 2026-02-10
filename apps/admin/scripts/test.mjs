@@ -1,7 +1,9 @@
 import { runProductsContractTests } from '../test/products.contract.test.mjs';
+import { runHashSyncTests } from '../test/hash-sync.test.mjs';
 
 const suites = [
   { name: 'products contract helpers', runner: runProductsContractTests },
+  { name: 'hash sync helpers', runner: runHashSyncTests },
 ];
 
 let hasError = false;
