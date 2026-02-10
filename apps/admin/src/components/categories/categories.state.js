@@ -91,6 +91,16 @@ export function setPage(n) {
   }
 }
 
+export function resetFilters() {
+  state.q = '';
+  state.status = 'all';
+  state.orderBy = 'name';
+  state.orderDir = 'asc';
+  state.meta.page = 1;
+  state.meta.pageSize = DEFAULT_PAGE_SIZE;
+  state.meta.pageCount = Math.max(1, Number(state.meta.pageCount) || 1);
+}
+
 /** Construye los query params actuales. */
 function buildQuery() {
   const params = new URLSearchParams();

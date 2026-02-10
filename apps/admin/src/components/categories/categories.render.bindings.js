@@ -4,6 +4,7 @@
 import {
   fetchCategories,
   getSnapshot,
+  resetFilters,
   setFilterActive,
   setOrder,
   setPage,
@@ -42,6 +43,22 @@ async function refreshAndRender(container) {
   renderCategoriesTable(getSnapshot(), container);
 }
 
+function applyDefaultFiltersToControls(container) {
+  const search = container.querySelector('input[type="search"]');
+  const filter = container.querySelector('#categories-filter-active');
+  const order = container.querySelector('#categories-order');
+
+  if (search) search.value = '';
+  if (filter) filter.value = 'all';
+  if (order) order.value = 'asc';
+}
+
+async function clearAndReload(container) {
+  resetFilters();
+  applyDefaultFiltersToControls(container);
+  await refreshAndRender(container);
+}
+
 /** Enlaza eventos de la vista de categorías */
 export function bindCategoriesBindings(container) {
   if (!container) return;
@@ -53,9 +70,18 @@ export function bindCategoriesBindings(container) {
   if ($search) {
     const onSearch = debounce(async () => {
       setSearch($search.value);
+      setPage(1);
       await refreshAndRender(container);
     }, 300);
     $search.addEventListener('input', onSearch);
+  }
+
+  const $clear = container.querySelector('#categories-filter-clear');
+  if ($clear) {
+    $clear.addEventListener('click', async (event) => {
+      event.preventDefault();
+      await clearAndReload(container);
+    });
   }
 
   const $refresh = container.querySelector('#categories-refresh');
@@ -74,19 +100,9 @@ export function bindCategoriesBindings(container) {
 
   const $emptyClear = container.querySelector('#categories-empty-clear');
   if ($emptyClear) {
-    $emptyClear.addEventListener('click', async () => {
-      setSearch('');
-      setFilterActive('all');
-      setOrder('asc');
-      setPage(1);
-
-      if ($search) $search.value = '';
-      const $filter = container.querySelector('#categories-filter-active');
-      if ($filter) $filter.value = 'all';
-      const $order = container.querySelector('#categories-order');
-      if ($order) $order.value = 'asc';
-
-      await refreshAndRender(container);
+    $emptyClear.addEventListener('click', async (event) => {
+      event.preventDefault();
+      await clearAndReload(container);
     });
   }
 
@@ -98,6 +114,7 @@ export function bindCategoriesBindings(container) {
     // filtro activo
     if (el.matches('[data-filter]')) {
       setFilterActive(el.value);
+      setPage(1);
       await refreshAndRender(container);
       return;
     }
@@ -105,6 +122,7 @@ export function bindCategoriesBindings(container) {
     // orden
     if (el.matches('[data-order]')) {
       setOrder(el.value);
+      setPage(1);
       await refreshAndRender(container);
       return;
     }
