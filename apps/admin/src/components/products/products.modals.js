@@ -8,10 +8,8 @@ import { openModal, closeModal } from '../../utils/modals.js';
 import { showSnackbar } from '../../utils/snackbar.js';
 
 import { productsApi, offersApi } from '../../utils/apis.js';
-import { productApiStatusToUi, uiToProductApiStatus } from '../../utils/status.helpers.js';
 
 import {
-  STATUS_FORM_OPTIONS,
   STATUS_LABELS,
   validateProductPayload,
   escapeHTML,
@@ -281,14 +279,11 @@ function handleFormError(error, form) {
 
 function buildProductPayload(formData) {
   const imageValue = formData.get('imageUrl')?.toString().trim() ?? '';
-  const rawStatus = formData.get('status')?.toString() ?? 'inactive';
-  const status = uiToProductApiStatus(rawStatus);
   return {
     name: formData.get('name')?.toString().trim() ?? '',
     description: formData.get('description')?.toString().trim() ?? '',
     price: Number(formData.get('price')),
     stock: Number(formData.get('stock')),
-    status,
     categoryId: formData.get('categoryId')?.toString() ?? '',
     imageUrl: imageValue ? imageValue : null,
   };
@@ -306,7 +301,6 @@ function buildProductFormNode({ mode, product }) {
   const inputImage = modal.querySelector('#field-image-url');
   const inputPrice = modal.querySelector('#field-price');
   const inputStock = modal.querySelector('#field-stock');
-  const selectStatus = modal.querySelector('#field-status');
   const selectCategory = modal.querySelector('#field-category');
   const offerToggle = modal.querySelector('#field-offer-enabled');
   const offerFields = modal.querySelector('[data-offer-fields]');
@@ -324,7 +318,6 @@ function buildProductFormNode({ mode, product }) {
       : '';
   const priceValue = Number.isFinite(Number(product.price)) ? Number(product.price) : 0;
   const stockValue = Number.isFinite(Number(product.stock)) ? Number(product.stock) : 0;
-  const statusValue = productApiStatusToUi(product.status);
   const descriptionValue = product.description ?? '';
   if (title) title.textContent = isEdit ? 'Editar producto' : 'Crear producto';
   if (submitButton) submitButton.textContent = isEdit ? 'Guardar' : 'Crear';
@@ -349,15 +342,6 @@ function buildProductFormNode({ mode, product }) {
   }
   if (previewEmpty) previewEmpty.hidden = false;
 
-  if (selectStatus) {
-    selectStatus.innerHTML = STATUS_FORM_OPTIONS.map(({ value, label }) => {
-      const option = document.createElement('option');
-      option.value = value;
-      option.textContent = label;
-      if (value === statusValue) option.selected = true;
-      return option.outerHTML;
-    }).join('');
-  }
 
   return modal;
 }

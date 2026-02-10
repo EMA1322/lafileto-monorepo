@@ -6,6 +6,7 @@
 
 import { can } from '../../utils/rbac.js';
 import { showSnackbar } from '../../utils/snackbar.js';
+import { productsApi } from '../../utils/apis.js';
 import { debounce } from '../../utils/helpers.js';
 
 import {
@@ -16,6 +17,8 @@ import {
   setPageSize,
   fetchProducts,
   notify,
+  upsertProduct,
+  setStatusPending,
 } from './products.state.js';
 import { openProductModal, openProductViewModal, openDeleteModal } from './products.modals.js';
 
@@ -179,6 +182,33 @@ export function bindProductsBindings(container) {
         return;
       }
       openDeleteModal(product, container);
+      return;
+    }
+    if (action === 'toggle-status') {
+      if (!can('products', 'u')) {
+        showSnackbar('No tenés permisos para editar productos.', { type: 'warning' });
+        return;
+      }
+      const nextStatus = button.dataset.nextStatus || 'draft';
+      if (button.disabled) return;
+      button.disabled = true;
+      setStatusPending(id, true);
+      notify(container);
+      (async () => {
+        try {
+          const { ok, data } = await productsApi.changeStatus(id, { status: nextStatus });
+          if (!ok) throw new Error('No se pudo actualizar el estado del producto.');
+          upsertProduct(data ?? { ...product, status: nextStatus, id: product.id });
+          notify(container);
+          showSnackbar('Estado del producto actualizado.', { type: 'success' });
+        } catch (error) {
+          console.error('[products.bindings] status update failed', error);
+          showSnackbar(error?.message || 'No se pudo actualizar el estado del producto.', { type: 'error' });
+        } finally {
+          setStatusPending(id, false);
+          notify(container);
+        }
+      })();
     }
   };
 

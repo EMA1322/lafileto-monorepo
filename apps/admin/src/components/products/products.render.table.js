@@ -5,6 +5,7 @@
 // ============================================================================
 
 import { applyRBAC } from '../../utils/rbac.js';
+import { UI_STATUS, getUiStatusLabel, productApiStatusToUi, uiToProductApiStatus } from '../../utils/status.helpers.js';
 
 import { DEFAULT_PAGE_SIZE, escapeHTML, formatMoney, formatStatusLabel, resolveOfferPricing } from './products.helpers.js';
 import { REQUEST_STATUS } from './products.state.js';
@@ -52,11 +53,28 @@ function renderOfferBadge(pricing, { ariaHidden = false } = {}) {
   return `<span class="badge badge--error products__badge products__badge--offer"${aria}>${escapeHTML(label)}</span>`;
 }
 
-function renderStatusBadge(status) {
-  const isActive = status === 'active';
-  const label = formatStatusLabel(status);
-  const variant = isActive ? 'badge--success' : 'badge--warning';
-  return `<span class="badge ${variant} products__status">${escapeHTML(label)}</span>`;
+function renderStatusToggle(item, pendingStatusIds = []) {
+  const uiStatus = productApiStatusToUi(item?.status);
+  const isActive = uiStatus === UI_STATUS.ACTIVE;
+  const nextApiStatus = uiToProductApiStatus(isActive ? UI_STATUS.INACTIVE : UI_STATUS.ACTIVE);
+  const label = formatStatusLabel(item?.status);
+  const isPending = pendingStatusIds.includes(String(item?.id));
+  const stateClass = isActive ? 'is-active' : 'is-inactive';
+
+  return `
+    <button
+      type="button"
+      class="products__status-toggle ${stateClass}"
+      data-action="toggle-status"
+      data-id="${escapeHTML(item?.id ?? '')}"
+      data-next-status="${escapeHTML(nextApiStatus)}"
+      aria-label="Cambiar estado de ${escapeHTML(item?.name ?? 'producto')}"
+      ${isPending ? 'disabled aria-busy="true"' : ''}
+      data-rbac-action="update"
+    >
+      ${escapeHTML(isPending ? 'Guardando…' : label || getUiStatusLabel(uiStatus))}
+    </button>
+  `;
 }
 
 function renderProductPrice(pricing) {
@@ -114,17 +132,16 @@ function renderProductImage(item, pricing) {
   `;
 }
 
-function renderTable(items, refs, categories) {
+function renderTable(items, refs, categories, pendingStatusIds = []) {
   if (!refs.tableBody) return;
   const rows = items
     .map((item) => {
       const idAttr = escapeHTML(item.id ?? '');
-      const status = item.status || 'draft';
       const pricing = resolveOfferPricing(item);
       const imageMarkup = renderProductImage(item, pricing);
       const hasImage = Boolean(item?.imageUrl);
       const priceMarkup = renderProductPrice(pricing);
-      const statusBadge = renderStatusBadge(status);
+      const statusToggle = renderStatusToggle(item, pendingStatusIds);
       return `
         <tr data-id="${idAttr}">
           <td class="products__cell-image"${hasImage ? '' : ' aria-label="Sin imagen"'}>
@@ -133,7 +150,7 @@ function renderTable(items, refs, categories) {
           <td>${escapeHTML(item.name ?? '—')}</td>
           <td class="products__cell--numeric">${priceMarkup}</td>
           <td class="products__cell--numeric">${Number(item.stock ?? 0)}</td>
-          <td>${statusBadge}</td>
+          <td>${statusToggle}</td>
           <td>${escapeHTML(resolveCategoryName(item.categoryId, categories))}</td>
           <td>
             <div class="products__actions">
@@ -269,6 +286,7 @@ export function renderProductsView(snapshot, root = document.querySelector('#pro
   const items = Array.isArray(view.items) ? view.items : [];
   const meta = view.meta || { page: 1, pageSize: DEFAULT_PAGE_SIZE, pageCount: 1, total: 0 };
   const categories = Array.isArray(view.categories) ? view.categories : [];
+  const pendingStatusIds = Array.isArray(view.pendingStatusIds) ? view.pendingStatusIds : [];
 
   const showLoading = isInitial || isLoading;
   const content = container.querySelector('.products__content');
@@ -317,7 +335,7 @@ export function renderProductsView(snapshot, root = document.querySelector('#pro
   if (showLoading) {
     if (refs.tableBody) refs.tableBody.innerHTML = '';
   } else if (hasData) {
-    renderTable(items, refs, categories);
+    renderTable(items, refs, categories, pendingStatusIds);
   } else {
     if (refs.tableBody) refs.tableBody.innerHTML = '';
   }

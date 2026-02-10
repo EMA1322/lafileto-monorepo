@@ -56,6 +56,7 @@ describe('admin products module', () => {
     const clonedView = viewTemplate?.content.firstElementChild?.cloneNode(true);
 
     expect(clonedForm?.querySelector('#products-form')).not.toBeNull();
+    expect(clonedForm?.querySelector('#field-status')).toBeNull();
     expect(clonedDelete?.querySelector('#confirm-delete')).not.toBeNull();
     expect(clonedView?.querySelector('#product-view-close')).not.toBeNull();
   });
@@ -102,12 +103,47 @@ describe('admin products module', () => {
     expect(rows[0]?.dataset.id).toBe('prod-1');
     expect(rows[0]?.querySelector('.products__actions [data-action="edit"]')).not.toBeNull();
 
+    const statusToggle = rows[0]?.querySelector('[data-action="toggle-status"]');
+    expect(statusToggle).not.toBeNull();
+    expect(statusToggle?.textContent?.trim()).toBe('Activo');
+    expect(statusToggle?.getAttribute('data-next-status')).toBe('draft');
+
     expect(document.querySelector('#products-meta')?.textContent).toBe('1–1 de 1 productos');
     expect(document.querySelector('#products-page-list button')?.textContent).toBe('1');
 
     const content = document.querySelector('.products__content');
     expect(content?.dataset.status).toBe('success');
     expect(content?.getAttribute('aria-busy')).toBe('false');
+  });
+
+
+  it('renderProductsView deshabilita toggle de estado mientras se procesa', () => {
+    renderProductsView({
+      status: REQUEST_STATUS.SUCCESS,
+      items: [
+        {
+          id: 'prod-2',
+          name: 'Empanada',
+          price: 2000,
+          stock: 4,
+          status: 'draft',
+          categoryId: 'cat-1',
+        },
+      ],
+      categories: [{ id: 'cat-1', name: 'Pizzas' }],
+      filters: { pageSize: 10 },
+      meta: {
+        page: 1,
+        pageSize: 10,
+        total: 1,
+        pageCount: 1,
+      },
+      pendingStatusIds: ['prod-2'],
+    });
+
+    const statusToggle = document.querySelector('#products-table-body [data-action="toggle-status"]');
+    expect(statusToggle?.disabled).toBe(true);
+    expect(statusToggle?.textContent?.trim()).toBe('Guardando…');
   });
 
   it('renderProductsView muestra estado de error con controles deshabilitados', () => {

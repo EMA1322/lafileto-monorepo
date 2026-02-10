@@ -264,9 +264,11 @@ export function validateProductPayload(payload = {}) {
     errors.push({ field: 'categoryId', message: 'Seleccioná una categoría.' });
   }
 
-  const status = payload.status ?? 'draft';
-  if (!STATUS_VALUES.includes(status)) {
-    errors.push({ field: 'status', message: 'Seleccioná un estado válido.' });
+  if (payload.status !== undefined && payload.status !== null && payload.status !== '') {
+    const status = String(payload.status).trim().toLowerCase();
+    if (!STATUS_VALUES.includes(status)) {
+      errors.push({ field: 'status', message: 'Seleccioná un estado válido.' });
+    }
   }
 
   const imageUrl = String(payload.imageUrl || payload.image_url || '').trim();
