@@ -103,6 +103,21 @@ export default function renderBindings(
     if (typeof onFiltersChange === 'function') onFiltersChange();
   };
 
+  const resetUsersHashState = () => {
+    if (typeof window === 'undefined') return;
+    if (!window.location.hash.startsWith('#users')) return;
+    if (window.location.hash === '#users') return;
+
+    const cleanHash = '#users';
+    if (window.history?.replaceState) {
+      const { pathname, search } = window.location;
+      window.history.replaceState(null, '', `${pathname}${search}${cleanHash}`);
+      return;
+    }
+
+    window.location.hash = cleanHash;
+  };
+
   searchInput?.addEventListener('input', (event) => {
     setFilters({ q: event.target.value || '' });
     setPage(1);
@@ -134,6 +149,7 @@ export default function renderBindings(
   clearFiltersButton?.addEventListener('click', (event) => {
     event.preventDefault();
     resetFilters();
+    resetUsersHashState();
     notifyFiltersChange();
     void reloadUsers({ onUsersStatus: renderUsersStatus, onUsersTable: renderUsersTable });
   }, { signal });
@@ -145,6 +161,7 @@ export default function renderBindings(
   emptyClearButton?.addEventListener('click', (event) => {
     event.preventDefault();
     resetFilters();
+    resetUsersHashState();
     notifyFiltersChange();
     void reloadUsers({ onUsersStatus: renderUsersStatus, onUsersTable: renderUsersTable });
   }, { signal });
