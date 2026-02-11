@@ -84,6 +84,8 @@ describe('admin categories module', () => {
 
     expect(document.querySelector('#categories-summary')?.textContent).toBe('41–48 de 48');
     expect(document.querySelector('#categories-page-size')?.value).toBe('20');
+    expect(document.querySelectorAll('#categories-page-size')).toHaveLength(1);
+    expect(document.querySelector('#categories-refresh')).toBeNull();
     expect(document.querySelector('#categories-page-first')?.dataset.page).toBe('1');
     expect(document.querySelector('#categories-page-prev')?.dataset.page).toBe('2');
     expect(document.querySelector('#categories-page-next')?.dataset.page).toBe('4');

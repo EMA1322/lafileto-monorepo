@@ -87,13 +87,6 @@ export function bindCategoriesBindings(container) {
     });
   }
 
-  const $refresh = container.querySelector('#categories-refresh');
-  if ($refresh) {
-    $refresh.addEventListener('click', async () => {
-      await refreshAndRender(container);
-    });
-  }
-
   const $retry = container.querySelector('#categories-retry');
   if ($retry) {
     $retry.addEventListener('click', async () => {
