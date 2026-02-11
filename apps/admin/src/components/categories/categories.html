@@ -15,6 +15,21 @@
       <p class="categories__subtitle">Organizá y administrá las categorías del catálogo.</p>
     </div>
 
+    <div class="categories__header-actions">
+      <button
+        id="categories-create"
+        class="btn btn--primary"
+        type="button"
+        data-action="new"
+        data-rbac-action="write"
+        data-rbac-hide
+        hidden
+      >
+        <span class="icon icon--sm" data-icon="plus" aria-hidden="true"></span>
+        <span class="icon-label">Crear categoría</span>
+      </button>
+    </div>
+
     <div class="categories__toolbar" role="group" aria-label="Búsqueda y filtros de categorías">
       <div class="categories__control categories__control--search">
         <label for="categories-search" class="sr-only">Buscar por nombre</label>
@@ -71,17 +86,6 @@
 
       <div class="categories__control categories__control--actions">
         <button id="categories-filter-clear" class="btn btn--ghost btn--sm" type="button">Limpiar filtros</button>
-        <button
-          id="categories-create"
-          class="btn btn--primary"
-          type="button"
-          data-action="new"
-          data-rbac-action="write"
-          data-rbac-hide
-          hidden
-        >
-          + Nueva
-        </button>
       </div>
     </div>
   </header>
