@@ -166,26 +166,18 @@
   text-align: right;
 }
 
-.products__cell--actions {
+.products__cell--actions,
+.products__td--actions {
   width: 1%;
   white-space: nowrap;
 }
 
 .products__actions {
   display: inline-flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: var(--space-2);
   align-items: center;
-}
-
-.products__action-btn {
-  --btn-border: color-mix(in srgb, var(--c-border) 60%, transparent);
-}
-
-.products__action-btn--danger {
-  --btn-bg: color-mix(in srgb, var(--c-error) 18%, var(--c-surface));
-  --btn-color: var(--c-error);
-  --btn-border: color-mix(in srgb, var(--c-error) 45%, var(--c-border));
+  justify-content: flex-end;
 }
 
 .products__image-wrapper {

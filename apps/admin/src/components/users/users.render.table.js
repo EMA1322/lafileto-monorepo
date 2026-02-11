@@ -1,5 +1,5 @@
 import { state, DEFAULT_PAGE_SIZE } from './users.state.js';
-import { escapeHTML, createButtonTemplate } from './users.helpers.js';
+import { escapeHTML } from './users.helpers.js';
 
 import { renderUsersStatus } from './users.render.status.js';
 import { applyRBAC } from '@/utils/rbac.js';
@@ -57,7 +57,7 @@ function statusSwitchMarkup(user, { phoneMissing = false } = {}) {
   const srHint = phoneMissing ? `<span class="sr-only">${escapeHTML(disabledReason)}</span>` : '';
   return `
     <button
-      class="users__status-toggle ${stateClass}"
+      class="btn btn--ghost btn--sm users__status-toggle ${stateClass} adminList__actionBtn"
       type="button"
       data-action="user-toggle-status"
       data-rbac-action="update"
@@ -235,14 +235,10 @@ export function renderUsersTable(root = document.querySelector('.users'), attemp
         const phone = phoneMissing ? '-' : escapeHTML(user.phone);
         const roleId = escapeHTML(user.roleId || '');
         const actions = `
-          <div class="users__row-actions" role="group" aria-label="Acciones">
-            <button class="btn btn-secondary btn--sm" type="button" data-action="user-edit" data-rbac-action="update" data-rbac-hide>
-              ${createButtonTemplate({ label: 'Editar', iconName: 'edit', iconSize: 'sm' })}
-            </button>
+          <div class="users__row-actions adminList__rowActions" role="group" aria-label="Acciones">
+            <button class="btn btn--ghost btn--sm users__action-btn adminList__actionBtn" type="button" data-action="user-edit" data-rbac-action="update" data-rbac-hide>Editar</button>
             ${statusSwitchMarkup(user, { phoneMissing })}
-            <button class="btn btn-danger btn--sm" type="button" data-action="user-delete" data-rbac-action="delete">
-              ${createButtonTemplate({ label: 'Eliminar', iconName: 'trash', iconSize: 'sm' })}
-            </button>
+            <button class="btn btn--danger btn--sm users__action-btn adminList__actionBtn" type="button" data-action="user-delete" data-rbac-action="delete">Eliminar</button>
           </div>
         `;
         return `
@@ -252,7 +248,7 @@ export function renderUsersTable(root = document.querySelector('.users'), attemp
             <td>${phone}</td>
             <td>${roleId}</td>
             <td>${formatStatus(user.status)}</td>
-            <td>${actions}</td>
+            <td class="users__td-actions adminList__td--actions">${actions}</td>
           </tr>
         `;
       })
