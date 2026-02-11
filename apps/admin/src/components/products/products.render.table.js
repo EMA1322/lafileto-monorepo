@@ -152,24 +152,24 @@ function renderTable(items, refs, categories, pendingStatusIds = []) {
           <td class="products__cell--numeric">${Number(item.stock ?? 0)}</td>
           <td>${statusToggle}</td>
           <td>${escapeHTML(resolveCategoryName(item.categoryId, categories))}</td>
-          <td>
-            <div class="products__actions">
+          <td class="products__td--actions adminList__td--actions">
+            <div class="products__actions adminList__rowActions" role="group" aria-label="Acciones">
               <button
-                class="btn btn--ghost btn--sm products__action-btn"
+                class="btn btn--ghost btn--sm products__action-btn adminList__actionBtn"
                 type="button"
                 data-action="view"
                 data-id="${idAttr}"
                 data-rbac-action="read"
               >Ver</button>
               <button
-                class="btn btn--ghost btn--sm products__action-btn"
+                class="btn btn--ghost btn--sm products__action-btn adminList__actionBtn"
                 type="button"
                 data-action="edit"
                 data-id="${idAttr}"
                 data-rbac-action="update"
               >Editar</button>
               <button
-                class="btn btn--ghost btn--sm products__action-btn products__action-btn--danger"
+                class="btn btn--danger btn--sm products__action-btn adminList__actionBtn"
                 type="button"
                 data-action="delete"
                 data-id="${idAttr}"

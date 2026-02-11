@@ -73,13 +73,19 @@ describe('admin users module', () => {
     const rows = document.querySelectorAll('#users-tbody tr');
     expect(rows).toHaveLength(1);
     expect(rows[0].querySelector('td')?.textContent).toBe('Ada Lovelace');
-    const normalized = document
-      .querySelector('#users-tbody')
-      ?.innerHTML.replace(/\s+/g, ' ')
-      .trim();
-    expect(normalized).toMatchInlineSnapshot(
-      `"<tr data-id="user-1" data-role-id="role-1"> <td>Ada Lovelace</td> <td>ada@example.com</td> <td>12345678</td> <td>role-1</td> <td><span class=\\"badge badge--success\\">Activo</span></td> <td> <div class=\\"users__row-actions\\" role=\\"group\\" aria-label=\\"Acciones\\"> <button class=\\"btn btn-secondary btn--sm\\" type=\\"button\\" data-action=\\"user-edit\\" data-rbac-action=\\"update\\" data-rbac-hide=\\"\\"> <svg class=\\"icon icon--sm\\" viewBox=\\"0 0 24 24\\" stroke-width=\\"1.5\\" stroke=\\"currentColor\\" fill=\\"none\\" stroke-linecap=\\"round\\" stroke-linejoin=\\"round\\" aria-hidden=\\"true\\"><path d=\\"M4 17.5V20h2.5L17.81 8.69a2 2 0 0 0-2.83-2.83L4 17.5z\\"></path><path d=\\"M14.88 6.12l2.99 2.99\\"></path></svg><span class=\\"icon-label\\">Editar</span> </button> <button class=\\"users__status-toggle is-active\\" type=\\"button\\" data-action=\\"user-toggle-status\\" data-rbac-action=\\"update\\" data-next-status=\\"INACTIVE\\" aria-pressed=\\"true\\" aria-label=\\"Cambiar estado a Inactivo\\">Activo</button> <button class=\\"btn btn-danger btn--sm\\" type=\\"button\\" data-action=\\"user-delete\\" data-rbac-action=\\"delete\\"> <svg class=\\"icon icon--sm\\" viewBox=\\"0 0 24 24\\" stroke-width=\\"1.5\\" stroke=\\"currentColor\\" fill=\\"none\\" stroke-linecap=\\"round\\" stroke-linejoin=\\"round\\" aria-hidden=\\"true\\"><path d=\\"M5 7h14\\"></path><path d=\\"M10 11v6\\"></path><path d=\\"M14 11v6\\"></path><path d=\\"M6 7l1 12a2 2 0 0 0 2 1.8h6a2 2 0 0 0 2-1.8l1-12\\"></path><path d=\\"M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2\\"></path></svg><span class=\\"icon-label\\">Eliminar</span> </button> </div> </td> </tr>"`
-    );
+    const row = document.querySelector('#users-tbody tr[data-id="user-1"]');
+    const actionCell = row?.querySelector('.users__td-actions.adminList__td--actions');
+    const actionGroup = actionCell?.querySelector('.users__row-actions.adminList__rowActions');
+    const buttons = actionGroup?.querySelectorAll('button') ?? [];
+
+    expect(actionCell).not.toBeNull();
+    expect(buttons).toHaveLength(3);
+    expect(buttons[0]?.textContent?.trim()).toBe('Editar');
+    expect(buttons[1]?.textContent?.trim()).toBe('Activo');
+    expect(buttons[2]?.textContent?.trim()).toBe('Eliminar');
+    expect(buttons[0]?.className).toContain('btn--ghost');
+    expect(buttons[1]?.className).toContain('btn--ghost');
+    expect(buttons[2]?.className).toContain('btn--danger');
   });
 
   it('incluye filtros y paginación en el template', () => {

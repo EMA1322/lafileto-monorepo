@@ -37,38 +37,28 @@ function renderRow(item) {
   const productLabel = productCount === '—' ? '—' : String(productCount);
   const actions = `
     <!-- Expose row id for delegated handlers without changing the visible UI -->
-    <div class="categories__row-actions" role="group" aria-label="Acciones">
+    <div class="categories__row-actions adminList__rowActions" role="group" aria-label="Acciones">
       <button
-        class="btn btn--ghost btn--icon categories__actionIcon"
+        class="btn btn--ghost btn--sm categories__actionBtn adminList__actionBtn"
         type="button"
         data-action="view"
         data-id="${idAttr}"
-        aria-label="Ver categoría"
-        title="Ver categoría"
-      >
-        <span class="icon icon--sm" data-icon="eye" aria-hidden="true"></span>
-      </button>
+        >Ver</button>
       <button
-        class="btn btn--secondary btn--sm"
+        class="btn btn--ghost btn--sm categories__actionBtn adminList__actionBtn"
         type="button"
         data-action="edit"
         data-id="${idAttr}"
         data-rbac-action="update"
         data-rbac-hide
-      >
-        <span class="icon icon--sm" data-icon="edit" aria-hidden="true"></span>
-        <span class="icon-label">Editar</span>
-      </button>
+      >Editar</button>
       <button
-        class="btn btn--sm categories__action--danger"
+        class="btn btn--danger btn--sm categories__actionBtn adminList__actionBtn"
         type="button"
         data-action="delete"
         data-id="${idAttr}"
         data-rbac-action="delete"
-      >
-        <span class="icon icon--sm" data-icon="trash" aria-hidden="true"></span>
-        <span class="icon-label">Eliminar</span>
-      </button>
+      >Eliminar</button>
     </div>
   `;
   return `
@@ -77,7 +67,7 @@ function renderRow(item) {
       <td class="categories__cell-image">${imageCell}</td>
       <td class="categories__cell-count">${productLabel}</td>
       <td class="categories__cell-status">${renderStatusBadge(item.active)}</td>
-      <td class="categories__cell-actions" data-column="actions">${actions}</td>
+      <td class="categories__cell-actions adminList__td--actions" data-column="actions">${actions}</td>
     </tr>
   `;
 }

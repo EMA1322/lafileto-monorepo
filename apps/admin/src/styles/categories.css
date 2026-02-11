@@ -117,11 +117,7 @@
   font-feature-settings: 'tnum' 1;
 }
 
-.categories__cell-actions {
-  width: 1%;
-  white-space: nowrap;
-}
-
+.categories__cell-actions,
 .categories__th-actions {
   width: 1%;
   white-space: nowrap;
@@ -130,17 +126,9 @@
 .categories__row-actions {
   display: inline-flex;
   align-items: center;
+  justify-content: flex-end;
+  flex-wrap: nowrap;
   gap: var(--space-2);
-}
-
-.categories__actionIcon {
-  --btn-color: var(--c-text-muted);
-}
-
-.categories__action--danger {
-  --btn-bg: color-mix(in srgb, var(--c-error) 18%, white);
-  --btn-border: color-mix(in srgb, var(--c-error) 55%, white);
-  --btn-color: var(--c-error);
 }
 
 /* =========================
