@@ -33,7 +33,7 @@ function setupToolbarButtons(container) {
   const btnUserNew = container.querySelector('#btn-user-new');
   if (btnUserNew && btnUserNew.dataset.iconified !== 'true') {
     btnUserNew.innerHTML = createButtonTemplate({
-      label: 'Nuevo usuario',
+      label: 'Crear usuario',
       iconName: 'plus',
       iconSize: 'sm',
     });

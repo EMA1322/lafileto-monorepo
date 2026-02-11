@@ -11,8 +11,25 @@
 
 <section class="users container" role="region" aria-labelledby="users-title">
   <header class="users__header">
-    <h1 id="users-title">Usuarios</h1>
-    <p class="users__subtitle">Administra usuarios y permisos del sistema.</p>
+    <div class="users__heading">
+      <h1 id="users-title" class="users__title">Usuarios</h1>
+      <p class="users__subtitle">Administra usuarios y permisos del sistema.</p>
+    </div>
+
+    <div class="users__header-actions">
+      <button
+        id="btn-user-new"
+        class="btn btn--primary"
+        type="button"
+        data-action="user-new"
+        data-rbac-action="write"
+        data-rbac-hide
+        hidden
+      >
+        <span class="icon icon--sm" data-icon="plus" aria-hidden="true"></span>
+        <span class="icon-label">Crear usuario</span>
+      </button>
+    </div>
   </header>
 
   <nav class="users__tabs" role="tablist" aria-label="Secciones de Usuarios">
@@ -48,23 +65,6 @@
     role="tabpanel"
     aria-labelledby="tab-users"
   >
-    <header class="users__toolbar" aria-label="Herramientas de listado de usuarios">
-      <div class="users__actions">
-        <button
-          id="btn-user-new"
-          class="btn"
-          type="button"
-          data-action="user-new"
-          data-rbac-action="write"
-          data-rbac-hide
-          hidden
-        >
-          <span class="icon icon--sm" data-icon="plus" aria-hidden="true"></span>
-          <span class="icon-label">Nuevo usuario</span>
-        </button>
-      </div>
-    </header>
-
     <form class="users__filters" id="users-filters" novalidate>
       <div class="users__filters-group" role="group" aria-label="Buscar">
         <label class="users__label" for="users-filter-q">Buscar</label>
