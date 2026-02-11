@@ -36,6 +36,30 @@ describe('admin categories module', () => {
     ({ renderCategoriesTable } = await import('../src/components/categories/categories.render.table.js'));
   });
 
+  it('mantiene contrato de layout: CTA, toolbar, pageSize, tabla y wrappers', () => {
+    const moduleRoot = document.querySelector('#categories-view');
+    const header = moduleRoot?.querySelector('.categories__header');
+    const createButton = document.querySelector('#categories-create');
+    const toolbar = document.querySelector('.categories__toolbar');
+    const pageSizeSelect = document.querySelector('#categories-page-size');
+    const tableHeaders = Array.from(document.querySelectorAll('#categories-table thead th')).map((th) => th.textContent?.trim());
+
+    expect(moduleRoot?.classList.contains('categories')).toBe(true);
+    expect(moduleRoot?.classList.contains('container')).toBe(true);
+    expect(createButton?.querySelector('.icon-label')?.textContent?.trim()).toBe('Crear categoría');
+    expect(createButton?.closest('.categories__header-actions')?.closest('.categories__header')).toBe(header ?? null);
+
+    expect(toolbar).not.toBeNull();
+    expect(toolbar?.closest('.categories__header')).toBe(header ?? null);
+    expect(pageSizeSelect?.closest('.categories__control--pageSize')?.closest('.categories__toolbar')).toBe(toolbar ?? null);
+    expect(document.querySelector('.categories__control--actions #categories-filter-clear')).not.toBeNull();
+
+    expect(document.querySelector('#categories-table-wrapper')?.classList.contains('table-wrapper')).toBe(true);
+    expect(document.querySelector('#categories-table')?.classList.contains('data-table')).toBe(true);
+    expect(tableHeaders).toEqual(['Nombre', 'Imagen', 'Productos', 'Estado', 'Acciones']);
+    expect(document.querySelector('th.categories__th-actions.adminList__th--actions')).not.toBeNull();
+  });
+
   it('renderCategoriesTable pinta filas con el template real', () => {
     renderCategoriesTable({
       loading: false,
@@ -65,6 +89,8 @@ describe('admin categories module', () => {
     expect(actionCell).not.toBeNull();
     expect(buttons).toHaveLength(3);
     expect(Array.from(buttons).map((button) => button.textContent?.trim())).toEqual(['Ver', 'Editar', 'Eliminar']);
+    expect(Array.from(buttons).map((button) => button.getAttribute('data-action'))).toEqual(['view', 'edit', 'delete']);
+    expect(Array.from(buttons).every((button) => button.className.includes('adminList__actionBtn'))).toBe(true);
     expect(buttons[0]?.className).toContain('btn--ghost');
     expect(buttons[1]?.className).toContain('btn--ghost');
     expect(buttons[2]?.className).toContain('btn--danger');

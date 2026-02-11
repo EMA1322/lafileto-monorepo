@@ -61,6 +61,31 @@ describe('admin products module', () => {
     expect(clonedView?.querySelector('#product-view-close')).not.toBeNull();
   });
 
+  it('mantiene contrato de layout: CTA, toolbar, tabla y wrappers canónicos', () => {
+    const moduleRoot = document.querySelector('#products-module');
+    const header = moduleRoot?.querySelector('.products__header');
+    const createButton = document.querySelector('#product-create');
+    const toolbar = document.querySelector('#products-filters');
+    const pageSizeSelect = document.querySelector('#filter-page-size');
+    const table = document.querySelector('#products-table-wrapper table');
+    const tableHeaders = Array.from(document.querySelectorAll('#products-table-wrapper thead th')).map((th) => th.textContent?.trim());
+
+    expect(moduleRoot?.classList.contains('products')).toBe(true);
+    expect(moduleRoot?.classList.contains('container')).toBe(true);
+    expect(createButton?.querySelector('.icon-label')?.textContent?.trim()).toBe('Crear producto');
+    expect(createButton?.closest('.products__header-actions')?.closest('.products__header')).toBe(header ?? null);
+
+    expect(toolbar).not.toBeNull();
+    expect(toolbar?.closest('.products__header')).toBeNull();
+    expect(toolbar?.querySelector('.products__filters-group--actions #filter-clear')).not.toBeNull();
+    expect(pageSizeSelect?.closest('.products__filters-group')).not.toBeNull();
+
+    expect(document.querySelector('#products-table-wrapper')?.classList.contains('table-wrapper')).toBe(true);
+    expect(table?.classList.contains('data-table')).toBe(true);
+    expect(tableHeaders).toEqual(['Imagen', 'Nombre', 'Precio', 'Stock', 'Estado', 'Categoría', 'Acciones']);
+    expect(document.querySelector('th.products__cell--actions.adminList__th--actions')).not.toBeNull();
+  });
+
   it('renderProductsView dibuja toolbar, tabla y estados base en éxito', () => {
     renderProductsView({
       status: REQUEST_STATUS.SUCCESS,
@@ -101,7 +126,17 @@ describe('admin products module', () => {
     const rows = document.querySelectorAll('#products-table-body tr');
     expect(rows).toHaveLength(1);
     expect(rows[0]?.dataset.id).toBe('prod-1');
-    expect(rows[0]?.querySelector('.products__actions [data-action="edit"]')).not.toBeNull();
+
+    const actionCell = rows[0]?.querySelector('.products__td--actions.adminList__td--actions');
+    const actionGroup = actionCell?.querySelector('.products__actions.adminList__rowActions');
+    const actionButtons = Array.from(actionGroup?.querySelectorAll('button') ?? []);
+
+    expect(actionCell).not.toBeNull();
+    expect(actionGroup).not.toBeNull();
+    expect(actionButtons).toHaveLength(3);
+    expect(actionButtons.map((button) => button.textContent?.trim())).toEqual(['Ver', 'Editar', 'Eliminar']);
+    expect(actionButtons.map((button) => button.getAttribute('data-action'))).toEqual(['view', 'edit', 'delete']);
+    expect(actionButtons.every((button) => button.className.includes('adminList__actionBtn'))).toBe(true);
 
     const statusToggle = rows[0]?.querySelector('[data-action="toggle-status"]');
     expect(statusToggle).not.toBeNull();

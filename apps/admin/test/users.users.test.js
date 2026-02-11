@@ -55,6 +55,32 @@ describe('admin users module', () => {
     }
   });
 
+  it('mantiene contrato de layout: CTA, toolbar, pageSize, tabla y wrappers', () => {
+    const moduleRoot = document.querySelector('.users');
+    const usersPanel = document.querySelector('#panel-users');
+    const header = moduleRoot?.querySelector('.users__header');
+    const createButton = document.querySelector('#btn-user-new');
+    const toolbar = document.querySelector('#users-filters');
+    const pageSizeSelect = document.querySelector('#users-filter-page-size');
+    const tableHeaders = Array.from(document.querySelectorAll('#users-table thead th')).map((th) => th.textContent?.trim());
+
+    expect(moduleRoot?.classList.contains('users')).toBe(true);
+    expect(moduleRoot?.classList.contains('container')).toBe(true);
+    expect(createButton?.querySelector('.icon-label')?.textContent?.trim()).toBe('Crear usuario');
+    expect(createButton?.closest('.users__header-actions')?.closest('.users__header')).toBe(header ?? null);
+
+    expect(toolbar).not.toBeNull();
+    expect(toolbar?.closest('.users__panel')).toBe(usersPanel ?? null);
+    expect(toolbar?.closest('.users__header')).toBeNull();
+    expect(pageSizeSelect?.closest('.users__filters-group')).not.toBeNull();
+    expect(toolbar?.querySelector('.users__filters-group--actions #users-filter-clear')).not.toBeNull();
+
+    expect(document.querySelector('#users-table-wrapper')?.classList.contains('table-wrapper')).toBe(true);
+    expect(document.querySelector('#users-table')?.classList.contains('data-table')).toBe(true);
+    expect(tableHeaders).toEqual(['Nombre completo', 'Email', 'Teléfono', 'Rol', 'Estado', 'Acciones']);
+    expect(document.querySelector('th.users__th-actions.adminList__th--actions')).not.toBeNull();
+  });
+
   it('renderUsersTable pinta filas con el template real', () => {
     state.roles = [{ id: 'role-1', name: 'Admin' }];
     state.users = [
@@ -80,9 +106,13 @@ describe('admin users module', () => {
 
     expect(actionCell).not.toBeNull();
     expect(buttons).toHaveLength(3);
-    expect(buttons[0]?.textContent?.trim()).toBe('Editar');
-    expect(buttons[1]?.textContent?.trim()).toBe('Activo');
-    expect(buttons[2]?.textContent?.trim()).toBe('Eliminar');
+    expect(Array.from(buttons).map((button) => button.textContent?.trim())).toEqual(['Editar', 'Activo', 'Eliminar']);
+    expect(Array.from(buttons).map((button) => button.getAttribute('data-action'))).toEqual([
+      'user-edit',
+      'user-toggle-status',
+      'user-delete',
+    ]);
+    expect(Array.from(buttons).every((button) => button.className.includes('adminList__actionBtn'))).toBe(true);
     expect(buttons[0]?.className).toContain('btn--ghost');
     expect(buttons[1]?.className).toContain('btn--ghost');
     expect(buttons[2]?.className).toContain('btn--danger');
