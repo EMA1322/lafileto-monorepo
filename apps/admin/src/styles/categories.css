@@ -40,14 +40,16 @@
   gap: var(--space-2);
 }
 
+.categories__label {
+  color: var(--c-text-muted);
+  font-size: var(--fs-h6);
+}
+
 .categories__control--actions {
   display: inline-flex;
   gap: var(--space-2);
 }
 
-.categories__toolbarButton {
-  --btn-color: var(--c-text-muted);
-}
 
 .categories__status {
   min-height: 1.5rem;
@@ -170,17 +172,6 @@
   justify-content: space-between;
   gap: var(--space-2);
   flex-wrap: wrap;
-}
-
-.categories__pageSize {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.categories__pageSizeLabel {
-  color: var(--c-text-muted);
-  font-size: var(--fs-h6);
 }
 
 .categories__pageSizeSelect {

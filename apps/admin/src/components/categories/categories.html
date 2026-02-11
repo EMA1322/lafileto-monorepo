@@ -56,17 +56,21 @@
         </select>
       </div>
 
+      <div class="categories__control categories__control--pageSize">
+        <label for="categories-page-size" class="categories__label">Resultados por página</label>
+        <select
+          id="categories-page-size"
+          class="form-control form-control--dense categories__select categories__pageSizeSelect"
+          name="pageSize"
+        >
+          <option value="10">10</option>
+          <option value="20">20</option>
+          <option value="50">50</option>
+        </select>
+      </div>
+
       <div class="categories__control categories__control--actions">
         <button id="categories-filter-clear" class="btn btn--ghost btn--sm" type="button">Limpiar filtros</button>
-        <button
-          id="categories-refresh"
-          class="btn btn--ghost btn--icon categories__toolbarButton"
-          type="button"
-          aria-label="Recargar categorías"
-          title="Recargar categorías"
-        >
-          <span class="icon icon--sm" data-icon="refresh" aria-hidden="true"></span>
-        </button>
         <button
           id="categories-create"
           class="btn btn--primary"
@@ -122,18 +126,6 @@
 
   <footer class="categories__footer" aria-label="Paginación de categorías">
     <div class="categories__footerRow">
-      <div class="categories__pageSize">
-        <label for="categories-page-size" class="categories__pageSizeLabel">Resultados por página</label>
-        <select
-          id="categories-page-size"
-          class="form-control form-control--dense categories__select categories__pageSizeSelect"
-          name="pageSize"
-        >
-          <option value="10">10</option>
-          <option value="20">20</option>
-          <option value="50">50</option>
-        </select>
-      </div>
       <div id="categories-summary" class="categories__summary" role="status" aria-live="polite">—</div>
     </div>
 

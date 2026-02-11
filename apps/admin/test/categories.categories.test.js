@@ -83,7 +83,22 @@ describe('admin categories module', () => {
     });
 
     expect(document.querySelector('#categories-summary')?.textContent).toBe('41–48 de 48');
-    expect(document.querySelector('#categories-page-size')?.value).toBe('20');
+    const pageSizeSelect = document.querySelector('#categories-page-size');
+    expect(pageSizeSelect?.value).toBe('20');
+    expect(document.querySelectorAll('#categories-page-size')).toHaveLength(1);
+    expect(pageSizeSelect?.closest('.categories__toolbar')).not.toBeNull();
+    expect(pageSizeSelect?.closest('.categories__footer')).toBeNull();
+
+    const pageSizeLabel = document.querySelector('label[for="categories-page-size"]');
+    expect(pageSizeLabel).not.toBeNull();
+    expect(pageSizeLabel?.textContent).toContain('Resultados por página');
+
+    const toolbarActions = document.querySelector('.categories__control--actions');
+    const actionsText = toolbarActions?.textContent ?? '';
+    expect(toolbarActions).not.toBeNull();
+    expect(actionsText).toContain('Limpiar filtros');
+    expect(actionsText).toContain('Nueva');
+
     expect(document.querySelector('#categories-page-first')?.dataset.page).toBe('1');
     expect(document.querySelector('#categories-page-prev')?.dataset.page).toBe('2');
     expect(document.querySelector('#categories-page-next')?.dataset.page).toBe('4');
