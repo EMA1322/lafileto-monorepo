@@ -151,3 +151,14 @@ export function buildRolePermsMap(seed) {
 
   return output;
 }
+
+export function getRoleLabel(roleId, rolesById) {
+  const normalizedRoleId = String(roleId || '').trim();
+  if (!normalizedRoleId) return '—';
+
+  const roleName = rolesById?.get(normalizedRoleId);
+  if (!roleName) return '—';
+
+  const normalizedRoleName = String(roleName).trim();
+  return normalizedRoleName || '—';
+}

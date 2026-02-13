@@ -1,5 +1,5 @@
 import { state, DEFAULT_PAGE_SIZE } from './users.state.js';
-import { escapeHTML } from './users.helpers.js';
+import { escapeHTML, getRoleLabel } from './users.helpers.js';
 
 import { renderUsersStatus } from './users.render.status.js';
 import { applyRBAC } from '@/utils/rbac.js';
@@ -147,6 +147,11 @@ export function renderUsersTable(root = document.querySelector('.users'), attemp
     : Array.isArray(state.users)
       ? state.users
       : [];
+  const rolesById = new Map(
+    (Array.isArray(state.roles) ? state.roles : [])
+      .filter(Boolean)
+      .map((role) => [String(role.roleId || role.id || ''), String(role.name || '').trim()]),
+  );
 
   const decorateTable = () => {
     applyRBAC(container);
@@ -234,6 +239,7 @@ export function renderUsersTable(root = document.querySelector('.users'), attemp
         const phoneMissing = isMissingPhone(user.phone);
         const phone = phoneMissing ? '-' : escapeHTML(user.phone);
         const roleId = escapeHTML(user.roleId || '');
+        const roleLabel = escapeHTML(getRoleLabel(user.roleId, rolesById));
         const actions = `
           <div class="users__row-actions adminList__rowActions" role="group" aria-label="Acciones">
             <button class="btn btn--ghost btn--sm users__action-btn adminList__actionBtn" type="button" data-action="user-edit" data-rbac-action="update" data-rbac-hide>Editar</button>
@@ -246,7 +252,7 @@ export function renderUsersTable(root = document.querySelector('.users'), attemp
             <td>${escapeHTML(user.fullName || '')}</td>
             <td>${escapeHTML(user.email || '')}</td>
             <td>${phone}</td>
-            <td>${roleId}</td>
+            <td>${roleLabel}</td>
             <td>${formatStatus(user.status)}</td>
             <td class="users__td-actions adminList__td--actions">${actions}</td>
           </tr>

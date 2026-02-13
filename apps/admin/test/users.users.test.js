@@ -99,6 +99,7 @@ describe('admin users module', () => {
     const rows = document.querySelectorAll('#users-tbody tr');
     expect(rows).toHaveLength(1);
     expect(rows[0].querySelector('td')?.textContent).toBe('Ada Lovelace');
+    expect(rows[0].querySelectorAll('td')[3]?.textContent).toBe('Admin');
     const row = document.querySelector('#users-tbody tr[data-id="user-1"]');
     const actionCell = row?.querySelector('.users__td-actions.adminList__td--actions');
     const actionGroup = actionCell?.querySelector('.users__row-actions.adminList__rowActions');
@@ -116,6 +117,26 @@ describe('admin users module', () => {
     expect(buttons[0]?.className).toContain('btn--ghost');
     expect(buttons[1]?.className).toContain('btn--ghost');
     expect(buttons[2]?.className).toContain('btn--danger');
+  });
+
+  it('renderUsersTable usa fallback de rol cuando no hay match', () => {
+    state.roles = [{ id: 'role-1', name: 'Admin' }];
+    state.users = [
+      {
+        id: 'user-404',
+        fullName: 'Linus Torvalds',
+        email: 'linus@example.com',
+        phone: '555551111',
+        roleId: 'role-missing',
+        status: 'active',
+      },
+    ];
+
+    renderUsersTable();
+
+    const roleCellText = document.querySelector('#users-tbody tr[data-id="user-404"] td:nth-child(4)')?.textContent?.trim();
+    expect(roleCellText).toBe('—');
+    expect(document.querySelector('#users-tbody')?.textContent).not.toContain('role-missing');
   });
 
   it('incluye filtros y paginación en el template', () => {
