@@ -39,6 +39,7 @@ describe('admin categories module', () => {
   it('mantiene contrato de layout: CTA, toolbar, pageSize, tabla y wrappers', () => {
     const moduleRoot = document.querySelector('#categories-view');
     const header = moduleRoot?.querySelector('.categories__header');
+    const mainHeading = moduleRoot?.querySelector('#categories-title');
     const createButton = document.querySelector('#categories-create');
     const toolbar = document.querySelector('.categories__toolbar');
     const pageSizeSelect = document.querySelector('#categories-page-size');
@@ -46,6 +47,8 @@ describe('admin categories module', () => {
 
     expect(moduleRoot?.classList.contains('categories')).toBe(true);
     expect(moduleRoot?.classList.contains('container')).toBe(true);
+    expect(mainHeading?.tagName).toBe('H1');
+    expect(moduleRoot?.querySelectorAll('h1')).toHaveLength(1);
     expect(createButton?.querySelector('.icon-label')?.textContent?.trim()).toBe('Crear categoría');
     expect(createButton?.closest('.categories__header-actions')?.closest('.categories__header')).toBe(header ?? null);
 
