@@ -11,6 +11,7 @@ const testFiles = [
   resolve(projectRoot, 'tests/integration/categories.api.test.mjs'),
   resolve(projectRoot, 'tests/integration/categories.rbac.test.mjs'),
   resolve(projectRoot, 'tests/integration/users.api.test.mjs'),
+  resolve(projectRoot, 'tests/integration/settings.service.test.mjs'),
 ];
 
 const child = spawn(process.execPath, ['--test', ...testFiles], {

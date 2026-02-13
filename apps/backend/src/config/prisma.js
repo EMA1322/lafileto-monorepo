@@ -42,6 +42,10 @@ try {
         this.rolePermission = {
           findUnique: notImplemented
         };
+        this.setting = {
+          findUnique: notImplemented,
+          upsert: notImplemented
+        };
         this.$disconnect = async () => {};
       }
     };

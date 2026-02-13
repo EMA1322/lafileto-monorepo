@@ -84,6 +84,25 @@ const ADMIN_FULL_ACCESS = { r: true, w: true, u: true, d: true, changeStatus: tr
 const NO_ACCESS = { r: false, w: false, u: false, d: false, changeStatus: false };
 const VIEWER_NO_ACCESS = { r: false, w: false, u: false, d: false, changeStatus: false };
 
+const DEFAULT_SITE_CONFIG = {
+  identity: { phone: '', email: '', address: '' },
+  whatsapp: { number: '', message: '' },
+  socialLinks: [],
+  map: { embedSrc: '' },
+  payments: { enabled: false, bankName: '', cbu: '', alias: '', cuit: '' },
+  hours: {
+    timezone: 'America/Argentina/San_Luis',
+    openingHours: [],
+    override: 'AUTO',
+    alert: { enabled: false, message: '' }
+  },
+  brand: { logo: '', favicon: '' },
+  seo: {
+    contact: { title: '', description: '' },
+    about: { title: '', description: '' }
+  }
+};
+
 async function upsertSetting(key, value) {
   await prisma.setting.upsert({
     where: { key },
@@ -156,6 +175,7 @@ async function seedI1() {
   console.log('▶ Seeding settings…');
   await upsertSetting('isOpen', false);
   await upsertSetting('whatsAppNumber', null);
+  await upsertSetting('siteConfig', DEFAULT_SITE_CONFIG);
 
   console.log('✓ I1 listo');
 }
