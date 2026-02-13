@@ -18,6 +18,7 @@ function seedPermissions() {
 
 describe('admin users module', () => {
   let state;
+  let fetchData;
   let renderUsersTable;
   let applyRBAC;
   let buildRolePermsMap;
@@ -27,6 +28,7 @@ describe('admin users module', () => {
 
     const stateModule = await import('../src/components/users/users.state.js');
     state = stateModule.state;
+    fetchData = stateModule.fetchData;
     state.users = [];
     state.roles = [];
     state.filters.q = '';
@@ -99,6 +101,7 @@ describe('admin users module', () => {
     const rows = document.querySelectorAll('#users-tbody tr');
     expect(rows).toHaveLength(1);
     expect(rows[0].querySelector('td')?.textContent).toBe('Ada Lovelace');
+    expect(rows[0].querySelectorAll('td')[3]?.textContent).toBe('Admin');
     const row = document.querySelector('#users-tbody tr[data-id="user-1"]');
     const actionCell = row?.querySelector('.users__td-actions.adminList__td--actions');
     const actionGroup = actionCell?.querySelector('.users__row-actions.adminList__rowActions');
@@ -116,6 +119,96 @@ describe('admin users module', () => {
     expect(buttons[0]?.className).toContain('btn--ghost');
     expect(buttons[1]?.className).toContain('btn--ghost');
     expect(buttons[2]?.className).toContain('btn--danger');
+  });
+
+  it('renderUsersTable usa fallback de rol cuando no hay match', () => {
+    state.roles = [{ id: 'role-1', name: 'Admin' }];
+    state.users = [
+      {
+        id: 'user-404',
+        fullName: 'Linus Torvalds',
+        email: 'linus@example.com',
+        phone: '555551111',
+        roleId: 'role-missing',
+        status: 'active',
+      },
+    ];
+
+    renderUsersTable();
+
+    const roleCellText = document.querySelector('#users-tbody tr[data-id="user-404"] td:nth-child(4)')?.textContent?.trim();
+    expect(roleCellText).toBe('—');
+    expect(document.querySelector('#users-tbody')?.textContent).not.toContain('role-missing');
+  });
+
+  it('fetchData re-renderiza users al cargar roles y reemplaza fallback por label', async () => {
+    const originalFetch = globalThis.fetch;
+    const tableRoleSnapshots = [];
+
+    const delayedOk = (payload, delayMs) => new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          ok: true,
+          status: 200,
+          headers: new Headers({ 'Content-Type': 'application/json' }),
+          text: async () => JSON.stringify(payload),
+        });
+      }, delayMs);
+    });
+
+    globalThis.fetch = (url) => {
+      const href = String(url);
+      if (href.includes('/users')) {
+        return delayedOk({
+          ok: true,
+          data: {
+            items: [
+              {
+                id: 'user-2',
+                fullName: 'Grace Hopper',
+                email: 'grace@example.com',
+                phone: '22222222',
+                roleId: 'role-1',
+                status: 'active',
+              },
+            ],
+            meta: { page: 1, pageSize: 10, total: 1, pageCount: 1 },
+          },
+        }, 0);
+      }
+      if (href.includes('/roles')) {
+        return delayedOk({
+          ok: true,
+          data: { items: [{ roleId: 'role-1', name: 'Admin' }] },
+        }, 20);
+      }
+      if (href.includes('/modules')) {
+        return delayedOk({
+          ok: true,
+          data: { items: [] },
+        }, 20);
+      }
+      throw new Error(`Unexpected URL in test: ${href}`);
+    };
+
+    try {
+      await fetchData({
+        onUsersTable: () => {
+          renderUsersTable();
+          const roleCell = document.querySelector('#users-tbody tr[data-id="user-2"] td:nth-child(4)')?.textContent?.trim();
+          if (roleCell) tableRoleSnapshots.push(roleCell);
+        },
+        onRolesView: () => {},
+        onUsersStatus: () => {},
+        onRolesStatus: () => {},
+      });
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+
+    expect(tableRoleSnapshots).toContain('—');
+    expect(tableRoleSnapshots.at(-1)).toBe('Admin');
+    expect(document.querySelector('#users-tbody')?.textContent).not.toContain('role-1');
   });
 
   it('incluye filtros y paginación en el template', () => {
