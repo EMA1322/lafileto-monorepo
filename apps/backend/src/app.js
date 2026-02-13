@@ -7,6 +7,7 @@ import { requestId } from './middlewares/requestId.js';
 import { requestTimeout } from './middlewares/requestTimeout.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { router } from './routes/index.js';
+import { settingsRoutes } from './routes/settings.routes.js';
 import { ok } from './utils/envelope.js';
 
 const app = express();
@@ -37,6 +38,9 @@ const debugPingHandler = (req, res) => {
 app.get('/_debug/ping', debugPingHandler);
 // Alias requerido para que el proxy del Admin (`/api/*`) pueda alcanzar el ping sin reescritura adicional.
 app.get('/api/_debug/ping', debugPingHandler);
+
+// Canonical: /api/v1/settings. Alias legacy sin versionado para compatibilidad.
+app.use('/api/settings', settingsRoutes);
 
 app.use('/api/v1', router);
 

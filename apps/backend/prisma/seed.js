@@ -5,6 +5,7 @@
 
 import bcrypt from 'bcryptjs';
 import { PrismaClient } from '@prisma/client';
+import { cloneSiteConfigDefaults } from '../src/settings/siteConfigDefaults.js';
 
 const prisma = new PrismaClient();
 
@@ -92,6 +93,14 @@ async function upsertSetting(key, value) {
   });
 }
 
+async function ensureSiteConfigSetting() {
+  await prisma.setting.upsert({
+    where: { key: 'siteConfig' },
+    create: { key: 'siteConfig', value: cloneSiteConfigDefaults() },
+    update: {}
+  });
+}
+
 async function upsertAdminUser({ email, fullName, password, roleId, phone }) {
   const passwordHash = bcrypt.hashSync(password, 10);
   const normalizedPhone = typeof phone === 'string' && phone.trim() ? phone.trim() : '1100000000';
@@ -156,6 +165,7 @@ async function seedI1() {
   console.log('▶ Seeding settings…');
   await upsertSetting('isOpen', false);
   await upsertSetting('whatsAppNumber', null);
+  await ensureSiteConfigSetting();
 
   console.log('✓ I1 listo');
 }
