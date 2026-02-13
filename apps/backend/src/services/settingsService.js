@@ -1,52 +1,7 @@
 import { settingRepository } from '../repositories/settingRepository.js';
+import { SITE_CONFIG_DEFAULTS, cloneSiteConfigDefaults } from '../settings/siteConfigDefaults.js';
 
 const SITE_CONFIG_KEY = 'siteConfig';
-
-const DEFAULT_SITE_CONFIG = {
-  identity: {
-    phone: '',
-    email: '',
-    address: ''
-  },
-  whatsapp: {
-    number: '',
-    message: ''
-  },
-  socialLinks: [],
-  map: {
-    embedSrc: ''
-  },
-  payments: {
-    enabled: false,
-    bankName: '',
-    cbu: '',
-    alias: '',
-    cuit: ''
-  },
-  hours: {
-    timezone: 'America/Argentina/San_Luis',
-    openingHours: [],
-    override: 'AUTO',
-    alert: {
-      enabled: false,
-      message: ''
-    }
-  },
-  brand: {
-    logo: '',
-    favicon: ''
-  },
-  seo: {
-    contact: {
-      title: '',
-      description: ''
-    },
-    about: {
-      title: '',
-      description: ''
-    }
-  }
-};
 
 function normalizeArray(value) {
   return Array.isArray(value) ? value : [];
@@ -71,46 +26,46 @@ function normalizeSiteConfig(rawValue) {
 
   return {
     identity: {
-      phone: identity.phone ?? DEFAULT_SITE_CONFIG.identity.phone,
-      email: identity.email ?? DEFAULT_SITE_CONFIG.identity.email,
-      address: identity.address ?? DEFAULT_SITE_CONFIG.identity.address
+      phone: identity.phone ?? SITE_CONFIG_DEFAULTS.identity.phone,
+      email: identity.email ?? SITE_CONFIG_DEFAULTS.identity.email,
+      address: identity.address ?? SITE_CONFIG_DEFAULTS.identity.address
     },
     whatsapp: {
-      number: whatsapp.number ?? DEFAULT_SITE_CONFIG.whatsapp.number,
-      message: whatsapp.message ?? DEFAULT_SITE_CONFIG.whatsapp.message
+      number: whatsapp.number ?? SITE_CONFIG_DEFAULTS.whatsapp.number,
+      message: whatsapp.message ?? SITE_CONFIG_DEFAULTS.whatsapp.message
     },
     socialLinks: normalizeArray(root.socialLinks),
     map: {
-      embedSrc: map.embedSrc ?? DEFAULT_SITE_CONFIG.map.embedSrc
+      embedSrc: map.embedSrc ?? SITE_CONFIG_DEFAULTS.map.embedSrc
     },
     payments: {
       enabled: Boolean(payments.enabled),
-      bankName: payments.bankName ?? DEFAULT_SITE_CONFIG.payments.bankName,
-      cbu: payments.cbu ?? DEFAULT_SITE_CONFIG.payments.cbu,
-      alias: payments.alias ?? DEFAULT_SITE_CONFIG.payments.alias,
-      cuit: payments.cuit ?? DEFAULT_SITE_CONFIG.payments.cuit
+      bankName: payments.bankName ?? SITE_CONFIG_DEFAULTS.payments.bankName,
+      cbu: payments.cbu ?? SITE_CONFIG_DEFAULTS.payments.cbu,
+      alias: payments.alias ?? SITE_CONFIG_DEFAULTS.payments.alias,
+      cuit: payments.cuit ?? SITE_CONFIG_DEFAULTS.payments.cuit
     },
     hours: {
-      timezone: hours.timezone ?? DEFAULT_SITE_CONFIG.hours.timezone,
+      timezone: hours.timezone ?? SITE_CONFIG_DEFAULTS.hours.timezone,
       openingHours: normalizeArray(hours.openingHours),
-      override: hours.override ?? DEFAULT_SITE_CONFIG.hours.override,
+      override: hours.override ?? SITE_CONFIG_DEFAULTS.hours.override,
       alert: {
         enabled: Boolean(alert.enabled),
-        message: alert.message ?? DEFAULT_SITE_CONFIG.hours.alert.message
+        message: alert.message ?? SITE_CONFIG_DEFAULTS.hours.alert.message
       }
     },
     brand: {
-      logo: brand.logo ?? DEFAULT_SITE_CONFIG.brand.logo,
-      favicon: brand.favicon ?? DEFAULT_SITE_CONFIG.brand.favicon
+      logo: brand.logo ?? SITE_CONFIG_DEFAULTS.brand.logo,
+      favicon: brand.favicon ?? SITE_CONFIG_DEFAULTS.brand.favicon
     },
     seo: {
       contact: {
-        title: contactSeo.title ?? DEFAULT_SITE_CONFIG.seo.contact.title,
-        description: contactSeo.description ?? DEFAULT_SITE_CONFIG.seo.contact.description
+        title: contactSeo.title ?? SITE_CONFIG_DEFAULTS.seo.contact.title,
+        description: contactSeo.description ?? SITE_CONFIG_DEFAULTS.seo.contact.description
       },
       about: {
-        title: aboutSeo.title ?? DEFAULT_SITE_CONFIG.seo.about.title,
-        description: aboutSeo.description ?? DEFAULT_SITE_CONFIG.seo.about.description
+        title: aboutSeo.title ?? SITE_CONFIG_DEFAULTS.seo.about.title,
+        description: aboutSeo.description ?? SITE_CONFIG_DEFAULTS.seo.about.description
       }
     }
   };
@@ -123,7 +78,7 @@ async function getOrCreateSiteConfigSetting() {
     return found;
   }
 
-  return settingRepository.upsertByKey(SITE_CONFIG_KEY, DEFAULT_SITE_CONFIG);
+  return settingRepository.upsertByKey(SITE_CONFIG_KEY, cloneSiteConfigDefaults());
 }
 
 export const settingsService = {
@@ -147,4 +102,4 @@ export const settingsService = {
   }
 };
 
-export { DEFAULT_SITE_CONFIG, SITE_CONFIG_KEY, normalizeSiteConfig };
+export { SITE_CONFIG_DEFAULTS, SITE_CONFIG_KEY, normalizeSiteConfig };

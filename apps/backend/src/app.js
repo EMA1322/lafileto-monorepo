@@ -39,7 +39,7 @@ app.get('/_debug/ping', debugPingHandler);
 // Alias requerido para que el proxy del Admin (`/api/*`) pueda alcanzar el ping sin reescritura adicional.
 app.get('/api/_debug/ping', debugPingHandler);
 
-// Alias legacy sin versionado para settings públicos/admin.
+// Canonical: /api/v1/settings. Alias legacy sin versionado para compatibilidad.
 app.use('/api/settings', settingsRoutes);
 
 app.use('/api/v1', router);
