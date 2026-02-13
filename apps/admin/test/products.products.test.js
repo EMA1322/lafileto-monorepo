@@ -7,11 +7,11 @@ const productsTemplate = readFileSync(
   'utf8',
 );
 
-function seedPermissions() {
+function seedPermissions({ canWrite = true } = {}) {
   sessionStorage.setItem(
     'rbac.permMap',
     JSON.stringify({
-      products: { r: true, w: true, u: true, d: true },
+      products: { r: true, w: canWrite, u: true, d: true },
     }),
   );
 }
@@ -19,6 +19,7 @@ function seedPermissions() {
 describe('admin products module', () => {
   let renderProductsView;
   let REQUEST_STATUS;
+  let applyRBAC;
 
   beforeEach(async () => {
     document.body.innerHTML = productsTemplate;
@@ -35,6 +36,7 @@ describe('admin products module', () => {
 
     ({ renderProductsView } = await import('../src/components/products/products.render.table.js'));
     ({ REQUEST_STATUS } = await import('../src/components/products/products.state.js'));
+    ({ applyRBAC } = await import('../src/utils/rbac.js'));
   });
 
   it('incluye estructura base del template y templates clonables', () => {
@@ -84,6 +86,20 @@ describe('admin products module', () => {
     expect(table?.classList.contains('data-table')).toBe(true);
     expect(tableHeaders).toEqual(['Imagen', 'Nombre', 'Precio', 'Stock', 'Estado', 'Categoría', 'Acciones']);
     expect(document.querySelector('th.products__cell--actions.adminList__th--actions')).not.toBeNull();
+  });
+
+
+  it('oculta el CTA Crear por defecto y lo muestra solo con permiso write tras aplicar RBAC', () => {
+    const createButton = document.querySelector('#product-create');
+
+    expect(createButton?.hasAttribute('hidden')).toBe(true);
+
+    applyRBAC(document.querySelector('#products-module'));
+    expect(createButton?.hasAttribute('hidden')).toBe(false);
+
+    seedPermissions({ canWrite: false });
+    applyRBAC(document.querySelector('#products-module'));
+    expect(createButton?.hasAttribute('hidden')).toBe(true);
   });
 
   it('renderProductsView dibuja toolbar, tabla y estados base en éxito', () => {
