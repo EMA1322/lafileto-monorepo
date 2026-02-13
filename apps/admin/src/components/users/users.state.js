@@ -586,6 +586,9 @@ export async function fetchData({
 
   try {
     await fetchRolesAndModules();
+    if (requestId === usersRequestSeq && !state.ui.loadingUsers && !state.ui.errorUsers) {
+      renderUsersTable();
+    }
     renderRolesView();
     notifyRolesStatus('');
   } catch (err) {

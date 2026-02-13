@@ -238,7 +238,6 @@ export function renderUsersTable(root = document.querySelector('.users'), attemp
       .map((user) => {
         const phoneMissing = isMissingPhone(user.phone);
         const phone = phoneMissing ? '-' : escapeHTML(user.phone);
-        const roleId = escapeHTML(user.roleId || '');
         const roleLabel = escapeHTML(getRoleLabel(user.roleId, rolesById));
         const actions = `
           <div class="users__row-actions adminList__rowActions" role="group" aria-label="Acciones">
@@ -248,7 +247,7 @@ export function renderUsersTable(root = document.querySelector('.users'), attemp
           </div>
         `;
         return `
-          <tr data-id="${escapeHTML(String(user.id))}" data-role-id="${roleId}">
+          <tr data-id="${escapeHTML(String(user.id))}">
             <td>${escapeHTML(user.fullName || '')}</td>
             <td>${escapeHTML(user.email || '')}</td>
             <td>${phone}</td>
