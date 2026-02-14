@@ -1,0 +1,106 @@
+.settings {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.settings__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.settings__title {
+  margin: 0;
+}
+
+.settings__subtitle {
+  margin-top: var(--space-1);
+  color: var(--c-text-muted);
+}
+
+.settings__content {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.settings__content [hidden] {
+  display: none !important;
+}
+
+.settings__content .settings__state,
+.settings__content .settings__card {
+  display: none;
+}
+
+.settings__content.is-loading .settings__state--loading,
+.settings__content[data-status='loading'] .settings__state--loading {
+  display: grid;
+}
+
+.settings__content.has-error .settings__state--error,
+.settings__content[data-status='error'] .settings__state--error {
+  display: grid;
+}
+
+.settings__content.is-empty .settings__state--empty,
+.settings__content[data-status='empty'] .settings__state--empty {
+  display: grid;
+}
+
+.settings__content.has-success .settings__card,
+.settings__content[data-status='success'] .settings__card {
+  display: block;
+}
+
+.settings__state {
+  display: grid;
+  place-items: center;
+  gap: var(--space-2);
+  text-align: center;
+  padding: var(--space-5) var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px dashed var(--c-border);
+  color: var(--c-text-muted);
+  background: var(--c-surface);
+}
+
+.settings__spinner {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 3px solid rgba(0, 0, 0, 0.08);
+  border-top-color: var(--c-secondary);
+  animation: settings-spin 1s linear infinite;
+}
+
+@keyframes settings-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.settings__card {
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-lg);
+  background: var(--c-surface);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-4);
+}
+
+.settings__card-title {
+  margin: 0 0 var(--space-3);
+  font-size: var(--fs-h5);
+}
+
+.settings__json {
+  margin: 0;
+  max-height: 480px;
+  overflow: auto;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--c-bg) 82%, #000 18%);
+  color: var(--c-text);
+  font-size: 0.85rem;
+}

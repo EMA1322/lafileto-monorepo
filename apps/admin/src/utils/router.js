@@ -183,16 +183,12 @@ async function router() {
         if (mod && typeof mod.initUsers === 'function') mod.initUsers();
         break;
       }
-     /*  case 'settings': {
+      case 'settings': {
         await loadAdminHeader();
-        try {
-          const mod = await import('../components/settings/settings.js');
-          if (mod && typeof mod.initSettings === 'function') mod.initSettings();
-        } catch {
-          // Si no existe el módulo todavía, no rompemos la navegación
-        }
+        const mod = await import('../components/settings/settings.js');
+        if (mod && typeof mod.initSettings === 'function') mod.initSettings();
         break;
-      } */
+      }
       default:
         // No-op (cubre futuras rutas)
         break;
