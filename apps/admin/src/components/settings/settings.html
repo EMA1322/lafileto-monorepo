@@ -32,34 +32,34 @@
     </div>
 
     <article class="settings__card" id="settings-success" hidden>
-      <h2 class="settings__card-title">Hours & Availability</h2>
+      <h2 class="settings__card-title">Horarios y disponibilidad</h2>
 
       <form id="settings-hours-form" class="settings__form" novalidate>
         <div id="settings-form-error" class="settings__form-error" role="alert" hidden></div>
 
         <fieldset class="settings__fieldset" id="settings-opening-hours">
-          <legend>Opening hours</legend>
+          <legend>Horario de apertura</legend>
           <div id="settings-hours-grid" class="settings__hours-grid"></div>
           <p class="settings__field-error" data-error-for="hours.openingHours" hidden></p>
         </fieldset>
 
         <fieldset class="settings__fieldset">
-          <legend>Availability override</legend>
+          <legend>Forzado de disponibilidad</legend>
           <label class="settings__field" for="hours-override">
-            <span class="settings__label">Override</span>
+            <span class="settings__label">Forzado</span>
             <select id="hours-override" name="hours.override" class="input"></select>
           </label>
           <p class="settings__field-error" data-error-for="hours.override" hidden></p>
         </fieldset>
 
         <fieldset class="settings__fieldset">
-          <legend>Alert banner</legend>
+          <legend>Banner de alerta</legend>
           <label class="settings__field settings__field--inline" for="hours-alert-enabled">
             <input id="hours-alert-enabled" name="hours.alert.enabled" type="checkbox" />
-            <span class="settings__label">Enable alert banner</span>
+            <span class="settings__label">Habilitar banner de alerta</span>
           </label>
           <label class="settings__field" for="hours-alert-message">
-            <span class="settings__label">Message</span>
+            <span class="settings__label">Mensaje</span>
             <textarea
               id="hours-alert-message"
               name="hours.alert.message"
@@ -71,6 +71,7 @@
           </label>
           <p class="settings__field-error" data-error-for="hours.alert.enabled" hidden></p>
           <p class="settings__field-error" data-error-for="hours.alert.message" hidden></p>
+          <p id="hours-alert-message-warning" class="settings__field-warning" hidden>Recomendado: agregá un mensaje para la alerta.</p>
         </fieldset>
 
         <div class="settings__actions">
@@ -82,9 +83,9 @@
             data-rbac-hide
             hidden
           >
-            Save
+            Guardar
           </button>
-          <p id="settings-readonly-hint" class="settings__readonly-hint" hidden>No permission to edit.</p>
+          <p id="settings-readonly-hint" class="settings__readonly-hint" hidden>No tenés permiso para editar.</p>
         </div>
       </form>
     </article>

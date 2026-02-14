@@ -50,6 +50,7 @@ function getRefs() {
     overrideSelect: container.querySelector('#hours-override'),
     alertEnabled: container.querySelector('#hours-alert-enabled'),
     alertMessage: container.querySelector('#hours-alert-message'),
+    alertMessageWarning: container.querySelector('#hours-alert-message-warning'),
     saveBtn: container.querySelector('#settings-save'),
     readonlyHint: container.querySelector('#settings-readonly-hint'),
   };
@@ -190,7 +191,7 @@ function createRow({ day, index }) {
 
   const closedText = document.createElement('span');
   closedText.className = 'settings__label';
-  closedText.textContent = 'Closed';
+  closedText.textContent = 'Cerrado';
 
   closedLabel.append(closedToggle, closedText);
 
@@ -199,7 +200,7 @@ function createRow({ day, index }) {
 
   const openLabel = document.createElement('span');
   openLabel.className = 'settings__label';
-  openLabel.textContent = 'Open';
+  openLabel.textContent = 'Apertura';
 
   const openInput = document.createElement('input');
   openInput.type = 'time';
@@ -214,7 +215,7 @@ function createRow({ day, index }) {
 
   const closeLabel = document.createElement('span');
   closeLabel.className = 'settings__label';
-  closeLabel.textContent = 'Close';
+  closeLabel.textContent = 'Cierre';
 
   const closeInput = document.createElement('input');
   closeInput.type = 'time';
@@ -310,6 +311,8 @@ function prefillForm(refs, config) {
     refs.alertMessage.value = typeof hours?.alert?.message === 'string' ? hours.alert.message : '';
   }
 
+  updateAlertMessageWarning(refs);
+
   state.openingHoursTemplate.forEach((slot, index) => {
     const openInput = refs.form?.elements?.namedItem(`hours.openingHours.${index}.open`);
     const closeInput = refs.form?.elements?.namedItem(`hours.openingHours.${index}.close`);
@@ -354,6 +357,15 @@ function collectHoursPayload(refs) {
   };
 }
 
+
+function updateAlertMessageWarning(refs) {
+  if (!refs?.alertMessageWarning) return;
+
+  const alertEnabled = Boolean(refs.alertEnabled?.checked);
+  const alertMessage = String(refs.alertMessage?.value || '').trim();
+  refs.alertMessageWarning.hidden = !(alertEnabled && !alertMessage);
+}
+
 function validateHours(payload) {
   const fieldErrors = new Map();
 
@@ -376,11 +388,6 @@ function validateHours(payload) {
       fieldErrors.set(`hours.openingHours.${index}`, 'La hora de apertura debe ser menor al cierre.');
     }
   });
-
-  if (payload.alert.enabled && !String(payload.alert.message || '').trim()) {
-    fieldErrors.set('hours.alert.message', 'Ingresá un mensaje cuando la alerta está habilitada.');
-  }
-
   return fieldErrors;
 }
 
@@ -398,6 +405,7 @@ async function saveSettings(refs) {
   setFormError(refs, '');
 
   const hoursPayload = collectHoursPayload(refs);
+  updateAlertMessageWarning(refs);
   const validationErrors = validateHours(hoursPayload);
 
   if (validationErrors.size > 0) {
@@ -478,6 +486,15 @@ export function initSettings() {
 
   refs.reloadBtn?.addEventListener('click', () => {
     void loadSettings(refs);
+  });
+
+
+  refs.alertEnabled?.addEventListener('change', () => {
+    updateAlertMessageWarning(refs);
+  });
+
+  refs.alertMessage?.addEventListener('input', () => {
+    updateAlertMessageWarning(refs);
   });
 
   refs.form?.addEventListener('submit', (event) => {

@@ -163,6 +163,12 @@
   font-size: 0.8rem;
 }
 
+.settings__field-warning {
+  margin: 0;
+  color: var(--c-text-muted);
+  font-size: 0.8rem;
+}
+
 .settings__actions {
   display: flex;
   gap: var(--space-2);
