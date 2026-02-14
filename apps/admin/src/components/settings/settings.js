@@ -74,6 +74,7 @@ async function loadSettings(refs) {
     const response = await apiFetch('/settings', {
       method: 'GET',
       showErrorToast: false,
+      redirectOn401: false,
     });
 
     const payload = response?.data ?? null;

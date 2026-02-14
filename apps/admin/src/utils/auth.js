@@ -228,7 +228,14 @@ function joinUrl(base, path) {
  * - Limpia el token ante 401/403 expirados y muestra mensajes legibles.
  */
 export async function apiFetch(path, options = {}) {
-  const { params, showErrorToast = true, errorMessage, body, ...restOptions } = options;
+  const {
+    params,
+    showErrorToast = true,
+    errorMessage,
+    body,
+    redirectOn401 = true,
+    ...restOptions
+  } = options;
 
   let url = joinUrl(API_BASE, path);
 
@@ -359,7 +366,7 @@ export async function apiFetch(path, options = {}) {
       err.code === 'UNAUTHORIZED';
 
     if (isUnauthorized) {
-      await logout({ redirect: true, skipRequest: true });
+      await logout({ redirect: redirectOn401, skipRequest: true });
     }
 
     if (
