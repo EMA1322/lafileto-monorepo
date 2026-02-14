@@ -1,0 +1,39 @@
+<link rel="stylesheet" href="/src/styles/settings.css" />
+
+<section
+  id="settings-module"
+  class="settings page container"
+  data-rbac-module="settings"
+  aria-labelledby="settings-title"
+>
+  <header class="settings__header">
+    <div class="settings__heading">
+      <h1 id="settings-title" class="settings__title">Configuración</h1>
+      <p class="settings__subtitle">Vista preliminar de ajustes globales del panel.</p>
+    </div>
+    <div class="settings__toolbar" role="group" aria-label="Acciones de configuración">
+      <button id="settings-reload" class="btn btn--ghost btn--sm" type="button">Actualizar</button>
+    </div>
+  </header>
+
+  <section class="settings__content is-loading" aria-live="polite" aria-busy="true" data-status="loading">
+    <div class="settings__state settings__state--loading" id="settings-loading" role="status">
+      <span class="settings__spinner" aria-hidden="true"></span>
+      <p>Cargando configuración…</p>
+    </div>
+
+    <div class="settings__state settings__state--error" id="settings-error" role="alert" hidden>
+      <p id="settings-error-message">No pudimos cargar la configuración.</p>
+      <button id="settings-retry" class="btn btn--ghost btn--sm" type="button">Reintentar</button>
+    </div>
+
+    <div class="settings__state settings__state--empty" id="settings-empty" role="status" hidden>
+      <p>No hay configuración disponible para mostrar.</p>
+    </div>
+
+    <article class="settings__card" id="settings-success" hidden>
+      <h2 class="settings__card-title">Resumen (solo lectura)</h2>
+      <pre id="settings-json" class="settings__json" aria-label="JSON de configuración">{}</pre>
+    </article>
+  </section>
+</section>
