@@ -76,7 +76,16 @@
 
           <div id="social-links-list" class="settings__social-list"></div>
           <p class="settings__field-error" data-error-for="socialLinks" hidden></p>
-          <button id="social-links-add" type="button" class="btn btn--ghost btn--sm">Agregar red social</button>
+          <button
+            id="social-links-add"
+            type="button"
+            class="btn btn--ghost btn--sm"
+            data-rbac-action="write"
+            data-rbac-hide
+            hidden
+          >
+            Agregar red social
+          </button>
         </fieldset>
 
         <fieldset class="settings__fieldset">

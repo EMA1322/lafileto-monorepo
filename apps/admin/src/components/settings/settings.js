@@ -26,6 +26,7 @@ const state = {
   siteConfig: null,
   openingHoursTemplate: [],
   socialLinksTemplate: [],
+  socialLinksIndexMap: [],
   isSaving: false,
 };
 
@@ -183,7 +184,7 @@ function mapBackendFieldErrors(refs, error) {
   let mappedAtLeastOne = false;
 
   for (const fieldError of fields) {
-    const rawPath = normalizePath(fieldError?.path);
+    const rawPath = remapSocialLinkFieldPath(normalizePath(fieldError?.path));
     const message = fieldError?.message || 'Valor inválido.';
 
     if (!rawPath) continue;
@@ -321,6 +322,28 @@ function setReadOnlyState(refs) {
     if (control === refs.saveBtn) return;
     control.disabled = !writable;
   });
+
+  if (refs?.addSocialLinkBtn) {
+    refs.addSocialLinkBtn.disabled = !writable;
+  }
+
+  const removeButtons = refs?.socialLinksList?.querySelectorAll('[data-action="remove-social"]') || [];
+  removeButtons.forEach((button) => {
+    button.disabled = !writable;
+  });
+}
+
+function remapSocialLinkFieldPath(path) {
+  const normalized = normalizePath(path);
+  const match = normalized.match(/^socialLinks\.(\d+)(\..+)?$/);
+  if (!match) return normalized;
+
+  const payloadIndex = Number.parseInt(match[1], 10);
+  const suffix = match[2] || '';
+  const domIndex = state.socialLinksIndexMap[payloadIndex];
+
+  if (!Number.isInteger(domIndex)) return normalized;
+  return `socialLinks.${domIndex}${suffix}`;
 }
 
 function createSocialRow(link, index) {
@@ -365,6 +388,9 @@ function createSocialRow(link, index) {
   removeBtn.textContent = 'Quitar';
   removeBtn.dataset.action = 'remove-social';
   removeBtn.dataset.index = String(index);
+  removeBtn.dataset.rbacAction = 'write';
+  removeBtn.dataset.rbacHide = '';
+  removeBtn.hidden = true;
 
   const labelError = document.createElement('p');
   labelError.className = 'settings__field-error';
@@ -387,6 +413,8 @@ function renderSocialRows(refs) {
   state.socialLinksTemplate.forEach((link, index) => {
     refs.socialLinksList.append(createSocialRow(link, index));
   });
+
+  applyRBAC(refs.socialLinksList);
 }
 
 function ensureSocialRows(refs, socialLinks) {
@@ -401,12 +429,14 @@ function ensureSocialRows(refs, socialLinks) {
 }
 
 function addSocialRow(refs) {
+  if (!canWrite('settings')) return;
   state.socialLinksTemplate.push({ label: '', url: '' });
   renderSocialRows(refs);
   setReadOnlyState(refs);
 }
 
 function removeSocialRow(refs, index) {
+  if (!canWrite('settings')) return;
   if (!Number.isInteger(index) || index < 0 || index >= state.socialLinksTemplate.length) return;
   state.socialLinksTemplate.splice(index, 1);
   renderSocialRows(refs);
@@ -495,22 +525,40 @@ function collectHoursPayload(refs) {
 }
 
 function collectSocialLinksPayload(refs) {
-  return state.socialLinksTemplate
-    .map((_, index) => {
+  const rowsDraft = state.socialLinksTemplate.map((_, index) => {
       const labelInput = refs.form?.elements?.namedItem(`socialLinks.${index}.label`);
       const urlInput = refs.form?.elements?.namedItem(`socialLinks.${index}.url`);
 
       return {
+        domIndex: index,
         label: String(labelInput?.value || '').trim(),
         url: String(urlInput?.value || '').trim(),
       };
-    })
-    .filter((link) => link.label || link.url);
+    });
+
+  const payloadLinks = [];
+  const indexMap = [];
+
+  rowsDraft.forEach((link) => {
+    if (!link.label && !link.url) return;
+    indexMap.push(link.domIndex);
+    payloadLinks.push({ label: link.label, url: link.url });
+  });
+
+  state.socialLinksIndexMap = indexMap;
+
+  return {
+    rowsDraft,
+    payloadLinks,
+    indexMap,
+  };
 }
 
 function collectIdentityPayload(refs) {
   const rawMapEmbed = String(refs.mapEmbedSrc?.value || '');
   const extractedEmbedSrc = extractEmbedSrc(rawMapEmbed);
+
+  const socialLinksDraft = collectSocialLinksPayload(refs);
 
   return {
     identity: {
@@ -522,7 +570,8 @@ function collectIdentityPayload(refs) {
       number: normalizeDigits(refs.whatsappNumber?.value),
       message: String(refs.whatsappMessage?.value || '').trim(),
     },
-    socialLinks: collectSocialLinksPayload(refs),
+    socialLinks: socialLinksDraft.payloadLinks,
+    socialLinksDraft,
     map: {
       embedSrc: extractedEmbedSrc,
     },
@@ -570,12 +619,14 @@ function validateIdentityContact(payload) {
     fieldErrors.set('identity.email', 'Ingresá un email válido.');
   }
 
-  payload.socialLinks.forEach((link, index) => {
+  payload.socialLinksDraft.rowsDraft.forEach((link) => {
+    if (!link.label && !link.url) return;
+
     if (!link.label) {
-      fieldErrors.set(`socialLinks.${index}.label`, 'Ingresá un nombre para la red social.');
+      fieldErrors.set(`socialLinks.${link.domIndex}.label`, 'Ingresá un nombre para la red social.');
     }
     if (!isValidHttpUrl(link.url)) {
-      fieldErrors.set(`socialLinks.${index}.url`, 'La URL debe comenzar con http:// o https://');
+      fieldErrors.set(`socialLinks.${link.domIndex}.url`, 'La URL debe comenzar con http:// o https://');
     }
   });
 
@@ -623,6 +674,7 @@ async function saveSettings(refs) {
 
   try {
     delete identityPayload.__rawMapEmbed;
+    delete identityPayload.socialLinksDraft;
     const response = await apiFetch('/settings', {
       method: 'PUT',
       body: mergeSettingsPayload({
