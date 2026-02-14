@@ -94,13 +94,89 @@
   font-size: var(--fs-h5);
 }
 
-.settings__json {
+.settings__form {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.settings__form-error {
   margin: 0;
-  max-height: 480px;
-  overflow: auto;
-  padding: var(--space-3);
+  padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--c-bg) 82%, #000 18%);
-  color: var(--c-text);
+  border: 1px solid color-mix(in srgb, var(--c-danger) 60%, #fff 40%);
+  background: color-mix(in srgb, var(--c-danger) 10%, #fff 90%);
+  color: var(--c-danger);
+}
+
+.settings__fieldset {
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  display: grid;
+  gap: var(--space-2);
+}
+
+.settings__fieldset > legend {
+  padding: 0 var(--space-1);
+  font-weight: 600;
+}
+
+.settings__hours-grid {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.settings__row {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) auto repeat(2, minmax(130px, 1fr));
+  gap: var(--space-2);
+  align-items: end;
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--c-bg) 85%, #000 15%);
+}
+
+.settings__day {
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.settings__field {
+  display: grid;
+  gap: 4px;
+}
+
+.settings__field--inline {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.settings__label {
   font-size: 0.85rem;
+  color: var(--c-text-muted);
+}
+
+.settings__field-error {
+  margin: 0;
+  color: var(--c-danger);
+  font-size: 0.8rem;
+}
+
+.settings__actions {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.settings__readonly-hint {
+  margin: 0;
+  color: var(--c-text-muted);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 900px) {
+  .settings__row {
+    grid-template-columns: 1fr;
+  }
 }
