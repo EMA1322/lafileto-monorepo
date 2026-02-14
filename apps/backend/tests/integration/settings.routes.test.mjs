@@ -12,10 +12,6 @@ const { settingRepository } = await import('../../src/repositories/settingReposi
 let server;
 let baseUrl;
 
-const originalRepository = {
-  upsertByKey: settingRepository.upsertByKey
-};
-
 test.before(async () => {
   server = app.listen(0);
 
@@ -33,8 +29,6 @@ test.before(async () => {
 });
 
 test.after(async () => {
-  settingRepository.upsertByKey = originalRepository.upsertByKey;
-
   if (!server) return;
 
   await new Promise((resolve, reject) => {
@@ -104,6 +98,7 @@ test('PUT /api/v1/settings sin token => 401', async () => {
 test('PUT /api/v1/settings sin permiso settings:w => 403', async () => {
   const token = await buildToken({
     userId: 'viewer-1',
+    roleId: `role-test-deny-${Date.now()}`,
     permissions: {
       settings: { r: true, w: false, u: false, d: false }
     }
@@ -144,14 +139,12 @@ test('PUT /api/v1/settings payload inválido => 400 con details.fields path esta
 });
 
 test('PUT /api/v1/settings con settings:w => 200 y persiste meta', async () => {
-  const writes = [];
-  settingRepository.upsertByKey = async (key, value) => {
-    writes.push({ key, value });
-    return { key, value };
-  };
+  const actorUserId = `admin-${Date.now()}`;
+  const uniqueEmail = `settings-${Date.now()}@lafileto.test`;
 
   const token = await buildToken({
-    userId: 'admin-1',
+    userId: actorUserId,
+    roleId: `role-test-allow-${Date.now()}`,
     permissions: {
       settings: { r: true, w: true, u: true, d: true }
     }
@@ -160,14 +153,21 @@ test('PUT /api/v1/settings con settings:w => 200 y persiste meta', async () => {
   const res = await api('/api/v1/settings', {
     method: 'PUT',
     headers: { Authorization: `Bearer ${token}` },
-    json: validPayload()
+    json: {
+      ...validPayload(),
+      identity: {
+        ...validPayload().identity,
+        email: uniqueEmail
+      }
+    }
   });
 
   assert.equal(res.status, 200);
   assert.equal(res.body?.ok, true);
-  assert.equal(writes.length, 1);
-  assert.equal(writes[0].key, 'siteConfig');
-  assert.equal(writes[0].value.meta.updatedByUserId, 'admin-1');
-  assert.equal(typeof writes[0].value.meta.updatedAt, 'string');
   assert.equal(res.body?.data?.meta, undefined);
+
+  const persisted = await settingRepository.findByKey('siteConfig');
+  assert.equal(persisted?.value?.identity?.email, uniqueEmail);
+  assert.equal(persisted?.value?.meta?.updatedByUserId, actorUserId);
+  assert.equal(typeof persisted?.value?.meta?.updatedAt, 'string');
 });
