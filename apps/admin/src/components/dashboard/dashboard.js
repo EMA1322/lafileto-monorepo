@@ -16,6 +16,7 @@
 import { ensureRbacLoaded, canRead, canWrite, canUpdate, canDelete } from '../../utils/rbac.js';
 import { showSnackbar } from '../../utils/snackbar.js';
 import { safeText } from '../../utils/helpers.js';
+import { isFeatureEnabled } from '../../utils/featureFlags.js';
 
 // ---------------------------------------------
 // Estado interno del módulo (no persistente)
@@ -24,13 +25,6 @@ const MODULE = {
   firstRender: true, // Para enfocar el título tras la primera carga
   cache: null, // Guarda la última respuesta válida del JSON
 };
-
-function isFeatureEnabled(rawValue) {
-  const normalized = String(rawValue ?? '')
-    .trim()
-    .toLowerCase();
-  return normalized === 'true' || normalized === '1';
-}
 
 const FEATURE_SETTINGS = isFeatureEnabled(import.meta.env.VITE_FEATURE_SETTINGS);
 

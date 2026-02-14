@@ -20,20 +20,14 @@
 // ========================================================
 
 import { logout } from '@/utils/auth.js';
-import { ensureRbacLoaded, canRead, moduleKeyFromHash } from '@/utils/rbac.js';
+import { ensureRbacLoaded, canRead, moduleKeyFromHash, applyRBAC } from '@/utils/rbac.js';
 import { showSnackbar } from '@/utils/snackbar.js';
 import { openModal, closeModal } from '@/utils/modals.js';
+import { isFeatureEnabled } from '@/utils/featureFlags.js';
 
 // ------------------------------
 // Feature flags livianos (build-time/cliente)
 // ------------------------------
-function isFeatureEnabled(rawValue) {
-  const normalized = String(rawValue ?? '')
-    .trim()
-    .toLowerCase();
-  return normalized === 'true' || normalized === '1';
-}
-
 const FEATURE_SETTINGS = isFeatureEnabled(import.meta.env.VITE_FEATURE_SETTINGS);
 
 // ------------------------------
@@ -142,12 +136,14 @@ function buildMenu() {
     li.setAttribute('data-module-key', item.key);
 
     if (item.key === 'settings') {
-      li.setAttribute('data-rbac-hide', 'settings:r');
-      li.setAttribute('hidden', 'true');
+      li.setAttribute('data-rbac-module', 'settings');
     }
 
+    const settingsAttrs =
+      item.key === 'settings' ? 'data-rbac-action="read" data-rbac-hide hidden' : '';
+
     li.innerHTML = `
-      <a href="${item.hash}" class="header__nav-link" data-module-key="${item.key}">
+      <a href="${item.hash}" class="header__nav-link" data-module-key="${item.key}" ${settingsAttrs}>
         ${item.svg}
         <span class="header__nav-text">${item.title}</span>
       </a>
@@ -155,8 +151,8 @@ function buildMenu() {
 
     refs.navListEl.appendChild(li);
 
-    if (item.key === 'settings' && hasRead) {
-      li.removeAttribute('hidden');
+    if (item.key === 'settings') {
+      applyRBAC(li);
     }
   });
 
