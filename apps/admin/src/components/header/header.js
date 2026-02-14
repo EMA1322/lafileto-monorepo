@@ -27,7 +27,14 @@ import { openModal, closeModal } from '@/utils/modals.js';
 // ------------------------------
 // Feature flags livianos (build-time/cliente)
 // ------------------------------
-const FEATURE_SETTINGS = false; // ⬅️ Oculta "settings" hasta que exista el módulo
+function isFeatureEnabled(rawValue) {
+  const normalized = String(rawValue ?? '')
+    .trim()
+    .toLowerCase();
+  return normalized === 'true' || normalized === '1';
+}
+
+const FEATURE_SETTINGS = isFeatureEnabled(import.meta.env.VITE_FEATURE_SETTINGS);
 
 // ------------------------------
 // Catálogo del menú (orden fijo) + SVG inline
@@ -127,11 +134,17 @@ function buildMenu() {
     // 2) RBAC Read
     const key = item.key;
     const hasRead = canRead(key) || (key === 'users' && canRead('user')); // compat semilla vieja
-    if (!hasRead) return;
+
+    if (!hasRead && key !== 'settings') return;
 
     const li = document.createElement('li');
     li.className = 'header__nav-item';
     li.setAttribute('data-module-key', item.key);
+
+    if (item.key === 'settings') {
+      li.setAttribute('data-rbac-hide', 'settings:r');
+      li.setAttribute('hidden', 'true');
+    }
 
     li.innerHTML = `
       <a href="${item.hash}" class="header__nav-link" data-module-key="${item.key}">
@@ -141,6 +154,10 @@ function buildMenu() {
     `;
 
     refs.navListEl.appendChild(li);
+
+    if (item.key === 'settings' && hasRead) {
+      li.removeAttribute('hidden');
+    }
   });
 
   // Resaltar activo
