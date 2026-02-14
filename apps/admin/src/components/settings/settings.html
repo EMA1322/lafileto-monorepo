@@ -9,7 +9,7 @@
   <header class="settings__header">
     <div class="settings__heading">
       <h1 id="settings-title" class="settings__title">Configuración</h1>
-      <p class="settings__subtitle">Vista preliminar de ajustes globales del panel.</p>
+      <p class="settings__subtitle">Gestioná horarios y disponibilidad del sitio.</p>
     </div>
     <div class="settings__toolbar" role="group" aria-label="Acciones de configuración">
       <button id="settings-reload" class="btn btn--ghost btn--sm" type="button">Actualizar</button>
@@ -32,8 +32,62 @@
     </div>
 
     <article class="settings__card" id="settings-success" hidden>
-      <h2 class="settings__card-title">Resumen (solo lectura)</h2>
-      <pre id="settings-json" class="settings__json" aria-label="JSON de configuración">{}</pre>
+      <h2 class="settings__card-title">Horarios y disponibilidad</h2>
+
+      <form id="settings-hours-form" class="settings__form" novalidate>
+        <div id="settings-form-error" class="settings__form-error" role="alert" hidden></div>
+
+        <fieldset class="settings__fieldset" id="settings-opening-hours">
+          <legend>Horario de apertura</legend>
+          <div id="settings-hours-grid" class="settings__hours-grid"></div>
+          <p class="settings__field-error" data-error-for="hours.openingHours" hidden></p>
+        </fieldset>
+
+        <fieldset class="settings__fieldset">
+          <legend>Forzado de disponibilidad</legend>
+          <label class="settings__field" for="hours-override">
+            <span class="settings__label">Forzado</span>
+            <select id="hours-override" name="hours.override" class="input"></select>
+          </label>
+          <p class="settings__field-error" data-error-for="hours.override" hidden></p>
+        </fieldset>
+
+        <fieldset class="settings__fieldset">
+          <legend>Banner de alerta</legend>
+          <label class="settings__field settings__field--inline" for="hours-alert-enabled">
+            <input id="hours-alert-enabled" name="hours.alert.enabled" type="checkbox" />
+            <span class="settings__label">Habilitar banner de alerta</span>
+          </label>
+          <label class="settings__field" for="hours-alert-message">
+            <span class="settings__label">Mensaje</span>
+            <textarea
+              id="hours-alert-message"
+              name="hours.alert.message"
+              class="input"
+              rows="3"
+              maxlength="280"
+              placeholder="Ej.: Cerrado por mantenimiento"
+            ></textarea>
+          </label>
+          <p class="settings__field-error" data-error-for="hours.alert.enabled" hidden></p>
+          <p class="settings__field-error" data-error-for="hours.alert.message" hidden></p>
+          <p id="hours-alert-message-warning" class="settings__field-warning" hidden>Recomendado: agregá un mensaje para la alerta.</p>
+        </fieldset>
+
+        <div class="settings__actions">
+          <button
+            id="settings-save"
+            type="submit"
+            class="btn btn--primary"
+            data-rbac-action="write"
+            data-rbac-hide
+            hidden
+          >
+            Guardar
+          </button>
+          <p id="settings-readonly-hint" class="settings__readonly-hint" hidden>No tenés permiso para editar.</p>
+        </div>
+      </form>
     </article>
   </section>
 </section>
