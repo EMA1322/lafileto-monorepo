@@ -6,6 +6,12 @@ export const settingRepository = {
       where: { key }
     }),
 
+  updateByKey: (key, value) =>
+    prisma.setting.update({
+      where: { key },
+      data: { value }
+    }),
+
   upsertByKey: (key, value) =>
     prisma.setting.upsert({
       where: { key },
@@ -13,4 +19,3 @@ export const settingRepository = {
       create: { key, value }
     })
 };
-

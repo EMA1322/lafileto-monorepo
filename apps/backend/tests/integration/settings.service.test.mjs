@@ -79,3 +79,60 @@ test('getAdminSettings devuelve shape completo', async () => {
   assert.equal(response.payments.bankName, 'Banco Admin');
 });
 
+test('updateAdminSettings persiste siteConfig sanitizado con metadata de actualización', async () => {
+  const calls = [];
+
+  settingRepository.upsertByKey = async (key, value) => {
+    calls.push([key, value]);
+    return { key, value };
+  };
+
+  const response = await settingsService.updateAdminSettings(
+    {
+      identity: { phone: '266-123-0000', email: 'admin@lafileto.com' },
+      payments: { enabled: true, cbu: '0000-1234 5678 9012 3456-78' }
+    },
+    'user-123'
+  );
+
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0][0], SITE_CONFIG_KEY);
+  assert.equal(calls[0][1].meta.updatedByUserId, 'user-123');
+  assert.equal(typeof calls[0][1].meta.updatedAt, 'string');
+  assert.equal(calls[0][1].payments.cbu, '0000123456789012345678');
+  assert.equal(response.meta, undefined);
+});
+
+test('updateAdminSettings falla con 400 cuando hay errores de validación', async () => {
+  await assert.rejects(
+    () =>
+      settingsService.updateAdminSettings({
+        socialLinks: [{ label: 'XSS', url: 'javascript:alert(1)' }],
+        hours: { override: 'INVALID' }
+      }, 'user-1'),
+    (error) => {
+      assert.equal(error.code, 'BAD_REQUEST');
+      assert.equal(error.httpStatus, 400);
+      assert.equal(Array.isArray(error.details?.fields), true);
+      assert.equal(error.details.fields[0].path.includes('.'), true);
+      return true;
+    }
+  );
+});
+
+test('getPublicSettings nunca expone meta', async () => {
+  settingRepository.findByKey = async () => ({
+    key: SITE_CONFIG_KEY,
+    value: {
+      payments: { enabled: false },
+      meta: {
+        updatedByUserId: 'admin-1',
+        updatedAt: '2026-01-01T00:00:00.000Z'
+      }
+    }
+  });
+
+  const response = await settingsService.getPublicSettings();
+
+  assert.equal(response.meta, undefined);
+});

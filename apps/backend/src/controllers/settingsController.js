@@ -18,6 +18,14 @@ export const settingsController = {
     } catch (err) {
       return next(err);
     }
+  },
+
+  updateAdmin: async (req, res, next) => {
+    try {
+      const data = await settingsService.updateAdminSettings(req.body, req.user?.id);
+      return res.json(ok(data));
+    } catch (err) {
+      return next(err);
+    }
   }
 };
-
