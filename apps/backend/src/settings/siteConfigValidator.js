@@ -1,8 +1,85 @@
 import { MAX_LENGTHS, isValidHttpUrl, sanitizeSiteConfig } from './siteConfigSanitizers.js';
+import { SITE_CONFIG_DEFAULTS } from './siteConfigDefaults.js';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const HH_MM_REGEX = /^([01]\d|2[0-3]):([0-5]\d)$/;
 const HOURS_OVERRIDE_VALUES = new Set(['AUTO', 'FORCE_OPEN', 'FORCE_CLOSED']);
+
+function normalizeObject(value) {
+  return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+}
+
+function normalizeArray(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+function trimString(value) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function digitsOnly(value) {
+  return trimString(value).replace(/\D+/g, '');
+}
+
+function normalizeSiteConfigForValidation(input) {
+  const root = normalizeObject(input);
+  const identity = normalizeObject(root.identity);
+  const whatsapp = normalizeObject(root.whatsapp);
+  const payments = normalizeObject(root.payments);
+  const hours = normalizeObject(root.hours);
+  const seo = normalizeObject(root.seo);
+  const contact = normalizeObject(seo.contact);
+  const about = normalizeObject(seo.about);
+
+  const socialLinks = normalizeArray(root.socialLinks).map((item) => {
+    const link = normalizeObject(item);
+    return {
+      label: trimString(link.label),
+      url: trimString(link.url)
+    };
+  });
+
+  const openingHours = normalizeArray(hours.openingHours).map((entry) => {
+    const slot = normalizeObject(entry);
+    return {
+      day: trimString(slot.day),
+      open: trimString(slot.open),
+      close: trimString(slot.close),
+      closed: Boolean(slot.closed)
+    };
+  });
+
+  return {
+    identity: {
+      phone: digitsOnly(identity.phone),
+      email: trimString(identity.email)
+    },
+    whatsapp: {
+      number: digitsOnly(whatsapp.number)
+    },
+    socialLinks,
+    payments: {
+      enabled: Boolean(payments.enabled),
+      cbu: digitsOnly(payments.cbu),
+      alias: trimString(payments.alias),
+      cuit: digitsOnly(payments.cuit)
+    },
+    hours: {
+      override: trimString(hours.override) || SITE_CONFIG_DEFAULTS.hours.override,
+      openingHours
+    },
+    seo: {
+      contact: {
+        title: trimString(contact.title),
+        description: trimString(contact.description)
+      },
+      about: {
+        title: trimString(about.title),
+        description: trimString(about.description)
+      }
+    }
+  };
+}
 
 function isValidDigitsLength(value, min, max) {
   return value.length >= min && value.length <= max;
@@ -13,7 +90,8 @@ function toMinutes(hhmm) {
   return hours * 60 + minutes;
 }
 
-export function validateSiteConfig(config) {
+export function validateSiteConfig(input) {
+  const config = normalizeSiteConfigForValidation(input);
   const errors = [];
 
   if (config.identity.email && !EMAIL_REGEX.test(config.identity.email)) {
@@ -29,6 +107,10 @@ export function validateSiteConfig(config) {
   }
 
   for (const [index, link] of config.socialLinks.entries()) {
+    if (!link.label) {
+      errors.push(`socialLinks[${index}].label is required`);
+    }
+
     if (!isValidHttpUrl(link.url)) {
       errors.push(`socialLinks[${index}].url must use http/https`);
     }
@@ -92,8 +174,8 @@ export function validateSiteConfig(config) {
 }
 
 export function validateAndSanitizeSiteConfig(input) {
+  const { errors } = validateSiteConfig(input);
   const sanitized = sanitizeSiteConfig(input);
-  const { errors } = validateSiteConfig(sanitized);
 
   return {
     sanitized,

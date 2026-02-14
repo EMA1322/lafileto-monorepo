@@ -46,6 +46,32 @@ test('sanitizeSiteConfig allowlists google maps embeds only', () => {
   assert.equal(allowed.map.embedSrc, 'https://www.google.com/maps/embed?pb=valid');
 });
 
+
+
+test('validateAndSanitizeSiteConfig returns seo length errors while still truncating', () => {
+  const tooLongTitle = 'x'.repeat(300);
+
+  const result = validateAndSanitizeSiteConfig({
+    seo: {
+      contact: {
+        title: tooLongTitle
+      }
+    }
+  });
+
+  assert.equal(result.errors.some((error) => error.includes('seo.contact.title max length')), true);
+  assert.equal(result.sanitized.seo.contact.title.length, 70);
+});
+
+test('validateAndSanitizeSiteConfig reports invalid social url and sanitizes it out', () => {
+  const result = validateAndSanitizeSiteConfig({
+    socialLinks: [{ label: 'Bad', url: 'javascript:alert(1)' }]
+  });
+
+  assert.equal(result.errors.some((error) => error.includes('socialLinks[0].url must use http/https')), true);
+  assert.deepEqual(result.sanitized.socialLinks, []);
+});
+
 test('validateAndSanitizeSiteConfig reports invalid opening hours without inventing times', () => {
   const result = validateAndSanitizeSiteConfig({
     hours: {
