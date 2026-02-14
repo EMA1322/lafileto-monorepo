@@ -1,21 +1,12 @@
 import { settingRepository } from '../repositories/settingRepository.js';
 import { SITE_CONFIG_DEFAULTS, cloneSiteConfigDefaults } from '../settings/siteConfigDefaults.js';
 import { validateAndSanitizeSiteConfig } from '../settings/siteConfigValidator.js';
-import { createError } from '../utils/errors.js';
 
 const SITE_CONFIG_KEY = 'siteConfig';
 
 function normalizeSiteConfig(rawValue) {
   const { sanitized } = validateAndSanitizeSiteConfig(rawValue);
   return sanitized;
-}
-
-function toFieldError(errorMessage) {
-  const [path = 'siteConfig'] = String(errorMessage).split(' ');
-  return {
-    path,
-    message: errorMessage
-  };
 }
 
 async function getOrCreateSiteConfigSetting() {
@@ -48,17 +39,9 @@ export const settingsService = {
     return normalized;
   },
 
-  async updateAdminSettings(payload, actorUserId) {
-    const { sanitized, errors } = validateAndSanitizeSiteConfig(payload);
-
-    if (errors.length) {
-      throw createError('BAD_REQUEST', 'Datos inválidos.', {
-        fields: errors.map(toFieldError)
-      });
-    }
-
+  async updateAdminSettings(sanitizedPayload, actorUserId) {
     const nextValue = {
-      ...sanitized,
+      ...sanitizedPayload,
       meta: {
         updatedByUserId: actorUserId ?? null,
         updatedAt: new Date().toISOString()
@@ -67,7 +50,7 @@ export const settingsService = {
 
     await settingRepository.upsertByKey(SITE_CONFIG_KEY, nextValue);
 
-    return sanitized;
+    return sanitizedPayload;
   }
 };
 

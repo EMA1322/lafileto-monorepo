@@ -59,7 +59,7 @@ test('validateAndSanitizeSiteConfig returns seo length errors while still trunca
     }
   });
 
-  assert.equal(result.errors.some((error) => error.includes('seo.contact.title max length')), true);
+  assert.equal(result.errors.some((error) => error.path === 'seo.contact.title' && error.code === 'max_length'), true);
   assert.equal(result.sanitized.seo.contact.title.length, 70);
 });
 
@@ -68,7 +68,7 @@ test('validateAndSanitizeSiteConfig reports invalid social url and sanitizes it 
     socialLinks: [{ label: 'Bad', url: 'javascript:alert(1)' }]
   });
 
-  assert.equal(result.errors.some((error) => error.includes('socialLinks[0].url must use http/https')), true);
+  assert.equal(result.errors.some((error) => error.path === 'socialLinks[0].url' && error.code === 'invalid_url'), true);
   assert.deepEqual(result.sanitized.socialLinks, []);
 });
 
@@ -80,7 +80,7 @@ test('validateAndSanitizeSiteConfig reports invalid opening hours without invent
   });
 
   assert.equal(result.sanitized.hours.openingHours[0].open, '25:99');
-  assert.equal(result.errors.some((error) => error.includes('HH:MM')), true);
+  assert.equal(result.errors.some((error) => error.path === 'hours.openingHours[0]' && error.code === 'invalid_time_format'), true);
 });
 
 test('getPublicSettings keeps minimal payments DTO when disabled', async () => {
