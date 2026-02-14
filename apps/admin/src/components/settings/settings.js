@@ -10,6 +10,7 @@ const STATUS = {
 };
 
 const HH_MM_REGEX = /^([01]\d|2[0-3]):([0-5]\d)$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const OVERRIDE_OPTIONS = ['AUTO', 'FORCE_OPEN', 'FORCE_CLOSED'];
 const DEFAULT_WEEK_DAYS = [
   'monday',
@@ -24,8 +25,35 @@ const DEFAULT_WEEK_DAYS = [
 const state = {
   siteConfig: null,
   openingHoursTemplate: [],
+  socialLinksTemplate: [],
+  socialLinksIndexMap: [],
   isSaving: false,
 };
+
+function normalizeDigits(value) {
+  return String(value || '').replace(/\D+/g, '');
+}
+
+function isValidHttpUrl(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return false;
+
+  try {
+    const url = new URL(raw);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+function extractEmbedSrc(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  if (!raw.includes('<iframe')) return raw;
+
+  const match = raw.match(/src\s*=\s*['\"]([^'\"]+)['\"]/i);
+  return match?.[1]?.trim() || '';
+}
 
 function getRefs() {
   const container = document.querySelector('#settings-module');
@@ -51,6 +79,14 @@ function getRefs() {
     alertEnabled: container.querySelector('#hours-alert-enabled'),
     alertMessage: container.querySelector('#hours-alert-message'),
     alertMessageWarning: container.querySelector('#hours-alert-message-warning'),
+    identityPhone: container.querySelector('#identity-phone'),
+    identityEmail: container.querySelector('#identity-email'),
+    identityAddress: container.querySelector('#identity-address'),
+    whatsappNumber: container.querySelector('#whatsapp-number'),
+    whatsappMessage: container.querySelector('#whatsapp-message'),
+    socialLinksList: container.querySelector('#social-links-list'),
+    addSocialLinkBtn: container.querySelector('#social-links-add'),
+    mapEmbedSrc: container.querySelector('#map-embed-src'),
     saveBtn: container.querySelector('#settings-save'),
     readonlyHint: container.querySelector('#settings-readonly-hint'),
   };
@@ -148,7 +184,7 @@ function mapBackendFieldErrors(refs, error) {
   let mappedAtLeastOne = false;
 
   for (const fieldError of fields) {
-    const rawPath = normalizePath(fieldError?.path);
+    const rawPath = remapSocialLinkFieldPath(normalizePath(fieldError?.path));
     const message = fieldError?.message || 'Valor inválido.';
 
     if (!rawPath) continue;
@@ -286,10 +322,141 @@ function setReadOnlyState(refs) {
     if (control === refs.saveBtn) return;
     control.disabled = !writable;
   });
+
+  if (refs?.addSocialLinkBtn) {
+    refs.addSocialLinkBtn.disabled = !writable;
+  }
+
+  const removeButtons = refs?.socialLinksList?.querySelectorAll('[data-action="remove-social"]') || [];
+  removeButtons.forEach((button) => {
+    button.disabled = !writable;
+  });
+}
+
+function remapSocialLinkFieldPath(path) {
+  const normalized = normalizePath(path);
+  const match = normalized.match(/^socialLinks\.(\d+)(\..+)?$/);
+  if (!match) return normalized;
+
+  const payloadIndex = Number.parseInt(match[1], 10);
+  const suffix = match[2] || '';
+  const domIndex = state.socialLinksIndexMap[payloadIndex];
+
+  if (!Number.isInteger(domIndex)) return normalized;
+  return `socialLinks.${domIndex}${suffix}`;
+}
+
+function createSocialRow(link, index) {
+  const row = document.createElement('div');
+  row.className = 'settings__social-row';
+  row.dataset.index = String(index);
+
+  const labelField = document.createElement('label');
+  labelField.className = 'settings__field';
+
+  const labelText = document.createElement('span');
+  labelText.className = 'settings__label';
+  labelText.textContent = 'Nombre';
+
+  const labelInput = document.createElement('input');
+  labelInput.type = 'text';
+  labelInput.className = 'input';
+  labelInput.name = `socialLinks.${index}.label`;
+  labelInput.value = String(link?.label || '');
+
+  labelField.append(labelText, labelInput);
+
+  const urlField = document.createElement('label');
+  urlField.className = 'settings__field';
+
+  const urlText = document.createElement('span');
+  urlText.className = 'settings__label';
+  urlText.textContent = 'URL';
+
+  const urlInput = document.createElement('input');
+  urlInput.type = 'url';
+  urlInput.className = 'input';
+  urlInput.name = `socialLinks.${index}.url`;
+  urlInput.placeholder = 'https://';
+  urlInput.value = String(link?.url || '');
+
+  urlField.append(urlText, urlInput);
+
+  const removeBtn = document.createElement('button');
+  removeBtn.type = 'button';
+  removeBtn.className = 'btn btn--ghost btn--sm';
+  removeBtn.textContent = 'Quitar';
+  removeBtn.dataset.action = 'remove-social';
+  removeBtn.dataset.index = String(index);
+  removeBtn.dataset.rbacAction = 'write';
+  removeBtn.dataset.rbacHide = '';
+  removeBtn.hidden = true;
+
+  const labelError = document.createElement('p');
+  labelError.className = 'settings__field-error';
+  labelError.dataset.errorFor = `socialLinks.${index}.label`;
+  labelError.hidden = true;
+
+  const urlError = document.createElement('p');
+  urlError.className = 'settings__field-error';
+  urlError.dataset.errorFor = `socialLinks.${index}.url`;
+  urlError.hidden = true;
+
+  row.append(labelField, urlField, removeBtn, labelError, urlError);
+  return row;
+}
+
+function renderSocialRows(refs) {
+  if (!refs?.socialLinksList) return;
+
+  refs.socialLinksList.textContent = '';
+  state.socialLinksTemplate.forEach((link, index) => {
+    refs.socialLinksList.append(createSocialRow(link, index));
+  });
+
+  applyRBAC(refs.socialLinksList);
+}
+
+function ensureSocialRows(refs, socialLinks) {
+  const source = Array.isArray(socialLinks) ? socialLinks : [];
+
+  state.socialLinksTemplate = source.map((item) => ({
+    label: typeof item?.label === 'string' ? item.label : '',
+    url: typeof item?.url === 'string' ? item.url : '',
+  }));
+
+  renderSocialRows(refs);
+}
+
+function addSocialRow(refs) {
+  if (!canWrite('settings')) return;
+  state.socialLinksTemplate.push({ label: '', url: '' });
+  renderSocialRows(refs);
+  setReadOnlyState(refs);
+}
+
+function removeSocialRow(refs, index) {
+  if (!canWrite('settings')) return;
+  if (!Number.isInteger(index) || index < 0 || index >= state.socialLinksTemplate.length) return;
+  state.socialLinksTemplate.splice(index, 1);
+  renderSocialRows(refs);
+  setReadOnlyState(refs);
 }
 
 function prefillForm(refs, config) {
+  const identity = config?.identity || {};
+  const whatsapp = config?.whatsapp || {};
+  const map = config?.map || {};
   const hours = config?.hours || {};
+
+  if (refs.identityPhone) refs.identityPhone.value = String(identity.phone || '');
+  if (refs.identityEmail) refs.identityEmail.value = String(identity.email || '');
+  if (refs.identityAddress) refs.identityAddress.value = String(identity.address || '');
+  if (refs.whatsappNumber) refs.whatsappNumber.value = String(whatsapp.number || '');
+  if (refs.whatsappMessage) refs.whatsappMessage.value = String(whatsapp.message || '');
+  if (refs.mapEmbedSrc) refs.mapEmbedSrc.value = String(map.embedSrc || '');
+  ensureSocialRows(refs, config?.socialLinks);
+
   ensureHoursRows(refs, hours.openingHours);
 
   if (refs.overrideSelect) {
@@ -357,6 +524,60 @@ function collectHoursPayload(refs) {
   };
 }
 
+function collectSocialLinksPayload(refs) {
+  const rowsDraft = state.socialLinksTemplate.map((_, index) => {
+      const labelInput = refs.form?.elements?.namedItem(`socialLinks.${index}.label`);
+      const urlInput = refs.form?.elements?.namedItem(`socialLinks.${index}.url`);
+
+      return {
+        domIndex: index,
+        label: String(labelInput?.value || '').trim(),
+        url: String(urlInput?.value || '').trim(),
+      };
+    });
+
+  const payloadLinks = [];
+  const indexMap = [];
+
+  rowsDraft.forEach((link) => {
+    if (!link.label && !link.url) return;
+    indexMap.push(link.domIndex);
+    payloadLinks.push({ label: link.label, url: link.url });
+  });
+
+  state.socialLinksIndexMap = indexMap;
+
+  return {
+    rowsDraft,
+    payloadLinks,
+    indexMap,
+  };
+}
+
+function collectIdentityPayload(refs) {
+  const rawMapEmbed = String(refs.mapEmbedSrc?.value || '');
+  const extractedEmbedSrc = extractEmbedSrc(rawMapEmbed);
+
+  const socialLinksDraft = collectSocialLinksPayload(refs);
+
+  return {
+    identity: {
+      phone: normalizeDigits(refs.identityPhone?.value),
+      email: String(refs.identityEmail?.value || '').trim(),
+      address: String(refs.identityAddress?.value || '').trim(),
+    },
+    whatsapp: {
+      number: normalizeDigits(refs.whatsappNumber?.value),
+      message: String(refs.whatsappMessage?.value || '').trim(),
+    },
+    socialLinks: socialLinksDraft.payloadLinks,
+    socialLinksDraft,
+    map: {
+      embedSrc: extractedEmbedSrc,
+    },
+    __rawMapEmbed: rawMapEmbed,
+  };
+}
 
 function updateAlertMessageWarning(refs) {
   if (!refs?.alertMessageWarning) return;
@@ -391,10 +612,37 @@ function validateHours(payload) {
   return fieldErrors;
 }
 
-function mergeHoursPayload(payload) {
+function validateIdentityContact(payload) {
+  const fieldErrors = new Map();
+
+  if (payload.identity.email && !EMAIL_REGEX.test(payload.identity.email)) {
+    fieldErrors.set('identity.email', 'Ingresá un email válido.');
+  }
+
+  payload.socialLinksDraft.rowsDraft.forEach((link) => {
+    if (!link.label && !link.url) return;
+
+    if (!link.label) {
+      fieldErrors.set(`socialLinks.${link.domIndex}.label`, 'Ingresá un nombre para la red social.');
+    }
+    if (!isValidHttpUrl(link.url)) {
+      fieldErrors.set(`socialLinks.${link.domIndex}.url`, 'La URL debe comenzar con http:// o https://');
+    }
+  });
+
+  if (payload.__rawMapEmbed.trim() && !payload.map.embedSrc) {
+    fieldErrors.set('map.embedSrc', 'Pegá un src válido de Google Maps (o iframe con src).');
+  } else if (payload.map.embedSrc && !isValidHttpUrl(payload.map.embedSrc)) {
+    fieldErrors.set('map.embedSrc', 'El embed src debe comenzar con http:// o https://');
+  }
+
+  return fieldErrors;
+}
+
+function mergeSettingsPayload(payload) {
   return {
     ...(state.siteConfig || {}),
-    hours: payload,
+    ...payload,
   };
 }
 
@@ -405,8 +653,12 @@ async function saveSettings(refs) {
   setFormError(refs, '');
 
   const hoursPayload = collectHoursPayload(refs);
+  const identityPayload = collectIdentityPayload(refs);
   updateAlertMessageWarning(refs);
-  const validationErrors = validateHours(hoursPayload);
+  const validationErrors = new Map([
+    ...validateIdentityContact(identityPayload),
+    ...validateHours(hoursPayload),
+  ]);
 
   if (validationErrors.size > 0) {
     validationErrors.forEach((message, path) => {
@@ -421,14 +673,22 @@ async function saveSettings(refs) {
   if (refs.saveBtn) refs.saveBtn.disabled = true;
 
   try {
+    delete identityPayload.__rawMapEmbed;
+    delete identityPayload.socialLinksDraft;
     const response = await apiFetch('/settings', {
       method: 'PUT',
-      body: mergeHoursPayload(hoursPayload),
+      body: mergeSettingsPayload({
+        ...identityPayload,
+        hours: hoursPayload,
+      }),
       showErrorToast: false,
       redirectOn401: false,
     });
 
-    state.siteConfig = response?.data || mergeHoursPayload(hoursPayload);
+    state.siteConfig = response?.data || mergeSettingsPayload({
+      ...identityPayload,
+      hours: hoursPayload,
+    });
     prefillForm(refs, state.siteConfig);
     toast.success('Configuración guardada correctamente.');
   } catch (error) {
@@ -488,13 +748,36 @@ export function initSettings() {
     void loadSettings(refs);
   });
 
-
   refs.alertEnabled?.addEventListener('change', () => {
     updateAlertMessageWarning(refs);
   });
 
   refs.alertMessage?.addEventListener('input', () => {
     updateAlertMessageWarning(refs);
+  });
+
+  refs.addSocialLinkBtn?.addEventListener('click', () => {
+    addSocialRow(refs);
+  });
+
+  refs.socialLinksList?.addEventListener('click', (event) => {
+    const trigger = event.target instanceof Element ? event.target.closest('[data-action="remove-social"]') : null;
+    if (!trigger) return;
+
+    const index = Number.parseInt(trigger.getAttribute('data-index') || '', 10);
+    removeSocialRow(refs, index);
+  });
+
+  refs.whatsappNumber?.addEventListener('blur', () => {
+    refs.whatsappNumber.value = normalizeDigits(refs.whatsappNumber?.value);
+  });
+
+  refs.identityPhone?.addEventListener('blur', () => {
+    refs.identityPhone.value = normalizeDigits(refs.identityPhone?.value);
+  });
+
+  refs.mapEmbedSrc?.addEventListener('blur', () => {
+    refs.mapEmbedSrc.value = extractEmbedSrc(refs.mapEmbedSrc?.value);
   });
 
   refs.form?.addEventListener('submit', (event) => {

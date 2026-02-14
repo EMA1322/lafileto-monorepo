@@ -9,7 +9,7 @@
   <header class="settings__header">
     <div class="settings__heading">
       <h1 id="settings-title" class="settings__title">Configuración</h1>
-      <p class="settings__subtitle">Gestioná horarios y disponibilidad del sitio.</p>
+      <p class="settings__subtitle">Gestioná identidad, contacto y disponibilidad del sitio.</p>
     </div>
     <div class="settings__toolbar" role="group" aria-label="Acciones de configuración">
       <button id="settings-reload" class="btn btn--ghost btn--sm" type="button">Actualizar</button>
@@ -32,10 +32,78 @@
     </div>
 
     <article class="settings__card" id="settings-success" hidden>
-      <h2 class="settings__card-title">Horarios y disponibilidad</h2>
+      <h2 class="settings__card-title">Identidad, contacto y horarios</h2>
 
       <form id="settings-hours-form" class="settings__form" novalidate>
         <div id="settings-form-error" class="settings__form-error" role="alert" hidden></div>
+
+        <fieldset class="settings__fieldset">
+          <legend>Identidad y contacto</legend>
+
+          <label class="settings__field" for="identity-phone">
+            <span class="settings__label">Teléfono</span>
+            <input id="identity-phone" name="identity.phone" type="tel" class="input" autocomplete="tel" />
+          </label>
+          <p class="settings__field-error" data-error-for="identity.phone" hidden></p>
+
+          <label class="settings__field" for="identity-email">
+            <span class="settings__label">Email</span>
+            <input id="identity-email" name="identity.email" type="email" class="input" autocomplete="email" />
+          </label>
+          <p class="settings__field-error" data-error-for="identity.email" hidden></p>
+
+          <label class="settings__field" for="identity-address">
+            <span class="settings__label">Dirección</span>
+            <textarea id="identity-address" name="identity.address" class="input" rows="2" maxlength="180"></textarea>
+          </label>
+          <p class="settings__field-error" data-error-for="identity.address" hidden></p>
+
+          <label class="settings__field" for="whatsapp-number">
+            <span class="settings__label">WhatsApp</span>
+            <input id="whatsapp-number" name="whatsapp.number" type="tel" class="input" autocomplete="tel" />
+          </label>
+          <p class="settings__field-error" data-error-for="whatsapp.number" hidden></p>
+
+          <label class="settings__field" for="whatsapp-message">
+            <span class="settings__label">Mensaje CTA de WhatsApp</span>
+            <textarea id="whatsapp-message" name="whatsapp.message" class="input" rows="3" maxlength="280"></textarea>
+          </label>
+          <p class="settings__field-error" data-error-for="whatsapp.message" hidden></p>
+        </fieldset>
+
+        <fieldset class="settings__fieldset">
+          <legend>Redes sociales</legend>
+
+          <div id="social-links-list" class="settings__social-list"></div>
+          <p class="settings__field-error" data-error-for="socialLinks" hidden></p>
+          <button
+            id="social-links-add"
+            type="button"
+            class="btn btn--ghost btn--sm"
+            data-rbac-action="write"
+            data-rbac-hide
+            hidden
+          >
+            Agregar red social
+          </button>
+        </fieldset>
+
+        <fieldset class="settings__fieldset">
+          <legend>Mapa</legend>
+
+          <label class="settings__field" for="map-embed-src">
+            <span class="settings__label">Embed src de Google Maps</span>
+            <textarea
+              id="map-embed-src"
+              name="map.embedSrc"
+              class="input"
+              rows="3"
+              placeholder="https://www.google.com/maps/embed?..."
+            ></textarea>
+          </label>
+          <p class="settings__field-error" data-error-for="map.embedSrc" hidden></p>
+          <p class="settings__field-warning">Pegá sólo el src del iframe o el iframe completo para extraerlo automáticamente.</p>
+        </fieldset>
 
         <fieldset class="settings__fieldset" id="settings-opening-hours">
           <legend>Horario de apertura</legend>
