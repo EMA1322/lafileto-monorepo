@@ -127,9 +127,10 @@ function buildMenu() {
 
     // 2) RBAC Read
     const key = item.key;
-    const hasRead = canRead(key) || (key === 'users' && canRead('user')); // compat semilla vieja
+    const hasRead =
+      key === 'settings' ? true : canRead(key) || (key === 'users' && canRead('user')); // compat semilla vieja
 
-    if (!hasRead && key !== 'settings') return;
+    if (!hasRead) return;
 
     const li = document.createElement('li');
     li.className = 'header__nav-item';
@@ -150,11 +151,12 @@ function buildMenu() {
     `;
 
     refs.navListEl.appendChild(li);
-
-    if (item.key === 'settings') {
-      applyRBAC(li);
-    }
   });
+
+  const settingsNavItem = refs.navListEl.querySelector('[data-rbac-module="settings"]');
+  if (settingsNavItem) {
+    applyRBAC(settingsNavItem);
+  }
 
   // Resaltar activo
   highlightActiveItem();
