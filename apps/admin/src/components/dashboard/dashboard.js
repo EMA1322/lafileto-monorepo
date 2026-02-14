@@ -16,6 +16,7 @@
 import { ensureRbacLoaded, canRead, canWrite, canUpdate, canDelete } from '../../utils/rbac.js';
 import { showSnackbar } from '../../utils/snackbar.js';
 import { safeText } from '../../utils/helpers.js';
+import { isFeatureEnabled } from '../../utils/featureFlags.js';
 
 // ---------------------------------------------
 // Estado interno del módulo (no persistente)
@@ -24,6 +25,8 @@ const MODULE = {
   firstRender: true, // Para enfocar el título tras la primera carga
   cache: null, // Guarda la última respuesta válida del JSON
 };
+
+const FEATURE_SETTINGS = isFeatureEnabled(import.meta.env.VITE_FEATURE_SETTINGS);
 
 // ---------------------------------------------
 // Constantes del módulo
@@ -46,18 +49,27 @@ const QUICK_ACTIONS = [
     module: 'categories',
     perm: 'write',
   },
-  {
-    label: 'Ir a configuración',
-    icon: 'gear',
-    link: '#settings',
-    module: 'settings',
-    perm: 'read',
-  }, // oculto si ruta no existe
+  ...(FEATURE_SETTINGS
+    ? [
+        {
+          label: 'Ir a configuración',
+          icon: 'gear',
+          link: '#settings',
+          module: 'settings',
+          perm: 'read',
+        },
+      ]
+    : []),
 ];
 
-/** Rutas conocidas por el router actual (para ocultar #settings mientras no exista) */
-const KNOWN_ROUTES = new Set(['#login', '#dashboard', '#products', '#categories']);
-// Cuando implementes settings, agregá '#settings' aquí o expórtalo desde el router.
+/** Rutas conocidas por el router actual (para evitar links muertos en quick actions). */
+const KNOWN_ROUTES = new Set([
+  '#login',
+  '#dashboard',
+  '#products',
+  '#categories',
+  ...(FEATURE_SETTINGS ? ['#settings'] : []),
+]);
 
 // ===================================================================
 // API PÚBLICA

@@ -20,14 +20,15 @@
 // ========================================================
 
 import { logout } from '@/utils/auth.js';
-import { ensureRbacLoaded, canRead, moduleKeyFromHash } from '@/utils/rbac.js';
+import { ensureRbacLoaded, canRead, moduleKeyFromHash, applyRBAC } from '@/utils/rbac.js';
 import { showSnackbar } from '@/utils/snackbar.js';
 import { openModal, closeModal } from '@/utils/modals.js';
+import { isFeatureEnabled } from '@/utils/featureFlags.js';
 
 // ------------------------------
 // Feature flags livianos (build-time/cliente)
 // ------------------------------
-const FEATURE_SETTINGS = false; // ⬅️ Oculta "settings" hasta que exista el módulo
+const FEATURE_SETTINGS = isFeatureEnabled(import.meta.env.VITE_FEATURE_SETTINGS);
 
 // ------------------------------
 // Catálogo del menú (orden fijo) + SVG inline
@@ -126,15 +127,24 @@ function buildMenu() {
 
     // 2) RBAC Read
     const key = item.key;
-    const hasRead = canRead(key) || (key === 'users' && canRead('user')); // compat semilla vieja
+    const hasRead =
+      key === 'settings' ? true : canRead(key) || (key === 'users' && canRead('user')); // compat semilla vieja
+
     if (!hasRead) return;
 
     const li = document.createElement('li');
     li.className = 'header__nav-item';
     li.setAttribute('data-module-key', item.key);
 
+    if (item.key === 'settings') {
+      li.setAttribute('data-rbac-module', 'settings');
+    }
+
+    const settingsAttrs =
+      item.key === 'settings' ? 'data-rbac-action="read" data-rbac-hide hidden' : '';
+
     li.innerHTML = `
-      <a href="${item.hash}" class="header__nav-link" data-module-key="${item.key}">
+      <a href="${item.hash}" class="header__nav-link" data-module-key="${item.key}" ${settingsAttrs}>
         ${item.svg}
         <span class="header__nav-text">${item.title}</span>
       </a>
@@ -142,6 +152,11 @@ function buildMenu() {
 
     refs.navListEl.appendChild(li);
   });
+
+  const settingsNavItem = refs.navListEl.querySelector('[data-rbac-module="settings"]');
+  if (settingsNavItem) {
+    applyRBAC(settingsNavItem);
+  }
 
   // Resaltar activo
   highlightActiveItem();
