@@ -37,6 +37,20 @@ export const settingsService = {
     }
 
     return normalized;
+  },
+
+  async updateAdminSettings(sanitizedPayload, actorUserId) {
+    const nextValue = {
+      ...sanitizedPayload,
+      meta: {
+        updatedByUserId: actorUserId ?? null,
+        updatedAt: new Date().toISOString()
+      }
+    };
+
+    await settingRepository.upsertByKey(SITE_CONFIG_KEY, nextValue);
+
+    return sanitizedPayload;
   }
 };
 

@@ -90,29 +90,33 @@ function toMinutes(hhmm) {
   return hours * 60 + minutes;
 }
 
+function createValidationError(path, message, code) {
+  return { path, message, code };
+}
+
 export function validateSiteConfig(input) {
   const config = normalizeSiteConfigForValidation(input);
   const errors = [];
 
   if (config.identity.email && !EMAIL_REGEX.test(config.identity.email)) {
-    errors.push('identity.email must be a valid email address');
+    errors.push(createValidationError('identity.email', 'identity.email must be a valid email address', 'invalid_email'));
   }
 
   if (config.identity.phone && !isValidDigitsLength(config.identity.phone, 6, 20)) {
-    errors.push('identity.phone must contain between 6 and 20 digits');
+    errors.push(createValidationError('identity.phone', 'identity.phone must contain between 6 and 20 digits', 'invalid_length'));
   }
 
   if (config.whatsapp.number && !isValidDigitsLength(config.whatsapp.number, 6, 20)) {
-    errors.push('whatsapp.number must contain between 6 and 20 digits');
+    errors.push(createValidationError('whatsapp.number', 'whatsapp.number must contain between 6 and 20 digits', 'invalid_length'));
   }
 
   for (const [index, link] of config.socialLinks.entries()) {
     if (!link.label) {
-      errors.push(`socialLinks[${index}].label is required`);
+      errors.push(createValidationError(`socialLinks[${index}].label`, `socialLinks[${index}].label is required`, 'required'));
     }
 
     if (!isValidHttpUrl(link.url)) {
-      errors.push(`socialLinks[${index}].url must use http/https`);
+      errors.push(createValidationError(`socialLinks[${index}].url`, `socialLinks[${index}].url must use http/https`, 'invalid_url'));
     }
   }
 
@@ -121,20 +125,20 @@ export function validateSiteConfig(input) {
     const hasAlias = Boolean(config.payments.alias);
 
     if (!hasCBU && !hasAlias) {
-      errors.push('payments requires cbu or alias when enabled=true');
+      errors.push(createValidationError('payments', 'payments requires cbu or alias when enabled=true', 'missing_required_any'));
     }
 
     if (hasCBU && config.payments.cbu.length !== 22) {
-      errors.push('payments.cbu must have 22 digits');
+      errors.push(createValidationError('payments.cbu', 'payments.cbu must have 22 digits', 'invalid_length'));
     }
 
     if (config.payments.cuit && config.payments.cuit.length !== 11) {
-      errors.push('payments.cuit must have 11 digits');
+      errors.push(createValidationError('payments.cuit', 'payments.cuit must have 11 digits', 'invalid_length'));
     }
   }
 
   if (!HOURS_OVERRIDE_VALUES.has(config.hours.override)) {
-    errors.push('hours.override must be one of AUTO, FORCE_OPEN, FORCE_CLOSED');
+    errors.push(createValidationError('hours.override', 'hours.override must be one of AUTO, FORCE_OPEN, FORCE_CLOSED', 'invalid_enum'));
   }
 
   for (const [index, slot] of config.hours.openingHours.entries()) {
@@ -142,29 +146,29 @@ export function validateSiteConfig(input) {
     const hasClose = Boolean(slot.close);
 
     if ((hasOpen && !HH_MM_REGEX.test(slot.open)) || (hasClose && !HH_MM_REGEX.test(slot.close))) {
-      errors.push(`hours.openingHours[${index}] must use HH:MM format`);
+      errors.push(createValidationError(`hours.openingHours[${index}]`, `hours.openingHours[${index}] must use HH:MM format`, 'invalid_time_format'));
       continue;
     }
 
     if (hasOpen && hasClose && toMinutes(slot.open) >= toMinutes(slot.close)) {
-      errors.push(`hours.openingHours[${index}] must have open < close`);
+      errors.push(createValidationError(`hours.openingHours[${index}]`, `hours.openingHours[${index}] must have open < close`, 'invalid_time_range'));
     }
   }
 
   if (config.seo.contact.title.length > MAX_LENGTHS.seoTitle) {
-    errors.push(`seo.contact.title max length is ${MAX_LENGTHS.seoTitle}`);
+    errors.push(createValidationError('seo.contact.title', `seo.contact.title max length is ${MAX_LENGTHS.seoTitle}`, 'max_length'));
   }
 
   if (config.seo.contact.description.length > MAX_LENGTHS.seoDescription) {
-    errors.push(`seo.contact.description max length is ${MAX_LENGTHS.seoDescription}`);
+    errors.push(createValidationError('seo.contact.description', `seo.contact.description max length is ${MAX_LENGTHS.seoDescription}`, 'max_length'));
   }
 
   if (config.seo.about.title.length > MAX_LENGTHS.seoTitle) {
-    errors.push(`seo.about.title max length is ${MAX_LENGTHS.seoTitle}`);
+    errors.push(createValidationError('seo.about.title', `seo.about.title max length is ${MAX_LENGTHS.seoTitle}`, 'max_length'));
   }
 
   if (config.seo.about.description.length > MAX_LENGTHS.seoDescription) {
-    errors.push(`seo.about.description max length is ${MAX_LENGTHS.seoDescription}`);
+    errors.push(createValidationError('seo.about.description', `seo.about.description max length is ${MAX_LENGTHS.seoDescription}`, 'max_length'));
   }
 
   return {

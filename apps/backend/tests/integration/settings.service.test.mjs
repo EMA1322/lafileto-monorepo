@@ -79,3 +79,43 @@ test('getAdminSettings devuelve shape completo', async () => {
   assert.equal(response.payments.bankName, 'Banco Admin');
 });
 
+test('updateAdminSettings persiste siteConfig sanitizado con metadata de actualización', async () => {
+  const calls = [];
+
+  settingRepository.upsertByKey = async (key, value) => {
+    calls.push([key, value]);
+    return { key, value };
+  };
+
+  const response = await settingsService.updateAdminSettings(
+    {
+      identity: { phone: '2661230000', email: 'admin@lafileto.com' },
+      payments: { enabled: true, cbu: '0000123456789012345678' }
+    },
+    'user-123'
+  );
+
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0][0], SITE_CONFIG_KEY);
+  assert.equal(calls[0][1].meta.updatedByUserId, 'user-123');
+  assert.equal(typeof calls[0][1].meta.updatedAt, 'string');
+  assert.equal(calls[0][1].payments.cbu, '0000123456789012345678');
+  assert.equal(response.meta, undefined);
+});
+
+test('getPublicSettings nunca expone meta', async () => {
+  settingRepository.findByKey = async () => ({
+    key: SITE_CONFIG_KEY,
+    value: {
+      payments: { enabled: false },
+      meta: {
+        updatedByUserId: 'admin-1',
+        updatedAt: '2026-01-01T00:00:00.000Z'
+      }
+    }
+  });
+
+  const response = await settingsService.getPublicSettings();
+
+  assert.equal(response.meta, undefined);
+});
