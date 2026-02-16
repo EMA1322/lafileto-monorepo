@@ -106,6 +106,76 @@
         </fieldset>
 
         <fieldset class="settings__fieldset">
+          <legend>Marca</legend>
+
+          <label class="settings__field" for="brand-logo">
+            <span class="settings__label">Logo (URL)</span>
+            <input
+              id="brand-logo"
+              name="brand.logo"
+              type="url"
+              class="input"
+              autocomplete="off"
+              placeholder="https://.../logo.png"
+            />
+          </label>
+          <p class="settings__field-error" data-error-for="brand.logo" hidden></p>
+
+          <label class="settings__field" for="brand-favicon">
+            <span class="settings__label">Favicon (URL)</span>
+            <input
+              id="brand-favicon"
+              name="brand.favicon"
+              type="url"
+              class="input"
+              autocomplete="off"
+              placeholder="https://.../favicon.ico"
+            />
+          </label>
+          <p class="settings__field-error" data-error-for="brand.favicon" hidden></p>
+        </fieldset>
+
+        <fieldset class="settings__fieldset">
+          <legend>SEO público</legend>
+
+          <label class="settings__field" for="seo-contact-title">
+            <span class="settings__label">Contacto · Meta título</span>
+            <input id="seo-contact-title" name="seo.contact.title" type="text" class="input" maxlength="70" />
+          </label>
+          <p class="settings__field-error" data-error-for="seo.contact.title" hidden></p>
+
+          <label class="settings__field" for="seo-contact-description">
+            <span class="settings__label">Contacto · Meta descripción</span>
+            <textarea
+              id="seo-contact-description"
+              name="seo.contact.description"
+              class="input"
+              rows="3"
+              maxlength="180"
+            ></textarea>
+          </label>
+          <p class="settings__field-error" data-error-for="seo.contact.description" hidden></p>
+
+          <label class="settings__field" for="seo-about-title">
+            <span class="settings__label">Nosotros · Meta título</span>
+            <input id="seo-about-title" name="seo.about.title" type="text" class="input" maxlength="70" />
+          </label>
+          <p class="settings__field-error" data-error-for="seo.about.title" hidden></p>
+
+          <label class="settings__field" for="seo-about-description">
+            <span class="settings__label">Nosotros · Meta descripción</span>
+            <textarea
+              id="seo-about-description"
+              name="seo.about.description"
+              class="input"
+              rows="3"
+              maxlength="180"
+            ></textarea>
+          </label>
+          <p class="settings__field-error" data-error-for="seo.about.description" hidden></p>
+        </fieldset>
+
+        <fieldset class="settings__fieldset">
           <legend>Pagos</legend>
 
           <label class="settings__field settings__field--inline" for="payments-enabled">

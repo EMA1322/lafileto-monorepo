@@ -12,6 +12,8 @@ const STATUS = {
 const HH_MM_REGEX = /^([01]\d|2[0-3]):([0-5]\d)$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const CBU_LENGTH = 22;
+const SEO_TITLE_MAX_LENGTH = 70;
+const SEO_DESCRIPTION_MAX_LENGTH = 180;
 const OVERRIDE_OPTIONS = ['AUTO', 'FORCE_OPEN', 'FORCE_CLOSED'];
 const DEFAULT_WEEK_DAYS = [
   'monday',
@@ -94,6 +96,12 @@ function getRefs() {
     socialLinksList: container.querySelector('#social-links-list'),
     addSocialLinkBtn: container.querySelector('#social-links-add'),
     mapEmbedSrc: container.querySelector('#map-embed-src'),
+    brandLogo: container.querySelector('#brand-logo'),
+    brandFavicon: container.querySelector('#brand-favicon'),
+    seoContactTitle: container.querySelector('#seo-contact-title'),
+    seoContactDescription: container.querySelector('#seo-contact-description'),
+    seoAboutTitle: container.querySelector('#seo-about-title'),
+    seoAboutDescription: container.querySelector('#seo-about-description'),
     paymentsEnabled: container.querySelector('#payments-enabled'),
     paymentsBankName: container.querySelector('#payments-bank-name'),
     paymentsCbu: container.querySelector('#payments-cbu'),
@@ -473,6 +481,10 @@ function prefillForm(refs, config) {
   const map = config?.map || {};
   const hours = config?.hours || {};
   const payments = config?.payments || {};
+  const brand = config?.brand || {};
+  const seo = config?.seo || {};
+  const contactSeo = seo?.contact || {};
+  const aboutSeo = seo?.about || {};
 
   if (refs.identityPhone) refs.identityPhone.value = String(identity.phone || '');
   if (refs.identityEmail) refs.identityEmail.value = String(identity.email || '');
@@ -480,6 +492,12 @@ function prefillForm(refs, config) {
   if (refs.whatsappNumber) refs.whatsappNumber.value = String(whatsapp.number || '');
   if (refs.whatsappMessage) refs.whatsappMessage.value = String(whatsapp.message || '');
   if (refs.mapEmbedSrc) refs.mapEmbedSrc.value = String(map.embedSrc || '');
+  if (refs.brandLogo) refs.brandLogo.value = String(brand.logo || '');
+  if (refs.brandFavicon) refs.brandFavicon.value = String(brand.favicon || '');
+  if (refs.seoContactTitle) refs.seoContactTitle.value = String(contactSeo.title || '');
+  if (refs.seoContactDescription) refs.seoContactDescription.value = String(contactSeo.description || '');
+  if (refs.seoAboutTitle) refs.seoAboutTitle.value = String(aboutSeo.title || '');
+  if (refs.seoAboutDescription) refs.seoAboutDescription.value = String(aboutSeo.description || '');
   if (refs.paymentsEnabled) refs.paymentsEnabled.checked = Boolean(payments.enabled);
   if (refs.paymentsBankName) refs.paymentsBankName.value = String(payments.bankName || '');
   if (refs.paymentsCbu) refs.paymentsCbu.value = formatCbuMask(payments.cbu);
@@ -620,6 +638,25 @@ function collectPaymentsPayload(refs) {
   };
 }
 
+function collectBrandSeoPayload(refs) {
+  return {
+    brand: {
+      logo: String(refs.brandLogo?.value || '').trim(),
+      favicon: String(refs.brandFavicon?.value || '').trim(),
+    },
+    seo: {
+      contact: {
+        title: String(refs.seoContactTitle?.value || '').trim(),
+        description: String(refs.seoContactDescription?.value || '').trim(),
+      },
+      about: {
+        title: String(refs.seoAboutTitle?.value || '').trim(),
+        description: String(refs.seoAboutDescription?.value || '').trim(),
+      },
+    },
+  };
+}
+
 function updateAlertMessageWarning(refs) {
   if (!refs?.alertMessageWarning) return;
 
@@ -700,6 +737,41 @@ function validatePayments(payload) {
   return fieldErrors;
 }
 
+function validateBrandSeo(payload) {
+  const fieldErrors = new Map();
+  const logoUrl = payload.brand.logo;
+  const faviconUrl = payload.brand.favicon;
+
+  if (logoUrl && !isValidHttpUrl(logoUrl)) {
+    fieldErrors.set('brand.logo', 'La URL del logo debe comenzar con http:// o https://');
+  }
+
+  if (faviconUrl && !isValidHttpUrl(faviconUrl)) {
+    fieldErrors.set('brand.favicon', 'La URL del favicon debe comenzar con http:// o https://');
+  }
+
+  if (payload.seo.contact.title.length > SEO_TITLE_MAX_LENGTH) {
+    fieldErrors.set('seo.contact.title', `El meta título de Contacto admite hasta ${SEO_TITLE_MAX_LENGTH} caracteres.`);
+  }
+  if (payload.seo.about.title.length > SEO_TITLE_MAX_LENGTH) {
+    fieldErrors.set('seo.about.title', `El meta título de Nosotros admite hasta ${SEO_TITLE_MAX_LENGTH} caracteres.`);
+  }
+  if (payload.seo.contact.description.length > SEO_DESCRIPTION_MAX_LENGTH) {
+    fieldErrors.set(
+      'seo.contact.description',
+      `La meta descripción de Contacto admite hasta ${SEO_DESCRIPTION_MAX_LENGTH} caracteres.`,
+    );
+  }
+  if (payload.seo.about.description.length > SEO_DESCRIPTION_MAX_LENGTH) {
+    fieldErrors.set(
+      'seo.about.description',
+      `La meta descripción de Nosotros admite hasta ${SEO_DESCRIPTION_MAX_LENGTH} caracteres.`,
+    );
+  }
+
+  return fieldErrors;
+}
+
 function mergeSettingsPayload(payload) {
   return {
     ...(state.siteConfig || {}),
@@ -716,11 +788,13 @@ async function saveSettings(refs) {
   const hoursPayload = collectHoursPayload(refs);
   const identityPayload = collectIdentityPayload(refs);
   const paymentsPayload = collectPaymentsPayload(refs);
+  const brandSeoPayload = collectBrandSeoPayload(refs);
   updateAlertMessageWarning(refs);
   const validationErrors = new Map([
     ...validateIdentityContact(identityPayload),
     ...validateHours(hoursPayload),
     ...validatePayments(paymentsPayload),
+    ...validateBrandSeo(brandSeoPayload),
   ]);
 
   if (validationErrors.size > 0) {
@@ -744,6 +818,7 @@ async function saveSettings(refs) {
         ...identityPayload,
         payments: paymentsPayload,
         hours: hoursPayload,
+        ...brandSeoPayload,
       }),
       showErrorToast: false,
       redirectOn401: false,
@@ -753,6 +828,7 @@ async function saveSettings(refs) {
       ...identityPayload,
       payments: paymentsPayload,
       hours: hoursPayload,
+      ...brandSeoPayload,
     });
     prefillForm(refs, state.siteConfig);
     toast.success('Configuración guardada correctamente.');
