@@ -34,6 +34,7 @@ try {
           findFirst: notImplemented,
           findMany: notImplemented,
           count: notImplemented,
+          groupBy: notImplemented,
           create: notImplemented,
           update: notImplemented,
           delete: notImplemented,
