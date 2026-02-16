@@ -8,6 +8,7 @@ import { categoriesRoutes } from "./categories.routes.js";
 import { productsRoutes } from "./products.routes.js";
 import { offersRoutes } from "./offers.routes.js";
 import { settingsRoutes } from './settings.routes.js';
+import { dashboardRoutes } from './dashboard.routes.js';
 
 export const router = Router();
 
@@ -37,3 +38,4 @@ router.use("/categories", categoriesRoutes);
 router.use("/products", productsRoutes);
 router.use("/offers", offersRoutes);
 router.use('/settings', settingsRoutes);
+router.use('/dashboard', dashboardRoutes);
