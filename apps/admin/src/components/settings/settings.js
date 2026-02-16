@@ -684,7 +684,16 @@ function validatePayments(payload) {
   const fieldErrors = new Map();
   if (!payload.enabled) return fieldErrors;
 
-  if (payload.cbu.length !== CBU_LENGTH) {
+  const hasCbu = payload.cbu.length > 0;
+  const hasAlias = String(payload.alias || '').trim().length > 0;
+
+  if (!hasCbu && !hasAlias) {
+    fieldErrors.set('payments.cbu', 'Ingresá CBU o Alias.');
+    fieldErrors.set('payments.alias', 'Ingresá CBU o Alias.');
+    return fieldErrors;
+  }
+
+  if (hasCbu && payload.cbu.length !== CBU_LENGTH) {
     fieldErrors.set('payments.cbu', 'El CBU debe tener 22 dígitos.');
   }
 
