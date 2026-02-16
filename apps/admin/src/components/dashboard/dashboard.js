@@ -1,12 +1,11 @@
 /**
  * MÓDULO: Dashboard (ADMIN)
  * Archivo: /src/components/dashboard/dashboard.js
- * Objetivo: Cargar datos del dashboard (mock JSON), renderizar KPIs y Acciones rápidas (RBAC)
+ * Objetivo: Cargar datos del dashboard (API summary), renderizar KPIs y Acciones rápidas (RBAC)
  *           sin dependencia de actividad reciente tras remover auditoría. Manejo de estados: loading / empty / error.
  *
  * IMPORTANTE:
- * - En Vite, los archivos dentro de /public/ se sirven desde la raíz → fetch('/data/dashboard.json')
- * - Asegurate de crear /public/data/dashboard.json con el shape definido en la ESPEC.
+ * - Fuente de datos: GET /api/v1/dashboard/summary (vía apiFetch)
  *
  * Convenciones:
  * - Nombres de funciones/variables/IDs en inglés.
@@ -17,13 +16,14 @@ import { ensureRbacLoaded, canRead, canWrite, canUpdate, canDelete } from '../..
 import { showSnackbar } from '../../utils/snackbar.js';
 import { safeText } from '../../utils/helpers.js';
 import { isFeatureEnabled } from '../../utils/featureFlags.js';
+import { apiFetch } from '../../utils/api.js';
 
 // ---------------------------------------------
 // Estado interno del módulo (no persistente)
 // ---------------------------------------------
 const MODULE = {
   firstRender: true, // Para enfocar el título tras la primera carga
-  cache: null, // Guarda la última respuesta válida del JSON
+  cache: null, // Guarda la última respuesta válida del summary
 };
 
 const FEATURE_SETTINGS = isFeatureEnabled(import.meta.env.VITE_FEATURE_SETTINGS);
@@ -132,24 +132,39 @@ async function reload() {
   }
 }
 
-/** Fetch del mock (sin cache) + validación mínima. */
+/** Fetch del summary + validación mínima. */
 async function loadDashboardData() {
-  const res = await fetch(`/data/dashboard.json?ts=${Date.now()}`, { cache: 'no-store' });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const json = await res.json();
+  const response = await apiFetch('/dashboard/summary', { method: 'GET' });
+  const summary = response?.data || {};
 
-  // Validación mínima del contrato
-  const isOpen = typeof json?.isOpen === 'boolean' ? json.isOpen : null;
-  const kpis = json?.kpis || {};
-  const products = toNumberNonNegative(kpis.products);
-  const categories = toNumberNonNegative(kpis.categories);
-  const onSale = toNumberNonNegative(kpis.onSale);
+  const mode = normalizeMode(summary?.status?.mode);
+  const isOpen = resolveIsOpen(mode, summary?.status?.isOpen);
+
+  const counts = summary?.counts || {};
+  const products = toNumberNonNegative(counts.activeProducts);
+  const categories = toNumberNonNegative(counts.activeCategories);
+  const onSale = toNumberNonNegative(counts.activeOffers);
 
   return {
-    businessName: safeText(json?.businessName || ''),
+    businessName: '',
+    mode,
     isOpen,
     kpis: { products, categories, onSale }, // Auditoría eliminada: sin colección de actividad
   };
+}
+
+function normalizeMode(mode) {
+  const normalized = String(mode || '').trim().toUpperCase();
+  if (normalized === 'FORCE_OPEN' || normalized === 'FORCE_CLOSED' || normalized === 'AUTO') {
+    return normalized;
+  }
+  return 'AUTO';
+}
+
+function resolveIsOpen(mode, isOpen) {
+  if (mode === 'FORCE_OPEN') return true;
+  if (mode === 'FORCE_CLOSED') return false;
+  return typeof isOpen === 'boolean' ? isOpen : null;
 }
 
 function toNumberNonNegative(n) {
@@ -163,12 +178,12 @@ function toNumberNonNegative(n) {
 
 /** Renderiza KPIs y accesos rápidos; sin bloques de auditoría. */
 function renderAll(data) {
-  renderKpis(data.kpis, data.isOpen);
+  renderKpis(data.kpis, data.mode, data.isOpen);
   renderQuickActions(); // Auditoría eliminada: ya no se pinta actividad reciente
 }
 
 /** KPIs: escribe valores y badge de estado */
-function renderKpis(kpis, isOpen) {
+function renderKpis(kpis, mode, isOpen) {
   const ids = {
     products: document.getElementById('kpi-products-count'),
     categories: document.getElementById('kpi-categories-count'),
@@ -183,6 +198,7 @@ function renderKpis(kpis, isOpen) {
   if (ids.state) {
     const state = isOpen === true ? 'open' : isOpen === false ? 'closed' : 'unknown';
     ids.state.dataset.state = state;
+    ids.state.dataset.mode = mode;
     ids.state.textContent = state === 'open' ? 'Abierto' : state === 'closed' ? 'Cerrado' : '—';
   }
 }
