@@ -27,6 +27,12 @@ const MODULE = {
 };
 
 const FEATURE_SETTINGS = isFeatureEnabled(import.meta.env.VITE_FEATURE_SETTINGS);
+const STATUS = {
+  LOADING: 'loading',
+  ERROR: 'error',
+  EMPTY: 'empty',
+  SUCCESS: 'success',
+};
 
 // ---------------------------------------------
 // Constantes del módulo
@@ -110,25 +116,31 @@ export async function initDashboard() {
 /** Dispara una recarga completa del tablero (con UI de loading). */
 async function reload() {
   const root = getRoot();
+  const content = getContent();
   if (!root) return;
 
-  setLoading(true, 'Cargando datos…');
+  setStatus(content, STATUS.LOADING, 'Cargando datos del panel…');
 
   try {
     const data = await loadDashboardData();
     MODULE.cache = data;
 
     renderAll(data);
-    setLoading(false, 'Datos actualizados');
+    checkEmptyState(content, data);
+
+    if (content?.dataset.status === STATUS.EMPTY) {
+      announceStatus('No hay datos para mostrar en el panel.');
+    } else {
+      setStatus(content, STATUS.SUCCESS, 'Datos actualizados.');
+    }
 
     if (MODULE.firstRender) {
       MODULE.firstRender = false;
       focusTitle();
     }
-    checkEmptyState(data);
   } catch (err) {
     console.error('[dashboard] Error loading data:', err);
-    setError('Ocurrió un error al cargar el tablero. Intentá nuevamente.');
+    setStatus(content, STATUS.ERROR, resolveErrorMessage(err));
   }
 }
 
@@ -238,6 +250,9 @@ function renderQuickActions() {
 
   const frag = document.createDocumentFragment();
   actions.forEach((a) => {
+    const item = document.createElement('li');
+    item.className = 'dashboard__quick-item';
+
     const btn = document.createElement('button');
     btn.className = 'dashboard__quick-btn';
     btn.type = 'button';
@@ -248,7 +263,8 @@ function renderQuickActions() {
 
     // Ícono simple por tipo (SVG inline accesible como decorativo)
     btn.innerHTML = `${buildIcon(a.icon)}<span>${safeText(a.label)}</span>`;
-    frag.appendChild(btn);
+    item.appendChild(btn);
+    frag.appendChild(item);
   });
 
   wrap.appendChild(frag);
@@ -282,6 +298,11 @@ function mountBindings(root) {
         return;
       }
 
+      if (t.closest('#dashboard-empty-reload')) {
+        reload();
+        return;
+      }
+
       // 3) Quick Actions (SPA navigation por data-link)
       const qaBtn = t.closest('.dashboard__quick-btn');
       if (qaBtn?.dataset.link) {
@@ -293,47 +314,40 @@ function mountBindings(root) {
   );
 }
 
-/** Muestra/oculta estado de carga; actualiza región aria-live. */
-function setLoading(flag, message = '') {
-  const root = getRoot();
-  const sr = document.querySelector('.dashboard__sr-status');
-  if (!root) return;
+function setStatus(content, status, message = '') {
+  if (!content) return;
+  content.dataset.status = status;
+  content.classList.toggle('is-loading', status === STATUS.LOADING);
+  content.classList.toggle('has-error', status === STATUS.ERROR);
+  content.classList.toggle('is-empty', status === STATUS.EMPTY);
+  content.classList.toggle('has-success', status === STATUS.SUCCESS);
+  content.setAttribute('aria-busy', status === STATUS.LOADING ? 'true' : 'false');
 
-  root.classList.toggle('is-loading', !!flag); // Auditoría eliminada: sin sincronizar listas recientes
-  if (sr && message) sr.textContent = message;
+  const loadingState = document.getElementById('dashboard-loading');
+  const errorState = document.getElementById('dashboard-error');
+  const emptyState = document.getElementById('dashboard-empty');
+  const successState = document.getElementById('dashboard-success');
 
-  // Ocultar error al reiniciar carga
-  if (flag) {
-    const err = document.querySelector('.dashboard__error');
-    if (err) err.hidden = true;
+  if (loadingState) loadingState.hidden = status !== STATUS.LOADING;
+  if (errorState) errorState.hidden = status !== STATUS.ERROR;
+  if (emptyState) emptyState.hidden = status !== STATUS.EMPTY;
+  if (successState) successState.hidden = status !== STATUS.SUCCESS;
+
+  if (status === STATUS.ERROR) {
+    const errorText = document.querySelector('.dashboard__error-text');
+    if (errorText) errorText.textContent = message || 'Ocurrió un error al cargar el panel.';
   }
-}
 
-/** Activa estado de error. */
-function setError(message) {
-  const root = getRoot();
-  const sr = document.querySelector('.dashboard__sr-status');
-  const err = document.querySelector('.dashboard__error');
-  if (!root) return;
-
-  root.classList.add('is-error');
-  root.classList.remove('is-loading');
-
-  if (sr) sr.textContent = 'Ocurrió un error al cargar el tablero.';
-  if (err) {
-    const p = err.querySelector('.dashboard__error-text');
-    if (p) p.textContent = message;
-    err.hidden = false;
-  }
+  announceStatus(message);
 }
 
 /** Determina si mostrar estado "empty" únicamente con KPIs (sin auditoría). */
-function checkEmptyState(data) {
-  const root = getRoot();
-  if (!root) return;
-
+function checkEmptyState(content, data) {
+  if (!content) return;
   const noKpis = data.kpis.products + data.kpis.categories + data.kpis.onSale === 0;
-  root.classList.toggle('is-empty', noKpis); // Auditoría eliminada: estado vacío depende solo de KPIs
+  if (noKpis) {
+    setStatus(content, STATUS.EMPTY, 'No hay datos para mostrar en el panel.');
+  }
 }
 
 /** Mueve el foco al título tras la primera carga (accesibilidad). */
@@ -348,6 +362,24 @@ function focusTitle() {
 /** Devuelve el root del módulo (sección .dashboard). */
 function getRoot() {
   return document.querySelector('.dashboard[data-module="dashboard"], .dashboard');
+}
+
+function getContent() {
+  return document.querySelector('.dashboard__content');
+}
+
+function announceStatus(message) {
+  const sr = document.querySelector('.dashboard__sr-status');
+  if (sr && message) {
+    sr.textContent = message;
+  }
+}
+
+function resolveErrorMessage(error) {
+  if (!error) return 'Ocurrió un error al cargar el tablero. Intentá nuevamente.';
+  if (error.status === 401) return 'Tu sesión expiró. Iniciá sesión nuevamente para continuar.';
+  if (error.status === 403) return 'No tenés permisos para ver el panel general.';
+  return error.message || 'Ocurrió un error al cargar el tablero. Intentá nuevamente.';
 }
 
 /** Verifica si la ruta existe en el router actual (listado local). */
