@@ -11,6 +11,7 @@ const STATUS = {
 
 const HH_MM_REGEX = /^([01]\d|2[0-3]):([0-5]\d)$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const CBU_LENGTH = 22;
 const OVERRIDE_OPTIONS = ['AUTO', 'FORCE_OPEN', 'FORCE_CLOSED'];
 const DEFAULT_WEEK_DAYS = [
   'monday',
@@ -32,6 +33,12 @@ const state = {
 
 function normalizeDigits(value) {
   return String(value || '').replace(/\D+/g, '');
+}
+
+function formatCbuMask(value) {
+  const digits = normalizeDigits(value).slice(0, CBU_LENGTH);
+  const parts = digits.match(/.{1,4}/g) || [];
+  return parts.join(' ');
 }
 
 function isValidHttpUrl(value) {
@@ -87,9 +94,24 @@ function getRefs() {
     socialLinksList: container.querySelector('#social-links-list'),
     addSocialLinkBtn: container.querySelector('#social-links-add'),
     mapEmbedSrc: container.querySelector('#map-embed-src'),
+    paymentsEnabled: container.querySelector('#payments-enabled'),
+    paymentsBankName: container.querySelector('#payments-bank-name'),
+    paymentsCbu: container.querySelector('#payments-cbu'),
+    paymentsAlias: container.querySelector('#payments-alias'),
+    paymentsCuit: container.querySelector('#payments-cuit'),
     saveBtn: container.querySelector('#settings-save'),
     readonlyHint: container.querySelector('#settings-readonly-hint'),
   };
+}
+
+function updatePaymentsFieldsState(refs) {
+  const enabled = Boolean(refs?.paymentsEnabled?.checked);
+  const controls = [refs?.paymentsBankName, refs?.paymentsCbu, refs?.paymentsAlias, refs?.paymentsCuit];
+
+  controls.forEach((control) => {
+    if (!control) return;
+    control.disabled = !enabled || !canWrite('settings');
+  });
 }
 
 function setStatus(refs, status, message = '') {
@@ -331,6 +353,8 @@ function setReadOnlyState(refs) {
   removeButtons.forEach((button) => {
     button.disabled = !writable;
   });
+
+  updatePaymentsFieldsState(refs);
 }
 
 function remapSocialLinkFieldPath(path) {
@@ -448,6 +472,7 @@ function prefillForm(refs, config) {
   const whatsapp = config?.whatsapp || {};
   const map = config?.map || {};
   const hours = config?.hours || {};
+  const payments = config?.payments || {};
 
   if (refs.identityPhone) refs.identityPhone.value = String(identity.phone || '');
   if (refs.identityEmail) refs.identityEmail.value = String(identity.email || '');
@@ -455,6 +480,11 @@ function prefillForm(refs, config) {
   if (refs.whatsappNumber) refs.whatsappNumber.value = String(whatsapp.number || '');
   if (refs.whatsappMessage) refs.whatsappMessage.value = String(whatsapp.message || '');
   if (refs.mapEmbedSrc) refs.mapEmbedSrc.value = String(map.embedSrc || '');
+  if (refs.paymentsEnabled) refs.paymentsEnabled.checked = Boolean(payments.enabled);
+  if (refs.paymentsBankName) refs.paymentsBankName.value = String(payments.bankName || '');
+  if (refs.paymentsCbu) refs.paymentsCbu.value = formatCbuMask(payments.cbu);
+  if (refs.paymentsAlias) refs.paymentsAlias.value = String(payments.alias || '');
+  if (refs.paymentsCuit) refs.paymentsCuit.value = normalizeDigits(payments.cuit);
   ensureSocialRows(refs, config?.socialLinks);
 
   ensureHoursRows(refs, hours.openingHours);
@@ -479,6 +509,7 @@ function prefillForm(refs, config) {
   }
 
   updateAlertMessageWarning(refs);
+  updatePaymentsFieldsState(refs);
 
   state.openingHoursTemplate.forEach((slot, index) => {
     const openInput = refs.form?.elements?.namedItem(`hours.openingHours.${index}.open`);
@@ -579,6 +610,16 @@ function collectIdentityPayload(refs) {
   };
 }
 
+function collectPaymentsPayload(refs) {
+  return {
+    enabled: Boolean(refs.paymentsEnabled?.checked),
+    bankName: String(refs.paymentsBankName?.value || '').trim(),
+    cbu: normalizeDigits(refs.paymentsCbu?.value),
+    alias: String(refs.paymentsAlias?.value || '').trim(),
+    cuit: normalizeDigits(refs.paymentsCuit?.value),
+  };
+}
+
 function updateAlertMessageWarning(refs) {
   if (!refs?.alertMessageWarning) return;
 
@@ -639,6 +680,26 @@ function validateIdentityContact(payload) {
   return fieldErrors;
 }
 
+function validatePayments(payload) {
+  const fieldErrors = new Map();
+  if (!payload.enabled) return fieldErrors;
+
+  const hasCbu = payload.cbu.length > 0;
+  const hasAlias = String(payload.alias || '').trim().length > 0;
+
+  if (!hasCbu && !hasAlias) {
+    fieldErrors.set('payments.cbu', 'Ingresá CBU o Alias.');
+    fieldErrors.set('payments.alias', 'Ingresá CBU o Alias.');
+    return fieldErrors;
+  }
+
+  if (hasCbu && payload.cbu.length !== CBU_LENGTH) {
+    fieldErrors.set('payments.cbu', 'El CBU debe tener 22 dígitos.');
+  }
+
+  return fieldErrors;
+}
+
 function mergeSettingsPayload(payload) {
   return {
     ...(state.siteConfig || {}),
@@ -654,10 +715,12 @@ async function saveSettings(refs) {
 
   const hoursPayload = collectHoursPayload(refs);
   const identityPayload = collectIdentityPayload(refs);
+  const paymentsPayload = collectPaymentsPayload(refs);
   updateAlertMessageWarning(refs);
   const validationErrors = new Map([
     ...validateIdentityContact(identityPayload),
     ...validateHours(hoursPayload),
+    ...validatePayments(paymentsPayload),
   ]);
 
   if (validationErrors.size > 0) {
@@ -679,6 +742,7 @@ async function saveSettings(refs) {
       method: 'PUT',
       body: mergeSettingsPayload({
         ...identityPayload,
+        payments: paymentsPayload,
         hours: hoursPayload,
       }),
       showErrorToast: false,
@@ -687,6 +751,7 @@ async function saveSettings(refs) {
 
     state.siteConfig = response?.data || mergeSettingsPayload({
       ...identityPayload,
+      payments: paymentsPayload,
       hours: hoursPayload,
     });
     prefillForm(refs, state.siteConfig);
@@ -778,6 +843,18 @@ export function initSettings() {
 
   refs.mapEmbedSrc?.addEventListener('blur', () => {
     refs.mapEmbedSrc.value = extractEmbedSrc(refs.mapEmbedSrc?.value);
+  });
+
+  refs.paymentsEnabled?.addEventListener('change', () => {
+    updatePaymentsFieldsState(refs);
+  });
+
+  refs.paymentsCbu?.addEventListener('input', () => {
+    refs.paymentsCbu.value = formatCbuMask(refs.paymentsCbu?.value);
+  });
+
+  refs.paymentsCuit?.addEventListener('blur', () => {
+    refs.paymentsCuit.value = normalizeDigits(refs.paymentsCuit?.value);
   });
 
   refs.form?.addEventListener('submit', (event) => {

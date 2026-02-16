@@ -32,7 +32,7 @@
     </div>
 
     <article class="settings__card" id="settings-success" hidden>
-      <h2 class="settings__card-title">Identidad, contacto y horarios</h2>
+      <h2 class="settings__card-title">Identidad, contacto, pagos y horarios</h2>
 
       <form id="settings-hours-form" class="settings__form" novalidate>
         <div id="settings-form-error" class="settings__form-error" role="alert" hidden></div>
@@ -103,6 +103,58 @@
           </label>
           <p class="settings__field-error" data-error-for="map.embedSrc" hidden></p>
           <p class="settings__field-warning">Pegá sólo el src del iframe o el iframe completo para extraerlo automáticamente.</p>
+        </fieldset>
+
+        <fieldset class="settings__fieldset">
+          <legend>Pagos</legend>
+
+          <label class="settings__field settings__field--inline" for="payments-enabled">
+            <input id="payments-enabled" name="payments.enabled" type="checkbox" />
+            <span class="settings__label">Habilitar medios de pago por transferencia</span>
+          </label>
+          <p class="settings__field-error" data-error-for="payments.enabled" hidden></p>
+
+          <label class="settings__field" for="payments-bank-name">
+            <span class="settings__label">Banco</span>
+            <input id="payments-bank-name" name="payments.bankName" type="text" class="input" maxlength="120" />
+          </label>
+          <p class="settings__field-error" data-error-for="payments.bankName" hidden></p>
+
+          <label class="settings__field" for="payments-cbu">
+            <span class="settings__label">CBU</span>
+            <input
+              id="payments-cbu"
+              name="payments.cbu"
+              type="text"
+              class="input"
+              inputmode="numeric"
+              autocomplete="off"
+              maxlength="27"
+              placeholder="0000 0000 0000 0000 0000 00"
+            />
+          </label>
+          <p class="settings__field-error" data-error-for="payments.cbu" hidden></p>
+
+          <label class="settings__field" for="payments-alias">
+            <span class="settings__label">Alias</span>
+            <input id="payments-alias" name="payments.alias" type="text" class="input" maxlength="120" autocomplete="off" />
+          </label>
+          <p class="settings__field-error" data-error-for="payments.alias" hidden></p>
+
+          <label class="settings__field" for="payments-cuit">
+            <span class="settings__label">CUIT</span>
+            <input
+              id="payments-cuit"
+              name="payments.cuit"
+              type="text"
+              class="input"
+              inputmode="numeric"
+              autocomplete="off"
+              maxlength="13"
+              placeholder="00-00000000-0"
+            />
+          </label>
+          <p class="settings__field-error" data-error-for="payments.cuit" hidden></p>
         </fieldset>
 
         <fieldset class="settings__fieldset" id="settings-opening-hours">
