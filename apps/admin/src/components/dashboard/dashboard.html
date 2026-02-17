@@ -23,17 +23,17 @@
     aria-busy="true"
     data-status="loading"
   >
-    <div class="dashboard__state dashboard__state--loading" id="dashboard-loading" role="status">
+    <div class="dashboard__state dashboard__state--loading card card__body" id="dashboard-loading" role="status">
       <span class="dashboard__spinner" aria-hidden="true"></span>
       <p>Cargando resumen del panel…</p>
     </div>
 
-    <div class="dashboard__state dashboard__state--error" id="dashboard-error" role="alert" hidden>
+    <div class="dashboard__state dashboard__state--error card card__body" id="dashboard-error" role="alert" hidden>
       <p class="dashboard__error-text">Ocurrió un error al cargar el panel.</p>
       <button id="dashboard-retry" class="btn btn--ghost btn--sm" type="button">Reintentar</button>
     </div>
 
-    <div class="dashboard__state dashboard__state--empty" id="dashboard-empty" role="status" hidden>
+    <div class="dashboard__state dashboard__state--empty card card__body" id="dashboard-empty" role="status" hidden>
       <p>No hay datos para mostrar en este momento.</p>
       <button id="dashboard-empty-reload" class="btn btn--ghost btn--sm" type="button">Actualizar</button>
     </div>
@@ -42,7 +42,7 @@
       <!-- 📊 KPIs (grid responsive) -->
       <section class="dashboard__kpis" aria-label="Indicadores clave">
         <!-- KPI: Productos -->
-        <article class="dashboard__kpi" aria-labelledby="kpi-products-label">
+        <article class="dashboard__kpi card" aria-labelledby="kpi-products-label">
           <div class="dashboard__kpi-icon" aria-hidden="true">
             <svg width="28" height="28" viewBox="0 0 24 24" focusable="false">
               <path d="M3 7l9-4 9 4-9 4-9-4zm0 6l9 4 9-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path>
@@ -56,7 +56,7 @@
         </article>
 
         <!-- KPI: Categorías -->
-        <article class="dashboard__kpi" aria-labelledby="kpi-categories-label">
+        <article class="dashboard__kpi card" aria-labelledby="kpi-categories-label">
           <div class="dashboard__kpi-icon" aria-hidden="true">
             <svg width="28" height="28" viewBox="0 0 24 24" focusable="false">
               <path d="M4 6h16M4 12h10M4 18h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
@@ -69,7 +69,7 @@
         </article>
 
         <!-- KPI: En oferta -->
-        <article class="dashboard__kpi" aria-labelledby="kpi-onsale-label">
+        <article class="dashboard__kpi card" aria-labelledby="kpi-onsale-label">
           <div class="dashboard__kpi-icon" aria-hidden="true">
             <svg width="28" height="28" viewBox="0 0 24 24" focusable="false">
               <path d="M3 12l7-7 11 11-7 7L3 12z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path>
@@ -83,14 +83,14 @@
         </article>
 
         <!-- KPI: Estado -->
-        <article class="dashboard__kpi" aria-labelledby="kpi-isopen-label">
+        <article class="dashboard__kpi card" aria-labelledby="kpi-isopen-label">
           <div class="dashboard__kpi-icon" aria-hidden="true">
             <svg width="28" height="28" viewBox="0 0 24 24" focusable="false">
               <path d="M4 12l4 4 12-12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
             </svg>
           </div>
           <h3 id="kpi-isopen-label" class="dashboard__kpi-label">Estado</h3>
-          <p id="kpi-isopen-badge" class="dashboard__kpi-badge" data-state="unknown" aria-live="polite">
+          <p id="kpi-isopen-badge" class="dashboard__kpi-badge badge badge--neutral" data-state="unknown" aria-live="polite">
             <span class="skeleton skeleton--kpi" aria-hidden="true">—</span>
           </p>
         </article>
