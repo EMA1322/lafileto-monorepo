@@ -72,6 +72,14 @@
   color: var(--text-strong);
 }
 
+.header__brand-logo {
+  display: block;
+  width: auto;
+  max-width: 180px;
+  max-height: 32px;
+  object-fit: contain;
+}
+
 .header__menu-toggle {
   display: inline-flex;
   align-items: center;

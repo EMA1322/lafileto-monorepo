@@ -24,6 +24,7 @@ import { ensureRbacLoaded, canRead, moduleKeyFromHash, applyRBAC } from '@/utils
 import { showSnackbar } from '@/utils/snackbar.js';
 import { openModal, closeModal } from '@/utils/modals.js';
 import { isFeatureEnabled } from '@/utils/featureFlags.js';
+import { getSettingsBrandLogoUrl } from '@/components/settings/settings.js';
 
 // ------------------------------
 // Feature flags livianos (build-time/cliente)
@@ -91,6 +92,10 @@ const refs = {
   drawerEl: null,
   overlayEl: null,
   navListEl: null,
+  logoLinkEl: null,
+  logoFallbackIconEl: null,
+  logoFallbackTextEl: null,
+  logoImageEl: null,
 };
 const state = {
   bound: false,
@@ -263,6 +268,45 @@ function onNavClick(e) {
   if (window.matchMedia('(max-width: 767.98px)').matches) setDrawer(false);
 }
 
+function showBrandFallback() {
+  refs.logoFallbackIconEl?.removeAttribute('hidden');
+  refs.logoFallbackTextEl?.removeAttribute('hidden');
+  refs.logoImageEl?.remove();
+  refs.logoImageEl = null;
+}
+
+function renderBrandLogo() {
+  if (!refs.logoLinkEl) return;
+
+  const logoUrl = getSettingsBrandLogoUrl();
+  if (!logoUrl) {
+    showBrandFallback();
+    return;
+  }
+
+  if (!refs.logoImageEl) {
+    const brandImage = document.createElement('img');
+    brandImage.className = 'header__brand-logo';
+    brandImage.alt = 'Admin brand logo';
+    brandImage.loading = 'eager';
+    brandImage.decoding = 'async';
+
+    brandImage.addEventListener('error', () => {
+      showBrandFallback();
+    });
+
+    refs.logoImageEl = brandImage;
+  }
+
+  refs.logoFallbackIconEl?.setAttribute('hidden', 'true');
+  refs.logoFallbackTextEl?.setAttribute('hidden', 'true');
+  refs.logoImageEl.src = logoUrl;
+
+  if (!refs.logoImageEl.isConnected) {
+    refs.logoLinkEl.prepend(refs.logoImageEl);
+  }
+}
+
 // ------------------------------
 // API pública de inicialización
 // ------------------------------
@@ -274,6 +318,9 @@ export async function initAdminHeader() {
   refs.drawerEl = document.getElementById('headerDrawer');
   refs.overlayEl = document.getElementById('headerOverlay');
   refs.navListEl = document.getElementById('headerNavList');
+  refs.logoLinkEl = refs.headerEl.querySelector('.header__logo[href="#dashboard"]');
+  refs.logoFallbackIconEl = refs.logoLinkEl?.querySelector('.header__logo-icon') || null;
+  refs.logoFallbackTextEl = refs.logoLinkEl?.querySelector('.header__logo-text') || null;
 
   if (!refs.headerEl || !refs.toggleBtnEl || !refs.drawerEl || !refs.overlayEl || !refs.navListEl) {
     console.error('[Header] Faltan nodos requeridos. Ver header.html');
@@ -282,6 +329,7 @@ export async function initAdminHeader() {
 
   // Construir menú según RBAC + flags
   buildMenu();
+  renderBrandLogo();
 
   if (!state.bound) {
     // Toggle
@@ -319,6 +367,10 @@ export async function initAdminHeader() {
     const onHash = () => highlightActiveItem();
     window.addEventListener('hashchange', onHash);
     state.cleanupFns.push(() => window.removeEventListener('hashchange', onHash));
+
+    const onBrandLogoUpdate = () => renderBrandLogo();
+    document.addEventListener('admin:settings-brand-logo-updated', onBrandLogoUpdate);
+    state.cleanupFns.push(() => document.removeEventListener('admin:settings-brand-logo-updated', onBrandLogoUpdate));
 
     state.bound = true;
   }
