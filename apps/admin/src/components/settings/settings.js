@@ -33,6 +33,44 @@ const state = {
   isSaving: false,
 };
 
+const SETTINGS_BRAND_LOGO_CACHE_KEY = 'admin.settings.brand.logo';
+
+function persistBrandLogoCache(siteConfig) {
+  const logoUrl = String(siteConfig?.brand?.logo || '').trim();
+  try {
+    if (!logoUrl) {
+      localStorage.removeItem(SETTINGS_BRAND_LOGO_CACHE_KEY);
+      return;
+    }
+
+    localStorage.setItem(SETTINGS_BRAND_LOGO_CACHE_KEY, logoUrl);
+  } catch {
+    // noop: localStorage may be blocked in private mode.
+  }
+}
+
+function emitSettingsBrandLogoUpdate(siteConfig) {
+  const logoUrl = String(siteConfig?.brand?.logo || '').trim();
+  document.dispatchEvent(
+    new CustomEvent('admin:settings-brand-logo-updated', {
+      detail: {
+        logoUrl,
+      },
+    }),
+  );
+}
+
+export function getSettingsBrandLogoUrl() {
+  const stateLogoUrl = String(state.siteConfig?.brand?.logo || '').trim();
+  if (stateLogoUrl) return stateLogoUrl;
+
+  try {
+    return String(localStorage.getItem(SETTINGS_BRAND_LOGO_CACHE_KEY) || '').trim();
+  } catch {
+    return '';
+  }
+}
+
 function normalizeDigits(value) {
   return String(value || '').replace(/\D+/g, '');
 }
@@ -830,6 +868,8 @@ async function saveSettings(refs) {
       hours: hoursPayload,
       ...brandSeoPayload,
     });
+    persistBrandLogoCache(state.siteConfig);
+    emitSettingsBrandLogoUpdate(state.siteConfig);
     prefillForm(refs, state.siteConfig);
     toast.success('Configuración guardada correctamente.');
   } catch (error) {
@@ -863,6 +903,8 @@ async function loadSettings(refs) {
     }
 
     state.siteConfig = payload;
+    persistBrandLogoCache(payload);
+    emitSettingsBrandLogoUpdate(payload);
     prefillForm(refs, payload);
 
     applyRBAC(refs.container);
