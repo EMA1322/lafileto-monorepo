@@ -57,6 +57,10 @@
   gap: var(--spacing-sm);
 }
 
+.header__account-slot {
+  display: none;
+}
+
 .header__logo {
   display: inline-flex;
   align-items: center;
@@ -147,6 +151,10 @@
   min-width: 0;
 }
 
+.header__right {
+  margin-top: auto;
+}
+
 .header__nav-list {
   list-style: none;
   margin: 0;
@@ -183,42 +191,26 @@
   background: color-mix(in srgb, var(--primary-color) 10%, transparent);
 }
 
-.header__footer {
-  margin-top: auto;
+.header__drawer-footer {
   padding: var(--spacing-sm);
   border-top: 1px solid var(--border-color);
-  display: grid;
-  grid-template-columns: 1fr auto;
+}
+
+.header__account {
+  display: flex;
   align-items: center;
-  gap: 0.75rem;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
 }
 
-.header__user-name {
-  font-weight: 600;
-  color: var(--text-strong);
-}
-
-.header__logout-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  background: var(--surface-card);
-  color: var(--text-color);
-  cursor: pointer;
-}
-
-.header__logout-btn:focus-visible {
-  outline: 2px solid rgba(220, 53, 69, 0.35);
-  outline-offset: 2px;
+.header__account .c-pill {
+  min-width: 0;
 }
 
 @media (min-width: 1024px) {
   .header__bar {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
     column-gap: var(--spacing-md);
   }
@@ -242,15 +234,19 @@
   .header__drawer-inner {
     height: auto;
     padding: 0;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    column-gap: var(--spacing-md);
+    display: block;
   }
 
   .header__center {
     display: flex;
     justify-content: center;
+  }
+
+  .header__right,
+  .header__drawer-footer {
+    margin-top: 0;
+    padding: 0;
+    border: 0;
   }
 
   .header__nav-list {
@@ -262,11 +258,13 @@
     overflow: visible;
   }
 
-  .header__footer {
-    margin-top: 0;
-    border-top: 0;
-    padding: 0;
-    grid-template-columns: auto auto;
-    justify-content: end;
+  .header__account-slot {
+    display: flex;
+    justify-content: flex-end;
+    min-width: 0;
+  }
+
+  .header__account {
+    justify-content: flex-end;
   }
 }
