@@ -108,6 +108,74 @@ const state = {
   cleanupFns: [],
 };
 
+function registerCleanup(fn) {
+  if (typeof fn === 'function') state.cleanupFns.push(fn);
+}
+
+function addListener(target, type, handler, options) {
+  if (!target || typeof target.addEventListener !== 'function') return;
+  target.addEventListener(type, handler, options);
+  registerCleanup(() => target.removeEventListener(type, handler, options));
+}
+
+function resetRefs() {
+  Object.keys(refs).forEach((key) => {
+    refs[key] = null;
+  });
+}
+
+function syncRefsFromDOM() {
+  refs.headerEl = document.querySelector('header.header');
+  refs.toggleBtnEl = document.getElementById('headerMenuToggle');
+  refs.drawerEl = document.getElementById('headerDrawer');
+  refs.overlayEl = document.getElementById('headerOverlay');
+  refs.navListEl = document.getElementById('headerNavList');
+  refs.accountEl = refs.headerEl?.querySelector('[data-header-account]') || null;
+  refs.accountSlotEl = refs.headerEl?.querySelector('.header__account-slot') || null;
+  refs.drawerFooterEl = refs.headerEl?.querySelector('.header__drawer-footer') || null;
+  refs.userNameEl = refs.headerEl?.querySelector('[data-header-user-name]') || null;
+  refs.userRoleEl = refs.headerEl?.querySelector('[data-header-user-role]') || null;
+  refs.logoLinkEl = refs.headerEl?.querySelector('.header__logo[href="#dashboard"]') || null;
+  refs.logoFallbackIconEl = refs.logoLinkEl?.querySelector('.header__logo-icon') || null;
+  refs.logoFallbackTextEl = refs.logoLinkEl?.querySelector('.header__logo-text') || null;
+}
+
+function isBoundToCurrentDOM() {
+  if (!state.bound) return false;
+
+  if (
+    !refs.headerEl?.isConnected ||
+    !refs.toggleBtnEl?.isConnected ||
+    !refs.drawerEl?.isConnected ||
+    !refs.overlayEl?.isConnected ||
+    !refs.navListEl?.isConnected
+  ) {
+    return false;
+  }
+
+  return (
+    refs.headerEl === document.querySelector('header.header') &&
+    refs.toggleBtnEl === document.getElementById('headerMenuToggle') &&
+    refs.drawerEl === document.getElementById('headerDrawer') &&
+    refs.overlayEl === document.getElementById('headerOverlay') &&
+    refs.navListEl === document.getElementById('headerNavList')
+  );
+}
+
+export function destroyAdminHeader() {
+  const cleanupQueue = [...state.cleanupFns].reverse();
+  cleanupQueue.forEach((cleanupFn) => {
+    cleanupFn();
+  });
+
+  state.cleanupFns = [];
+  state.bound = false;
+  state.drawerOpen = false;
+
+  refs.logoImageEl?.remove();
+  resetRefs();
+}
+
 // Utilidad: focusables visibles
 function getFocusableElements(container) {
   if (!container) return [];
@@ -341,21 +409,15 @@ function placeAccountBlock() {
 // API pública de inicialización
 // ------------------------------
 export async function initAdminHeader() {
-  await ensureRbacLoaded();
+  syncRefsFromDOM();
 
-  refs.headerEl = document.querySelector('header.header');
-  refs.toggleBtnEl = document.getElementById('headerMenuToggle');
-  refs.drawerEl = document.getElementById('headerDrawer');
-  refs.overlayEl = document.getElementById('headerOverlay');
-  refs.navListEl = document.getElementById('headerNavList');
-  refs.accountEl = refs.headerEl.querySelector('[data-header-account]');
-  refs.accountSlotEl = refs.headerEl.querySelector('.header__account-slot');
-  refs.drawerFooterEl = refs.headerEl.querySelector('.header__drawer-footer');
-  refs.userNameEl = refs.headerEl.querySelector('[data-header-user-name]');
-  refs.userRoleEl = refs.headerEl.querySelector('[data-header-user-role]');
-  refs.logoLinkEl = refs.headerEl.querySelector('.header__logo[href="#dashboard"]');
-  refs.logoFallbackIconEl = refs.logoLinkEl?.querySelector('.header__logo-icon') || null;
-  refs.logoFallbackTextEl = refs.logoLinkEl?.querySelector('.header__logo-text') || null;
+  if (isBoundToCurrentDOM()) return;
+  if (state.bound) {
+    destroyAdminHeader();
+    syncRefsFromDOM();
+  }
+
+  await ensureRbacLoaded();
 
   if (!refs.headerEl || !refs.toggleBtnEl || !refs.drawerEl || !refs.overlayEl || !refs.navListEl) {
     console.error('[Header] Faltan nodos requeridos. Ver header.html');
@@ -371,23 +433,19 @@ export async function initAdminHeader() {
   if (!state.bound) {
     // Toggle
     const toggleFn = () => toggleDrawer();
-    refs.toggleBtnEl.addEventListener('click', toggleFn);
-    state.cleanupFns.push(() => refs.toggleBtnEl.removeEventListener('click', toggleFn));
+    addListener(refs.toggleBtnEl, 'click', toggleFn);
 
     // Overlay
     const overlayFn = () => setDrawer(false);
-    refs.overlayEl.addEventListener('click', overlayFn);
-    state.cleanupFns.push(() => refs.overlayEl.removeEventListener('click', overlayFn));
+    addListener(refs.overlayEl, 'click', overlayFn);
 
     // Esc + focus-trap
     const keyFn = (e) => handleKeydown(e);
-    document.addEventListener('keydown', keyFn);
-    state.cleanupFns.push(() => document.removeEventListener('keydown', keyFn));
+    addListener(document, 'keydown', keyFn);
 
     // Delegación navegación
     const navFn = (e) => onNavClick(e);
-    refs.navListEl.addEventListener('click', navFn);
-    state.cleanupFns.push(() => refs.navListEl.removeEventListener('click', navFn));
+    addListener(refs.navListEl, 'click', navFn);
 
     // Delegación logout
     const clickDelegate = (e) => {
@@ -397,17 +455,14 @@ export async function initAdminHeader() {
         handleLogout();
       }
     };
-    refs.headerEl.addEventListener('click', clickDelegate);
-    state.cleanupFns.push(() => refs.headerEl.removeEventListener('click', clickDelegate));
+    addListener(refs.headerEl, 'click', clickDelegate);
 
     // Resaltar activo ante cambios de hash
     const onHash = () => highlightActiveItem();
-    window.addEventListener('hashchange', onHash);
-    state.cleanupFns.push(() => window.removeEventListener('hashchange', onHash));
+    addListener(window, 'hashchange', onHash);
 
     const onBrandLogoUpdate = () => renderBrandLogo();
-    document.addEventListener('admin:settings-brand-logo-updated', onBrandLogoUpdate);
-    state.cleanupFns.push(() => document.removeEventListener('admin:settings-brand-logo-updated', onBrandLogoUpdate));
+    addListener(document, 'admin:settings-brand-logo-updated', onBrandLogoUpdate);
 
     state.bound = true;
   }
