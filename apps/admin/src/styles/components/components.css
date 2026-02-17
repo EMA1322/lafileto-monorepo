@@ -161,7 +161,7 @@
   .badge--accent    { background: color-mix(in srgb, var(--c-secondary), #fff 86%); color: var(--c-text); border-color: color-mix(in srgb, var(--c-secondary), #000 12%); }
 
   /* Reusable pill/chip primitive for compact identity blocks (e.g. current user). */
-  .pill {
+  .c-pill {
     --pill-bg: var(--c-neutral-100);
     --pill-color: var(--c-text);
     --pill-border: var(--c-border);
@@ -181,7 +181,7 @@
     line-height: 1;
     white-space: nowrap;
   }
-  .pill--sm {
+  .c-pill--sm {
     gap: var(--space-1);
     padding: var(--space-1) var(--space-2);
     min-height: var(--space-6);
@@ -189,7 +189,7 @@
 
   /* Keep keyboard focus visible on interactive badge/pill usage. */
   :is(a, button).badge:focus-visible,
-  :is(a, button).pill:focus-visible {
+  :is(a, button).c-pill:focus-visible {
     outline: none;
     box-shadow: 0 0 0 var(--ring-width) var(--ring-color);
   }
