@@ -158,7 +158,6 @@ async function loadDashboardData() {
   const onSale = toNumberNonNegative(counts.activeOffers);
 
   return {
-    businessName: '',
     mode,
     isOpen,
     kpis: { products, categories, onSale }, // Auditoría eliminada: sin colección de actividad
