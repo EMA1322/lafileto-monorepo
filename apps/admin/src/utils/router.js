@@ -11,12 +11,15 @@ import {
   logout
 } from './auth.js';
 import { showSnackbar } from './snackbar.js';
+import { isFeatureEnabled } from './featureFlags.js';
 import {
   ensureRbacLoaded,
   moduleKeyFromHash, // convención única de moduleKey (UI ↔ RBAC ↔ API)
   canRead
 } from './rbac.js';
 import { uiNotFound } from './ui-templates.js';
+
+const FEATURE_SETTINGS = isFeatureEnabled(import.meta.env.VITE_FEATURE_SETTINGS);
 
 // Rutas centralizadas (mantener en sync con /src/components/*)
 const routes = {
@@ -118,6 +121,15 @@ async function router() {
 
   if (isNoAccessRoute) {
     await renderNoAccess();
+    return;
+  }
+
+  if (!isLoginRoute && hashRoute === 'settings' && !FEATURE_SETTINGS) {
+    window.location.hash = '#dashboard';
+    showSnackbar('Configuración deshabilitada en este entorno.', {
+      type: 'warning',
+      code: 'FEATURE_DISABLED'
+    });
     return;
   }
 
