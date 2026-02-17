@@ -20,6 +20,7 @@ import {
 import { uiNotFound } from './ui-templates.js';
 
 const FEATURE_SETTINGS = isFeatureEnabled(import.meta.env.VITE_FEATURE_SETTINGS);
+let headerModuleRef = null;
 
 // Rutas centralizadas (mantener en sync con /src/components/*)
 const routes = {
@@ -72,12 +73,24 @@ async function loadAdminHeader() {
 
     // header.js hace su propio ensureRbacLoaded() y filtrado de menú
     const moduleHeader = await import('../components/header/header.js');
+    headerModuleRef = moduleHeader;
     if (moduleHeader && typeof moduleHeader.initAdminHeader === 'function') {
-      moduleHeader.initAdminHeader();
+      await moduleHeader.initAdminHeader();
     }
   } catch (err) {
     console.error('Error cargando el header del admin:', err);
   }
+}
+
+function destroyAdminHeaderIfNeeded() {
+  const headerContainer = document.getElementById('admin-header');
+  if (!headerContainer) return;
+
+  if (headerModuleRef && typeof headerModuleRef.destroyAdminHeader === 'function') {
+    headerModuleRef.destroyAdminHeader();
+  }
+  headerModuleRef = null;
+  headerContainer.innerHTML = '';
 }
 
 /** Router principal */
@@ -162,8 +175,7 @@ async function router() {
     switch (hashRoute) {
       case 'login': {
         // Ocultar header en login
-        const header = document.getElementById('admin-header');
-        if (header) header.innerHTML = '';
+        destroyAdminHeaderIfNeeded();
         const mod = await import('../components/login/login.js');
         if (mod && typeof mod.initLogin === 'function') mod.initLogin();
         break;
