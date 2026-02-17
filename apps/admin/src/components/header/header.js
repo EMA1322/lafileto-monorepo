@@ -19,7 +19,7 @@
 //
 // ========================================================
 
-import { logout } from '@/utils/auth.js';
+import { logout, getCurrentUser } from '@/utils/auth.js';
 import { ensureRbacLoaded, canRead, moduleKeyFromHash, applyRBAC } from '@/utils/rbac.js';
 import { showSnackbar } from '@/utils/snackbar.js';
 import { openModal, closeModal } from '@/utils/modals.js';
@@ -92,6 +92,11 @@ const refs = {
   drawerEl: null,
   overlayEl: null,
   navListEl: null,
+  accountEl: null,
+  accountSlotEl: null,
+  drawerFooterEl: null,
+  userNameEl: null,
+  userRoleEl: null,
   logoLinkEl: null,
   logoFallbackIconEl: null,
   logoFallbackTextEl: null,
@@ -307,6 +312,31 @@ function renderBrandLogo() {
   }
 }
 
+function getUserRoleLabel(user) {
+  const roleValue = user?.roleName || user?.role?.name || user?.role || user?.roleId || '';
+  return String(roleValue || '').trim();
+}
+
+function renderAccountInfo() {
+  if (!refs.userNameEl || !refs.userRoleEl) return;
+
+  const user = getCurrentUser() || null;
+  const nameValue = user?.name || user?.fullName || user?.username || user?.email || '';
+  const roleValue = getUserRoleLabel(user);
+
+  refs.userNameEl.textContent = String(nameValue || '').trim() || 'User';
+  refs.userRoleEl.textContent = roleValue || '—';
+}
+
+function placeAccountBlock() {
+  if (!refs.accountEl || !refs.accountSlotEl || !refs.drawerFooterEl) return;
+  const isDesktop = window.matchMedia('(min-width: 1024px)').matches;
+  const target = isDesktop ? refs.accountSlotEl : refs.drawerFooterEl;
+  if (refs.accountEl.parentElement !== target) {
+    target.appendChild(refs.accountEl);
+  }
+}
+
 // ------------------------------
 // API pública de inicialización
 // ------------------------------
@@ -318,6 +348,11 @@ export async function initAdminHeader() {
   refs.drawerEl = document.getElementById('headerDrawer');
   refs.overlayEl = document.getElementById('headerOverlay');
   refs.navListEl = document.getElementById('headerNavList');
+  refs.accountEl = refs.headerEl.querySelector('[data-header-account]');
+  refs.accountSlotEl = refs.headerEl.querySelector('.header__account-slot');
+  refs.drawerFooterEl = refs.headerEl.querySelector('.header__drawer-footer');
+  refs.userNameEl = refs.headerEl.querySelector('[data-header-user-name]');
+  refs.userRoleEl = refs.headerEl.querySelector('[data-header-user-role]');
   refs.logoLinkEl = refs.headerEl.querySelector('.header__logo[href="#dashboard"]');
   refs.logoFallbackIconEl = refs.logoLinkEl?.querySelector('.header__logo-icon') || null;
   refs.logoFallbackTextEl = refs.logoLinkEl?.querySelector('.header__logo-text') || null;
@@ -329,6 +364,8 @@ export async function initAdminHeader() {
 
   // Construir menú según RBAC + flags
   buildMenu();
+  renderAccountInfo();
+  placeAccountBlock();
   renderBrandLogo();
 
   if (!state.bound) {
