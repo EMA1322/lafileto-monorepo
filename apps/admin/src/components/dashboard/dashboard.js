@@ -254,7 +254,7 @@ function renderQuickActions() {
     item.className = 'dashboard__quick-item';
 
     const btn = document.createElement('button');
-    btn.className = 'dashboard__quick-btn';
+    btn.className = 'dashboard__quick-btn btn btn--outline';
     btn.type = 'button';
     btn.dataset.link = a.link;
     btn.dataset.module = a.module;
