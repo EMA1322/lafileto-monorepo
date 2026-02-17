@@ -1,55 +1,55 @@
 <!-- ============================================= -->
-<!-- HEADER ADMIN - MENÚ DIGITAL                   -->
-<!-- SPA con RBAC: menú dinámico según permisos    -->
-<!-- Responsive + Accesible + Logout confirmado    -->
+<!-- ADMIN HEADER - DIGITAL MENU                   -->
+<!-- Responsive + Accessible + Confirmed logout    -->
 <!-- ============================================= -->
 
-<!-- Accesibilidad: enlace para saltar al contenido principal -->
+<!-- Accessibility: skip to main content -->
 <a href="#app" class="skip-link">Saltar al contenido</a>
 
-<!-- 🆕 Code-splitting de CSS del header -->
-<link rel="stylesheet" href="/src/styles/header.css" />
+<!-- Header stylesheet -->
+<link rel="stylesheet" href="/src/styles/core/header.css" />
 
 <header class="header" role="banner" data-module-key="admin-header" aria-label="Encabezado principal del panel">
   <div class="header__container container">
-
-    <!-- LOGO + TÍTULO -->
-    <a href="#dashboard" class="header__logo" aria-label="Ir al panel principal">
-      <!-- Icono inline SVG -->
-      <svg class="header__logo-icon" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
-        <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8v-10h-8v10zm0-18v6h8V3h-8z" fill="currentColor" />
-      </svg>
-      <span class="header__logo-text">Admin Panel</span>
-    </a>
-
-    <!-- BOTÓN HAMBURGUESA (VISIBLE EN MOBILE) -->
-    <button id="headerMenuToggle" class="header__menu-toggle" aria-label="Abrir menú de navegación"
-      aria-controls="headerDrawer" aria-expanded="false">
-      <!-- Icono SVG hamburguesa -->
-      <svg class="header__menu-icon" viewBox="0 0 24 24" width="28" height="28" fill="currentColor" aria-hidden="true">
-        <path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-      </svg>
-    </button>
-
-    <!-- OVERLAY para drawer (cierre por clic fuera) -->
-    <div id="headerOverlay" class="header__overlay" hidden></div>
-
-    <!-- DRAWER DE NAVEGACIÓN -->
-    <nav id="headerDrawer" class="header__drawer" role="navigation" aria-label="Navegación principal">
-      <!-- Lista del menú: se llena desde header.js según RBAC -->
-      <ul id="headerNavList" class="header__nav-list"></ul>
-
-      <!-- Drawer footer: user + logout -->
-      <div class="header__footer">
-        <span class="header__user-name">Admin</span>
-        <button id="adminLogoutBtn" class="header__logout-btn" data-action="logout"
-          aria-label="Cerrar sesión del administrador">
-          <svg class="header__logout-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
-            <path d="M16 13v-2H7V8l-5 4 5 4v-3h9zM21 3H5a2 2 0 0 0-2 2v4h2V5h16v14H5v-4H3v4a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"/>
+    <div class="header__bar">
+      <div class="header__left">
+        <a href="#dashboard" class="header__logo" aria-label="Ir al panel principal">
+          <svg class="header__logo-icon" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+            <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8v-10h-8v10zm0-18v6h8V3h-8z" fill="currentColor" />
           </svg>
-          Cerrar sesión
-        </button>
+          <span class="header__logo-text">Admin Panel</span>
+        </a>
       </div>
-    </nav>
+
+      <button id="headerMenuToggle" class="header__menu-toggle" aria-label="Abrir menú de navegación"
+        aria-controls="headerDrawer" aria-expanded="false">
+        <svg class="header__menu-icon" viewBox="0 0 24 24" width="28" height="28" fill="currentColor" aria-hidden="true">
+          <path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+      </button>
+
+      <div id="headerOverlay" class="header__overlay" hidden></div>
+
+      <nav id="headerDrawer" class="header__drawer" role="navigation" aria-label="Navegación principal">
+        <div class="header__drawer-inner">
+          <div class="header__center">
+            <ul id="headerNavList" class="header__nav-list"></ul>
+          </div>
+
+          <div class="header__right">
+            <div class="header__footer">
+              <span class="header__user-name">Admin</span>
+              <button id="adminLogoutBtn" class="header__logout-btn" data-action="logout"
+                aria-label="Cerrar sesión del administrador">
+                <svg class="header__logout-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
+                  <path d="M16 13v-2H7V8l-5 4 5 4v-3h9zM21 3H5a2 2 0 0 0-2 2v4h2V5h16v14H5v-4H3v4a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"/>
+                </svg>
+                Cerrar sesión
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </div>
   </div>
 </header>
