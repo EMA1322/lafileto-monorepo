@@ -157,6 +157,42 @@
   .badge--warning   { background: color-mix(in srgb, var(--c-warning), #fff 85%); color: var(--c-text); border-color: color-mix(in srgb, var(--c-warning), #000 12%); }
   .badge--error     { background: color-mix(in srgb, var(--c-error),   #fff 85%); color: var(--c-text); border-color: color-mix(in srgb, var(--c-error),   #000 12%); }
   .badge--neutral   { background: var(--c-neutral-100); color: var(--c-text); border-color: var(--c-border); }
+  /* Accent badge variant for compact status labels (e.g. account role). */
+  .badge--accent    { background: color-mix(in srgb, var(--c-secondary), #fff 86%); color: var(--c-text); border-color: color-mix(in srgb, var(--c-secondary), #000 12%); }
+
+  /* Reusable pill/chip primitive for compact identity blocks (e.g. current user). */
+  .c-pill {
+    --pill-bg: var(--c-neutral-100);
+    --pill-color: var(--c-text);
+    --pill-border: var(--c-border);
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-3);
+    min-height: calc(var(--space-4) + var(--space-2));
+    border: 1px solid var(--pill-border);
+    border-radius: var(--radius-full);
+    background: var(--pill-bg);
+    color: var(--pill-color);
+    font-size: var(--fs-h6);
+    font-weight: var(--fw-medium);
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .c-pill--sm {
+    gap: var(--space-1);
+    padding: var(--space-1) var(--space-2);
+    min-height: var(--space-6);
+  }
+
+  /* Keep keyboard focus visible on interactive badge/pill usage. */
+  :is(a, button).badge:focus-visible,
+  :is(a, button).c-pill:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 var(--ring-width) var(--ring-color);
+  }
 
   /* ——— Navegación / Menús ——— */
   .nav {
