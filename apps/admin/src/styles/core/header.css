@@ -2,16 +2,6 @@
    MODULE: ADMIN HEADER (Mobile-first, BEM, accessible)
    =========================================================== */
 
-:root {
-  --header-height: 56px;
-}
-
-@media (min-width: 768px) {
-  :root {
-    --header-height: 64px;
-  }
-}
-
 /* Skip link */
 .skip-link {
   position: absolute;
@@ -46,11 +36,11 @@
 }
 
 .header__container {
-  min-height: var(--header-height);
+  min-height: var(--header-height-mobile);
 }
 
 .header__bar {
-  min-height: var(--header-height);
+  min-height: var(--header-height-mobile);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -148,8 +138,19 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding-top: var(--header-height);
+  padding-top: var(--header-height-mobile);
   padding-bottom: calc(var(--spacing-sm) + 12px + env(safe-area-inset-bottom, 0px));
+}
+
+@media (min-width: 768px) {
+  .header__container,
+  .header__bar {
+    min-height: var(--header-height);
+  }
+
+  .header__drawer-inner {
+    padding-top: var(--header-height);
+  }
 }
 
 .header__center,
