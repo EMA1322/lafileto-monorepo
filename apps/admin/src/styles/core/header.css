@@ -2,6 +2,15 @@
    MODULE: ADMIN HEADER (Mobile-first, BEM, accessible)
    =========================================================== */
 
+.header-mount,
+#admin-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: var(--surface-card);
+  isolation: isolate;
+}
+
 /* Skip link */
 .skip-link {
   position: absolute;
@@ -30,7 +39,7 @@
 .header {
   position: sticky;
   top: 0;
-  z-index: 1000;
+  z-index: 40;
   background: var(--surface-card);
   border-bottom: 1px solid var(--border-color);
 }
@@ -102,7 +111,7 @@
   position: fixed;
   inset: 0;
   background: rgba(17, 24, 39, 0.44);
-  z-index: 998;
+  z-index: 48;
   backdrop-filter: saturate(120%) blur(2px);
   opacity: 1;
   transition: opacity 0.22s ease;
@@ -125,7 +134,7 @@
   transform: translateX(-100%);
   opacity: 0.98;
   transition: transform 0.26s ease-in-out, opacity 0.22s ease-in-out;
-  z-index: 999;
+  z-index: 49;
   box-sizing: border-box;
 }
 
