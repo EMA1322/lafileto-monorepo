@@ -91,6 +91,10 @@
     --container-max: 1200px;
     --container-pad-x: 1rem;
 
+    /* ——— Header ——— */
+    --header-height: 4rem;
+    --header-height-mobile: 3.5rem;
+
     /* ——— Alias legacy (transición de global.css) ——— */
     --primary-color: var(--c-primary);
     --secondary-color: var(--c-surface-muted);
