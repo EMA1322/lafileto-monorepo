@@ -30,6 +30,23 @@ export async function setAllowlistAndReload(allowlist) {
   return reloadModules();
 }
 
+export async function setCorsEnvAndReload({ allowlist, nodeEnv } = {}) {
+  if (allowlist === undefined) {
+    delete process.env.CORS_ALLOWLIST;
+  } else {
+    process.env.CORS_ALLOWLIST = toCsv(allowlist);
+  }
+
+  if (nodeEnv === undefined) {
+    delete process.env.NODE_ENV;
+  } else {
+    process.env.NODE_ENV = nodeEnv;
+  }
+
+  reloadToken += 1;
+  return reloadModules();
+}
+
 export async function createCorsTestApp({ allowlist } = {}) {
   const corsModule = await setAllowlistAndReload(allowlist);
   const { buildCorsOptions } = corsModule;
