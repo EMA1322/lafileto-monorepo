@@ -4,6 +4,7 @@
 // ================================
 
 import { renderView } from './renderView.js';
+import headerCssUrl from '@/styles/core/header.css?url';
 import {
   isAuthenticated,
   ensureAuthReady,
@@ -21,6 +22,7 @@ import { uiNotFound } from './ui-templates.js';
 
 const FEATURE_SETTINGS = isFeatureEnabled(import.meta.env.VITE_FEATURE_SETTINGS);
 let headerModuleRef = null;
+const stylesheetLoadPromises = new Map();
 
 // Rutas centralizadas (mantener en sync con /src/components/*)
 const routes = {
@@ -60,12 +62,61 @@ async function renderNoAccess() {
 }
 
 /** Carga perezosa del header (una sola vez por sesión) */
+function isStylesheetLoaded(linkEl) {
+  return linkEl?.dataset.loaded === 'true' || Boolean(linkEl?.sheet);
+}
+
+async function ensureStylesheetLoaded(href, key) {
+  if (!href || !key) return;
+
+  const selector = `link[rel="stylesheet"][data-style="${key}"]`;
+  const existingLink = document.head.querySelector(selector) || document.querySelector(selector);
+  if (existingLink && isStylesheetLoaded(existingLink)) return;
+
+  const pendingPromise = stylesheetLoadPromises.get(key);
+  if (pendingPromise) {
+    await pendingPromise;
+    return;
+  }
+
+  const linkEl = existingLink || document.createElement('link');
+  linkEl.rel = 'stylesheet';
+  linkEl.href = href;
+  linkEl.dataset.style = key;
+
+  const loadPromise = new Promise((resolve, reject) => {
+    linkEl.addEventListener('load', () => {
+      linkEl.dataset.loaded = 'true';
+      resolve();
+    }, { once: true });
+    linkEl.addEventListener('error', () => reject(new Error(`Stylesheet failed: ${href}`)), { once: true });
+  });
+
+  stylesheetLoadPromises.set(key, loadPromise);
+  if (!existingLink) {
+    document.head.appendChild(linkEl);
+  }
+
+  try {
+    await loadPromise;
+  } finally {
+    stylesheetLoadPromises.delete(key);
+  }
+}
+
 async function loadAdminHeader() {
   const headerContainer = document.getElementById('admin-header');
   if (!headerContainer) return;
 
   // Si ya existe contenido, no recargar (performance)
   if (headerContainer.innerHTML.trim() !== '') return;
+
+  try {
+    // Header styles are loaded by router to prevent FOUC.
+    await ensureStylesheetLoaded(headerCssUrl, 'admin-header');
+  } catch (err) {
+    console.warn('Header stylesheet could not be preloaded. Continuing with fallback render.', err);
+  }
 
   try {
     const res = await fetch('/src/components/header/header.html', { cache: 'no-store' });
