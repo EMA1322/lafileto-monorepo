@@ -108,6 +108,10 @@ const state = {
   cleanupFns: [],
 };
 
+const DESKTOP_MQ = window.matchMedia('(min-width: 1024px)');
+const BODY_SCROLL_LOCK_DATA_ATTR = 'headerDrawerScrollLock';
+const BODY_SCROLL_PREV_OVERFLOW_ATTR = 'headerDrawerPrevOverflow';
+
 function registerCleanup(fn) {
   if (typeof fn === 'function') state.cleanupFns.push(fn);
 }
@@ -116,6 +120,51 @@ function addListener(target, type, handler, options) {
   if (!target || typeof target.addEventListener !== 'function') return;
   target.addEventListener(type, handler, options);
   registerCleanup(() => target.removeEventListener(type, handler, options));
+}
+
+function setBodyScrollLock(locked) {
+  const bodyEl = document.body;
+  if (!bodyEl) return;
+
+  if (locked) {
+    if (bodyEl.dataset[BODY_SCROLL_LOCK_DATA_ATTR] === 'true') return;
+    bodyEl.dataset[BODY_SCROLL_LOCK_DATA_ATTR] = 'true';
+    bodyEl.dataset[BODY_SCROLL_PREV_OVERFLOW_ATTR] = bodyEl.style.overflow || '';
+    bodyEl.style.overflow = 'hidden';
+    return;
+  }
+
+  if (bodyEl.dataset[BODY_SCROLL_LOCK_DATA_ATTR] !== 'true') return;
+  bodyEl.style.overflow = bodyEl.dataset[BODY_SCROLL_PREV_OVERFLOW_ATTR] || '';
+  delete bodyEl.dataset[BODY_SCROLL_LOCK_DATA_ATTR];
+  delete bodyEl.dataset[BODY_SCROLL_PREV_OVERFLOW_ATTR];
+}
+
+function focusSafeTargetAfterDrawerClose() {
+  const activeInsideDrawer = refs.drawerEl?.contains(document.activeElement);
+  if (!activeInsideDrawer) return;
+
+  const fallbackTarget = refs.logoLinkEl || document.getElementById('app');
+  if (fallbackTarget && typeof fallbackTarget.focus === 'function') {
+    fallbackTarget.focus({ preventScroll: true });
+  }
+}
+
+function reconcileDrawerOnViewportChange() {
+  if (!refs.drawerEl || !refs.toggleBtnEl || !refs.overlayEl) return;
+
+  const forceClosed = DESKTOP_MQ.matches;
+  if (forceClosed && state.drawerOpen) {
+    setDrawer(false);
+    focusSafeTargetAfterDrawerClose();
+  }
+
+  if (!state.drawerOpen) {
+    refs.drawerEl.classList.remove('is-open');
+    refs.overlayEl.hidden = true;
+    refs.toggleBtnEl.setAttribute('aria-expanded', 'false');
+    setBodyScrollLock(false);
+  }
 }
 
 function resetRefs() {
@@ -171,6 +220,7 @@ export function destroyAdminHeader() {
   state.cleanupFns = [];
   state.bound = false;
   state.drawerOpen = false;
+  setBodyScrollLock(false);
 
   refs.logoImageEl?.remove();
   resetRefs();
@@ -288,6 +338,7 @@ function setDrawer(open) {
   refs.drawerEl.classList.toggle('is-open', state.drawerOpen);
   refs.overlayEl.hidden = !state.drawerOpen;
   refs.toggleBtnEl.setAttribute('aria-expanded', String(state.drawerOpen));
+  setBodyScrollLock(state.drawerOpen);
 
   if (state.drawerOpen) {
     const first = getFocusableElements(refs.drawerEl)[0];
@@ -490,6 +541,29 @@ export async function initAdminHeader() {
 
     const onBrandLogoUpdate = () => renderBrandLogo();
     addListener(document, 'admin:settings-brand-logo-updated', onBrandLogoUpdate);
+
+    const onViewportChange = () => reconcileDrawerOnViewportChange();
+    if (typeof DESKTOP_MQ.addEventListener === 'function') {
+      addListener(DESKTOP_MQ, 'change', onViewportChange);
+    } else if (typeof DESKTOP_MQ.addListener === 'function') {
+      DESKTOP_MQ.addListener(onViewportChange);
+      registerCleanup(() => DESKTOP_MQ.removeListener(onViewportChange));
+      let resizeRafId = 0;
+      const onResizeFallback = () => {
+        if (resizeRafId) return;
+        resizeRafId = requestAnimationFrame(() => {
+          resizeRafId = 0;
+          onViewportChange();
+        });
+      };
+      addListener(window, 'resize', onResizeFallback, { passive: true });
+      addListener(window, 'orientationchange', onResizeFallback);
+      registerCleanup(() => {
+        if (resizeRafId) cancelAnimationFrame(resizeRafId);
+      });
+    }
+
+    reconcileDrawerOnViewportChange();
 
     state.bound = true;
   }
