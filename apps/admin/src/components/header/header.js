@@ -3,14 +3,14 @@
 // ========================================================
 //
 // - Construye el menú desde un catálogo interno (NAV_MODULES)
-// - Filtra por permisos (RBAC) usando canRead(moduleKey)
+// - Renderiza items con atributos RBAC declarativos y aplica RBAC uniforme
 // - Resalta ruta activa con aria-current="page"
 // - Drawer accesible: abre/cierra, Escape, clic en overlay, focus management
 // - Logout seguro: confirmación en modal, limpia auth + RBAC, redirige a #login, snackbar
 //
 // Dependencias:
 //   - auth.js        → isAuthenticated(), logout()
-//   - rbac.js        → ensureRbacLoaded(), canRead(), moduleKeyFromHash()
+//   - rbac.js        → ensureRbacLoaded(), moduleKeyFromHash(), applyRBAC()
 //   - snackbar.js    → showSnackbar()
 //   - modals.js      → openModal(), closeModal()
 //
@@ -20,7 +20,7 @@
 // ========================================================
 
 import { logout, getCurrentUser } from '@/utils/auth.js';
-import { ensureRbacLoaded, canRead, moduleKeyFromHash, applyRBAC } from '@/utils/rbac.js';
+import { ensureRbacLoaded, moduleKeyFromHash, applyRBAC } from '@/utils/rbac.js';
 import { showSnackbar } from '@/utils/snackbar.js';
 import { openModal, closeModal } from '@/utils/modals.js';
 import { isFeatureEnabled } from '@/utils/featureFlags.js';
@@ -33,7 +33,7 @@ const FEATURE_SETTINGS = isFeatureEnabled(import.meta.env.VITE_FEATURE_SETTINGS)
 
 // ------------------------------
 // Catálogo del menú (orden fijo) + SVG inline
-// (Se filtra por RBAC: solo se renderizan los que tienen Read)
+// (Se filtra por feature flags; RBAC visual decide visibilidad)
 // ------------------------------
 const NAV_MODULES = [
   {
@@ -193,36 +193,30 @@ function getFocusableElements(container) {
 }
 
 // ------------------------------
-// Construye el menú según RBAC (Read) + feature flag
+// Construye el menú según feature flags + RBAC declarativo
 // ------------------------------
 function buildMenu() {
   if (!refs.navListEl) return;
   refs.navListEl.innerHTML = '';
 
   NAV_MODULES.forEach((item) => {
-    // 1) Feature flag local: ocultar settings hasta que exista el módulo
+    // 1) Feature flag local: ocultar settings si no está habilitado
     if (item.key === 'settings' && !FEATURE_SETTINGS) return;
-
-    // 2) RBAC Read
-    const key = item.key;
-    const hasRead =
-      key === 'settings' ? true : canRead(key) || (key === 'users' && canRead('user')); // compat semilla vieja
-
-    if (!hasRead) return;
 
     const li = document.createElement('li');
     li.className = 'header__nav-item';
     li.setAttribute('data-module-key', item.key);
-
-    if (item.key === 'settings') {
-      li.setAttribute('data-rbac-module', 'settings');
-    }
-
-    const settingsAttrs =
-      item.key === 'settings' ? 'data-rbac-action="read" data-rbac-hide hidden' : '';
+    li.setAttribute('data-rbac-module', item.key);
 
     li.innerHTML = `
-      <a href="${item.hash}" class="header__nav-link" data-module-key="${item.key}" ${settingsAttrs}>
+      <a
+        href="${item.hash}"
+        class="header__nav-link"
+        data-module-key="${item.key}"
+        data-rbac-action="read"
+        data-rbac-hide
+        hidden
+      >
         ${item.svg}
         <span class="header__nav-text">${item.title}</span>
       </a>
@@ -231,10 +225,7 @@ function buildMenu() {
     refs.navListEl.appendChild(li);
   });
 
-  const settingsNavItem = refs.navListEl.querySelector('[data-rbac-module="settings"]');
-  if (settingsNavItem) {
-    applyRBAC(settingsNavItem);
-  }
+  refs.navListEl.querySelectorAll('[data-rbac-module]').forEach((itemEl) => applyRBAC(itemEl));
 
   // Resaltar activo
   highlightActiveItem();
