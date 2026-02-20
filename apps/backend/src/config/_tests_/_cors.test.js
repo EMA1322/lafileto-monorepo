@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { createCorsTestApp, setAllowlistAndReload } from './setup-env.mjs';
+import { createCorsTestApp, setAllowlistAndReload, setCorsEnvAndReload } from './setup-env.mjs';
 
 const { buildCorsOptions } = await import('../cors.js');
 
@@ -81,6 +81,35 @@ test('origin callback allows whitelisted origins and rejects others', async () =
   assert(denied.err instanceof Error);
   assert.equal(denied.err.message, 'Not allowed by CORS: https://denied.test');
   assert.equal(denied.allowed, undefined);
+});
+
+
+test('allows 192.168.1.x:5174 origins only in development', async () => {
+  const devModule = await setCorsEnvAndReload({
+    allowlist: 'https://allowlisted.test',
+    nodeEnv: 'development',
+  });
+
+  const devOptions = devModule.buildCorsOptions();
+  const lanAllowed = await evaluateOrigin(devOptions, 'http://192.168.1.35:5174');
+  assert.equal(lanAllowed.err, null);
+  assert.equal(lanAllowed.allowed, true);
+
+  const wrongPort = await evaluateOrigin(devOptions, 'http://192.168.1.35:5173');
+  assert(wrongPort.err instanceof Error);
+  assert.equal(wrongPort.err.message, 'Not allowed by CORS: http://192.168.1.35:5173');
+
+  const prodModule = await setCorsEnvAndReload({
+    allowlist: 'https://allowlisted.test',
+    nodeEnv: 'production',
+  });
+
+  const prodOptions = prodModule.buildCorsOptions();
+  const lanDeniedInProd = await evaluateOrigin(prodOptions, 'http://192.168.1.35:5174');
+  assert(lanDeniedInProd.err instanceof Error);
+  assert.equal(lanDeniedInProd.err.message, 'Not allowed by CORS: http://192.168.1.35:5174');
+
+  await setCorsEnvAndReload({ allowlist: undefined, nodeEnv: undefined });
 });
 
 test('preflight OPTIONS responds 204 with Access-Control-Allow-Origin header', async () => {
