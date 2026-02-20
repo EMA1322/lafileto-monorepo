@@ -352,11 +352,17 @@
 
   .header__account-slot {
     display: flex;
+    align-items: center;
     justify-content: flex-end;
-    min-width: 0;
+    justify-self: end;
+    margin-inline-start: auto;
+    min-width: max-content;
   }
 
   .header__account {
+    display: flex;
+    align-items: center;
     justify-content: flex-end;
+    white-space: nowrap;
   }
 }
