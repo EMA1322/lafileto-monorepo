@@ -4,7 +4,7 @@ import { offerRepository } from '../repositories/offerRepository.js';
 import { categoryRepository } from '../repositories/categoryRepository.js';
 import { createError } from '../utils/errors.js';
 import { normalizePage, normalizePageSize } from '../utils/pagination.js';
-import { buildOfferSummary } from '../utils/offers.js';
+import { buildOfferSummary, isOfferActive } from '../utils/offers.js';
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_PAGE_SIZE = 10;
@@ -112,8 +112,17 @@ async function attachActiveOfferSummaries(products, { now } = {}) {
   return list.map((product) => ({
     ...product,
     offer: (() => {
-      const summary = buildOfferSummary(offersMap.get(product.id), product.price, { now: reference });
-      return summary?.isActive ? summary : null;
+      const offer = offersMap.get(product.id);
+      const summary = buildOfferSummary(
+        {
+          ...offer,
+          productStatus: product.status
+        },
+        product.price,
+        { now: reference }
+      );
+      const isActive = isOfferActive({ ...offer, productStatus: product.status }, reference);
+      return isActive && summary ? { ...summary, isActive } : null;
     })()
   }));
 }
@@ -241,8 +250,13 @@ export const productService = {
     return {
       ...sanitized,
       offer: (() => {
-        const summary = buildOfferSummary(activeOffer, sanitized?.price ?? 0, { now: referenceNow });
-        return summary?.isActive ? summary : null;
+        const offerForState = {
+          ...activeOffer,
+          productStatus: sanitized?.status
+        };
+        const summary = buildOfferSummary(offerForState, sanitized?.price ?? 0, { now: referenceNow });
+        const isActive = isOfferActive(offerForState, referenceNow);
+        return isActive && summary ? { ...summary, isActive } : null;
       })()
     };
   },

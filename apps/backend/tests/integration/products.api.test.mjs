@@ -356,6 +356,8 @@ offerRepository.findActiveByProductId = async (productId, { now } = {}) => {
   if (!productId) return null;
   const offer = findOfferByProductId(productId);
   if (!offer) return null;
+  const product = products.find((item) => item.id === productId);
+  if (!product || product.status !== 'ACTIVE') return null;
   return cloneOffer(offer);
 };
 
@@ -363,7 +365,8 @@ offerRepository.findActiveByProductIds = async (productIds = [], { now } = {}) =
   const map = new Map();
   for (const id of productIds) {
     const offer = findOfferByProductId(id);
-    if (offer) {
+    const product = products.find((item) => item.id === id);
+    if (offer && product?.status === 'ACTIVE') {
       map.set(id, cloneOffer(offer));
     }
   }
@@ -418,6 +421,10 @@ offerRepository.list = async ({
     }
 
     if (Number.isFinite(priceMax) && product.price > priceMax) {
+      return false;
+    }
+
+    if (activeOnly && product.status !== 'ACTIVE') {
       return false;
     }
 
@@ -866,12 +873,10 @@ test('GET /products incluye resumen de oferta con finalPrice', async () => {
   assert.equal(parrilla.offer?.finalPrice, 1680);
 
   const milanesa = map.get('prod-003');
-  assert.equal(milanesa.offer?.isActive, true);
-  assert.equal(milanesa.offer?.finalPrice, 1615);
+  assert.equal(milanesa.offer, null);
 
   const pizza = map.get('prod-004');
-  assert.equal(pizza.offer?.isActive, true);
-  assert.equal(pizza.offer?.finalPrice, 3135);
+  assert.equal(pizza.offer, null);
 
   const ensalada = map.get('prod-005');
   assert.equal(ensalada.offer?.isActive, true);
@@ -917,6 +922,8 @@ test('GET /offers devuelve ofertas con nombres normalizados', async () => {
   assert.ok(items.every((item) => typeof item.discountPercent === 'number'));
 
   const ids = items.map((item) => item.productId);
+  assert.ok(!ids.includes('prod-003'));
+  assert.ok(!ids.includes('prod-004'));
   assert.ok(!ids.includes('prod-006'));
 
   const hornoOffer = items.find((item) => item.productId === 'prod-001');
