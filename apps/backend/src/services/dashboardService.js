@@ -45,6 +45,152 @@ function normalizeTimezone(value) {
   return raw || SITE_CONFIG_DEFAULTS.hours.timezone;
 }
 
+function getLocalDateParts(date, timezone) {
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
+
+  const parts = formatter.formatToParts(date);
+  const year = Number(parts.find((part) => part.type === 'year')?.value);
+  const month = Number(parts.find((part) => part.type === 'month')?.value);
+  const day = Number(parts.find((part) => part.type === 'day')?.value);
+
+  return { year, month, day };
+}
+
+function getOffsetMs(date, timezone) {
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23'
+  });
+
+  const parts = formatter.formatToParts(date);
+  const year = Number(parts.find((part) => part.type === 'year')?.value);
+  const month = Number(parts.find((part) => part.type === 'month')?.value);
+  const day = Number(parts.find((part) => part.type === 'day')?.value);
+  const hour = Number(parts.find((part) => part.type === 'hour')?.value);
+  const minute = Number(parts.find((part) => part.type === 'minute')?.value);
+  const second = Number(parts.find((part) => part.type === 'second')?.value);
+
+  const asUtc = Date.UTC(year, month - 1, day, hour, minute, second);
+  return asUtc - date.getTime();
+}
+
+function zonedDateTimeToUtcIso({ year, month, day, minutes }, timezone) {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  const utcGuess = new Date(Date.UTC(year, month - 1, day, hours, mins, 0));
+  const offsetMs = getOffsetMs(utcGuess, timezone);
+  return new Date(utcGuess.getTime() - offsetMs).toISOString();
+}
+
+function getBusinessStatusFromHours(hoursConfig = {}) {
+  const timezone = normalizeTimezone(hoursConfig.timezone);
+  const override = typeof hoursConfig.override === 'string' ? hoursConfig.override.trim() : AUTO;
+
+  if (override === FORCE_OPEN) {
+    return { isOpen: true, nextChangeAt: null };
+  }
+
+  if (override === FORCE_CLOSED) {
+    return { isOpen: false, nextChangeAt: null };
+  }
+
+  const openingHours = Array.isArray(hoursConfig.openingHours) ? hoursConfig.openingHours : [];
+  if (openingHours.length === 0) {
+    return { isOpen: false, nextChangeAt: null };
+  }
+
+  let now;
+  try {
+    now = getNowInTimezone(timezone);
+  } catch {
+    now = getNowInTimezone(SITE_CONFIG_DEFAULTS.hours.timezone);
+  }
+
+  const weekdays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  const currentDayIndex = weekdays.indexOf(now.weekday);
+
+  if (currentDayIndex === -1) {
+    return { isOpen: computeIsOpenFromHours(hoursConfig), nextChangeAt: null };
+  }
+
+  const slotsByDay = weekdays.map((weekday) =>
+    openingHours
+      .filter((slot) => (typeof slot?.day === 'string' ? slot.day.trim().toLowerCase() : '') === weekday)
+      .map((slot) => ({
+        open: parseTimeToMinutes(slot?.open),
+        close: parseTimeToMinutes(slot?.close),
+        closed: Boolean(slot?.closed)
+      }))
+      .filter((slot) => !slot.closed && slot.open !== null && slot.close !== null && slot.open < slot.close)
+      .sort((a, b) => a.open - b.open)
+  );
+
+  const localDate = getLocalDateParts(new Date(), timezone);
+  const baseDateUtc = new Date(Date.UTC(localDate.year, localDate.month - 1, localDate.day, 12, 0, 0));
+
+  for (let dayOffset = 0; dayOffset < 8; dayOffset += 1) {
+    const dayIndex = (currentDayIndex + dayOffset) % 7;
+    const slots = slotsByDay[dayIndex] || [];
+
+    for (const slot of slots) {
+      const isCurrentDay = dayOffset === 0;
+      const changeMinute = isCurrentDay && now.minutes >= slot.open && now.minutes < slot.close
+        ? slot.close
+        : slot.open;
+
+      if (isCurrentDay && now.minutes >= slot.close) {
+        continue;
+      }
+
+      if (isCurrentDay && now.minutes < slot.open) {
+        const targetDate = new Date(baseDateUtc);
+        targetDate.setUTCDate(targetDate.getUTCDate() + dayOffset);
+        const targetParts = getLocalDateParts(targetDate, timezone);
+        return {
+          isOpen: false,
+          nextChangeAt: zonedDateTimeToUtcIso({ ...targetParts, minutes: changeMinute }, timezone)
+        };
+      }
+
+      if (isCurrentDay && now.minutes >= slot.open && now.minutes < slot.close) {
+        const targetDate = new Date(baseDateUtc);
+        targetDate.setUTCDate(targetDate.getUTCDate() + dayOffset);
+        const targetParts = getLocalDateParts(targetDate, timezone);
+        return {
+          isOpen: true,
+          nextChangeAt: zonedDateTimeToUtcIso({ ...targetParts, minutes: changeMinute }, timezone)
+        };
+      }
+
+      if (!isCurrentDay) {
+        const targetDate = new Date(baseDateUtc);
+        targetDate.setUTCDate(targetDate.getUTCDate() + dayOffset);
+        const targetParts = getLocalDateParts(targetDate, timezone);
+        return {
+          isOpen: false,
+          nextChangeAt: zonedDateTimeToUtcIso({ ...targetParts, minutes: slot.open }, timezone)
+        };
+      }
+    }
+  }
+
+  return {
+    isOpen: false,
+    nextChangeAt: null
+  };
+}
+
 export function computeIsOpenFromHours(hoursConfig = {}) {
   const override = typeof hoursConfig.override === 'string' ? hoursConfig.override.trim() : AUTO;
 
@@ -84,7 +230,7 @@ export function computeIsOpenFromHours(hoursConfig = {}) {
 
 export const dashboardService = {
   async getAdminSummary() {
-    const [activeProducts, activeCategories, activeOffers, settings] = await Promise.all([
+    const [activeProducts, activeCategories, activeOffers, productsWithoutImageRows, settings] = await Promise.all([
       prisma.product.count({ where: { status: 'ACTIVE' } }),
       prisma.category.count({ where: { active: true } }),
       prisma.offer.count({
@@ -92,21 +238,46 @@ export const dashboardService = {
           product: { status: 'ACTIVE' }
         }
       }),
+      prisma.$queryRaw`
+        SELECT COUNT(*) AS count
+        FROM Product
+        WHERE imageUrl IS NULL OR TRIM(imageUrl) = ''
+      `,
       settingsService.getAdminSettings()
     ]);
 
+    const productsWithoutImage = Number(productsWithoutImageRows?.[0]?.count ?? 0);
+
     const mode = settings?.hours?.override || AUTO;
-    const isOpen = computeIsOpenFromHours(settings?.hours);
+    const businessStatus = getBusinessStatusFromHours(settings?.hours);
+    const offerPercentRaw = activeProducts > 0 ? (activeOffers / activeProducts) * 100 : 0;
+    const offerPercent = Math.round(offerPercentRaw * 10) / 10;
 
     return {
+      meta: {
+        generatedAt: new Date().toISOString()
+      },
       counts: {
         activeProducts,
         activeCategories,
-        activeOffers
+        activeOffers,
+        productsWithoutImage
+      },
+      insights: {
+        offersActive: activeOffers,
+        offerPercent
+      },
+      business: {
+        isOpen: businessStatus.isOpen,
+        nextChangeAt: businessStatus.nextChangeAt
+      },
+      activity: {
+        items: [],
+        note: 'Activity feed not implemented yet'
       },
       status: {
         mode,
-        isOpen
+        isOpen: businessStatus.isOpen
       }
     };
   }

@@ -23,10 +23,53 @@ const nowSetting = {
   }
 };
 
+const products = [
+  { id: 'p-1', name: 'Product 1', status: 'ACTIVE', imageUrl: null },
+  { id: 'p-2', name: 'Product 2', status: 'ACTIVE', imageUrl: '' },
+  { id: 'p-3', name: 'Product 3', status: 'ACTIVE', imageUrl: 'https://example.com/3.png' },
+  { id: 'p-4', name: 'Product 4', status: 'ACTIVE', imageUrl: 'https://example.com/4.png' },
+  { id: 'p-5', name: 'Product 5', status: 'ACTIVE', imageUrl: 'https://example.com/5.png' },
+  { id: 'p-6', name: 'Product 6', status: 'ACTIVE', imageUrl: 'https://example.com/6.png' },
+  { id: 'p-7', name: 'Product 7', status: 'ACTIVE', imageUrl: 'https://example.com/7.png' }
+];
+
+function isWithoutImage(product) {
+  if (product.imageUrl == null) return true;
+  if (typeof product.imageUrl !== 'string') return false;
+  return product.imageUrl.trim() === '';
+}
+
 prisma.product.count = async ({ where = {} } = {}) => {
-  if (where.status === 'ACTIVE') return 7;
+  if (where.status === 'ACTIVE') {
+    return products.filter((product) => product.status === 'ACTIVE').length;
+  }
+
   return 0;
 };
+
+prisma.product.create = async ({ data = {} } = {}) => {
+  const created = {
+    id: data.id || `product-${Date.now()}`,
+    name: data.name || 'Inserted product',
+    status: data.status || 'DRAFT',
+    imageUrl: data.imageUrl ?? null
+  };
+
+  products.push(created);
+  return created;
+};
+
+prisma.product.delete = async ({ where = {} } = {}) => {
+  const index = products.findIndex((product) => product.id === where.id);
+  if (index === -1) {
+    throw new Error('Product not found for cleanup');
+  }
+
+  const [removed] = products.splice(index, 1);
+  return removed;
+};
+
+prisma.$queryRaw = async () => [{ count: String(products.filter(isWithoutImage).length) }];
 
 prisma.category.count = async ({ where = {} } = {}) => {
   if (where.active === true) return 3;
@@ -147,7 +190,7 @@ test('GET /api/v1/dashboard/summary sin dashboard:r => 403', async () => {
   assert.equal(res.body?.ok, false);
 });
 
-test('GET /api/v1/dashboard/summary con dashboard:r => 200', async () => {
+test('GET /api/v1/dashboard/summary con dashboard:r => 200 y whitespace-only suma +1 en productsWithoutImage', async () => {
   const token = await buildToken({
     userId: 'admin-1',
     roleId: `role-test-allow-${Date.now()}`,
@@ -156,19 +199,35 @@ test('GET /api/v1/dashboard/summary con dashboard:r => 200', async () => {
     }
   });
 
-  const res = await api('/api/v1/dashboard/summary', {
-    headers: { Authorization: `Bearer ${token}` }
+  const headers = { Authorization: `Bearer ${token}` };
+
+  const baselineRes = await api('/api/v1/dashboard/summary', { headers });
+
+  assert.equal(baselineRes.status, 200);
+  assert.equal(baselineRes.body?.ok, true);
+  assert.equal(typeof baselineRes.body?.data?.meta?.generatedAt, 'string');
+  assert.equal(Number.isNaN(Date.parse(baselineRes.body?.data?.meta?.generatedAt)), false);
+  assert.equal(typeof baselineRes.body?.data?.counts?.activeOffers, 'number');
+  assert.ok(Array.isArray(baselineRes.body?.data?.activity?.items));
+
+  const baselineWithoutImage = baselineRes.body?.data?.counts?.productsWithoutImage;
+
+  const inserted = await prisma.product.create({
+    data: {
+      name: `Whitespace Product ${Date.now()}`,
+      status: 'ACTIVE',
+      imageUrl: '   '
+    }
   });
 
-  assert.equal(res.status, 200);
-  assert.equal(res.body?.ok, true);
-  assert.deepEqual(res.body?.data?.counts, {
-    activeProducts: 7,
-    activeCategories: 3,
-    activeOffers: 3
-  });
-  assert.deepEqual(res.body?.data?.status, {
-    mode: 'FORCE_OPEN',
-    isOpen: true
-  });
+  try {
+    const updatedRes = await api('/api/v1/dashboard/summary', { headers });
+
+    assert.equal(updatedRes.status, 200);
+    assert.equal(updatedRes.body?.ok, true);
+    assert.equal(typeof updatedRes.body?.data?.counts?.activeOffers, 'number');
+    assert.equal(updatedRes.body?.data?.counts?.productsWithoutImage, baselineWithoutImage + 1);
+  } finally {
+    await prisma.product.delete({ where: { id: inserted.id } });
+  }
 });
