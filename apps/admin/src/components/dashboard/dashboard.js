@@ -153,20 +153,38 @@ async function loadDashboardData() {
   const summary = response?.data || {};
 
   const mode = normalizeMode(summary?.status?.mode);
-  const isOpen = resolveIsOpen(mode, summary?.status?.isOpen);
+  const isOpen = resolveIsOpen(mode, summary?.business?.isOpen ?? summary?.status?.isOpen);
 
   const counts = summary?.counts || {};
   const products = toNumberNonNegative(counts.activeProducts);
   const categories = toNumberNonNegative(counts.activeCategories);
-  const onSale = toNumberNonNegative(counts.activeOffers);
+  const activeOffers = toNumberNonNegative(counts.activeOffers);
+  const productsWithoutImage = toNumberNonNegative(counts.productsWithoutImage);
+  const activityItems = Array.isArray(summary?.activity?.items) ? summary.activity.items : [];
+  const nextChangeAt = parseGeneratedAt(summary?.business?.nextChangeAt);
+  const offerPercent = toNullablePercent(summary?.insights?.offerPercent);
   const generatedAt = parseGeneratedAt(summary?.meta?.generatedAt);
 
   return {
     mode,
     isOpen,
+    nextChangeAt,
+    activityItems,
+    insights: {
+      offerPercent,
+      activeOffers,
+      productsWithoutImage,
+    },
     generatedAt,
-    kpis: { products, categories, onSale }, // Auditoría eliminada: sin colección de actividad
+    kpis: { products, categories, onSale: activeOffers },
   };
+}
+
+function toNullablePercent(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const n = Number(value);
+  if (!Number.isFinite(n)) return null;
+  return Math.max(0, Math.round(n));
 }
 
 function parseGeneratedAt(value) {
@@ -202,7 +220,119 @@ function toNumberNonNegative(n) {
 function renderAll(data) {
   renderHeaderInfo(data);
   renderKpis(data.kpis, data.mode, data.isOpen);
-  renderQuickActions(); // Auditoría eliminada: ya no se pinta actividad reciente
+  renderQuickActions();
+  renderLowerPanels(data);
+}
+
+function renderLowerPanels(data) {
+  renderActivityPanel(data.activityItems);
+  renderBusinessPanel(data.isOpen, data.nextChangeAt);
+  renderTipsPanel(data);
+  renderInsightsPanel(data.insights);
+}
+
+function renderActivityPanel(items) {
+  const listEl = document.getElementById('dashboard-activity-list');
+  const emptyEl = document.getElementById('dashboard-activity-empty');
+  if (!listEl || !emptyEl) return;
+
+  const normalizedItems = Array.isArray(items) ? items.slice(0, 5) : [];
+  listEl.innerHTML = '';
+
+  if (normalizedItems.length === 0) {
+    listEl.hidden = true;
+    emptyEl.hidden = false;
+    return;
+  }
+
+  const frag = document.createDocumentFragment();
+  normalizedItems.forEach((item) => {
+    const li = document.createElement('li');
+    li.textContent = formatActivityItem(item);
+    frag.appendChild(li);
+  });
+
+  listEl.appendChild(frag);
+  listEl.hidden = false;
+  emptyEl.hidden = true;
+}
+
+function formatActivityItem(item) {
+  if (typeof item === 'string') return item;
+  if (!item || typeof item !== 'object') return 'Actividad registrada.';
+
+  const label = String(item.label || item.title || item.message || item.action || '').trim();
+  const when = formatLocalDate(item.createdAt || item.at || item.timestamp);
+  if (label && when) return `${label} (${when})`;
+  return label || when || 'Actividad registrada.';
+}
+
+function renderBusinessPanel(isOpen, nextChangeAt) {
+  const badgeEl = document.getElementById('dashboard-business-badge');
+  const nextChangeEl = document.getElementById('dashboard-business-nextchange');
+  const settingsBtn = document.querySelector('.dashboard__business-settings');
+  if (badgeEl) {
+    badgeEl.textContent = isOpen === true ? 'Abierto' : isOpen === false ? 'Cerrado' : '—';
+  }
+  if (nextChangeEl) {
+    const next = formatLocalDate(nextChangeAt);
+    nextChangeEl.textContent = next ? `Próximo cambio: ${next}` : 'Próximo cambio: —';
+  }
+  if (settingsBtn) {
+    settingsBtn.hidden = !FEATURE_SETTINGS;
+  }
+}
+
+function renderTipsPanel(data) {
+  const tipsEl = document.getElementById('dashboard-tips-list');
+  if (!tipsEl) return;
+
+  const productsWithoutImage = toNumberNonNegative(data?.insights?.productsWithoutImage);
+  const activeOffers = toNumberNonNegative(data?.insights?.activeOffers);
+  const isOpen = data?.isOpen;
+
+  const tips = [];
+  if (productsWithoutImage > 0) tips.push(`Revisar productos sin imagen (${productsWithoutImage})`);
+  if (activeOffers > 0) tips.push(`Revisar ofertas activas (${activeOffers})`);
+  if (isOpen === false) tips.push('Revisar horarios de atención');
+  if (tips.length === 0) tips.push('Todo en orden por ahora.');
+
+  tipsEl.innerHTML = '';
+  const frag = document.createDocumentFragment();
+  tips.forEach((tip) => {
+    const li = document.createElement('li');
+    li.textContent = tip;
+    frag.appendChild(li);
+  });
+  tipsEl.appendChild(frag);
+}
+
+function renderInsightsPanel(insights) {
+  const offerPercentEl = document.getElementById('dashboard-insights-offerpercent');
+  const activeOffersEl = document.getElementById('dashboard-insights-activeoffers');
+  const noImageEl = document.getElementById('dashboard-insights-noimage');
+  if (offerPercentEl) {
+    const offerPercent = insights?.offerPercent;
+    offerPercentEl.textContent = `% del catálogo en oferta: ${offerPercent === null ? '—' : `${offerPercent}%`}`;
+  }
+  if (activeOffersEl) {
+    activeOffersEl.textContent = `Ofertas activas: ${toNumberNonNegative(insights?.activeOffers)}`;
+  }
+  if (noImageEl) {
+    noImageEl.textContent = `Productos sin imagen: ${toNumberNonNegative(insights?.productsWithoutImage)}`;
+  }
+}
+
+function formatLocalDate(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return '';
+  return new Intl.DateTimeFormat('es-AR', {
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
 }
 
 function renderHeaderInfo(data) {
@@ -372,6 +502,11 @@ function mountBindings(root) {
         window.location.hash = qaBtn.dataset.link;
         return;
       }
+
+      const navBtn = t.closest('[data-link]');
+      if (navBtn?.dataset.link) {
+        window.location.hash = navBtn.dataset.link;
+      }
     },
     { passive: true },
   );
@@ -415,7 +550,9 @@ function setStatus(content, status, message = '') {
 function checkEmptyState(content, data) {
   if (!content) return;
   const noKpis = data.kpis.products + data.kpis.categories + data.kpis.onSale === 0;
-  if (noKpis) {
+  const hasBusiness = data.isOpen !== null;
+  const hasInsights = data.insights.offerPercent !== null || data.insights.productsWithoutImage > 0;
+  if (noKpis && !hasBusiness && !hasInsights) {
     setStatus(content, STATUS.EMPTY, 'No hay datos para mostrar en el panel.');
   }
 }

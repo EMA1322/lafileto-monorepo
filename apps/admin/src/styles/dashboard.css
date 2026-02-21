@@ -401,6 +401,49 @@
   display: none !important;
 }
 
+
+.dashboard__lower {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+}
+
+.dashboard__panel {
+  padding: var(--space-4);
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.dashboard__panel-title {
+  margin: 0;
+  font-size: var(--fs-h5);
+  color: var(--c-text);
+}
+
+.dashboard__panel-empty,
+.dashboard__business-nextchange {
+  margin: 0;
+  color: var(--c-text-muted);
+}
+
+.dashboard__activity-list,
+.dashboard__tips-list,
+.dashboard__insights-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: var(--space-1);
+}
+
+.dashboard__business-badge {
+  width: fit-content;
+}
+
+.dashboard__business-settings {
+  width: fit-content;
+}
+
 .skeleton--kpi {
   min-width: 3.8ch;
   height: 1.4rem;
@@ -452,6 +495,10 @@
 
   .dashboard__quick-list {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .dashboard__lower {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

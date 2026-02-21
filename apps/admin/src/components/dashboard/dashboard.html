@@ -166,6 +166,37 @@
 
         <p class="dashboard__quick-empty" hidden>No hay accesos disponibles.</p>
       </section>
+
+      <section class="dashboard__lower" aria-label="Resumen adicional">
+        <div class="card dashboard__panel dashboard__panel--activity">
+          <h3 class="dashboard__panel-title">Actividad reciente</h3>
+          <ul id="dashboard-activity-list" class="dashboard__activity-list" hidden></ul>
+          <p id="dashboard-activity-empty" class="dashboard__panel-empty">Todavía no hay actividad para mostrar.</p>
+        </div>
+
+        <div class="card dashboard__panel dashboard__panel--business">
+          <h3 class="dashboard__panel-title">Estado del negocio</h3>
+          <p id="dashboard-business-badge" class="c-pill c-pill--sm dashboard__business-badge">—</p>
+          <p id="dashboard-business-nextchange" class="dashboard__business-nextchange">Próximo cambio: —</p>
+          <button class="btn btn--outline btn--sm dashboard__business-settings" type="button" data-link="#settings">
+            Revisar configuración
+          </button>
+        </div>
+
+        <div class="card dashboard__panel dashboard__panel--tips">
+          <h3 class="dashboard__panel-title">Tips y checklist</h3>
+          <ul id="dashboard-tips-list" class="dashboard__tips-list"></ul>
+        </div>
+
+        <div class="card dashboard__panel dashboard__panel--insights">
+          <h3 class="dashboard__panel-title">Insights</h3>
+          <ul class="dashboard__insights-list">
+            <li id="dashboard-insights-offerpercent"></li>
+            <li id="dashboard-insights-activeoffers"></li>
+            <li id="dashboard-insights-noimage"></li>
+          </ul>
+        </div>
+      </section>
     </div>
   </section>
 </section>
