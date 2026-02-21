@@ -84,11 +84,13 @@ export function computeIsOpenFromHours(hoursConfig = {}) {
 
 export const dashboardService = {
   async getAdminSummary() {
-    const [activeProducts, activeCategories, offersByProduct, settings] = await Promise.all([
+    const [activeProducts, activeCategories, activeOffers, settings] = await Promise.all([
       prisma.product.count({ where: { status: 'ACTIVE' } }),
       prisma.category.count({ where: { active: true } }),
-      prisma.offer.groupBy({
-        by: ['productId']
+      prisma.offer.count({
+        where: {
+          product: { status: 'ACTIVE' }
+        }
       }),
       settingsService.getAdminSettings()
     ]);
@@ -100,7 +102,7 @@ export const dashboardService = {
       counts: {
         activeProducts,
         activeCategories,
-        activeOffers: offersByProduct.length
+        activeOffers
       },
       status: {
         mode,

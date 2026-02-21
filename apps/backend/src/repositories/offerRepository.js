@@ -36,8 +36,10 @@ export const offerRepository = {
     if (!productId) return null;
     return prisma.offer.findFirst({
       where: {
-        productId
-      }
+        productId,
+        ...buildOfferActiveWhere(now)
+      },
+      select: offerSelect
     });
   },
 
@@ -47,8 +49,10 @@ export const offerRepository = {
     }
     const rows = await prisma.offer.findMany({
       where: {
-        productId: { in: productIds }
-      }
+        productId: { in: productIds },
+        ...buildOfferActiveWhere(now)
+      },
+      select: offerSelect
     });
     const map = new Map();
     for (const row of rows) {
@@ -79,6 +83,14 @@ export const offerRepository = {
     const where = {
       ...(Object.keys(productWhere).length > 0 ? { product: productWhere } : {})
     };
+
+    if (activeOnly) {
+      const activeWhere = buildOfferActiveWhere(now);
+      where.product = {
+        ...(where.product ?? {}),
+        ...(activeWhere.product ?? {})
+      };
+    }
 
     const order = buildProductOrder(orderBy, orderDirection);
 
@@ -124,5 +136,10 @@ export const offerRepository = {
 };
 
 export function buildOfferActiveWhere(now = new Date()) {
-  return {};
+  void now;
+  return {
+    product: {
+      status: 'ACTIVE'
+    }
+  };
 }

@@ -35,12 +35,24 @@ export function applyDiscount(price, discountPct) {
   return roundCurrency(discounted);
 }
 
+export function isOfferActive(offer, now = new Date()) {
+  void now;
+  if (!offer) return false;
+
+  const productStatus =
+    offer?.productStatus ??
+    offer?.status ??
+    offer?.product?.status;
+
+  return typeof productStatus === 'string' && productStatus.toUpperCase() === 'ACTIVE';
+}
+
 export function buildOfferSummary(offer, price, { now } = {}) {
   const basePrice = roundCurrency(normalizePrice(price));
   const discountPercent = normalizeDiscountPercent(
     offer?.discountPercent ?? offer?.discountPct ?? undefined
   );
-  if (!offer || !discountPercent) {
+  if (!offer || !discountPercent || !isOfferActive(offer, now)) {
     return null;
   }
   const finalPrice = applyDiscount(basePrice, discountPercent);

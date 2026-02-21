@@ -3,7 +3,7 @@ import { offerRepository } from '../repositories/offerRepository.js';
 import { productRepository } from '../repositories/productRepository.js';
 import { sanitizeProduct } from './productService.js';
 import { normalizePage, normalizePageSize } from '../utils/pagination.js';
-import { buildOfferSummary, normalizeDiscountPercent } from '../utils/offers.js';
+import { buildOfferSummary, isOfferActive, normalizeDiscountPercent } from '../utils/offers.js';
 import { createError } from '../utils/errors.js';
 
 const DEFAULT_PAGE = 1;
@@ -47,7 +47,12 @@ function sanitizeOffer(row, { now, productFallback } = {}) {
       ? sanitizeProduct(productFallback)
       : null;
 
-  const summary = buildOfferSummary(row, product?.price ?? 0, { now: reference });
+  const offerForState = {
+    ...row,
+    ...(product ? { product } : {})
+  };
+  const isActive = isOfferActive(offerForState, reference);
+  const summary = buildOfferSummary(offerForState, product?.price ?? 0, { now: reference });
   const discountPercent = normalizeDiscountPercent(row.discountPct ?? row.discountPercent);
 
   return {
@@ -56,7 +61,7 @@ function sanitizeOffer(row, { now, productFallback } = {}) {
     discountPercent: discountPercent ?? null,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
-    isActive: summary?.isActive ?? false,
+    isActive,
     finalPrice: summary?.finalPrice ?? product?.price,
     product: product ?? undefined
   };

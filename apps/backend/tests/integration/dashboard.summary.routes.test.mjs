@@ -33,12 +33,12 @@ prisma.category.count = async ({ where = {} } = {}) => {
   return 0;
 };
 
-prisma.offer.groupBy = async ({ by = [] } = {}) => {
-  if (!Array.isArray(by) || !by.includes('productId')) {
-    throw new Error('groupBy dashboard summary must group by productId');
+prisma.offer.count = async ({ where = {} } = {}) => {
+  if (where?.product?.status !== 'ACTIVE') {
+    throw new Error('dashboard summary must count offers for ACTIVE products');
   }
 
-  return [{ productId: 'p-1' }, { productId: 'p-2' }, { productId: 'p-3' }];
+  return 3;
 };
 
 prisma.setting.findUnique = async ({ where = {} } = {}) => {
