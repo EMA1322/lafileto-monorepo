@@ -220,14 +220,14 @@ function renderHeaderInfo(data) {
 
   if (updatedEl) {
     const relativeTime = formatRelativeTime(data.generatedAt);
-    updatedEl.textContent = `Last updated: ${relativeTime || '—'}`;
+    updatedEl.textContent = `Última actualización: ${relativeTime || '—'}`;
   }
 
   if (miniGuideEl) {
     const products = toNumberNonNegative(data?.kpis?.products);
     const categories = toNumberNonNegative(data?.kpis?.categories);
     const onSale = toNumberNonNegative(data?.kpis?.onSale);
-    miniGuideEl.textContent = `Today you have ${products} active products, ${categories} categories, ${onSale} offers.`;
+    miniGuideEl.textContent = `Hoy tenés ${products} productos activos, ${categories} categorías, ${onSale} ofertas.`;
   }
 }
 
@@ -238,13 +238,14 @@ function formatRelativeTime(isoString, now = new Date()) {
 
   const diffMs = Math.max(0, now.getTime() - target.getTime());
   const diffMinutes = Math.floor(diffMs / 60000);
-  if (diffMinutes <= 0) return 'just now';
-  if (diffMinutes === 1) return '1 min ago';
-  if (diffMinutes < 60) return `${diffMinutes} min ago`;
+  if (diffMinutes <= 0) return 'recién';
+  if (diffMinutes < 60) return `hace ${diffMinutes} min`;
 
   const diffHours = Math.floor(diffMinutes / 60);
-  if (diffHours === 1) return '1 h ago';
-  return `${diffHours} h ago`;
+  if (diffHours < 24) return `hace ${diffHours} h`;
+
+  const diffDays = Math.floor(diffHours / 24);
+  return `hace ${diffDays} d`;
 }
 
 /** KPIs: escribe valores y badge de estado */
@@ -344,9 +345,9 @@ function mountBindings(root) {
         setRefreshButtonLoading(true);
         try {
           await reload({ throwOnError: true });
-          toast.success('Data updated');
+          toast.success('Datos actualizados');
         } catch {
-          toast.error('Could not refresh data');
+          toast.error('No se pudo actualizar. Reintentá.');
         } finally {
           MODULE.isRefreshing = false;
           setRefreshButtonLoading(false);
