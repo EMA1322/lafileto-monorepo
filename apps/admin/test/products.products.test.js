@@ -69,6 +69,7 @@ describe('admin products module', () => {
     const createButton = document.querySelector('#product-create');
     const toolbar = document.querySelector('#products-filters');
     const pageSizeSelect = document.querySelector('#filter-page-size');
+    const offerSelect = document.querySelector('#products-offer-filter');
     const table = document.querySelector('#products-table-wrapper table');
     const tableHeaders = Array.from(document.querySelectorAll('#products-table-wrapper thead th')).map((th) => th.textContent?.trim());
 
@@ -81,6 +82,7 @@ describe('admin products module', () => {
     expect(toolbar?.closest('.products__header')).toBeNull();
     expect(toolbar?.querySelector('.products__filters-group--actions #filter-clear')).not.toBeNull();
     expect(pageSizeSelect?.closest('.products__filters-group')).not.toBeNull();
+    expect(offerSelect?.closest('.products__filters-group')).not.toBeNull();
 
     expect(document.querySelector('#products-table-wrapper')?.classList.contains('table-wrapper')).toBe(true);
     expect(table?.classList.contains('data-table')).toBe(true);
@@ -121,6 +123,7 @@ describe('admin products module', () => {
         q: 'pizza',
         status: 'active',
         categoryId: 'cat-1',
+        offer: 'true',
         orderBy: 'name',
         orderDir: 'asc',
         pageSize: 10,

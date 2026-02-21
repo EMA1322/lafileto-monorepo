@@ -50,6 +50,13 @@ function sanitizeFilters(input = {}) {
     filters.status = uiStatus || 'all';
   }
 
+  const offerValue = typeof source.offer === 'string' ? source.offer.trim() : DEFAULT_FILTERS.offer;
+  if (offerValue === 'true' || offerValue === 'false') {
+    filters.offer = offerValue;
+  } else {
+    filters.offer = 'all';
+  }
+
   const priceMinRaw = source.priceMin;
   if (priceMinRaw !== '' && priceMinRaw !== null && priceMinRaw !== undefined) {
     const priceMinNum = Number(priceMinRaw);
@@ -165,6 +172,7 @@ export function parseFiltersFromHash(hashString = '') {
   if (params.has('q')) raw.q = params.get('q') || '';
   if (params.has('categoryId')) raw.categoryId = params.get('categoryId') || 'all';
   if (params.has('status')) raw.status = params.get('status') || 'all';
+  if (params.has('offer')) raw.offer = params.get('offer') || 'all';
   if (params.has('priceMin')) raw.priceMin = params.get('priceMin');
   if (params.has('priceMax')) raw.priceMax = params.get('priceMax');
   if (params.has('orderBy')) raw.orderBy = params.get('orderBy');
@@ -183,6 +191,9 @@ export function getFiltersQuery(filters = state.filters) {
   if (data.categoryId && data.categoryId !== 'all') params.set('categoryId', data.categoryId);
   if (FILTER_STATUS_VALUES.includes(data.status) && data.status !== 'all') {
     params.set('status', data.status);
+  }
+  if (data.offer === 'true' || data.offer === 'false') {
+    params.set('offer', data.offer);
   }
   if (data.priceMin !== '' && data.priceMin !== null && data.priceMin !== undefined) {
     params.set('priceMin', String(data.priceMin));

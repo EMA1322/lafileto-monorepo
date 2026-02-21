@@ -17,6 +17,7 @@ function getRefs(container) {
     searchInput: container.querySelector('#filter-q'),
     categorySelect: container.querySelector('#filter-category'),
     statusSelect: container.querySelector('#filter-status'),
+    offerSelect: container.querySelector('#products-offer-filter'),
     orderBySelect: container.querySelector('#filter-order-by'),
     orderDirSelect: container.querySelector('#filter-order-dir'),
     pageSizeSelect: container.querySelector('#filter-page-size'),
@@ -241,6 +242,9 @@ function renderFilters(snapshot, refs) {
   }
   if (refs.statusSelect) {
     refs.statusSelect.value = filters.status || 'all';
+  }
+  if (refs.offerSelect) {
+    refs.offerSelect.value = filters.offer || 'all';
   }
   if (refs.orderBySelect) {
     refs.orderBySelect.value = filters.orderBy || 'updatedAt';
