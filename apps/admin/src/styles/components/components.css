@@ -163,9 +163,87 @@
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
   }
+  .card--metric {
+    display: grid;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .card--action {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    text-align: left;
+    transition: border-color .2s ease, box-shadow .2s ease, transform .02s ease;
+  }
+  .card--action:hover {
+    border-color: color-mix(in srgb, var(--c-secondary) 32%, var(--c-border));
+    box-shadow: var(--shadow-md);
+  }
+  .card--action:active {
+    transform: translateY(1px);
+  }
+  .card--action:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 var(--ring-width) var(--ring-color), var(--shadow-md);
+  }
+  .card__meta {
+    margin: 0;
+    color: var(--c-text-muted);
+    font-size: var(--fs-base);
+    font-weight: var(--fw-medium);
+  }
+  .card__value {
+    margin: 0;
+    color: var(--c-text);
+    font-size: var(--fs-h3);
+    font-weight: var(--fw-bold);
+    line-height: 1.2;
+  }
+  .card__icon {
+    width: var(--space-9);
+    height: var(--space-9);
+    display: grid;
+    place-items: center;
+    color: var(--c-secondary);
+  }
   .card__header, .card__body, .card__footer { padding: var(--space-4); }
   .card__header { border-bottom: 1px solid var(--c-border); }
   .card__footer { border-top: 1px solid var(--c-border); }
+
+  @keyframes skeleton-shimmer {
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  .skeleton {
+    position: relative;
+    display: inline-block;
+    color: transparent;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background: var(--c-neutral-200);
+    user-select: none;
+  }
+  .skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+    animation: skeleton-shimmer 1.2s infinite;
+  }
+  .skeleton--pill {
+    min-width: 6ch;
+    height: 1.25rem;
+    border-radius: var(--radius-full);
+  }
+  .skeleton--text {
+    min-width: 10ch;
+    height: 1rem;
+  }
 
   /* ——— Badges ——— */
   .badge {
