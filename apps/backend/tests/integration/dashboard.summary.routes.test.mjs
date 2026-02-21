@@ -24,6 +24,10 @@ const nowSetting = {
 };
 
 prisma.product.count = async ({ where = {} } = {}) => {
+  if (Array.isArray(where.OR)) {
+    return 2;
+  }
+
   if (where.status === 'ACTIVE') return 7;
   return 0;
 };
@@ -162,11 +166,24 @@ test('GET /api/v1/dashboard/summary con dashboard:r => 200', async () => {
 
   assert.equal(res.status, 200);
   assert.equal(res.body?.ok, true);
-  assert.deepEqual(res.body?.data?.counts, {
-    activeProducts: 7,
-    activeCategories: 3,
-    activeOffers: 3
-  });
+  assert.equal(typeof res.body?.data?.meta?.generatedAt, 'string');
+  assert.equal(Number.isNaN(Date.parse(res.body?.data?.meta?.generatedAt)), false);
+
+  assert.equal(res.body?.data?.counts?.activeOffers, 3);
+  assert.equal(res.body?.data?.counts?.productsWithoutImage, 2);
+  assert.equal(res.body?.data?.counts?.activeProducts, 7);
+  assert.equal(res.body?.data?.counts?.activeCategories, 3);
+
+  assert.equal(res.body?.data?.insights?.offersActive, 3);
+  assert.equal(res.body?.data?.insights?.offerPercent, 42.9);
+
+  assert.equal(typeof res.body?.data?.business?.isOpen, 'boolean');
+  assert.equal(res.body?.data?.business?.isOpen, true);
+  assert.equal(res.body?.data?.business?.nextChangeAt, null);
+
+  assert.ok(Array.isArray(res.body?.data?.activity?.items));
+  assert.equal(res.body?.data?.activity?.note, 'Activity feed not implemented yet');
+
   assert.deepEqual(res.body?.data?.status, {
     mode: 'FORCE_OPEN',
     isOpen: true
