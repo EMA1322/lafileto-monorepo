@@ -13,7 +13,8 @@
  */
 
 import { ensureRbacLoaded, canRead, canWrite, canUpdate, canDelete } from '../../utils/rbac.js';
-import { showSnackbar } from '../../utils/snackbar.js';
+import { getCurrentUser } from '../../utils/auth.js';
+import { toast } from '../../utils/toast.js';
 import { safeText } from '../../utils/helpers.js';
 import { isFeatureEnabled } from '../../utils/featureFlags.js';
 import { apiFetch } from '../../utils/api.js';
@@ -24,6 +25,7 @@ import { apiFetch } from '../../utils/api.js';
 const MODULE = {
   firstRender: true, // Para enfocar el título tras la primera carga
   cache: null, // Guarda la última respuesta válida del summary
+  isRefreshing: false,
 };
 
 const FEATURE_SETTINGS = isFeatureEnabled(import.meta.env.VITE_FEATURE_SETTINGS);
@@ -114,7 +116,7 @@ export async function initDashboard() {
 // ===================================================================
 
 /** Dispara una recarga completa del tablero (con UI de loading). */
-async function reload() {
+async function reload({ throwOnError = false } = {}) {
   const root = getRoot();
   const content = getContent();
   if (!root) return;
@@ -141,6 +143,7 @@ async function reload() {
   } catch (err) {
     console.error('[dashboard] Error loading data:', err);
     setStatus(content, STATUS.ERROR, resolveErrorMessage(err));
+    if (throwOnError) throw err;
   }
 }
 
@@ -156,12 +159,20 @@ async function loadDashboardData() {
   const products = toNumberNonNegative(counts.activeProducts);
   const categories = toNumberNonNegative(counts.activeCategories);
   const onSale = toNumberNonNegative(counts.activeOffers);
+  const generatedAt = parseGeneratedAt(summary?.meta?.generatedAt);
 
   return {
     mode,
     isOpen,
+    generatedAt,
     kpis: { products, categories, onSale }, // Auditoría eliminada: sin colección de actividad
   };
+}
+
+function parseGeneratedAt(value) {
+  if (!value) return null;
+  const parsed = new Date(value);
+  return Number.isFinite(parsed.getTime()) ? parsed.toISOString() : null;
 }
 
 function normalizeMode(mode) {
@@ -189,8 +200,52 @@ function toNumberNonNegative(n) {
 
 /** Renderiza KPIs y accesos rápidos; sin bloques de auditoría. */
 function renderAll(data) {
+  renderHeaderInfo(data);
   renderKpis(data.kpis, data.mode, data.isOpen);
   renderQuickActions(); // Auditoría eliminada: ya no se pinta actividad reciente
+}
+
+function renderHeaderInfo(data) {
+  const user = getCurrentUser() || null;
+  const userNameEl = document.getElementById('dashboard-user-name');
+  const userRoleEl = document.getElementById('dashboard-user-role');
+  const updatedEl = document.getElementById('dashboard-last-updated');
+  const miniGuideEl = document.getElementById('dashboard-mini-guide');
+
+  const userName = String(user?.name || user?.fullName || user?.username || '').trim() || 'Admin';
+  const userRole = String(user?.roleName || user?.role?.name || user?.role || user?.roleId || '').trim() || 'Admin';
+
+  if (userNameEl) userNameEl.textContent = userName;
+  if (userRoleEl) userRoleEl.textContent = userRole;
+
+  if (updatedEl) {
+    const relativeTime = formatRelativeTime(data.generatedAt);
+    updatedEl.textContent = `Última actualización: ${relativeTime || '—'}`;
+  }
+
+  if (miniGuideEl) {
+    const products = toNumberNonNegative(data?.kpis?.products);
+    const categories = toNumberNonNegative(data?.kpis?.categories);
+    const onSale = toNumberNonNegative(data?.kpis?.onSale);
+    miniGuideEl.textContent = `Hoy tenés ${products} productos activos, ${categories} categorías, ${onSale} ofertas.`;
+  }
+}
+
+function formatRelativeTime(isoString, now = new Date()) {
+  if (!isoString) return '';
+  const target = new Date(isoString);
+  if (!Number.isFinite(target.getTime())) return '';
+
+  const diffMs = Math.max(0, now.getTime() - target.getTime());
+  const diffMinutes = Math.floor(diffMs / 60000);
+  if (diffMinutes <= 0) return 'recién';
+  if (diffMinutes < 60) return `hace ${diffMinutes} min`;
+
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) return `hace ${diffHours} h`;
+
+  const diffDays = Math.floor(diffHours / 24);
+  return `hace ${diffDays} d`;
 }
 
 /** KPIs: escribe valores y badge de estado */
@@ -285,9 +340,18 @@ function mountBindings(root) {
 
       // 1) Botón: Actualizar
       if (t.closest('#dashboard-refresh')) {
-        await reload();
-        // Opcional: si snackbar no existe en este build, el operador ?. evita errores.
-        showSnackbar?.('Dashboard actualizado', 'success', 1800);
+        if (MODULE.isRefreshing) return;
+        MODULE.isRefreshing = true;
+        setRefreshButtonLoading(true);
+        try {
+          await reload({ throwOnError: true });
+          toast.success('Datos actualizados');
+        } catch {
+          toast.error('No se pudo actualizar. Reintentá.');
+        } finally {
+          MODULE.isRefreshing = false;
+          setRefreshButtonLoading(false);
+        }
         return;
       }
 
@@ -311,6 +375,13 @@ function mountBindings(root) {
     },
     { passive: true },
   );
+}
+
+function setRefreshButtonLoading(isLoading) {
+  const refreshBtn = document.getElementById('dashboard-refresh');
+  if (!refreshBtn) return;
+  refreshBtn.classList.toggle('is-loading', isLoading);
+  refreshBtn.disabled = isLoading;
 }
 
 function setStatus(content, status, message = '') {

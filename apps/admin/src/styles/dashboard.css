@@ -40,9 +40,72 @@
   gap: var(--space-5);
 }
 
+
 .dashboard__header {
   margin-bottom: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
   text-align: left;
+}
+
+.dashboard__header-main {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.dashboard__welcome-row {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.dashboard__welcome {
+  margin: 0;
+  color: var(--c-text);
+  font-size: var(--fs-base);
+}
+
+.dashboard__updated,
+.dashboard__mini-guide {
+  margin: 0;
+  color: var(--c-text-muted);
+  font-size: var(--fs-sm);
+}
+
+.dashboard__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--space-2);
+}
+
+#dashboard-refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.dashboard__refresh-spinner {
+  width: 0.95rem;
+  height: 0.95rem;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+#dashboard-refresh.is-loading .dashboard__refresh-spinner {
+  opacity: 1;
+  animation: dashboard-spin 0.7s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #dashboard-refresh.is-loading .dashboard__refresh-spinner {
+    animation: none;
+  }
 }
 
 .dashboard__title {
@@ -59,13 +122,6 @@
   font-size: var(--fs-base);
 }
 
-.dashboard__toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: var(--space-2);
-  margin-bottom: var(--space-5);
-}
 
 .dashboard__state {
   place-items: center;
@@ -202,6 +258,18 @@
   height: 1.25rem;
 }
 
+@media (min-width: 768px) {
+  .dashboard__header {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+
+  .dashboard__toolbar {
+    justify-content: flex-end;
+  }
+}
+
 @media (min-width: 640px) {
   .dashboard__kpis {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -217,6 +285,10 @@
 @media (max-width: 640px) {
   .dashboard {
     padding: var(--space-4);
+  }
+
+  .dashboard__header {
+    gap: var(--space-2);
   }
 
   .dashboard__kpi {

@@ -8,11 +8,21 @@
 
   <!-- Header del dashboard -->
   <header class="dashboard__header container">
-    <h1 id="dashboard-title" class="dashboard__title">Panel general</h1>
+    <div class="dashboard__header-main">
+      <h1 id="dashboard-title" class="dashboard__title">Panel general</h1>
+      <div class="dashboard__welcome-row">
+        <p class="dashboard__welcome">Hola, <span id="dashboard-user-name">Admin</span></p>
+        <span class="c-pill c-pill--sm" id="dashboard-user-role">—</span>
+      </div>
+      <p class="dashboard__updated" id="dashboard-last-updated">Última actualización: —</p>
+      <p class="dashboard__mini-guide" id="dashboard-mini-guide">Hoy tenés 0 productos activos, 0 categorías, 0 ofertas.</p>
+    </div>
 
     <div class="dashboard__toolbar">
       <button id="dashboard-refresh" class="btn" aria-label="Actualizar datos del panel" type="button">
-        Actualizar
+        <span class="dashboard__refresh-spinner" aria-hidden="true"></span>
+        <span class="dashboard__refresh-label">Actualizar</span>
+        <span class="sr-only">Actualizando datos del panel</span>
       </button>
     </div>
   </header>
