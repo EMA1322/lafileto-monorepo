@@ -43,6 +43,30 @@
     --btn-color: #ffffff;
     --btn-border: color-mix(in srgb, var(--c-secondary), #000 18%);
   }
+  .btn--danger {
+    --btn-bg: var(--c-error);
+    --btn-color: var(--c-white);
+    --btn-border: color-mix(in srgb, var(--c-error), #000 18%);
+  }
+  .btn--danger:hover {
+    --btn-bg: color-mix(in srgb, var(--c-error), #000 10%);
+    --btn-border: color-mix(in srgb, var(--c-error), #000 26%);
+    filter: none;
+  }
+  .btn--danger:active {
+    --btn-bg: color-mix(in srgb, var(--c-error), #000 16%);
+    --btn-border: color-mix(in srgb, var(--c-error), #000 32%);
+  }
+  .btn--danger:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 var(--ring-width) var(--ring-color);
+  }
+  .btn--danger[aria-disabled="true"] {
+    opacity: .6;
+    cursor: not-allowed;
+    box-shadow: none;
+    pointer-events: none;
+  }
   .btn--outline {
     --btn-bg: transparent;
     --btn-color: var(--c-text);
