@@ -193,8 +193,8 @@ export function bindProductsBindings(container) {
       return;
     }
     if (action === 'toggle-status') {
-      if (!can('products', 'u')) {
-        showSnackbar('No tenés permisos para editar productos.', { type: 'warning' });
+      if (!can('products', 'changeStatus')) {
+        showSnackbar('No tenés permisos para cambiar el estado de productos.', { type: 'warning' });
         return;
       }
       const nextStatus = button.dataset.nextStatus || 'draft';

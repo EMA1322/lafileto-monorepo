@@ -71,7 +71,9 @@ function renderStatusToggle(item, pendingStatusIds = []) {
       data-next-status="${escapeHTML(nextApiStatus)}"
       aria-label="Cambiar estado de ${escapeHTML(item?.name ?? 'producto')}"
       ${isPending ? 'disabled aria-busy="true"' : ''}
-      data-rbac-action="update"
+      data-rbac-action="change-status"
+      data-rbac-hide
+      hidden
     >
       ${escapeHTML(isPending ? 'Guardando…' : label || getUiStatusLabel(uiStatus))}
     </button>

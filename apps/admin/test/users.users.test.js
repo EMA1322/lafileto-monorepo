@@ -22,6 +22,7 @@ describe('admin users module', () => {
   let renderUsersTable;
   let applyRBAC;
   let buildRolePermsMap;
+  let fetchRolePermissions;
 
   beforeEach(async () => {
     document.body.innerHTML = usersTemplate;
@@ -44,6 +45,7 @@ describe('admin users module', () => {
     ({ renderUsersTable } = await import('../src/components/users/users.render.table.js'));
     ({ applyRBAC } = await import('../src/components/users/viewRBAC.js'));
     ({ buildRolePermsMap } = await import('../src/components/users/helpers.js'));
+    ({ fetchRolePermissions } = stateModule);
 
     seedPermissions();
 
@@ -309,9 +311,43 @@ describe('admin users module', () => {
     const result = buildRolePermsMap(seed);
     expect(result).toEqual({
       admin: {
-        users: { r: true, w: true, u: true, d: false },
+        users: { r: true, w: true, u: true, d: false, changeStatus: false },
       },
     });
+  });
+
+
+  it('template de permisos incluye columna Change status', () => {
+    const headers = Array.from(document.querySelectorAll('#tpl-permissions-matrix thead th')).map((th) => th.textContent?.trim());
+    expect(headers).toEqual(['Módulo', 'R', 'W', 'U', 'D', 'Change status']);
+  });
+
+  it('fetchRolePermissions normaliza changeStatus y fallback undefined -> false', async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async (url) => ({
+      ok: true,
+      status: 200,
+      headers: new Headers({ 'Content-Type': 'application/json' }),
+      text: async () => JSON.stringify({
+        ok: true,
+        data: {
+          permissions: [
+            { moduleKey: 'products', r: true, w: true, u: true, d: false, changeStatus: true },
+            { moduleKey: 'users', r: true, w: false, u: false, d: false },
+          ],
+        },
+      }),
+    });
+
+    try {
+      const result = await fetchRolePermissions('role-admin');
+      expect(result).toEqual([
+        { moduleKey: 'products', r: true, w: true, u: true, d: false, changeStatus: true },
+        { moduleKey: 'users', r: true, w: false, u: false, d: false, changeStatus: false },
+      ]);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   });
 
   it('applyRBAC oculta pestaña de roles si no es admin', () => {

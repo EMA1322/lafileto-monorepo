@@ -11,7 +11,7 @@ function seedPermissions({ canWrite = true } = {}) {
   sessionStorage.setItem(
     'rbac.permMap',
     JSON.stringify({
-      products: { r: true, w: canWrite, u: true, d: true },
+      products: { r: true, w: canWrite, u: true, d: true, changeStatus: true },
     }),
   );
 }
@@ -161,6 +161,7 @@ describe('admin products module', () => {
     expect(statusToggle).not.toBeNull();
     expect(statusToggle?.textContent?.trim()).toBe('Activo');
     expect(statusToggle?.getAttribute('data-next-status')).toBe('draft');
+    expect(statusToggle?.getAttribute('data-rbac-action')).toBe('change-status');
 
     expect(document.querySelector('#products-meta')?.textContent).toBe('1–1 de 1 productos');
     expect(document.querySelector('#products-page-list button')?.textContent).toBe('1');

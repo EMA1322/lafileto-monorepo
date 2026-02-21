@@ -128,6 +128,7 @@ export function buildRolePermsMap(seed) {
         w: !!entry.w,
         u: !!entry.u,
         d: !!entry.d,
+        changeStatus: !!(entry.changeStatus ?? entry.change_status ?? entry['change-status']),
       };
     });
     return output;
@@ -144,6 +145,7 @@ export function buildRolePermsMap(seed) {
           w: !!perms.w,
           u: !!perms.u,
           d: !!perms.d,
+          changeStatus: !!(perms.changeStatus ?? perms.change_status ?? perms['change-status']),
         };
       });
     });

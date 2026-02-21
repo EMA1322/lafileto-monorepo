@@ -532,6 +532,7 @@ export async function fetchRolePermissions(roleId) {
     w: !!entry.w,
     u: !!entry.u,
     d: !!entry.d,
+    changeStatus: !!(entry.changeStatus ?? entry.change_status ?? entry['change-status']),
   }));
 }
 

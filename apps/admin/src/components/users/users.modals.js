@@ -367,6 +367,7 @@ export async function openPermissionsMatrixModal(role) {
           <td><input type="checkbox" data-perm="w" ${current.w ? "checked" : ""} /></td>
           <td><input type="checkbox" data-perm="u" ${current.u ? "checked" : ""} /></td>
           <td><input type="checkbox" data-perm="d" ${current.d ? "checked" : ""} /></td>
+          <td><input type="checkbox" data-perm="changeStatus" ${current.changeStatus ? "checked" : ""} /></td>
         </tr>
       `;
     })
@@ -383,7 +384,8 @@ export async function openPermissionsMatrixModal(role) {
         r: tr.querySelector('[data-perm="r"]').checked,
         w: tr.querySelector('[data-perm="w"]').checked,
         u: tr.querySelector('[data-perm="u"]').checked,
-        d: tr.querySelector('[data-perm="d"]').checked
+        d: tr.querySelector('[data-perm="d"]').checked,
+        changeStatus: tr.querySelector('[data-perm="changeStatus"]').checked,
       });
     });
 
