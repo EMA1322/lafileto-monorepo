@@ -33,9 +33,57 @@
     aria-busy="true"
     data-status="loading"
   >
-    <div class="dashboard__state dashboard__state--loading card card__body" id="dashboard-loading" role="status">
-      <span class="dashboard__spinner" aria-hidden="true"></span>
-      <p>Cargando resumen del panel…</p>
+    <div class="dashboard__state dashboard__state--loading" id="dashboard-loading" role="status">
+      <p class="dashboard__loading-copy">Cargando resumen del panel…</p>
+      <section class="dashboard__kpis" aria-hidden="true">
+        <article class="dashboard__kpi dashboard__kpi--products card card--metric">
+          <div class="dashboard__kpi-icon card__icon">
+            <span class="skeleton skeleton--pill">&nbsp;</span>
+          </div>
+          <p class="dashboard__kpi-label card__meta">
+            <span class="skeleton skeleton--kpi-label">&nbsp;</span>
+          </p>
+          <p class="dashboard__kpi-value card__value">
+            <span class="skeleton skeleton--kpi-value">&nbsp;</span>
+          </p>
+        </article>
+
+        <article class="dashboard__kpi dashboard__kpi--categories card card--metric">
+          <div class="dashboard__kpi-icon card__icon">
+            <span class="skeleton skeleton--pill">&nbsp;</span>
+          </div>
+          <p class="dashboard__kpi-label card__meta">
+            <span class="skeleton skeleton--kpi-label">&nbsp;</span>
+          </p>
+          <p class="dashboard__kpi-value card__value">
+            <span class="skeleton skeleton--kpi-value">&nbsp;</span>
+          </p>
+        </article>
+
+        <article class="dashboard__kpi dashboard__kpi--offers card card--metric">
+          <div class="dashboard__kpi-icon card__icon">
+            <span class="skeleton skeleton--pill">&nbsp;</span>
+          </div>
+          <p class="dashboard__kpi-label card__meta">
+            <span class="skeleton skeleton--kpi-label">&nbsp;</span>
+          </p>
+          <p class="dashboard__kpi-value card__value">
+            <span class="skeleton skeleton--kpi-value">&nbsp;</span>
+          </p>
+        </article>
+
+        <article class="dashboard__kpi dashboard__kpi--status card card--metric">
+          <div class="dashboard__kpi-icon card__icon">
+            <span class="skeleton skeleton--pill">&nbsp;</span>
+          </div>
+          <p class="dashboard__kpi-label card__meta">
+            <span class="skeleton skeleton--kpi-label">&nbsp;</span>
+          </p>
+          <p class="dashboard__kpi-value card__value">
+            <span class="skeleton skeleton--kpi-value">&nbsp;</span>
+          </p>
+        </article>
+      </section>
     </div>
 
     <div class="dashboard__state dashboard__state--error card card__body" id="dashboard-error" role="alert" hidden>
@@ -52,7 +100,7 @@
       <!-- 📊 KPIs (grid responsive) -->
       <section class="dashboard__kpis" aria-label="Indicadores clave">
         <!-- KPI: Productos -->
-        <article class="dashboard__kpi card card--metric" aria-labelledby="kpi-products-label">
+        <article class="dashboard__kpi dashboard__kpi--products card card--metric" aria-labelledby="kpi-products-label">
           <div class="dashboard__kpi-icon card__icon" aria-hidden="true">
             <svg width="28" height="28" viewBox="0 0 24 24" focusable="false">
               <path d="M3 7l9-4 9 4-9 4-9-4zm0 6l9 4 9-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path>
@@ -66,7 +114,7 @@
         </article>
 
         <!-- KPI: Categorías -->
-        <article class="dashboard__kpi card card--metric" aria-labelledby="kpi-categories-label">
+        <article class="dashboard__kpi dashboard__kpi--categories card card--metric" aria-labelledby="kpi-categories-label">
           <div class="dashboard__kpi-icon card__icon" aria-hidden="true">
             <svg width="28" height="28" viewBox="0 0 24 24" focusable="false">
               <path d="M4 6h16M4 12h10M4 18h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
@@ -79,7 +127,7 @@
         </article>
 
         <!-- KPI: En oferta -->
-        <article class="dashboard__kpi card card--metric" aria-labelledby="kpi-onsale-label">
+        <article class="dashboard__kpi dashboard__kpi--offers card card--metric" aria-labelledby="kpi-onsale-label">
           <div class="dashboard__kpi-icon card__icon" aria-hidden="true">
             <svg width="28" height="28" viewBox="0 0 24 24" focusable="false">
               <path d="M3 12l7-7 11 11-7 7L3 12z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path>
@@ -93,7 +141,7 @@
         </article>
 
         <!-- KPI: Estado -->
-        <article class="dashboard__kpi card card--metric" aria-labelledby="kpi-isopen-label">
+        <article class="dashboard__kpi dashboard__kpi--status card card--metric" aria-labelledby="kpi-isopen-label">
           <div class="dashboard__kpi-icon card__icon" aria-hidden="true">
             <svg width="28" height="28" viewBox="0 0 24 24" focusable="false">
               <path d="M4 12l4 4 12-12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
