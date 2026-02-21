@@ -125,7 +125,8 @@ export const productListQuerySchema = z
     orderBy: orderByParam,
     orderDir: orderDirParam,
     orderDirection: orderDirectionParam,
-    all: boolishOptional.transform((val) => val ?? false)
+    all: boolishOptional.transform((val) => val ?? false),
+    hasOffer: boolishOptional
   })
   .passthrough()
   .transform((values) => ({
@@ -139,7 +140,8 @@ export const productListQuerySchema = z
     orderBy: values.orderBy,
     orderDir: values.orderDir,
     orderDirection: values.orderDirection,
-    all: values.all
+    all: values.all,
+    hasOffer: values.hasOffer
   }));
 
 const nameSchema = z
