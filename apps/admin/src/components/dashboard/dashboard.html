@@ -1,6 +1,6 @@
 <!-- Módulo Dashboard (fragmento que inyecta el router en #app) -->
 <!-- Code-splitting: el CSS del módulo se carga aquí -->
-<link rel="stylesheet" href="/src/styles/dashboard.css" />
+<link rel="stylesheet" href="/src/styles/dashboard.css" data-dashboard-style="true" />
 
 <section class="dashboard" aria-labelledby="dashboard-title">
   <!-- Región para anuncios de estado accesibles (lectores de pantalla) -->
@@ -169,13 +169,28 @@
 
       <section class="dashboard__lower" aria-label="Resumen adicional">
         <div class="card dashboard__panel dashboard__panel--activity">
-          <h3 class="dashboard__panel-title">Actividad reciente</h3>
+          <h3 class="dashboard__panel-title">
+            <span class="dashboard__panel-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" focusable="false">
+                <path d="M20 10l-8 8-9-9V3h6l11 11z" fill="none" stroke="currentColor" stroke-width="2"></path>
+                <circle cx="7.5" cy="7.5" r="1.5" fill="currentColor"></circle>
+              </svg>
+            </span>
+            <span>Actividad reciente</span>
+          </h3>
           <ul id="dashboard-activity-list" class="dashboard__activity-list" hidden></ul>
           <p id="dashboard-activity-empty" class="dashboard__panel-empty">Todavía no hay actividad para mostrar.</p>
         </div>
 
         <div class="card dashboard__panel dashboard__panel--business">
-          <h3 class="dashboard__panel-title">Estado del negocio</h3>
+          <h3 class="dashboard__panel-title">
+            <span class="dashboard__panel-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" focusable="false">
+                <path d="M4 12l4 4 12-12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+              </svg>
+            </span>
+            <span>Estado del negocio</span>
+          </h3>
           <p id="dashboard-business-badge" class="c-pill c-pill--sm dashboard__business-badge">—</p>
           <p id="dashboard-business-nextchange" class="dashboard__business-nextchange">Próximo cambio: —</p>
           <button class="btn btn--outline btn--sm dashboard__business-settings" type="button" data-link="#settings">
@@ -184,12 +199,27 @@
         </div>
 
         <div class="card dashboard__panel dashboard__panel--tips">
-          <h3 class="dashboard__panel-title">Tips y checklist</h3>
+          <h3 class="dashboard__panel-title">
+            <span class="dashboard__panel-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" focusable="false">
+                <path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+              </svg>
+            </span>
+            <span>Tips y checklist</span>
+          </h3>
           <ul id="dashboard-tips-list" class="dashboard__tips-list"></ul>
         </div>
 
         <div class="card dashboard__panel dashboard__panel--insights">
-          <h3 class="dashboard__panel-title">Insights</h3>
+          <h3 class="dashboard__panel-title">
+            <span class="dashboard__panel-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" focusable="false">
+                <path d="M3 7l9-4 9 4-9 4-9-4zm0 6l9 4 9-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path>
+                <path d="M3 7v10l9 4 9-4V7" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path>
+              </svg>
+            </span>
+            <span>Insights</span>
+          </h3>
           <ul class="dashboard__insights-list">
             <li id="dashboard-insights-offerpercent"></li>
             <li id="dashboard-insights-activeoffers"></li>

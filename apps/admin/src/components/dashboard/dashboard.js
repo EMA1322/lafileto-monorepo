@@ -133,6 +133,7 @@ async function reload({ throwOnError = false } = {}) {
     if (content?.dataset.status === STATUS.EMPTY) {
       announceStatus('No hay datos para mostrar en el panel.');
     } else {
+      await ensureDashboardStylesReady();
       setStatus(content, STATUS.SUCCESS, 'Datos actualizados.');
     }
 
@@ -176,6 +177,9 @@ async function loadDashboardData() {
       productsWithoutImage,
     },
     generatedAt,
+    businessSnapshot: {
+      isOpen,
+    },
     kpis: { products, categories, onSale: activeOffers },
   };
 }
@@ -225,28 +229,30 @@ function renderAll(data) {
 }
 
 function renderLowerPanels(data) {
-  renderActivityPanel(data.activityItems);
+  renderActivityPanel(data.activityItems, data);
   renderBusinessPanel(data.isOpen, data.nextChangeAt);
   renderTipsPanel(data);
   renderInsightsPanel(data.insights);
 }
 
-function renderActivityPanel(items) {
+function renderActivityPanel(items, data) {
   const listEl = document.getElementById('dashboard-activity-list');
   const emptyEl = document.getElementById('dashboard-activity-empty');
   if (!listEl || !emptyEl) return;
 
   const normalizedItems = Array.isArray(items) ? items.slice(0, 5) : [];
+  const fallbackItems = buildActivityFallbackItems(data);
+  const displayItems = normalizedItems.length > 0 ? normalizedItems : fallbackItems;
   listEl.innerHTML = '';
 
-  if (normalizedItems.length === 0) {
+  if (displayItems.length === 0) {
     listEl.hidden = true;
     emptyEl.hidden = false;
     return;
   }
 
   const frag = document.createDocumentFragment();
-  normalizedItems.forEach((item) => {
+  displayItems.forEach((item) => {
     const li = document.createElement('li');
     li.textContent = formatActivityItem(item);
     frag.appendChild(li);
@@ -265,6 +271,21 @@ function formatActivityItem(item) {
   const when = formatLocalDate(item.createdAt || item.at || item.timestamp);
   if (label && when) return `${label} (${when})`;
   return label || when || 'Actividad registrada.';
+}
+
+function buildActivityFallbackItems(data) {
+  const fallbackItems = [];
+  const generatedAt = formatLocalDate(data?.generatedAt);
+  const isOpen = data?.businessSnapshot?.isOpen;
+  const activeOffers = toNumberNonNegative(data?.insights?.activeOffers);
+
+  if (generatedAt) fallbackItems.push(`Panel actualizado: ${generatedAt}`);
+  if (isOpen === true || isOpen === false) {
+    fallbackItems.push(`Estado del negocio: ${isOpen ? 'Abierto' : 'Cerrado'}`);
+  }
+  fallbackItems.push(`Ofertas activas: ${activeOffers}`);
+
+  return fallbackItems.slice(0, 3);
 }
 
 function renderBusinessPanel(isOpen, nextChangeAt) {
@@ -587,6 +608,19 @@ function resolveErrorMessage(error) {
   if (error.status === 401) return 'Tu sesión expiró. Iniciá sesión nuevamente para continuar.';
   if (error.status === 403) return 'No tenés permisos para ver el panel general.';
   return error.message || 'Ocurrió un error al cargar el tablero. Intentá nuevamente.';
+}
+
+async function ensureDashboardStylesReady() {
+  const dashboardLink = document.querySelector('link[data-dashboard-style="true"]');
+  if (!dashboardLink) return;
+  if (dashboardLink.sheet) return;
+
+  await new Promise((resolve) => {
+    const done = () => resolve();
+    dashboardLink.addEventListener('load', done, { once: true });
+    dashboardLink.addEventListener('error', done, { once: true });
+    window.setTimeout(done, 180);
+  });
 }
 
 /** Verifica si la ruta existe en el router actual (listado local). */
