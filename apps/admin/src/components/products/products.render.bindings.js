@@ -28,6 +28,7 @@ function getRefs(container) {
     searchInput: container.querySelector('#filter-q'),
     categorySelect: container.querySelector('#filter-category'),
     statusSelect: container.querySelector('#filter-status'),
+    offerSelect: container.querySelector('#products-offer-filter'),
     orderBySelect: container.querySelector('#filter-order-by'),
     orderDirSelect: container.querySelector('#filter-order-dir'),
     pageSizeSelect: container.querySelector('#filter-page-size'),
@@ -89,6 +90,13 @@ export function bindProductsBindings(container) {
 
   attach(refs.statusSelect, 'change', (event) => {
     setFilters({ status: event.target.value || 'all' });
+    setPage(1);
+    notify(container);
+    void reloadProducts(container);
+  }, listeners);
+
+  attach(refs.offerSelect, 'change', (event) => {
+    setFilters({ offer: event.target.value || 'all' });
     setPage(1);
     notify(container);
     void reloadProducts(container);

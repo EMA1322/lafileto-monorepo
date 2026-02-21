@@ -37,6 +37,7 @@ export const DEFAULT_FILTERS = {
   q: '',
   categoryId: 'all',
   status: 'all',
+  offer: 'all',
   priceMin: '',
   priceMax: '',
   orderBy: 'updatedAt',
@@ -65,6 +66,12 @@ export function buildQuery(filters = {}) {
     } else if (STATUS_VALUES.includes(source.status)) {
       params.status = source.status;
     }
+  }
+
+  if (source.offer === 'true') {
+    params.hasOffer = 'true';
+  } else if (source.offer === 'false') {
+    params.hasOffer = 'false';
   }
 
   const rawMin = source.priceMin;

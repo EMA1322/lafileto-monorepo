@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 
 import {
+  buildQuery,
   mapProductFromApi,
   resolveOfferPricing,
 } from '../src/components/products/products.helpers.js';
@@ -63,6 +64,18 @@ function testOfferValidation() {
   assert.equal(valid.payload.discountPercent, 10);
 }
 
+
+function testBuildQueryOfferFilter() {
+  const all = buildQuery({ offer: 'all' });
+  assert.equal(Object.hasOwn(all, 'hasOffer'), false);
+
+  const onSale = buildQuery({ offer: 'true' });
+  assert.equal(onSale.hasOffer, 'true');
+
+  const noOffer = buildQuery({ offer: 'false' });
+  assert.equal(noOffer.hasOffer, 'false');
+}
+
 function testOfferPricingFromSummary() {
   const product = {
     price: 200,
@@ -82,5 +95,6 @@ function testOfferPricingFromSummary() {
 export function runProductsContractTests() {
   testProductMapping();
   testOfferValidation();
+  testBuildQueryOfferFilter();
   testOfferPricingFromSummary();
 }
