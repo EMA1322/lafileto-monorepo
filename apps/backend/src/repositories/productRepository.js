@@ -44,7 +44,7 @@ export function buildProductOrder(orderBy = 'name', orderDirection = 'asc') {
   return { [field]: direction };
 }
 
-export function buildProductWhere({ q, status, categoryId, priceMin, priceMax } = {}) {
+export function buildProductWhere({ q, status, categoryId, priceMin, priceMax, hasOffer } = {}) {
   const where = {};
 
   const normalizedStatus = normalizeStatus(status);
@@ -71,6 +71,12 @@ export function buildProductWhere({ q, status, categoryId, priceMin, priceMax } 
   }
   if (Object.keys(priceFilter).length > 0) {
     where.price = priceFilter;
+  }
+
+  if (hasOffer === true) {
+    where.offer = { isNot: null };
+  } else if (hasOffer === false) {
+    where.offer = { is: null };
   }
 
   const normalizedQuery = typeof q === 'string' ? q.trim() : '';
@@ -121,9 +127,10 @@ export const productRepository = {
     priceMax,
     orderBy,
     orderDirection,
-    all = false
+    all = false,
+    hasOffer
   }) {
-    const where = buildProductWhere({ q, status, categoryId, priceMin, priceMax });
+    const where = buildProductWhere({ q, status, categoryId, priceMin, priceMax, hasOffer });
     const order = buildProductOrder(orderBy, orderDirection);
 
     if (all) {

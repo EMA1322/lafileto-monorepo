@@ -209,7 +209,8 @@ productRepository.list = async function list({
   priceMax,
   orderBy = 'name',
   orderDirection = 'asc',
-  all = false
+  all = false,
+  hasOffer
 } = {}) {
   const normalizedPage = Number.isInteger(page) && page > 0 ? page : 1;
   const normalizedPageSize = Number.isInteger(pageSize) && pageSize > 0 ? pageSize : 10;
@@ -244,6 +245,12 @@ productRepository.list = async function list({
 
   if (Number.isFinite(priceMax)) {
     filtered = filtered.filter((item) => item.price <= priceMax);
+  }
+
+  if (hasOffer === true) {
+    filtered = filtered.filter((item) => findOfferByProductId(item.id));
+  } else if (hasOffer === false) {
+    filtered = filtered.filter((item) => !findOfferByProductId(item.id));
   }
 
   const ordered = sortProducts(filtered, orderBy, orderDirection);
@@ -727,6 +734,76 @@ test('GET /products?status=inactive incluye draft y archived', async () => {
   assert.equal(res.body?.data?.items?.length, 2);
   const statuses = res.body?.data?.items?.map((item) => item.status).sort();
   assert.deepEqual(statuses, ['archived', 'draft']);
+});
+
+
+test('GET /products?hasOffer=true incluye solo productos con offer', async () => {
+  const req = {
+    validated: {
+      query: {
+        page: 1,
+        pageSize: 10,
+        q: undefined,
+        status: 'all',
+        categoryId: undefined,
+        priceMin: undefined,
+        priceMax: undefined,
+        orderBy: 'name',
+        orderDir: 'asc',
+        orderDirection: undefined,
+        all: false,
+        hasOffer: true
+      }
+    }
+  };
+  const res = createResponse();
+  let error = null;
+
+  await productsController.list(req, res, (err) => {
+    error = err;
+  });
+
+  assert.equal(error, null);
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body?.ok, true);
+  const ids = res.body?.data?.items?.map((item) => item.id) ?? [];
+  assert.ok(ids.includes('prod-001'));
+  assert.ok(!ids.includes('prod-006'));
+});
+
+test('GET /products?hasOffer=false incluye solo productos sin offer y combina status', async () => {
+  const req = {
+    validated: {
+      query: {
+        page: 1,
+        pageSize: 10,
+        q: undefined,
+        status: 'active',
+        categoryId: undefined,
+        priceMin: undefined,
+        priceMax: undefined,
+        orderBy: 'name',
+        orderDir: 'asc',
+        orderDirection: undefined,
+        all: false,
+        hasOffer: false
+      }
+    }
+  };
+  const res = createResponse();
+  let error = null;
+
+  await productsController.list(req, res, (err) => {
+    error = err;
+  });
+
+  assert.equal(error, null);
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body?.ok, true);
+  const ids = res.body?.data?.items?.map((item) => item.id) ?? [];
+  assert.ok(ids.includes('prod-006'));
+  assert.ok(!ids.includes('prod-001'));
+  assert.ok(!ids.includes('prod-003'));
 });
 
 test('GET /products?q=pollo es case-insensitive', async () => {

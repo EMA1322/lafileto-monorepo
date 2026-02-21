@@ -155,7 +155,8 @@ export const productService = {
     orderBy,
     orderDir,
     orderDirection,
-    all
+    all,
+    hasOffer
   } = {}) {
     const normalizedSearch = typeof q === 'string' ? q.trim() : '';
     const normalizedStatus = normalizeStatusFilter(status);
@@ -178,7 +179,8 @@ export const productService = {
       status: normalizedStatus,
       categoryId: normalizedCategoryId.length > 0 ? normalizedCategoryId : undefined,
       priceMin: Number.isFinite(min) ? min : undefined,
-      priceMax: Number.isFinite(max) ? max : undefined
+      priceMax: Number.isFinite(max) ? max : undefined,
+      hasOffer: typeof hasOffer === 'boolean' ? hasOffer : undefined
     };
 
     const referenceNow = new Date();
