@@ -24,12 +24,22 @@ const nowSetting = {
 };
 
 prisma.product.count = async ({ where = {} } = {}) => {
-  if (Array.isArray(where.OR)) {
-    return 2;
-  }
-
   if (where.status === 'ACTIVE') return 7;
   return 0;
+};
+
+prisma.$queryRaw = async (sqlParts) => {
+  const sql = Array.isArray(sqlParts) ? sqlParts.join('?') : String(sqlParts || '');
+
+  if (!sql.includes('FROM Product')) {
+    throw new Error('dashboard summary must count productsWithoutImage from Product table');
+  }
+
+  if (!sql.includes('imageUrl IS NULL OR TRIM(imageUrl) =')) {
+    throw new Error('dashboard summary must include whitespace-safe imageUrl predicate');
+  }
+
+  return [{ count: '3' }];
 };
 
 prisma.category.count = async ({ where = {} } = {}) => {
@@ -170,7 +180,7 @@ test('GET /api/v1/dashboard/summary con dashboard:r => 200', async () => {
   assert.equal(Number.isNaN(Date.parse(res.body?.data?.meta?.generatedAt)), false);
 
   assert.equal(res.body?.data?.counts?.activeOffers, 3);
-  assert.equal(res.body?.data?.counts?.productsWithoutImage, 2);
+  assert.equal(res.body?.data?.counts?.productsWithoutImage, 3);
   assert.equal(res.body?.data?.counts?.activeProducts, 7);
   assert.equal(res.body?.data?.counts?.activeCategories, 3);
 

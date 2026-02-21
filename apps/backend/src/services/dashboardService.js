@@ -230,7 +230,7 @@ export function computeIsOpenFromHours(hoursConfig = {}) {
 
 export const dashboardService = {
   async getAdminSummary() {
-    const [activeProducts, activeCategories, activeOffers, productsWithoutImage, settings] = await Promise.all([
+    const [activeProducts, activeCategories, activeOffers, productsWithoutImageRows, settings] = await Promise.all([
       prisma.product.count({ where: { status: 'ACTIVE' } }),
       prisma.category.count({ where: { active: true } }),
       prisma.offer.count({
@@ -238,16 +238,15 @@ export const dashboardService = {
           product: { status: 'ACTIVE' }
         }
       }),
-      prisma.product.count({
-        where: {
-          OR: [
-            { imageUrl: null },
-            { imageUrl: '' }
-          ]
-        }
-      }),
+      prisma.$queryRaw`
+        SELECT COUNT(*) AS count
+        FROM Product
+        WHERE imageUrl IS NULL OR TRIM(imageUrl) = ''
+      `,
       settingsService.getAdminSettings()
     ]);
+
+    const productsWithoutImage = Number(productsWithoutImageRows?.[0]?.count ?? 0);
 
     const mode = settings?.hours?.override || AUTO;
     const businessStatus = getBusinessStatusFromHours(settings?.hours);
