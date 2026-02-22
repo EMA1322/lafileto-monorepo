@@ -10,7 +10,7 @@
   * { margin: 0; }
   html:focus-within { scroll-behavior: smooth; }
   html, body { height: 100%; }
-  body { line-height: var(--lh-base); -webkit-font-smoothing: antialiased; }
+  body { line-height: var(--lh-normal); -webkit-font-smoothing: antialiased; }
   img, picture, video, canvas, svg { display: block; max-width: 100%; }
   input, button, textarea, select { font: inherit; }
   p, h1, h2, h3, h4, h5, h6 { overflow-wrap: anywhere; }
@@ -26,6 +26,8 @@
   :root { font-size: var(--fs-base); }
   body {
     font-family: var(--font-sans);
+    font-size: var(--fs-md);
+    line-height: var(--lh-normal);
     color: var(--c-text);
     background: var(--c-bg);
   }
@@ -39,8 +41,12 @@
   h1, h2, h3, h4, h5, h6 {
     font-weight: var(--fw-semibold);
     color: var(--c-text);
-    line-height: 1.2;
+    line-height: var(--lh-tight);
     margin-bottom: var(--space-3);
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-display);
   }
   h1 { font-size: var(--fs-h1); }
   h2 { font-size: var(--fs-h2); }
