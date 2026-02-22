@@ -20,43 +20,56 @@ mod?.initMiModulo?.();
 
 ---
 
-## B) Tokens semánticos (PR12)
+## B) Contrato visual + mapeo de tokens (PR12)
 
-Usá **solo variables de `tokens.css`**, sin hex hardcodeados en módulos.
+Esta sección es el **contrato visual mandatorio** del Admin UI.
 
-### Tokens más usados (reales)
+### Reglas fijas (source of truth)
 
-- **Superficies y borde**: `--surface-0`, `--surface-1`, `--surface-2`, `--surface-hover`, `--border-soft`, `--border-strong`.
-- **Texto**: `--c-text`, `--c-text-muted`, `--text-subtle`.
-- **Estados**: `--c-success`, `--c-warning`, `--c-error`, `--c-secondary`.
-- **Spacing/radius/sombra**: `--space-1..8`, `--radius-sm/md/lg/full`, `--shadow-sm/md/lg`.
-- **Focus ring**: `--ring-width`, `--ring-color`, `--ring-offset`.
+1. **Los módulos NO definen colores base**. Se consumen tokens semánticos (`--surface-*`, `--border-*`, `--c-text`, `--c-text-muted`, etc.).
+2. **`components.css` es la fuente de verdad de primitives** (`.btn`, `.card`, `.modal`, `.toast`, `.tooltip`, `.view-state`).
+3. **CSS de módulo = layout/placement + overrides mínimos scoped** (`.products__*`, `.users__*`).
+4. **No duplicar primitives en módulos**: prohibido redefinir `.btn/.card/.modal/.toast/.tooltip/.view-state` localmente.
+5. **Siempre respetar `prefers-reduced-motion`**: nuevas animaciones deben usar guardas equivalentes a `shouldReduceMotion()` o media query.
 
-Snippet CSS copy/paste:
+### Mapeo real: primitivos -> semánticos
+
+- **Primitivos neutrales y marca**: `--c-neutral-*`, `--c-primary`, `--c-secondary`, `--c-success`, `--c-warning`, `--c-error`.
+- **Superficies semánticas**:
+  - `--surface-0` = fondo raíz (`--c-bg`)
+  - `--surface-1` = contenedor base (`--c-surface`)
+  - `--surface-2` = contenedor sutil (`--c-surface-muted`)
+  - `--surface-hover` y `--surface-elevated` = interacción/elevación
+- **Texto semántico**: `--c-text` (principal), `--text-subtle` (intermedio), `--c-text-muted` (secundario).
+- **Bordes semánticos**: `--border-soft` (divisor suave), `--border-strong` (separación marcada).
+- **Estado semántico**: `success/info/warning/error` usando `--c-success`, `--c-secondary`, `--c-warning`, `--c-error`.
 
 ```css
-.mi-modulo__panel {
+.products__panel {
   background: var(--surface-1);
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
-  padding: var(--space-4);
   color: var(--c-text);
 }
 
-.mi-modulo__btn:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 var(--ring-width) var(--ring-color);
+.products__panel:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-strong);
+}
+
+.products__hint {
+  color: var(--text-subtle);
 }
 ```
 
 ---
 
-## C) Componentes disponibles (UI kit real)
+## C) Componentes base mandatorios (UI kit real)
 
 > Preferí componer con estas clases antes de crear variantes nuevas.
 
-### Botones
+### Botones (`.btn`)
 
 - Base: `.btn`
 - Variantes: `.btn--primary`, `.btn--secondary`, `.btn--danger`, `.btn--outline`, `.btn--ghost`
@@ -67,7 +80,7 @@ Snippet CSS copy/paste:
 <button class="btn btn--ghost btn--sm" type="button">Cancelar</button>
 ```
 
-### Card
+### Card (`.card`)
 
 - Base: `.card`
 - Estructura: `.card__header`, `.card__body`, `.card__footer`
@@ -100,7 +113,7 @@ Snippet CSS copy/paste:
 </div>
 ```
 
-### Modal
+### Modal (`.modal`)
 
 - CSS global: `.modal`, `.modal.is-open`, `.modal__dialog`, `.modal__header`, `.modal__body`, `.modal__footer`, `.modal__title`
 - Servicio utilitario disponible: `openModal()` en `utils/modal.js`.
@@ -114,7 +127,7 @@ Snippet CSS copy/paste:
 </div>
 ```
 
-### Toast
+### Toast unificado (PR13)
 
 - Stack: `.toast-stack`
 - Item: `.toast`, `.toast--success|error|info|warning`, `.toast__message`, `.toast__close`
@@ -133,7 +146,7 @@ toast.success('Guardado correctamente');
 <span class="skeleton skeleton--text">Cargando</span>
 ```
 
-### Tooltip
+### Tooltip (Floating UI, PR20)
 
 - Trigger declarativo: `data-tooltip="..."` + opcional `data-tooltip-placement="top|bottom|left|right"`
 - Estilos: `.tooltip`, `.tooltip__content`
@@ -142,6 +155,29 @@ toast.success('Guardado correctamente');
 ```html
 <button class="btn btn--icon" data-tooltip="Actualizar" data-tooltip-placement="bottom">↻</button>
 ```
+
+### Íconos por sprite (PR17)
+
+- Declarativo: `data-icon="..."`.
+- Inicialización: `mountIcons(root)` resuelve `icons.svg#i-<name>`.
+
+```html
+<button class="btn btn--ghost btn--sm" type="button">
+  <svg class="icon icon--sm" data-icon="refresh" aria-hidden="true"><use></use></svg>
+  Refrescar
+</button>
+```
+
+### View-state (PR14)
+
+- Clases reales: `.view-state`, `.view-state--loading`, `.view-state--empty`, `.view-state__inner`, `.view-state__spinner`, `.view-state__title`, `.view-state__text`, `.view-state__actions`.
+- Para error se mantiene el mismo primitive con copy + CTA de reintento (sin crear otra librería paralela).
+
+### Fechas consistentes (PR18)
+
+- Utilidades: `formatShortDateTime()` y `formatRelative()` en `utils/dates.js` (locale `es`).
+- Fallback estándar para fecha inválida: `—`.
+- Regla: en tablas/cards del admin no formatear fechas "a mano".
 
 ---
 
@@ -243,10 +279,106 @@ function trapTabKey(event, root) {
 ## G) Convenciones BEM/scoping y anti-duplicación
 
 - **BEM por módulo**: `products__*`, `users__*`, `categories__*`, etc.
-- Reutilizable global va en `styles/components/components.css` (prefijos neutrales: `.btn`, `.card`, `.badge`, `.data-table`, `.view-state`, etc.).
+- Reutilizable global va en `styles/components/components.css` (prefijos neutrales: `.btn`, `.card`, `.badge`, `.data-table`, `.view-state`, `.toast`, `.tooltip`).
 - Estilos de módulo en su archivo (`styles/<modulo>.css`) sin redefinir tokens ni componentes base.
 - Evitar “double source of truth”: si existe `.btn--*`, no crear `.miModulo__btn--primary` con mismos estilos.
-- Mantener jerarquía de capas: tokens → base → components → css de módulo.
+- Mantener jerarquía de capas: `tokens -> base -> components -> css de módulo`.
+
+### Checklist anti-duplicación por módulo
+
+**Permitido (sí):**
+
+- Layout, grillas, spacing específico del dominio (`.products__filters`, `.users__toolbar`).
+- Composición de primitives (`.products__toolbar .btn { ... }`) con overrides mínimos y scoped.
+- Ajustes puntuales de anchura/orden/visibilidad por breakpoint del módulo.
+
+**No permitido (no):**
+
+- Copiar estilos de `.btn`, `.card`, `.modal`, `.toast`, `.tooltip`, `.view-state` en CSS de módulo.
+- Definir colores HEX/RGB directos para superficies y texto base.
+- Crear variantes paralelas (`.users__btn-primary`) que dupliquen las existentes.
+
+```css
+.products__toolbar {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: space-between;
+}
+
+.products__toolbar .btn--ghost {
+  min-width: 8rem;
+}
+
+/* NO: .products__btn-primary { background: #fdc300; ... } */
+```
+
+### Snippets copy/paste (10-25 líneas)
+
+#### 1) Button + tooltip + icon
+
+```html
+<button
+  class="btn btn--secondary btn--sm"
+  type="button"
+  data-tooltip="Recargar listado"
+  data-tooltip-placement="bottom"
+>
+  <svg class="icon icon--sm" data-icon="refresh" aria-hidden="true"><use></use></svg>
+  Recargar
+</button>
+
+<script type="module">
+  import { mountIcons } from '@/utils/icons.js';
+  import { initTooltips } from '@/utils/floating.js';
+  mountIcons(document);
+  initTooltips(document);
+</script>
+```
+
+#### 2) Card action
+
+```html
+<button class="card card--action" type="button">
+  <span class="card__icon">
+    <svg class="icon" data-icon="users" aria-hidden="true"><use></use></svg>
+  </span>
+  <span>
+    <p class="card__meta">Usuarios activos</p>
+    <p class="card__value">128</p>
+  </span>
+</button>
+```
+
+#### 3) Inline alert (placeholder actual)
+
+```html
+<div class="card" role="status" aria-live="polite">
+  <div class="card__body">
+    <p class="products__inline-alert">
+      Aún no existe primitive `.alert` global en `components.css`.
+      Usá `toast.info()` para feedback temporal o card scoped para mensajes persistentes.
+    </p>
+  </div>
+</div>
+```
+
+#### 4) View-state loading/empty
+
+```html
+<section class="view-state view-state--loading" role="status" aria-live="polite" aria-atomic="true">
+  <div class="view-state__inner view-state__inner--center">
+    <span class="view-state__spinner" aria-hidden="true"></span>
+    <p class="view-state__text">Cargando usuarios…</p>
+  </div>
+</section>
+
+<section class="view-state view-state--empty" aria-live="polite">
+  <div class="view-state__inner view-state__inner--center">
+    <p class="view-state__title">Sin resultados</p>
+    <p class="view-state__text">Probá ajustando filtros.</p>
+  </div>
+</section>
+```
 
 ---
 
