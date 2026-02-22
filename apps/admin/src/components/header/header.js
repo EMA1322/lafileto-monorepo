@@ -25,7 +25,7 @@ import notify from '@/utils/notify.js';
 import { openModal, closeModal } from '@/utils/modals.js';
 import { isFeatureEnabled } from '@/utils/featureFlags.js';
 import { getSettingsBrandLogoUrl } from '@/components/settings/settings.js';
-import { renderIcon } from '@/utils/icons.js';
+import { renderIcon, mountIcons } from '@/utils/icons.js';
 
 // ------------------------------
 // Feature flags livianos (build-time/cliente)
@@ -462,6 +462,7 @@ export async function initAdminHeader() {
 
   // Construir menú según RBAC + flags
   buildMenu();
+  mountIcons(refs.headerEl);
   renderAccountInfo();
   placeAccountBlock();
   renderBrandLogo();

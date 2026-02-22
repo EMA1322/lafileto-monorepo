@@ -18,7 +18,7 @@ import { toast } from '../../utils/toast.js';
 import { safeText } from '../../utils/helpers.js';
 import { isFeatureEnabled } from '../../utils/featureFlags.js';
 import { apiFetch } from '../../utils/api.js';
-import { renderIcon } from '../../utils/icons.js';
+import { renderIcon, mountIcons } from '../../utils/icons.js';
 
 // ---------------------------------------------
 // Estado interno del módulo (no persistente)
@@ -107,6 +107,8 @@ export async function initDashboard() {
     mountBindings(root);
     root.dataset.bound = 'true';
   }
+
+  mountIcons(root);
 
   // 4) Cargar/recargar datos del tablero
   await reload();

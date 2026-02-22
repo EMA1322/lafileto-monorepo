@@ -169,7 +169,11 @@ export function icon(name, { size = 'md', className = '', title } = {}) {
 }
 
 /**
- * Upgrades placeholder elements (e.g. <span data-icon="plus">) to inline SVGs.
+ * Resolves sprite hrefs for declarative icons ([data-icon]) in a BASE_URL-safe way.
+ * Supports:
+ * - <svg data-icon="name"><use></use></svg>
+ * - <svg><use data-icon="name"></use></svg>
+ * - legacy placeholders (e.g. <span data-icon="plus">) via inline fallback.
  * @param {ParentNode} [root=document] Root element to scan.
  */
 export function mountIcons(root = document) {
@@ -178,7 +182,26 @@ export function mountIcons(root = document) {
   if (!placeholders.length) return;
 
   placeholders.forEach((el) => {
-    const name = el.getAttribute('data-icon');
+    const elementName = el.getAttribute('data-icon');
+    const isSvg = el instanceof SVGElement && el.tagName.toLowerCase() === 'svg';
+    const isUse = el instanceof SVGElement && el.tagName.toLowerCase() === 'use';
+
+    if (isSvg || isUse) {
+      const name = (elementName || '').trim();
+      if (!name) return;
+      const href = getIconHref(name);
+      const useEl = isUse ? el : (el.querySelector('use') || el.appendChild(document.createElementNS('http://www.w3.org/2000/svg', 'use')));
+
+      if (useEl.getAttribute('href') !== href) {
+        useEl.setAttribute('href', href);
+      }
+      if (useEl.getAttributeNS('http://www.w3.org/1999/xlink', 'href') !== href) {
+        useEl.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', href);
+      }
+      return;
+    }
+
+    const name = elementName;
     if (!name) return;
 
     const sizeClass = Array.from(el.classList || []).find((cls) => cls.startsWith('icon--'));
