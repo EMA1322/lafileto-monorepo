@@ -21,6 +21,7 @@ import { apiFetch } from '../../utils/api.js';
 import { renderIcon, mountIcons } from '../../utils/icons.js';
 import { formatRelative, formatShortDateTime, safeParseISO } from '../../utils/dates.js';
 import { initTooltips } from '../../utils/floating.js';
+import { countUp } from '../../utils/motion.js';
 
 // ---------------------------------------------
 // Estado interno del módulo (no persistente)
@@ -385,9 +386,9 @@ function renderKpis(kpis, mode, isOpen) {
     state: document.getElementById('kpi-isopen-badge'),
   };
 
-  if (ids.products) ids.products.textContent = kpis.products;
-  if (ids.categories) ids.categories.textContent = kpis.categories;
-  if (ids.onSale) ids.onSale.textContent = kpis.onSale;
+  if (ids.products) countUp(ids.products, kpis.products);
+  if (ids.categories) countUp(ids.categories, kpis.categories);
+  if (ids.onSale) countUp(ids.onSale, kpis.onSale);
 
   if (ids.state) {
     const state = isOpen === true ? 'open' : isOpen === false ? 'closed' : 'unknown';
