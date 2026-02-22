@@ -309,11 +309,14 @@
   display: inline-flex;
 }
 
+/* Deprecated: .skeleton--kpi* is kept for backward compatibility; remove in PRXX. */
+.dashboard__kpi .dashboard__skeleton--kpi-value,
 .dashboard__kpi .skeleton--kpi-value {
   width: 4.2ch;
   height: 1.65rem;
 }
 
+.dashboard__kpi .dashboard__skeleton--kpi-label,
 .dashboard__kpi .skeleton--kpi-label {
   width: 12ch;
   height: 1.05rem;
@@ -517,6 +520,7 @@
   width: fit-content;
 }
 
+.dashboard__skeleton--kpi,
 .skeleton--kpi {
   min-width: 3.8ch;
   height: 1.4rem;
