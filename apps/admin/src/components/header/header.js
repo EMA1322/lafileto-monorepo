@@ -27,6 +27,7 @@ import { isFeatureEnabled } from '@/utils/featureFlags.js';
 import { getSettingsBrandLogoUrl } from '@/components/settings/settings.js';
 import { renderIcon, mountIcons } from '@/utils/icons.js';
 import { createFocusTrap } from 'focus-trap';
+import { initTooltips } from '@/utils/floating.js';
 
 // ------------------------------
 // Feature flags livianos (build-time/cliente)
@@ -223,6 +224,8 @@ function buildMenu() {
     li.setAttribute('data-module-key', item.key);
     li.setAttribute('data-rbac-module', item.key);
 
+    const tooltipAttr = item.key === 'settings' ? 'data-tooltip="Configuración" data-tooltip-placement="right"' : '';
+
     li.innerHTML = `
       <a
         href="${item.hash}"
@@ -231,6 +234,7 @@ function buildMenu() {
         data-rbac-action="read"
         data-rbac-hide
         hidden
+        ${tooltipAttr}
       >
         ${renderIcon(item.icon, 'icon header__nav-icon')}
         <span class="header__nav-text">${item.title}</span>
@@ -474,6 +478,7 @@ export async function initAdminHeader() {
   // Construir menú según RBAC + flags
   buildMenu();
   mountIcons(refs.headerEl);
+  initTooltips(refs.headerEl);
   renderAccountInfo();
   placeAccountBlock();
   renderBrandLogo();
