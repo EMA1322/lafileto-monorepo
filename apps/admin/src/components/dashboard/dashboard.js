@@ -18,6 +18,7 @@ import { toast } from '../../utils/toast.js';
 import { safeText } from '../../utils/helpers.js';
 import { isFeatureEnabled } from '../../utils/featureFlags.js';
 import { apiFetch } from '../../utils/api.js';
+import { renderIcon, mountIcons } from '../../utils/icons.js';
 
 // ---------------------------------------------
 // Estado interno del módulo (no persistente)
@@ -106,6 +107,8 @@ export async function initDashboard() {
     mountBindings(root);
     root.dataset.bound = 'true';
   }
+
+  mountIcons(root);
 
   // 4) Cargar/recargar datos del tablero
   await reload();
@@ -630,17 +633,12 @@ function routeExists(hash) {
 
 /** Construye un pequeño ícono SVG (decorativo) según el nombre. */
 function buildIcon(name) {
-  // Íconos simples en línea; aria-hidden para evitar ruido en lectores
-  switch (name) {
-    case 'box':
-      return `<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24"><path d="M3 7l9-4 9 4-9 4-9-4zm0 6l9 4 9-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M3 7v10l9 4 9-4V7" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>`;
-    case 'tags':
-      return `<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24"><path d="M20 10l-8 8-9-9V3h6l11 11z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="7.5" cy="7.5" r="1.5" fill="currentColor"/></svg>`;
-    case 'plus':
-      return `<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
-    case 'gear':
-      return `<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24"><path d="M12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm8 5l2 1-2 1a8 8 0 0 1-1 2l1 2-2 1-2-1a8 8 0 0 1-2 1l-1 2-2-2-2 2-1-2a8 8 0 0 1-2-1l-2 1-2-1 1-2a8 8 0 0 1-1-2l-2-1 2-1a8 8 0 0 1 1-2L2 8l2-1 2 1a8 8 0 0 1 2-1l1-2 2 2 2-2 1 2a8 8 0 0 1 2 1l2-1 2 1-1 2a8 8 0 0 1 1 2z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>`;
-    default:
-      return `<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="currentColor"/></svg>`;
-  }
+  const iconMap = {
+    box: 'box',
+    tags: 'tag',
+    plus: 'plus',
+    gear: 'settings',
+  };
+
+  return renderIcon(iconMap[name] || 'dashboard', 'icon', { ariaLabel: '' });
 }

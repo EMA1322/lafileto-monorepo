@@ -7,6 +7,7 @@
 const VALID_SIZES = new Set(['xs', 'sm', 'md', 'lg', 'xl']);
 
 const DEFAULT_STROKE_WIDTH = 1.5;
+const ICON_NAME_PATTERN = /^[a-z0-9-]+$/;
 
 function escapeHtml(value = '') {
   return String(value)
@@ -15,6 +16,33 @@ function escapeHtml(value = '') {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+function assertValidIconName(name) {
+  if (!ICON_NAME_PATTERN.test(String(name || ''))) {
+    throw new Error(`[icons] Invalid icon name: ${name}`);
+  }
+}
+
+export function getSpriteUrl() {
+  return `${import.meta.env.BASE_URL}icons.svg`;
+}
+
+export function getIconHref(name) {
+  assertValidIconName(name);
+  return `${getSpriteUrl()}#i-${name}`;
+}
+
+export function renderIcon(name, className = 'icon', opts = {}) {
+  const safeClassName = escapeHtml(className || 'icon');
+  const href = getIconHref(name);
+  const ariaLabel = typeof opts.ariaLabel === 'string' ? opts.ariaLabel.trim() : '';
+
+  if (ariaLabel) {
+    return `<svg class="${safeClassName}" role="img" aria-hidden="false" aria-label="${escapeHtml(ariaLabel)}"><use href="${href}"></use></svg>`;
+  }
+
+  return `<svg class="${safeClassName}" aria-hidden="true"><use href="${href}"></use></svg>`;
 }
 
 export const ICONS = {
@@ -141,7 +169,11 @@ export function icon(name, { size = 'md', className = '', title } = {}) {
 }
 
 /**
- * Upgrades placeholder elements (e.g. <span data-icon="plus">) to inline SVGs.
+ * Resolves sprite hrefs for declarative icons ([data-icon]) in a BASE_URL-safe way.
+ * Supports:
+ * - <svg data-icon="name"><use></use></svg>
+ * - <svg><use data-icon="name"></use></svg>
+ * - legacy placeholders (e.g. <span data-icon="plus">) via inline fallback.
  * @param {ParentNode} [root=document] Root element to scan.
  */
 export function mountIcons(root = document) {
@@ -150,7 +182,26 @@ export function mountIcons(root = document) {
   if (!placeholders.length) return;
 
   placeholders.forEach((el) => {
-    const name = el.getAttribute('data-icon');
+    const elementName = el.getAttribute('data-icon');
+    const isSvg = el instanceof SVGElement && el.tagName.toLowerCase() === 'svg';
+    const isUse = el instanceof SVGElement && el.tagName.toLowerCase() === 'use';
+
+    if (isSvg || isUse) {
+      const name = (elementName || '').trim();
+      if (!name) return;
+      const href = getIconHref(name);
+      const useEl = isUse ? el : (el.querySelector('use') || el.appendChild(document.createElementNS('http://www.w3.org/2000/svg', 'use')));
+
+      if (useEl.getAttribute('href') !== href) {
+        useEl.setAttribute('href', href);
+      }
+      if (useEl.getAttributeNS('http://www.w3.org/1999/xlink', 'href') !== href) {
+        useEl.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', href);
+      }
+      return;
+    }
+
+    const name = elementName;
     if (!name) return;
 
     const sizeClass = Array.from(el.classList || []).find((cls) => cls.startsWith('icon--'));
