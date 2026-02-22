@@ -28,6 +28,7 @@ import { getSettingsBrandLogoUrl } from '@/components/settings/settings.js';
 import { renderIcon, mountIcons } from '@/utils/icons.js';
 import { createFocusTrap } from 'focus-trap';
 import { initTooltips } from '@/utils/floating.js';
+import { t } from '@/utils/i18n.js';
 
 // ------------------------------
 // Feature flags livianos (build-time/cliente)
@@ -39,7 +40,7 @@ const FEATURE_SETTINGS = isFeatureEnabled(import.meta.env.VITE_FEATURE_SETTINGS)
 // (Se filtra por feature flags; RBAC visual decide visibilidad)
 // ------------------------------
 const NAV_MODULES = [
-  { key: 'dashboard', title: 'Dashboard', hash: '#dashboard', icon: 'dashboard' },
+  { key: 'dashboard', title: t('header.dashboardNav'), hash: '#dashboard', icon: 'dashboard' },
   { key: 'products', title: 'Productos', hash: '#products', icon: 'products' },
   { key: 'categories', title: 'Categorías', hash: '#categories', icon: 'categories' },
   { key: 'settings', title: 'Configuración', hash: '#settings', icon: 'settings' },
@@ -224,7 +225,7 @@ function buildMenu() {
     li.setAttribute('data-module-key', item.key);
     li.setAttribute('data-rbac-module', item.key);
 
-    const tooltipAttr = item.key === 'settings' ? 'data-tooltip="Configuración" data-tooltip-placement="right"' : '';
+    const tooltipAttr = item.key === 'settings' ? `data-tooltip="${t('common.settings')}" data-tooltip-placement="right"` : '';
 
     li.innerHTML = `
       <a
@@ -276,8 +277,8 @@ function updateNavEmptyState() {
   emptyStateItemEl.setAttribute('role', 'status');
   emptyStateItemEl.setAttribute('aria-live', 'polite');
   emptyStateItemEl.innerHTML = `
-    <span class="header__nav-empty-title">No navigation items available for your role.</span>
-    <a class="header__nav-empty-cta header__nav-link" href="#dashboard">Go to Dashboard</a>
+    <span class="header__nav-empty-title">${t('header.noNavItems')}</span>
+    <a class="header__nav-empty-cta header__nav-link" href="#dashboard">${t('header.goToDashboard')}</a>
   `;
 
   navListEl.appendChild(emptyStateItemEl);
@@ -357,7 +358,7 @@ function handleKeydown(e) {
 function handleLogout() {
   const html = `
     <div>
-      <p>¿Seguro que querés cerrar sesión?</p>
+      <p>${t('header.confirmLogout')}</p>
       <div style="display:flex; gap:.5rem; justify-content:flex-end; margin-top:1rem;">
         <button class="btn btn-secondary" data-close-modal>Cancelar</button>
         <button id="confirmLogoutBtn" class="btn">Cerrar sesión</button>
@@ -373,9 +374,9 @@ function handleLogout() {
         confirmBtn.disabled = true;
         await logout();
         closeModal();
-        notify('Sesión cerrada correctamente', 'success', 2400);
+        notify(t('header.logoutSuccess'), 'success', 2400);
       } catch {
-        notify('No se pudo cerrar sesión', 'error', 3000);
+        notify(t('header.logoutError'), 'error', 3000);
         confirmBtn.disabled = false;
       } finally {
         confirmBtn.removeEventListener('click', onConfirm);
@@ -411,7 +412,7 @@ function renderBrandLogo() {
   if (!refs.logoImageEl) {
     const brandImage = document.createElement('img');
     brandImage.className = 'header__brand-logo';
-    brandImage.alt = 'Admin brand logo';
+    brandImage.alt = t('header.brandLogoAlt');
     brandImage.loading = 'eager';
     brandImage.decoding = 'async';
 
@@ -443,7 +444,7 @@ function renderAccountInfo() {
   const nameValue = user?.name || user?.fullName || user?.username || user?.email || '';
   const roleValue = getUserRoleLabel(user);
 
-  refs.userNameEl.textContent = String(nameValue || '').trim() || 'User';
+  refs.userNameEl.textContent = String(nameValue || '').trim() || t('header.userFallback');
   refs.userRoleEl.textContent = roleValue || '—';
 }
 
