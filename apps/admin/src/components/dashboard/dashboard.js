@@ -20,6 +20,7 @@ import { isFeatureEnabled } from '../../utils/featureFlags.js';
 import { apiFetch } from '../../utils/api.js';
 import { renderIcon, mountIcons } from '../../utils/icons.js';
 import { formatRelative, formatShortDateTime, safeParseISO } from '../../utils/dates.js';
+import { initTooltips } from '../../utils/floating.js';
 
 // ---------------------------------------------
 // Estado interno del módulo (no persistente)
@@ -110,6 +111,7 @@ export async function initDashboard() {
   }
 
   mountIcons(root);
+  initTooltips(root);
 
   // 4) Cargar/recargar datos del tablero
   await reload();

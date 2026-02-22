@@ -535,6 +535,60 @@
     }
   }
 
+
+  /* ——— Tooltips (Floating UI) ——— */
+  .tooltip {
+    --tooltip-surface: var(--c-surface);
+    --tooltip-border: var(--c-border);
+    --tooltip-text: var(--c-text);
+    --tooltip-shadow: var(--shadow-md);
+    --tooltip-radius: var(--radius-md);
+
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 70;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(2px) scale(0.98);
+    animation: tooltip-fade-in .16s ease-out forwards;
+  }
+
+  .tooltip__content {
+    max-width: 260px;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--tooltip-radius);
+    border: 1px solid var(--tooltip-border);
+    background: var(--tooltip-surface);
+    color: var(--tooltip-text);
+    box-shadow: var(--tooltip-shadow);
+    font-size: var(--fs-sm, var(--fs-base));
+    line-height: var(--lh-normal, 1.4);
+  }
+
+  .tooltip__arrow {
+    display: none;
+  }
+
+  @keyframes tooltip-fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(2px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tooltip {
+      transform: none;
+      animation: none;
+      opacity: 1;
+    }
+  }
+
   /* ——— Layout: contenedor principal ——— */
   .page {
     padding-block: var(--space-6);
