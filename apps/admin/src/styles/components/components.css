@@ -305,6 +305,17 @@
   .view-state--loading .view-state__inner {
     background: color-mix(in srgb, var(--c-surface) 92%, transparent);
   }
+  .view-state--empty .view-state__inner {
+    border-color: color-mix(in srgb, var(--c-border) 96%, var(--c-secondary));
+    background: color-mix(in srgb, var(--c-surface) 82%, var(--c-surface-muted));
+    box-shadow: var(--shadow-md);
+  }
+  .view-state--empty .view-state__title {
+    color: var(--c-text);
+  }
+  .view-state--empty .view-state__text {
+    color: var(--c-text-muted);
+  }
 
   @keyframes view-state-spin {
     to {
