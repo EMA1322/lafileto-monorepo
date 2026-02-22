@@ -7,6 +7,7 @@
 const VALID_SIZES = new Set(['xs', 'sm', 'md', 'lg', 'xl']);
 
 const DEFAULT_STROKE_WIDTH = 1.5;
+const ICON_NAME_PATTERN = /^[a-z0-9-]+$/;
 
 function escapeHtml(value = '') {
   return String(value)
@@ -15,6 +16,33 @@ function escapeHtml(value = '') {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+function assertValidIconName(name) {
+  if (!ICON_NAME_PATTERN.test(String(name || ''))) {
+    throw new Error(`[icons] Invalid icon name: ${name}`);
+  }
+}
+
+export function getSpriteUrl() {
+  return `${import.meta.env.BASE_URL}icons.svg`;
+}
+
+export function getIconHref(name) {
+  assertValidIconName(name);
+  return `${getSpriteUrl()}#i-${name}`;
+}
+
+export function renderIcon(name, className = 'icon', opts = {}) {
+  const safeClassName = escapeHtml(className || 'icon');
+  const href = getIconHref(name);
+  const ariaLabel = typeof opts.ariaLabel === 'string' ? opts.ariaLabel.trim() : '';
+
+  if (ariaLabel) {
+    return `<svg class="${safeClassName}" role="img" aria-hidden="false" aria-label="${escapeHtml(ariaLabel)}"><use href="${href}"></use></svg>`;
+  }
+
+  return `<svg class="${safeClassName}" aria-hidden="true"><use href="${href}"></use></svg>`;
 }
 
 export const ICONS = {

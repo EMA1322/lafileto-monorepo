@@ -25,6 +25,7 @@ import notify from '@/utils/notify.js';
 import { openModal, closeModal } from '@/utils/modals.js';
 import { isFeatureEnabled } from '@/utils/featureFlags.js';
 import { getSettingsBrandLogoUrl } from '@/components/settings/settings.js';
+import { renderIcon } from '@/utils/icons.js';
 
 // ------------------------------
 // Feature flags livianos (build-time/cliente)
@@ -36,51 +37,11 @@ const FEATURE_SETTINGS = isFeatureEnabled(import.meta.env.VITE_FEATURE_SETTINGS)
 // (Se filtra por feature flags; RBAC visual decide visibilidad)
 // ------------------------------
 const NAV_MODULES = [
-  {
-    key: 'dashboard',
-    title: 'Dashboard',
-    hash: '#dashboard',
-    svg: `
-      <svg viewBox="0 0 24 24" class="header__nav-icon" width="20" height="20" aria-hidden="true">
-        <path fill="currentColor" d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8v-10h-8v10zm0-18v6h8V3h-8z"/>
-      </svg>`,
-  },
-  {
-    key: 'products',
-    title: 'Productos',
-    hash: '#products',
-    svg: `
-      <svg viewBox="0 0 24 24" class="header__nav-icon" width="20" height="20" aria-hidden="true">
-        <path fill="currentColor" d="M16 6V4H5a2 2 0 0 0-2 2v10h2V6h11zm3-2h-8v2h8v12H7v2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/>
-      </svg>`,
-  },
-  {
-    key: 'categories',
-    title: 'Categorías',
-    hash: '#categories',
-    svg: `
-      <svg viewBox="0 0 24 24" class="header__nav-icon" width="20" height="20" aria-hidden="true">
-        <path fill="currentColor" d="M3 5h8v6H3V5zm10 0h8v6h-8V5zM3 13h8v6H3v-6zm10 0h8v6h-8v-6z"/>
-      </svg>`,
-  },
-  {
-    key: 'settings',
-    title: 'Configuración',
-    hash: '#settings',
-    svg: `
-      <svg viewBox="0 0 24 24" class="header__nav-icon" width="20" height="20" aria-hidden="true">
-        <path fill="currentColor" d="M19.14 12.94a7.96 7.96 0 0 0 .05-.94c0-.32-.02-.63-.05-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.7 7.7 0 0 0-1.63-.94L14.5 2h-5l-.45 2.3a7.7 7.7 0 0 0-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.51 7.82a.5.5 0 0 0 .12.64l2.03 1.58c-.03.31-.05.62-.05.94s.02.63.05.94L2.63 13.5a.5.5 0 0 0-.12.64l1.92 3.32c.13.23.4.33.64.22l2.39-.96c.5.38 1.04.7 1.63.94l.45 2.3h5l.45-2.3c.59-.24 1.13-.56 1.63-.94l2.39.96c.24.1.51 0 .64-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.56zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/>
-      </svg>`,
-  },
-  {
-    key: 'users',
-    title: 'Usuarios',
-    hash: '#users',
-    svg: `
-      <svg viewBox="0 0 24 24" class="header__nav-icon" width="20" height="20" aria-hidden="true">
-        <path fill="currentColor" d="M16 11c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 3-1.34 3-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.91 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
-      </svg>`,
-  },
+  { key: 'dashboard', title: 'Dashboard', hash: '#dashboard', icon: 'dashboard' },
+  { key: 'products', title: 'Productos', hash: '#products', icon: 'products' },
+  { key: 'categories', title: 'Categorías', hash: '#categories', icon: 'categories' },
+  { key: 'settings', title: 'Configuración', hash: '#settings', icon: 'settings' },
+  { key: 'users', title: 'Usuarios', hash: '#users', icon: 'users' },
 ];
 
 // ------------------------------
@@ -267,7 +228,7 @@ function buildMenu() {
         data-rbac-hide
         hidden
       >
-        ${item.svg}
+        ${renderIcon(item.icon, 'icon header__nav-icon')}
         <span class="header__nav-text">${item.title}</span>
       </a>
     `;
