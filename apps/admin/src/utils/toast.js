@@ -1,6 +1,8 @@
 // toast.js — Notificaciones accesibles y reutilizables para Admin.
 // Comentarios en español, código en inglés.
 
+import { animateIn, animateOut } from './motion.js';
+
 const DEFAULT_DURATION = 4500;
 const MAX_TOASTS = 3;
 
@@ -119,9 +121,7 @@ function buildToast(message, type, options = {}) {
     remaining: duration,
     dismiss(reason) {
       pauseDismiss(record);
-      toast.classList.remove('toast--visible');
       const finalize = () => {
-        toast.removeEventListener('transitionend', finalize);
         if (toast.isConnected) {
           toast.remove();
         }
@@ -137,11 +137,12 @@ function buildToast(message, type, options = {}) {
           options.onClose(reason || 'manual');
         }
       };
-      toast.addEventListener('transitionend', finalize);
-      if (WIN?.setTimeout) {
-        WIN.setTimeout(finalize, 320);
+
+      const exitAnimation = animateOut(toast, 'fadeUp');
+      if (exitAnimation?.finished && typeof exitAnimation.finished.then === 'function') {
+        exitAnimation.finished.then(finalize).catch(finalize);
       } else {
-        setTimeout(finalize, 320);
+        finalize();
       }
     },
   };
@@ -160,6 +161,7 @@ function buildToast(message, type, options = {}) {
 
   raf(() => {
     toast.classList.add('toast--visible');
+    animateIn(toast, 'fadeUp');
   });
 
   scheduleDismiss(record);
