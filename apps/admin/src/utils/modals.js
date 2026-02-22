@@ -22,11 +22,14 @@
  *  </div>
  */
 
+import { createFocusTrap } from 'focus-trap';
+
 let modalEl, modalBodyEl, modalCloseBtnEl, modalOverlayEl; // refs a nodos del DOM
-let lastFocusedEl = null;         // elemento que tenía el foco antes de abrir el modal
+let lastModalTriggerEl = null;    // elemento que disparó la apertura del modal
 let keydownHandler = null;        // referencia al handler de teclado (para limpiar)
 let bodyClickHandler = null;      // delega cierre por [data-close-modal]
 let isInitialized = false;        // evita registrar listeners múltiples
+let modalTrap = null;             // instancia focus-trap para modal global
 
 /**
  * Inicializa referencias y listeners del modal global.
@@ -79,7 +82,7 @@ export function openModal(content = '', focusSelector = '#modal-close') {
   if (!modalEl) return; // defensa si init falló
 
   // Guardar el elemento actualmente enfocado para restaurarlo al cerrar
-  lastFocusedEl = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  lastModalTriggerEl = document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
   // Inyectar contenido
   if (content instanceof Node) {
@@ -94,7 +97,7 @@ export function openModal(content = '', focusSelector = '#modal-close') {
   modalEl.setAttribute('aria-modal', 'true');
   modalEl.setAttribute('role', 'dialog');
 
-  // Configurar focus trap + Escape (limpiar si ya existía)
+  // Configurar Escape (limpiar si ya existía)
   if (keydownHandler) {
     document.removeEventListener('keydown', keydownHandler);
     keydownHandler = null;
@@ -107,22 +110,18 @@ export function openModal(content = '', focusSelector = '#modal-close') {
       return;
     }
 
-    // Focus trap con Tab / Shift+Tab
-    if (e.key === 'Tab') {
-      const focusables = getFocusableElements(modalEl);
-      if (!focusables.length) return;
-      const first = focusables[0];
-      const last  = focusables[focusables.length - 1];
-
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault(); last.focus(); return;
-      }
-      if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault(); first.focus(); return;
-      }
-    }
   };
   document.addEventListener('keydown', keydownHandler);
+
+  if (!modalTrap) {
+    modalTrap = createFocusTrap(modalEl, {
+      fallbackFocus: modalEl,
+      allowOutsideClick: true,
+      escapeDeactivates: false,
+      clickOutsideDeactivates: false,
+      returnFocusOnDeactivate: false,
+    });
+  }
 
   // Foco inicial: selector → primer focusable → botón cerrar → contenedor
   const initialFocus =
@@ -130,6 +129,8 @@ export function openModal(content = '', focusSelector = '#modal-close') {
     getFocusableElements(modalEl)[0] ||
     modalCloseBtnEl ||
     modalEl;
+
+  modalTrap.activate({ initialFocus });
 
   // Evitar que el foco se pierda si el elemento aún no existe
   queueMicrotask(() => {
@@ -152,6 +153,10 @@ export function closeModal() {
     keydownHandler = null;
   }
 
+  if (modalTrap) {
+    modalTrap.deactivate();
+  }
+
   // Si el foco quedó dentro del modal, hacer blur ANTES de aria-hidden
   if (modalEl.contains(document.activeElement) && document.activeElement instanceof HTMLElement) {
     document.activeElement.blur();
@@ -167,12 +172,19 @@ export function closeModal() {
 
   // Restaurar foco al disparador de forma segura (microtask)
   queueMicrotask(() => {
-    if (lastFocusedEl && document.contains(lastFocusedEl) && typeof lastFocusedEl.focus === 'function') {
-      lastFocusedEl.focus();
+    if (
+      lastModalTriggerEl
+      && document.contains(lastModalTriggerEl)
+      && typeof lastModalTriggerEl.focus === 'function'
+    ) {
+      lastModalTriggerEl.focus();
+    } else if (document.body && typeof document.body.focus === 'function') {
+      document.body.focus();
     }
-    lastFocusedEl = null;
+    lastModalTriggerEl = null;
   });
 }
+
 
 /* Utilidad: devuelve elementos focusables visibles dentro de un contenedor */
 function getFocusableElements(container) {

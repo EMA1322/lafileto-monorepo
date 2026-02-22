@@ -26,6 +26,7 @@ import { openModal, closeModal } from '@/utils/modals.js';
 import { isFeatureEnabled } from '@/utils/featureFlags.js';
 import { getSettingsBrandLogoUrl } from '@/components/settings/settings.js';
 import { renderIcon, mountIcons } from '@/utils/icons.js';
+import { createFocusTrap } from 'focus-trap';
 
 // ------------------------------
 // Feature flags livianos (build-time/cliente)
@@ -67,6 +68,7 @@ const state = {
   bound: false,
   drawerOpen: false,
   cleanupFns: [],
+  drawerTrap: null,
 };
 
 const DESKTOP_MQ = window.matchMedia('(min-width: 1024px)');
@@ -181,6 +183,8 @@ export function destroyAdminHeader() {
   state.cleanupFns = [];
   state.bound = false;
   state.drawerOpen = false;
+  state.drawerTrap?.deactivate();
+  state.drawerTrap = null;
   setBodyScrollLock(false);
 
   refs.logoImageEl?.remove();
@@ -293,6 +297,7 @@ function highlightActiveItem() {
 // Abre/cierra el drawer (mobile) + aria-expanded
 // ------------------------------
 function setDrawer(open) {
+  const wasOpen = state.drawerOpen;
   state.drawerOpen = Boolean(open);
   if (!refs.drawerEl || !refs.toggleBtnEl || !refs.overlayEl) return;
 
@@ -302,37 +307,43 @@ function setDrawer(open) {
   setBodyScrollLock(state.drawerOpen);
 
   if (state.drawerOpen) {
+    if (!state.drawerTrap) {
+      state.drawerTrap = createFocusTrap(refs.drawerEl, {
+        fallbackFocus: refs.drawerEl,
+        allowOutsideClick: true,
+        escapeDeactivates: false,
+        clickOutsideDeactivates: false,
+        returnFocusOnDeactivate: false,
+      });
+    }
+
     const first = getFocusableElements(refs.drawerEl)[0];
-    requestAnimationFrame(() => (first ? first.focus() : refs.drawerEl.focus()));
+    requestAnimationFrame(() => {
+      state.drawerTrap?.activate({ initialFocus: first || refs.drawerEl });
+      (first || refs.drawerEl).focus();
+    });
+    return;
+  }
+
+  if (state.drawerTrap) {
+    state.drawerTrap.deactivate();
+  }
+
+  if (wasOpen && refs.toggleBtnEl && typeof refs.toggleBtnEl.focus === 'function') {
+    requestAnimationFrame(() => refs.toggleBtnEl.focus({ preventScroll: true }));
   }
 }
 function toggleDrawer() {
   setDrawer(!state.drawerOpen);
 }
 
-// ESC + focus-trap dentro del drawer abierto
+// ESC dentro del drawer abierto
 function handleKeydown(e) {
   if (!state.drawerOpen) return;
   if (e.key === 'Escape') {
     e.preventDefault();
     setDrawer(false);
     return;
-  }
-  if (e.key === 'Tab') {
-    const focusables = getFocusableElements(refs.drawerEl);
-    if (!focusables.length) return;
-    const first = focusables[0];
-    const last = focusables[focusables.length - 1];
-    if (e.shiftKey && document.activeElement === first) {
-      e.preventDefault();
-      last.focus();
-      return;
-    }
-    if (!e.shiftKey && document.activeElement === last) {
-      e.preventDefault();
-      first.focus();
-      return;
-    }
   }
 }
 
