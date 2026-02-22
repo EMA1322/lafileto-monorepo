@@ -9,6 +9,7 @@ import { UI_STATUS, getUiStatusLabel, productApiStatusToUi, uiToProductApiStatus
 
 import { DEFAULT_PAGE_SIZE, escapeHTML, formatMoney, formatStatusLabel, resolveOfferPricing } from './products.helpers.js';
 import { REQUEST_STATUS } from './products.state.js';
+import { t } from '../../utils/i18n.js';
 
 function getRefs(container) {
   return {
@@ -49,7 +50,9 @@ function renderOfferBadge(pricing, { ariaHidden = false } = {}) {
   if (!pricing?.hasActiveOffer) return '';
   const rawPercent = Number(pricing.discountPercent);
   const hasPercent = Number.isFinite(rawPercent) && rawPercent > 0;
-  const label = hasPercent ? `-${Math.round(rawPercent)}% OFF` : '% OFF';
+  const label = hasPercent
+    ? `-${Math.round(rawPercent)}% ${t('products.offerDiscountSuffix')}`
+    : `% ${t('products.offerDiscountSuffix')}`;
   const aria = ariaHidden ? ' aria-hidden="true"' : '';
   return `<span class="badge badge--error products__badge products__badge--offer"${aria}>${escapeHTML(label)}</span>`;
 }
@@ -328,7 +331,7 @@ export function renderProductsView(snapshot, root = document.querySelector('#pro
   }
 
   if (error && refs.errorMessage) {
-    const message = typeof error?.message === 'string' ? error.message : 'No se pudieron cargar los productos.';
+    const message = typeof error?.message === 'string' ? error.message : `${t('common.errorGeneric')} ${t('common.tryAgain')}`;
     refs.errorMessage.textContent = message;
   }
 

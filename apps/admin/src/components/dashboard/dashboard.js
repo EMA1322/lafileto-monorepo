@@ -22,6 +22,7 @@ import { renderIcon, mountIcons } from '../../utils/icons.js';
 import { formatRelative, formatShortDateTime, safeParseISO } from '../../utils/dates.js';
 import { initTooltips } from '../../utils/floating.js';
 import { countUp } from '../../utils/motion.js';
+import { t } from '../../utils/i18n.js';
 
 // ---------------------------------------------
 // Estado interno del módulo (no persistente)
@@ -128,7 +129,7 @@ async function reload({ throwOnError = false } = {}) {
   const content = getContent();
   if (!root) return;
 
-  setStatus(content, STATUS.LOADING, 'Cargando datos del panel…');
+  setStatus(content, STATUS.LOADING, t('dashboard.panelLoading'));
 
   try {
     const data = await loadDashboardData();
@@ -138,10 +139,10 @@ async function reload({ throwOnError = false } = {}) {
     checkEmptyState(content, data);
 
     if (content?.dataset.status === STATUS.EMPTY) {
-      announceStatus('No hay datos para mostrar en el panel.');
+      announceStatus(t('dashboard.emptyPanel'));
     } else {
       await ensureDashboardStylesReady();
-      setStatus(content, STATUS.SUCCESS, 'Datos actualizados.');
+      setStatus(content, STATUS.SUCCESS, t('dashboard.dataUpdated'));
     }
 
     if (MODULE.firstRender) {
@@ -464,19 +465,19 @@ function mountBindings(root) {
   root.addEventListener(
     'click',
     async (ev) => {
-      const t = ev.target instanceof Element ? ev.target : null;
-      if (!t) return;
+      const target = ev.target instanceof Element ? ev.target : null;
+      if (!target) return;
 
       // 1) Botón: Actualizar
-      if (t.closest('#dashboard-refresh')) {
+      if (target.closest('#dashboard-refresh')) {
         if (MODULE.isRefreshing) return;
         MODULE.isRefreshing = true;
         setRefreshButtonLoading(true);
         try {
           await reload({ throwOnError: true });
-          toast.success('Datos actualizados');
+          toast.success(t('dashboard.updatedToast'));
         } catch {
-          toast.error('No se pudo actualizar. Reintentá.');
+          toast.error(t('dashboard.refreshError'));
         } finally {
           MODULE.isRefreshing = false;
           setRefreshButtonLoading(false);
@@ -485,24 +486,24 @@ function mountBindings(root) {
       }
 
       // 2) Botón: Reintentar (estado de error)
-      if (t.closest('#dashboard-retry')) {
+      if (target.closest('#dashboard-retry')) {
         reload();
         return;
       }
 
-      if (t.closest('#dashboard-empty-reload')) {
+      if (target.closest('#dashboard-empty-reload')) {
         reload();
         return;
       }
 
       // 3) Quick Actions (SPA navigation por data-link)
-      const qaBtn = t.closest('.dashboard__quick-btn');
+      const qaBtn = target.closest('.dashboard__quick-btn');
       if (qaBtn?.dataset.link) {
         window.location.hash = qaBtn.dataset.link;
         return;
       }
 
-      const navBtn = t.closest('[data-link]');
+      const navBtn = target.closest('[data-link]');
       if (navBtn?.dataset.link) {
         window.location.hash = navBtn.dataset.link;
       }
@@ -539,7 +540,7 @@ function setStatus(content, status, message = '') {
 
   if (status === STATUS.ERROR) {
     const errorText = document.querySelector('.dashboard__error-text');
-    if (errorText) errorText.textContent = message || 'Ocurrió un error al cargar el panel.';
+    if (errorText) errorText.textContent = message || t('dashboard.loadingError');
   }
 
   announceStatus(message);
@@ -552,7 +553,7 @@ function checkEmptyState(content, data) {
   const hasBusiness = data.isOpen !== null;
   const hasInsights = data.insights.offerPercent !== null || data.insights.productsWithoutImage > 0;
   if (noKpis && !hasBusiness && !hasInsights) {
-    setStatus(content, STATUS.EMPTY, 'No hay datos para mostrar en el panel.');
+    setStatus(content, STATUS.EMPTY, t('dashboard.emptyPanel'));
   }
 }
 
@@ -582,10 +583,10 @@ function announceStatus(message) {
 }
 
 function resolveErrorMessage(error) {
-  if (!error) return 'Ocurrió un error al cargar el tablero. Intentá nuevamente.';
+  if (!error) return `${t('dashboard.loadingError')} ${t('common.tryAgain')}`;
   if (error.status === 401) return 'Tu sesión expiró. Iniciá sesión nuevamente para continuar.';
   if (error.status === 403) return 'No tenés permisos para ver el panel general.';
-  return error.message || 'Ocurrió un error al cargar el tablero. Intentá nuevamente.';
+  return error.message || `${t('dashboard.loadingError')} ${t('common.tryAgain')}`;
 }
 
 async function ensureDashboardStylesReady() {
