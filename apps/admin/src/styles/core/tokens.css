@@ -41,8 +41,22 @@
     /* ——— Tipografía ——— */
     --font-sans: 'Inter', 'Poppins', 'Lato', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 
+    /* Mobile-first type scale */
+    --fs-2xs: .75rem;   /* 12px */
+    --fs-xs: .8125rem;  /* 13px */
+    --fs-sm: .875rem;   /* 14px */
+    --fs-md: 1rem;      /* 16px */
+    --fs-lg: 1.125rem;  /* 18px */
+    --fs-xl: 1.25rem;   /* 20px */
+    --fs-2xl: 1.5rem;   /* 24px */
+
     --fs-base: 16px;
     --lh-base: 1.5;
+
+    --lh-tight: 1.25;
+    --lh-snug: 1.35;
+    --lh-normal: 1.5;
+    --lh-relaxed: 1.625;
 
     --fs-h1: clamp(1.75rem, 1.2rem + 1.5vw, 2.25rem);
     --fs-h2: clamp(1.5rem, 1.1rem + 1vw, 1.75rem);
@@ -55,6 +69,20 @@
     --fw-medium: 500;
     --fw-semibold: 600;
     --fw-bold: 700;
+
+    /* Semantic surfaces and UI states */
+    --surface-0: var(--c-bg);
+    --surface-1: var(--c-surface);
+    --surface-2: var(--c-surface-muted);
+    --surface-hover: color-mix(in srgb, var(--surface-2) 86%, var(--c-neutral-200));
+    --surface-elevated: color-mix(in srgb, var(--surface-1) 92%, var(--c-neutral-100));
+
+    --border-soft: color-mix(in srgb, var(--c-border) 70%, transparent);
+    --border-strong: color-mix(in srgb, var(--c-border) 88%, var(--c-neutral-300));
+
+    --text-subtle: color-mix(in srgb, var(--c-text) 72%, white);
+
+    --shadow-med: var(--shadow-md);
 
     /* ——— Espaciado (escala 4/8/16) ——— */
     --space-0: 0;
