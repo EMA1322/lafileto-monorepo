@@ -5,7 +5,7 @@
 // ============================================================================
 
 import { ensureRbacLoaded, can } from '../../utils/rbac.js';
-import { showSnackbar } from '../../utils/snackbar.js';
+import notifyToast from '../../utils/notify.js';
 import { replaceHash } from '../../utils/helpers.js';
 
 import { renderProductsView } from './products.render.table.js';
@@ -80,7 +80,7 @@ export async function initModule(attempt = 0) {
 
   await ensureRbacLoaded();
   if (!can('products', 'r')) {
-    showSnackbar('No tenés permisos para ver productos.', { type: 'warning' });
+    notifyToast('No tenés permisos para ver productos.', { type: 'warning' });
     window.location.hash = '#not-authorized';
     return;
   }
@@ -112,7 +112,7 @@ export async function initModule(attempt = 0) {
     await fetchProducts();
   } catch (error) {
     console.error('[products] initial fetch failed', error);
-    showSnackbar(error?.message || 'No se pudieron cargar los productos.', { type: 'error' });
+    notifyToast(error?.message || 'No se pudieron cargar los productos.', { type: 'error' });
   }
 }
 

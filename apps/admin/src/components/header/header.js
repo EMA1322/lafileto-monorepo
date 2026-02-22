@@ -6,12 +6,12 @@
 // - Renderiza items con atributos RBAC declarativos y aplica RBAC uniforme
 // - Resalta ruta activa con aria-current="page"
 // - Drawer accesible: abre/cierra, Escape, clic en overlay, focus management
-// - Logout seguro: confirmación en modal, limpia auth + RBAC, redirige a #login, snackbar
+// - Logout seguro: confirmación en modal, limpia auth + RBAC, redirige a #login, toast
 //
 // Dependencias:
 //   - auth.js        → isAuthenticated(), logout()
 //   - rbac.js        → ensureRbacLoaded(), moduleKeyFromHash(), applyRBAC()
-//   - snackbar.js    → showSnackbar()
+//   - snackbar.js    → notify()
 //   - modals.js      → openModal(), closeModal()
 //
 // Convención de clases/IDs (ver header.html / header.css):
@@ -21,7 +21,7 @@
 
 import { logout, getCurrentUser } from '@/utils/auth.js';
 import { ensureRbacLoaded, moduleKeyFromHash, applyRBAC } from '@/utils/rbac.js';
-import { showSnackbar } from '@/utils/snackbar.js';
+import notify from '@/utils/notify.js';
 import { openModal, closeModal } from '@/utils/modals.js';
 import { isFeatureEnabled } from '@/utils/featureFlags.js';
 import { getSettingsBrandLogoUrl } from '@/components/settings/settings.js';
@@ -397,9 +397,9 @@ function handleLogout() {
         confirmBtn.disabled = true;
         await logout();
         closeModal();
-        showSnackbar('Sesión cerrada correctamente', 'success', 2400);
+        notify('Sesión cerrada correctamente', 'success', 2400);
       } catch {
-        showSnackbar('No se pudo cerrar sesión', 'error', 3000);
+        notify('No se pudo cerrar sesión', 'error', 3000);
         confirmBtn.disabled = false;
       } finally {
         confirmBtn.removeEventListener('click', onConfirm);

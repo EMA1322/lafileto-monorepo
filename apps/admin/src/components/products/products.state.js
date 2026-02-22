@@ -5,7 +5,7 @@
 // ============================================================================
 
 import { productsApi, categoriesApi } from '../../utils/apis.js';
-import { showSnackbar } from '../../utils/snackbar.js';
+import notifyToast from '../../utils/notify.js';
 import { computePageCount } from '../../utils/helpers.js';
 import { UI_STATUS, normalizeUiStatus } from '../../utils/status.helpers.js';
 
@@ -291,7 +291,7 @@ export async function fetchCategories() {
   } catch (error) {
     state.categories = [];
     console.error('[products.state] fetchCategories failed', error);
-    showSnackbar('No se pudieron cargar las categorías.', { type: 'warning' });
+    notifyToast('No se pudieron cargar las categorías.', { type: 'warning' });
   }
 }
 

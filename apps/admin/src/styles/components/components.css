@@ -444,6 +444,12 @@
     color: color-mix(in srgb, var(--c-secondary) 65%, var(--c-text));
   }
 
+  .toast--warning {
+    border-color: color-mix(in srgb, var(--c-warning) 35%, var(--c-border));
+    background: color-mix(in srgb, var(--c-warning) 12%, var(--c-surface));
+    color: color-mix(in srgb, var(--c-warning) 70%, var(--c-text));
+  }
+
   @media (max-width: 480px) {
     .toast-stack {
       inset-inline: var(--space-3);

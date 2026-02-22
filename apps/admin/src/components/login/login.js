@@ -9,7 +9,7 @@
 ========================================================= */
 
 import { login as doLogin, apiFetch } from '@/utils/auth.js';
-import { showSnackbar } from '@/utils/snackbar.js';
+import notify from '@/utils/notify.js';
 
 const IS_DEV = (() => {
   try {
@@ -102,12 +102,12 @@ function attachDebugPing() {
       if (IS_DEV) {
         console.info('[login.debugPing] success', { ts });
       }
-      showSnackbar(`API responde ${ts ? `(${ts})` : ''}`, { type: 'success' });
+      notify(`API responde ${ts ? `(${ts})` : ''}`, { type: 'success' });
     } catch (error) {
       if (IS_DEV) {
         console.error('[login.debugPing] error', error);
       }
-      showSnackbar(`Ping falló: ${error?.message || 'Error inesperado'}`, { type: 'error' });
+      notify(`Ping falló: ${error?.message || 'Error inesperado'}`, { type: 'error' });
     }
   };
 
@@ -152,7 +152,7 @@ export function initLogin() {
     if (missing.length) {
       const message = `Por favor, complete ${missing.join(' y ')}.`;
       showInlineError(message, errorMsg);
-      showSnackbar(message, { type: 'error', code: 'VALIDATION_ERROR' });
+      notify(message, { type: 'error', code: 'VALIDATION_ERROR' });
       if (passwordInput) passwordInput.focus();
       return;
     }
@@ -161,18 +161,18 @@ export function initLogin() {
     submitting = true;
     const restore = setSubmitting(submitBtn, true);
     clearInlineError(errorMsg);
-    showSnackbar('Verificando…', { type: 'info' });
+    notify('Verificando…', { type: 'info' });
 
     try {
       const result = await doLogin(email, password); // → guarda token + permisos
-      showSnackbar('¡Bienvenido!', { type: 'success' });
+      notify('¡Bienvenido!', { type: 'success' });
       const nextRoute = result?.nextRoute || '#dashboard';
       window.location.hash = nextRoute;
     } catch (err) {
       // Mapear código → mensaje, limpiar password y enfocar
       const msg = getAuthErrorMessage(err);
       showInlineError(msg, errorMsg);
-      showSnackbar(msg, { type: 'error', code: err?.code || 'AUTH_INVALID' });
+      notify(msg, { type: 'error', code: err?.code || 'AUTH_INVALID' });
 
       if (passwordInput) {
         passwordInput.value = '';

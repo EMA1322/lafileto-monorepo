@@ -5,7 +5,7 @@
 // ============================================================================
 
 import { openModal, closeModal } from '../../utils/modals.js';
-import { showSnackbar } from '../../utils/snackbar.js';
+import notifyToast from '../../utils/notify.js';
 
 import { productsApi, offersApi } from '../../utils/apis.js';
 
@@ -159,7 +159,7 @@ export function validateOfferForm(offerState) {
 
 function handleOfferError(error, form) {
   if (!error) {
-    showSnackbar('No se pudo guardar la oferta.', { type: 'error' });
+    notifyToast('No se pudo guardar la oferta.', { type: 'error' });
     return;
   }
 
@@ -176,7 +176,7 @@ function handleOfferError(error, form) {
     if (focusTarget) focusTarget.focus();
   }
 
-  showSnackbar(error.message || 'No se pudo guardar la oferta.', { type: 'error' });
+  notifyToast(error.message || 'No se pudo guardar la oferta.', { type: 'error' });
 }
 
 async function fetchProductById(id) {
@@ -242,7 +242,7 @@ async function syncOfferForProduct(product, offerPayload, originalOffer) {
 
 function handleFormError(error, form) {
   if (!error) {
-    showSnackbar('Ocurrió un error inesperado. Intentá nuevamente.', { type: 'error' });
+    notifyToast('Ocurrió un error inesperado. Intentá nuevamente.', { type: 'error' });
     return;
   }
 
@@ -258,7 +258,7 @@ function handleFormError(error, form) {
   if (mappedErrors.length) {
     const focusTarget = renderFieldErrors(form, mappedErrors);
     if (focusTarget) focusTarget.focus();
-    showSnackbar(error.message || 'Revisá los campos marcados.', { type: 'error' });
+    notifyToast(error.message || 'Revisá los campos marcados.', { type: 'error' });
     return;
   }
 
@@ -270,11 +270,11 @@ function handleFormError(error, form) {
       },
     ]);
     if (focusTarget) focusTarget.focus();
-    showSnackbar('Hay campos en conflicto. Revisá la información.', { type: 'error' });
+    notifyToast('Hay campos en conflicto. Revisá la información.', { type: 'error' });
     return;
   }
 
-  showSnackbar(error.message || 'Ocurrió un error. Intentá nuevamente.', { type: 'error' });
+  notifyToast(error.message || 'Ocurrió un error. Intentá nuevamente.', { type: 'error' });
 }
 
 function buildProductPayload(formData) {
@@ -445,7 +445,7 @@ export function openProductModal({ mode = 'create', product = {}, container } = 
     const focusTarget = renderFieldErrors(form, allErrors);
     if (allErrors.length) {
       if (focusTarget) focusTarget.focus();
-      showSnackbar('Revisá los campos marcados.', { type: 'warning' });
+      notifyToast('Revisá los campos marcados.', { type: 'warning' });
       return;
     }
 
@@ -508,7 +508,7 @@ export function openProductModal({ mode = 'create', product = {}, container } = 
           ? 'Producto y oferta creados correctamente.'
           : 'Producto creado correctamente.';
 
-      showSnackbar(successMessage, { type: 'success' });
+      notifyToast(successMessage, { type: 'success' });
       closeModal();
     } finally {
       setFormSubmitting(form, false);
@@ -536,10 +536,10 @@ export function openDeleteModal(product, container) {
       removeProduct(product.id);
       notify(container);
       await fetchProducts({ silentToast: true });
-      showSnackbar('Producto eliminado.', { type: 'success' });
+      notifyToast('Producto eliminado.', { type: 'success' });
       closeModal();
     } catch (error) {
-      showSnackbar(error.message || 'No se pudo eliminar el producto.', { type: 'error' });
+      notifyToast(error.message || 'No se pudo eliminar el producto.', { type: 'error' });
       confirm.disabled = false;
     }
   });
