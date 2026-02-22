@@ -19,6 +19,7 @@ import { safeText } from '../../utils/helpers.js';
 import { isFeatureEnabled } from '../../utils/featureFlags.js';
 import { apiFetch } from '../../utils/api.js';
 import { renderIcon, mountIcons } from '../../utils/icons.js';
+import { formatRelative, formatShortDateTime, safeParseISO } from '../../utils/dates.js';
 
 // ---------------------------------------------
 // Estado interno del módulo (no persistente)
@@ -195,9 +196,9 @@ function toNullablePercent(value) {
 }
 
 function parseGeneratedAt(value) {
-  if (!value) return null;
-  const parsed = new Date(value);
-  return Number.isFinite(parsed.getTime()) ? parsed.toISOString() : null;
+  if (typeof value !== 'string') return null;
+  const parsed = safeParseISO(value);
+  return parsed ? parsed.toISOString() : null;
 }
 
 function normalizeMode(mode) {
@@ -271,18 +272,19 @@ function formatActivityItem(item) {
   if (!item || typeof item !== 'object') return 'Actividad registrada.';
 
   const label = String(item.label || item.title || item.message || item.action || '').trim();
-  const when = formatLocalDate(item.createdAt || item.at || item.timestamp);
-  if (label && when) return `${label} (${when})`;
-  return label || when || 'Actividad registrada.';
+  const when = formatShortDateTime(item.createdAt || item.at || item.timestamp);
+  const hasWhen = when !== '—';
+  if (label && hasWhen) return `${label} (${when})`;
+  return label || (hasWhen ? when : '') || 'Actividad registrada.';
 }
 
 function buildActivityFallbackItems(data) {
   const fallbackItems = [];
-  const generatedAt = formatLocalDate(data?.generatedAt);
+  const generatedAt = formatShortDateTime(data?.generatedAt);
   const isOpen = data?.businessSnapshot?.isOpen;
   const activeOffers = toNumberNonNegative(data?.insights?.activeOffers);
 
-  if (generatedAt) fallbackItems.push(`Panel actualizado: ${generatedAt}`);
+  if (generatedAt !== '—') fallbackItems.push(`Panel actualizado: ${generatedAt}`);
   if (isOpen === true || isOpen === false) {
     fallbackItems.push(`Estado del negocio: ${isOpen ? 'Abierto' : 'Cerrado'}`);
   }
@@ -299,8 +301,8 @@ function renderBusinessPanel(isOpen, nextChangeAt) {
     badgeEl.textContent = isOpen === true ? 'Abierto' : isOpen === false ? 'Cerrado' : '—';
   }
   if (nextChangeEl) {
-    const next = formatLocalDate(nextChangeAt);
-    nextChangeEl.textContent = next ? `Próximo cambio: ${next}` : 'Próximo cambio: —';
+    const next = formatShortDateTime(nextChangeAt);
+    nextChangeEl.textContent = `Próximo cambio: ${next}`;
   }
   if (settingsBtn) {
     settingsBtn.hidden = !FEATURE_SETTINGS;
@@ -347,18 +349,6 @@ function renderInsightsPanel(insights) {
   }
 }
 
-function formatLocalDate(value) {
-  if (!value) return '';
-  const date = new Date(value);
-  if (!Number.isFinite(date.getTime())) return '';
-  return new Intl.DateTimeFormat('es-AR', {
-    day: '2-digit',
-    month: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(date);
-}
-
 function renderHeaderInfo(data) {
   const user = getCurrentUser() || null;
   const userNameEl = document.getElementById('dashboard-user-name');
@@ -373,8 +363,7 @@ function renderHeaderInfo(data) {
   if (userRoleEl) userRoleEl.textContent = userRole;
 
   if (updatedEl) {
-    const relativeTime = formatRelativeTime(data.generatedAt);
-    updatedEl.textContent = `Última actualización: ${relativeTime || '—'}`;
+    updatedEl.textContent = `Última actualización: ${formatRelative(data.generatedAt)}`;
   }
 
   if (miniGuideEl) {
@@ -383,23 +372,6 @@ function renderHeaderInfo(data) {
     const onSale = toNumberNonNegative(data?.kpis?.onSale);
     miniGuideEl.textContent = `Hoy tenés ${products} productos activos, ${categories} categorías, ${onSale} ofertas.`;
   }
-}
-
-function formatRelativeTime(isoString, now = new Date()) {
-  if (!isoString) return '';
-  const target = new Date(isoString);
-  if (!Number.isFinite(target.getTime())) return '';
-
-  const diffMs = Math.max(0, now.getTime() - target.getTime());
-  const diffMinutes = Math.floor(diffMs / 60000);
-  if (diffMinutes <= 0) return 'recién';
-  if (diffMinutes < 60) return `hace ${diffMinutes} min`;
-
-  const diffHours = Math.floor(diffMinutes / 60);
-  if (diffHours < 24) return `hace ${diffHours} h`;
-
-  const diffDays = Math.floor(diffHours / 24);
-  return `hace ${diffDays} d`;
 }
 
 /** KPIs: escribe valores y badge de estado */
