@@ -5,6 +5,7 @@
 
 import { renderView } from './renderView.js';
 import headerCssUrl from '@/styles/core/header.css?url';
+import { ensureStylesheetLoaded } from './styles.js';
 import {
   isAuthenticated,
   ensureAuthReady,
@@ -22,16 +23,37 @@ import { uiNotFound } from './ui-templates.js';
 
 const FEATURE_SETTINGS = isFeatureEnabled(import.meta.env.VITE_FEATURE_SETTINGS);
 let headerModuleRef = null;
-const stylesheetLoadPromises = new Map();
 
 // Rutas centralizadas (mantener en sync con /src/components/*)
 const routes = {
-  login: '/src/components/login/login.html',
-  dashboard: '/src/components/dashboard/dashboard.html',
-  products: '/src/components/products/products.html',
-  categories: '/src/components/categories/categories.html',
-  users: '/src/components/users/users.html',
-  settings: '/src/components/settings/settings.html', // si no existe, el 404 se encargará
+  login: {
+    viewHtmlPath: '/src/components/login/login.html',
+    cssHref: '/src/styles/login.css',
+  },
+  dashboard: {
+    viewHtmlPath: '/src/components/dashboard/dashboard.html',
+    cssHref: '/src/styles/dashboard.css',
+  },
+  products: {
+    viewHtmlPath: '/src/components/products/products.html',
+    cssHref: '/src/styles/products.css',
+  },
+  categories: {
+    viewHtmlPath: '/src/components/categories/categories.html',
+    cssHref: '/src/styles/categories.css',
+  },
+  users: {
+    viewHtmlPath: '/src/components/users/users.html',
+    cssHref: '/src/styles/users.css',
+  },
+  settings: {
+    viewHtmlPath: '/src/components/settings/settings.html',
+    cssHref: '/src/styles/settings.css',
+  },
+  'not-authorized': {
+    viewHtmlPath: '/src/components/no-access.html',
+    cssHref: '/src/styles/no-access.css',
+  },
 };
 
 /** Scrollea arriba en cada navegación (mejora UX) */
@@ -41,7 +63,10 @@ function scrollToTop() {
 
 /** Renderiza No-Access con CTA dinámico (según permisos) */
 async function renderNoAccess() {
-  await renderView('/src/components/no-access.html');
+  const routeConfig = routes['not-authorized'];
+  await ensureStylesheetLoaded(routeConfig?.cssHref);
+  await renderView(routeConfig?.viewHtmlPath || '/src/components/no-access.html');
+
   const cta = document.querySelector('#noaccess-cta');
   if (cta) {
     if (canRead('dashboard')) {
@@ -61,49 +86,6 @@ async function renderNoAccess() {
   }
 }
 
-/** Carga perezosa del header (una sola vez por sesión) */
-function isStylesheetLoaded(linkEl) {
-  return linkEl?.dataset.loaded === 'true' || Boolean(linkEl?.sheet);
-}
-
-async function ensureStylesheetLoaded(href, key) {
-  if (!href || !key) return;
-
-  const selector = `link[rel="stylesheet"][data-style="${key}"]`;
-  const existingLink = document.head.querySelector(selector) || document.querySelector(selector);
-  if (existingLink && isStylesheetLoaded(existingLink)) return;
-
-  const pendingPromise = stylesheetLoadPromises.get(key);
-  if (pendingPromise) {
-    await pendingPromise;
-    return;
-  }
-
-  const linkEl = existingLink || document.createElement('link');
-  linkEl.rel = 'stylesheet';
-  linkEl.href = href;
-  linkEl.dataset.style = key;
-
-  const loadPromise = new Promise((resolve, reject) => {
-    linkEl.addEventListener('load', () => {
-      linkEl.dataset.loaded = 'true';
-      resolve();
-    }, { once: true });
-    linkEl.addEventListener('error', () => reject(new Error(`Stylesheet failed: ${href}`)), { once: true });
-  });
-
-  stylesheetLoadPromises.set(key, loadPromise);
-  if (!existingLink) {
-    document.head.appendChild(linkEl);
-  }
-
-  try {
-    await loadPromise;
-  } finally {
-    stylesheetLoadPromises.delete(key);
-  }
-}
-
 async function loadAdminHeader() {
   const headerContainer = document.getElementById('admin-header');
   if (!headerContainer) return;
@@ -113,7 +95,7 @@ async function loadAdminHeader() {
 
   try {
     // Header styles are loaded by router to prevent FOUC.
-    await ensureStylesheetLoaded(headerCssUrl, 'admin-header');
+    await ensureStylesheetLoaded(headerCssUrl);
   } catch (err) {
     console.warn('Header stylesheet could not be preloaded. Continuing with fallback render.', err);
   }
@@ -207,8 +189,8 @@ async function router() {
   }
 
   // -------- 404 si la ruta no existe
-  const path = routes[hashRoute];
-  if (!path) {
+  const routeConfig = routes[hashRoute];
+  if (!routeConfig) {
     const app = document.getElementById('app');
     if (app) {
       const message = hashRoute ? `La ruta #${hashRoute} no existe.` : undefined;
@@ -220,7 +202,8 @@ async function router() {
   // -------- Carga de vista
   try {
     scrollToTop();
-    await renderView(path);
+    await ensureStylesheetLoaded(routeConfig.cssHref);
+    await renderView(routeConfig.viewHtmlPath);
 
     // Import dinámico del JS correspondiente (mismo patrón que ya usás)
     switch (hashRoute) {

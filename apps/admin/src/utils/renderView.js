@@ -46,34 +46,6 @@ export function uiNotFound(message = 'Sin resultados', title = 'No encontramos e
  * @param {string} path - Ruta del archivo HTML a cargar
  */
 
-function isDashboardView(path = '') {
-  return String(path).includes('/dashboard/dashboard.html');
-}
-
-async function ensureDashboardStylesheet() {
-  if (typeof document === 'undefined') return;
-  const href = '/src/styles/dashboard.css';
-  const existing = document.querySelector(`link[data-dashboard-preload="true"][href="${href}"]`)
-    || document.querySelector(`link[rel="stylesheet"][href="${href}"]`);
-
-  if (existing && existing.sheet) return;
-
-  const link = existing || document.createElement('link');
-  if (!existing) {
-    link.rel = 'stylesheet';
-    link.href = href;
-    link.setAttribute('data-dashboard-preload', 'true');
-    document.head.appendChild(link);
-  }
-
-  await new Promise((resolve) => {
-    const done = () => resolve();
-    link.addEventListener('load', done, { once: true });
-    link.addEventListener('error', done, { once: true });
-    window.setTimeout(done, 180);
-  });
-}
-
 export async function renderView(path) {
   const container = resolveContainer();
   if (!container) {
@@ -85,10 +57,6 @@ export async function renderView(path) {
   container.innerHTML = uiLoader();
 
   try {
-    if (isDashboardView(path)) {
-      await ensureDashboardStylesheet();
-    }
-
     const res = await fetch(path, { cache: 'no-store' });
     if (!res.ok) throw new Error(`HTTP ${res.status} al cargar ${path}`);
 
