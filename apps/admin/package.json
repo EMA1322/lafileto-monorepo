@@ -18,7 +18,11 @@
     "vite": "^5.4.0"
   },
   "dependencies": {
-    "normalize.css": "^8.0.1",
-    "@lafileto/shared-utils": "workspace:*"
+    "@floating-ui/dom": "^1.7.5",
+    "@lafileto/shared-utils": "workspace:*",
+    "@motionone/dom": "^10.18.0",
+    "date-fns": "^4.1.0",
+    "focus-trap": "^8.0.0",
+    "normalize.css": "^8.0.1"
   }
 }
