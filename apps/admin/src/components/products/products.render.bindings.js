@@ -5,7 +5,7 @@
 // ============================================================================
 
 import { can } from '../../utils/rbac.js';
-import { showSnackbar } from '../../utils/snackbar.js';
+import notifyToast from '../../utils/notify.js';
 import { productsApi } from '../../utils/apis.js';
 import { debounce } from '../../utils/helpers.js';
 
@@ -55,7 +55,7 @@ async function reloadProducts(container) {
     await fetchProducts();
   } catch (error) {
     console.error('[products.bindings] reload failed', error);
-    showSnackbar(error?.message || 'No se pudieron cargar los productos.', { type: 'error' });
+    notifyToast(error?.message || 'No se pudieron cargar los productos.', { type: 'error' });
   }
 }
 
@@ -68,7 +68,7 @@ export function bindProductsBindings(container) {
 
   attach(refs.createButton, 'click', () => {
     if (!can('products', 'w')) {
-      showSnackbar('No tenés permisos para crear productos.', { type: 'warning' });
+      notifyToast('No tenés permisos para crear productos.', { type: 'warning' });
       return;
     }
     openProductModal({ mode: 'create', product: {}, container });
@@ -165,12 +165,12 @@ export function bindProductsBindings(container) {
     if (!id) return;
     const product = state.items.find((item) => String(item.id) === String(id));
     if (!product) {
-      showSnackbar('No encontramos el producto seleccionado.', { type: 'warning' });
+      notifyToast('No encontramos el producto seleccionado.', { type: 'warning' });
       return;
     }
     if (action === 'view') {
       if (!can('products', 'r')) {
-        showSnackbar('No tenés permisos para ver productos.', { type: 'warning' });
+        notifyToast('No tenés permisos para ver productos.', { type: 'warning' });
         return;
       }
       openProductViewModal(product);
@@ -178,7 +178,7 @@ export function bindProductsBindings(container) {
     }
     if (action === 'edit') {
       if (!can('products', 'u')) {
-        showSnackbar('No tenés permisos para editar productos.', { type: 'warning' });
+        notifyToast('No tenés permisos para editar productos.', { type: 'warning' });
         return;
       }
       openProductModal({ mode: 'edit', product, container });
@@ -186,7 +186,7 @@ export function bindProductsBindings(container) {
     }
     if (action === 'delete') {
       if (!can('products', 'd')) {
-        showSnackbar('No tenés permisos para eliminar productos.', { type: 'warning' });
+        notifyToast('No tenés permisos para eliminar productos.', { type: 'warning' });
         return;
       }
       openDeleteModal(product, container);
@@ -194,7 +194,7 @@ export function bindProductsBindings(container) {
     }
     if (action === 'toggle-status') {
       if (!can('products', 'u')) {
-        showSnackbar('No tenés permisos para editar productos.', { type: 'warning' });
+        notifyToast('No tenés permisos para editar productos.', { type: 'warning' });
         return;
       }
       const nextStatus = button.dataset.nextStatus || 'draft';
@@ -208,10 +208,10 @@ export function bindProductsBindings(container) {
           if (!ok) throw new Error('No se pudo actualizar el estado del producto.');
           upsertProduct(data ?? { ...product, status: nextStatus, id: product.id });
           notify(container);
-          showSnackbar('Estado del producto actualizado.', { type: 'success' });
+          notifyToast('Estado del producto actualizado.', { type: 'success' });
         } catch (error) {
           console.error('[products.bindings] status update failed', error);
-          showSnackbar(error?.message || 'No se pudo actualizar el estado del producto.', { type: 'error' });
+          notifyToast(error?.message || 'No se pudo actualizar el estado del producto.', { type: 'error' });
         } finally {
           setStatusPending(id, false);
           notify(container);

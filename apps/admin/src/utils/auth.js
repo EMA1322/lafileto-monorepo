@@ -3,7 +3,7 @@
 // Fuente única de verdad: API_BASE, token, apiFetch, login/logout, isAuthenticated.
 
 import { setServerSession, clearRbac } from './rbac.js';
-import { showSnackbar } from './snackbar.js';
+import notify from './notify.js';
 
 const IS_DEV = (() => {
   try {
@@ -312,7 +312,7 @@ export async function apiFetch(path, options = {}) {
 
     if (showErrorToast) {
       const toastMessage = resolveErrorMessage(undefined, err.code, err.message, errorMessage);
-      showSnackbar(toastMessage, { type: 'error', code: err.code });
+      notify(toastMessage, { type: 'error', code: err.code });
     }
 
     if (IS_DEV) {
@@ -375,7 +375,7 @@ export async function apiFetch(path, options = {}) {
       (KNOWN_ERROR_STATUS.has(res.status) || ERROR_MESSAGES[err.code])
     ) {
       const toastMessage = resolveErrorMessage(res.status, err.code, errMessage, errorMessage);
-      showSnackbar(toastMessage, { type: 'error', code: err.code });
+      notify(toastMessage, { type: 'error', code: err.code });
     }
 
     if (IS_DEV) {

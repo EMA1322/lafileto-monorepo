@@ -43,7 +43,7 @@ function clampDuration(ms) {
 }
 
 function computeRole(type) {
-  return type === 'error' ? 'alert' : 'status';
+  return type === 'error' || type === 'warning' ? 'alert' : 'status';
 }
 
 function removeFromQueue(record) {
@@ -89,7 +89,7 @@ function buildToast(message, type, options = {}) {
   }
 
   const variant = typeof type === 'string' ? type.toLowerCase() : 'info';
-  const allowed = new Set(['success', 'error', 'info']);
+  const allowed = new Set(['success', 'error', 'info', 'warning']);
   const resolved = allowed.has(variant) ? variant : 'info';
   const duration = clampDuration(options?.duration ?? DEFAULT_DURATION);
 
@@ -182,6 +182,9 @@ export const toast = {
   },
   error(message, options) {
     return buildToast(message, 'error', options);
+  },
+  warning(message, options) {
+    return buildToast(message, 'warning', options);
   },
 };
 

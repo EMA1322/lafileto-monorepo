@@ -11,7 +11,7 @@ import {
   pickHomeRoute,
   logout
 } from './auth.js';
-import { showSnackbar } from './snackbar.js';
+import notify from './notify.js';
 import { isFeatureEnabled } from './featureFlags.js';
 import {
   ensureRbacLoaded,
@@ -190,7 +190,7 @@ async function router() {
 
   if (!isLoginRoute && hashRoute === 'settings' && !FEATURE_SETTINGS) {
     window.location.hash = '#dashboard';
-    showSnackbar('Configuración deshabilitada en este entorno.', {
+    notify('Configuración deshabilitada en este entorno.', {
       type: 'warning',
       code: 'FEATURE_DISABLED'
     });
@@ -201,8 +201,8 @@ async function router() {
   const moduleKey = moduleKeyFromHash(hashRoute);
   if (!isLoginRoute && moduleKey && !canRead(moduleKey)) {
     await renderNoAccess();
-    // Emite snackbar con código estandarizado (sin cambiar texto visible)
-    showSnackbar('No autorizado', { type: 'warning', code: 'PERMISSION_DENIED' });
+    // Emite notificación con código estandarizado (sin cambiar texto visible)
+    notify('No autorizado', { type: 'warning', code: 'PERMISSION_DENIED' });
     return;
   }
 
