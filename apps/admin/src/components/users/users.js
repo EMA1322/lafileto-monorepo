@@ -51,6 +51,16 @@ function hydrateTableActionButtons(container) {
     }
   });
 
+  const statusToggleButtons = container.querySelectorAll('[data-action="user-toggle-status"]');
+  statusToggleButtons.forEach((button) => {
+    const isActive = button.classList.contains('is-active');
+    button.classList.add('chip', 'chip--sm', 'chip--action');
+    button.classList.remove('btn', 'btn--ghost', 'btn--sm');
+    button.classList.toggle('chip--success', isActive);
+    button.classList.toggle('chip--warning', !isActive);
+    button.dataset.state = isActive ? 'active' : 'inactive';
+  });
+
   initTooltips(container);
 }
 
