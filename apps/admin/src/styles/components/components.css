@@ -652,6 +652,159 @@
     box-shadow: 0 0 0 var(--ring-width) var(--ring-color);
   }
 
+  /* ——— Chips ——— */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding-block: var(--space-1);
+    padding-inline: var(--space-3);
+    min-height: 1.75rem;
+    border: 1px solid var(--border-soft);
+    border-radius: 999px;
+    background: var(--surface-1);
+    color: var(--text);
+    font-size: var(--fs-sm);
+    line-height: 1;
+    user-select: none;
+    white-space: nowrap;
+  }
+
+  .chip--sm {
+    min-height: 1.5rem;
+    padding-block: var(--space-1);
+    padding-inline: var(--space-2);
+    font-size: var(--fs-xs);
+    gap: var(--space-1);
+  }
+
+  .chip--md {
+    min-height: 1.75rem;
+    padding-block: var(--space-1);
+    padding-inline: var(--space-3);
+    font-size: var(--fs-sm);
+  }
+
+  .chip--success {
+    background: var(--state-success-light);
+    border-color: color-mix(in srgb, var(--state-success-base) 30%, transparent);
+    color: var(--text);
+  }
+
+  .chip--info {
+    background: var(--state-info-light);
+    border-color: color-mix(in srgb, var(--state-info-base) 30%, transparent);
+    color: var(--text);
+  }
+
+  .chip--warning {
+    background: var(--state-warning-light);
+    border-color: color-mix(in srgb, var(--state-warning-base) 30%, transparent);
+    color: var(--text);
+  }
+
+  .chip--error {
+    background: var(--state-error-light);
+    border-color: color-mix(in srgb, var(--state-error-base) 30%, transparent);
+    color: var(--text);
+  }
+
+  .chip--outline {
+    background: transparent;
+    border-color: var(--border-strong);
+  }
+
+  .chip__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.5em;
+    padding-inline: var(--space-1);
+    border-radius: 999px;
+    background: color-mix(in srgb, currentColor 12%, transparent);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .chip--action,
+  :is(a, button).chip {
+    cursor: pointer;
+    transition: background .2s ease, border-color .2s ease, box-shadow .2s ease;
+  }
+
+  .chip--action:hover,
+  :is(a, button).chip:hover {
+    background: var(--surface-hover);
+  }
+
+  .chip--action:focus-visible,
+  :is(a, button).chip:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--focus-ring);
+  }
+
+  .chip--action[disabled],
+  .chip--action:disabled,
+  .chip--action[aria-disabled="true"],
+  :is(a, button).chip[disabled],
+  :is(a, button).chip:disabled,
+  :is(a, button).chip[aria-disabled="true"] {
+    opacity: .6;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  /* ——— Progress / Meter ——— */
+  .progress {
+    --progress-height: .5rem;
+    --progress-value: 0%;
+
+    width: 100%;
+    height: var(--progress-height);
+    border: 1px solid var(--border-soft);
+    border-radius: 999px;
+    background: var(--surface-1);
+    overflow: hidden;
+  }
+
+  .meter,
+  .progress--compact {
+    --progress-height: .375rem;
+  }
+
+  .progress__bar {
+    height: 100%;
+    width: var(--progress-value);
+    max-width: 100%;
+    border-radius: inherit;
+    background: var(--primary-base);
+    transition: width .25s ease;
+  }
+
+  .progress--success .progress__bar {
+    background: var(--state-success-base);
+  }
+
+  .progress--info .progress__bar {
+    background: var(--state-info-base);
+  }
+
+  .progress--warning .progress__bar {
+    background: var(--state-warning-dark);
+  }
+
+  .progress--error .progress__bar {
+    background: var(--state-error-base);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .chip--action,
+    :is(a, button).chip,
+    .progress__bar {
+      transition: none;
+    }
+  }
+
   /* ——— Navegación / Menús ——— */
   .nav {
     display: flex; gap: var(--space-3); flex-wrap: wrap;
