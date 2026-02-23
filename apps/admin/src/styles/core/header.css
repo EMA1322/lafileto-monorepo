@@ -28,8 +28,8 @@
   width: auto;
   height: auto;
   z-index: 1100;
-  background: var(--surface-card);
-  color: var(--text-color);
+  background: var(--surface-1);
+  color: var(--text);
   padding: 0.5rem 0.75rem;
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow-soft);
