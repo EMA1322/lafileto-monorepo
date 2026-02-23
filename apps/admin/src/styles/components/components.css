@@ -223,6 +223,14 @@
     --icon-btn-size: 2.25rem;
   }
 
+  .icon-btn--with-label {
+    inline-size: auto;
+    min-inline-size: max(var(--icon-btn-size), fit-content);
+    padding-inline: var(--space-3, .75rem);
+    gap: var(--space-2, .5rem);
+    border-radius: 999px;
+  }
+
   .icon-btn--ghost {
     --icon-btn-bg: transparent;
     --icon-btn-border: transparent;
