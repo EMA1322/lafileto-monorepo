@@ -3,11 +3,10 @@
 
 import {
   UI_STATUS,
-  getUiStatusLabel,
-  categoryApiActiveToUi,
   uiToCategoryApiActive,
   normalizeUiStatus,
 } from '../../utils/status.helpers.js';
+import { renderStatusChip } from '../../utils/status.js';
 
 export const MODULE_KEY = 'categories';
 export const MODULE_KEY_ALIAS = 'category';
@@ -15,9 +14,7 @@ export const DEFAULT_PAGE_SIZE = 10;
 export const PAGE_SIZE_OPTIONS = [10, 20, 50];
 
 export function renderStatusBadge(active) {
-  const uiStatus = categoryApiActiveToUi(active);
-  const badgeClass = uiStatus === UI_STATUS.ACTIVE ? 'badge--success' : 'badge--muted';
-  return `<span class="badge ${badgeClass}">${getUiStatusLabel(uiStatus)}</span>`;
+  return renderStatusChip({ domain: 'category', value: active });
 }
 
 /** Escape seguro para inyectar texto en HTML. */

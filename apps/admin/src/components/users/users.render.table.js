@@ -5,6 +5,7 @@ import { renderUsersStatus } from './users.render.status.js';
 import { applyRBAC } from '@/utils/rbac.js';
 import { mountIcons } from '@/utils/icons.js';
 import { UI_STATUS, getUiStatusLabel, normalizeUiStatus } from '../../utils/status.helpers.js';
+import { renderStatusChip } from '../../utils/status.js';
 
 function getRefs(container) {
   return {
@@ -32,12 +33,7 @@ function getRefs(container) {
 }
 
 function formatStatus(status) {
-  const uiStatus = normalizeUiStatus(status, null);
-  if (uiStatus) {
-    const badgeClass = uiStatus === UI_STATUS.ACTIVE ? 'badge--success' : 'badge--muted';
-    return `<span class="badge ${badgeClass}">${getUiStatusLabel(uiStatus)}</span>`;
-  }
-  return `<span class="badge badge--muted">${escapeHTML(String(status || 'Desconocido'))}</span>`;
+  return renderStatusChip({ domain: 'user', value: status });
 }
 
 function isMissingPhone(phone) {
@@ -48,23 +44,20 @@ function isMissingPhone(phone) {
 }
 
 function statusSwitchMarkup(user, { phoneMissing = false } = {}) {
+  if (phoneMissing) return '';
   const isActive = normalizeUiStatus(user.status) === UI_STATUS.ACTIVE;
-  const label = getUiStatusLabel(isActive ? UI_STATUS.ACTIVE : UI_STATUS.INACTIVE);
   const stateClass = isActive ? 'is-active' : 'is-inactive';
-  const disabledReason = 'Para cambiar el estado necesitás cargar un teléfono';
-  const disabledAttrs = phoneMissing ? ' disabled aria-disabled="true"' : '';
-  const titleAttr = phoneMissing ? ` title="${escapeHTML(disabledReason)}"` : '';
-  const srHint = phoneMissing ? `<span class="sr-only">${escapeHTML(disabledReason)}</span>` : '';
   return `
     <button
       class="btn btn--ghost btn--sm users__status-toggle ${stateClass} adminList__actionBtn"
       type="button"
       data-action="user-toggle-status"
       data-rbac-action="update"
+      data-rbac-hide
       data-next-status="${isActive ? UI_STATUS.INACTIVE : UI_STATUS.ACTIVE}"
       aria-pressed="${isActive}"
-      aria-label="Cambiar estado a ${getUiStatusLabel(isActive ? UI_STATUS.INACTIVE : UI_STATUS.ACTIVE)}"${disabledAttrs}${titleAttr}
-    >${label}${srHint}</button>
+      aria-label="Cambiar estado a ${getUiStatusLabel(isActive ? UI_STATUS.INACTIVE : UI_STATUS.ACTIVE)}"
+    >Cambiar</button>
   `;
 }
 

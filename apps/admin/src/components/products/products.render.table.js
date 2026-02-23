@@ -6,8 +6,9 @@
 
 import { applyRBAC } from '../../utils/rbac.js';
 import { UI_STATUS, getUiStatusLabel, productApiStatusToUi, uiToProductApiStatus } from '../../utils/status.helpers.js';
+import { renderStatusChip } from '../../utils/status.js';
 
-import { DEFAULT_PAGE_SIZE, escapeHTML, formatMoney, formatStatusLabel, resolveOfferPricing } from './products.helpers.js';
+import { DEFAULT_PAGE_SIZE, escapeHTML, formatMoney, resolveOfferPricing } from './products.helpers.js';
 import { REQUEST_STATUS } from './products.state.js';
 import { t } from '../../utils/i18n.js';
 
@@ -61,23 +62,27 @@ function renderStatusToggle(item, pendingStatusIds = []) {
   const uiStatus = productApiStatusToUi(item?.status);
   const isActive = uiStatus === UI_STATUS.ACTIVE;
   const nextApiStatus = uiToProductApiStatus(isActive ? UI_STATUS.INACTIVE : UI_STATUS.ACTIVE);
-  const label = formatStatusLabel(item?.status);
   const isPending = pendingStatusIds.includes(String(item?.id));
   const stateClass = isActive ? 'is-active' : 'is-inactive';
+  const statusChip = renderStatusChip({ domain: 'product', value: item?.status });
 
   return `
-    <button
-      type="button"
-      class="products__status-toggle ${stateClass}"
-      data-action="toggle-status"
-      data-id="${escapeHTML(item?.id ?? '')}"
-      data-next-status="${escapeHTML(nextApiStatus)}"
-      aria-label="Cambiar estado de ${escapeHTML(item?.name ?? 'producto')}"
-      ${isPending ? 'disabled aria-busy="true"' : ''}
-      data-rbac-action="update"
-    >
-      ${escapeHTML(isPending ? 'Guardando…' : label || getUiStatusLabel(uiStatus))}
-    </button>
+    <div class="products__status-cell">
+      ${statusChip}
+      <button
+        type="button"
+        class="products__status-toggle ${stateClass}"
+        data-action="toggle-status"
+        data-id="${escapeHTML(item?.id ?? '')}"
+        data-next-status="${escapeHTML(nextApiStatus)}"
+        aria-label="Cambiar estado de ${escapeHTML(item?.name ?? 'producto')}"
+        ${isPending ? 'disabled aria-busy="true"' : ''}
+        data-rbac-action="update"
+        data-rbac-hide
+      >
+        ${escapeHTML(isPending ? 'Guardando…' : `Cambiar a ${getUiStatusLabel(isActive ? UI_STATUS.INACTIVE : UI_STATUS.ACTIVE)}`)}
+      </button>
+    </div>
   `;
 }
 
