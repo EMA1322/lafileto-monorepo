@@ -302,11 +302,13 @@
     --modal-width: 640px;
     position: fixed;
     inset: 0;
+    box-sizing: border-box;
     z-index: 50;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: var(--modal-padding);
+    overflow-x: hidden;
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
@@ -339,7 +341,8 @@
     position: relative;
     z-index: 1;
     width: min(100%, var(--modal-width));
-    max-height: min(calc(100dvh - (var(--modal-padding) * 2)), 880px);
+    max-width: calc(100vw - (var(--modal-padding) * 2));
+    max-height: calc(100dvh - (var(--modal-padding) * 2));
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -360,6 +363,53 @@
     transform: translateY(0);
   }
 
+  .modal__title {
+    margin: 0;
+    padding: var(--space-4) calc(var(--space-8) + var(--space-2)) 0 var(--space-4);
+    font-size: var(--fs-h4);
+    font-weight: var(--fw-semibold);
+    overflow-wrap: anywhere;
+  }
+
+  .modal__close {
+    position: absolute;
+    top: var(--space-3);
+    right: var(--space-3);
+    inline-size: var(--space-8);
+    block-size: var(--space-8);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  .modal__close::before,
+  .modal__close::after {
+    content: '';
+    position: absolute;
+    inline-size: .875rem;
+    block-size: 2px;
+    border-radius: 999px;
+    background: currentColor;
+  }
+
+  .modal__close::before { transform: rotate(45deg); }
+  .modal__close::after { transform: rotate(-45deg); }
+
+  .modal__close:hover {
+    background: var(--surface-hover);
+  }
+
+  .modal__close:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--focus-ring, var(--ring-color));
+  }
+
   .modal__header,
   .modal__footer {
     padding: var(--space-4);
@@ -374,9 +424,13 @@
   .modal__body {
     padding: var(--space-4);
     overflow: auto;
+    overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
   }
-  .modal__title { font-size: var(--fs-h4); font-weight: var(--fw-semibold); }
+
+  .modal__body > * {
+    max-width: 100%;
+  }
 
   .modal--sm { --modal-width: 420px; }
   .modal--md { --modal-width: 640px; }
