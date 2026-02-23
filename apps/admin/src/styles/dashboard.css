@@ -487,6 +487,17 @@
   color: color-mix(in srgb, var(--text-muted, var(--c-text-muted)) 70%, var(--text-color, var(--c-text)));
 }
 
+.dashboard__business-nextchange {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.dashboard__next-change-chip {
+  flex-shrink: 0;
+}
+
 .dashboard__activity-item,
 .dashboard__tip-item,
 .dashboard__insights-list li {
@@ -557,6 +568,7 @@
 
 .dashboard__business-settings {
   width: fit-content;
+  min-height: 40px;
 }
 
 .dashboard__skeleton--kpi,

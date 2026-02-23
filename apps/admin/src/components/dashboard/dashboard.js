@@ -314,16 +314,35 @@ function buildActivityFallbackItems(data) {
 function renderBusinessPanel(isOpen, nextChangeAt) {
   const badgeEl = document.getElementById('dashboard-business-badge');
   const nextChangeEl = document.getElementById('dashboard-business-nextchange');
+  const nextChangeTextEl = nextChangeEl?.querySelector('.dashboard__next-change-text') ?? null;
+  const nextChangeChipEl = nextChangeEl?.querySelector('.dashboard__next-change-chip') ?? null;
   const settingsBtn = document.querySelector('.dashboard__business-settings');
+  const canOpenSettings = FEATURE_SETTINGS && KNOWN_ROUTES.has('#settings');
+  const nextChangeFormatted = formatShortDateTime(nextChangeAt);
+  const hasValidNextChange = nextChangeFormatted !== '—';
+
   if (badgeEl) {
     badgeEl.textContent = isOpen === true ? 'Abierto' : isOpen === false ? 'Cerrado' : '—';
   }
-  if (nextChangeEl) {
-    const next = formatShortDateTime(nextChangeAt);
-    nextChangeEl.textContent = `Próximo cambio: ${next}`;
+
+  if (nextChangeTextEl) {
+    nextChangeTextEl.textContent = hasValidNextChange ? `Próximo cambio: ${nextChangeFormatted}` : 'Sin horarios configurados';
+  } else if (nextChangeEl) {
+    nextChangeEl.textContent = hasValidNextChange ? `Próximo cambio: ${nextChangeFormatted}` : 'Sin horarios configurados';
   }
+
+  if (nextChangeChipEl) {
+    if (hasValidNextChange) {
+      nextChangeChipEl.hidden = true;
+      nextChangeChipEl.textContent = 'Requiere configuración';
+    } else {
+      nextChangeChipEl.hidden = false;
+      nextChangeChipEl.textContent = canOpenSettings ? 'Requiere configuración' : 'Configuración deshabilitada';
+    }
+  }
+
   if (settingsBtn) {
-    settingsBtn.hidden = !FEATURE_SETTINGS;
+    settingsBtn.hidden = !canOpenSettings;
   }
 }
 
