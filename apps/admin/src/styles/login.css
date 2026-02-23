@@ -1,90 +1,146 @@
 /* ================================
    LOGIN MODULE STYLES
-   Adaptado al núcleo de tokens del Admin
+   Layout + token-based styling
 ================================ */
 
-/* 1. Contenedor principal */
 .login {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    background: var(--secondary-color);
-    padding: var(--spacing-md);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: var(--space-4);
+  background: var(--surface-0, var(--c-bg));
 }
 
-/* 2. Caja central */
 .login__container {
-    max-width: 400px;
-    width: 100%;
-    padding: var(--spacing-lg);
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-md);
-    animation: fadeIn 0.6s ease-in-out;
+  width: 100%;
+  max-width: 28rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border: 1px solid var(--border-soft, var(--c-border));
+  border-radius: var(--radius-lg);
+  background: var(--surface-elevated, var(--c-surface));
+  box-shadow: var(--shadow-md, 0 10px 30px rgb(0 0 0 / 12%));
+  animation: fadeIn 0.4s ease;
 }
 
-/* Animación suave */
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-/* 3. Encabezado */
-.login__header { text-align: center; }
-.login__title { font-size: 1.8rem; font-weight: 700; color: var(--primary-color); }
-.login__subtitle { font-size: 1rem; color: var(--muted-color); }
+.login__header {
+  display: grid;
+  gap: var(--space-2);
+  text-align: center;
+}
 
-/* 4. Formulario */
-.login__form { display: flex; flex-direction: column; gap: var(--spacing-sm); }
-.login__field { display: flex; flex-direction: column; gap: 0.3rem; }
-.login__label { font-size: 0.95rem; font-weight: 500; color: var(--text-color); }
+.login__title {
+  margin: 0;
+  color: var(--text-strong, var(--c-text));
+  font-size: clamp(1.5rem, 1.8vw + 1rem, 2rem);
+  line-height: 1.2;
+}
+
+.login__subtitle {
+  margin: 0;
+  color: var(--text-muted, var(--c-text-muted));
+}
+
+.login__form {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.login__field {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.login__label {
+  color: var(--text-color, var(--c-text));
+  font-weight: 600;
+}
+
 .login__input {
-    padding: 0.8rem;
-    border: 1px solid #ddd;
-    border-radius: var(--radius-sm);
-    font-size: 1rem;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
-}
-.login__input:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 8px rgba(13, 110, 253, 0.3);
-    outline: none;
+  width: 100%;
+  min-height: var(--space-9);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border-soft, var(--c-border));
+  border-radius: var(--radius-md);
+  color: var(--text-color, var(--c-text));
+  background: var(--surface-1, var(--c-surface));
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.login__button { margin-top: var(--spacing-xs); }
+.login__input::placeholder {
+  color: var(--text-subtle, var(--c-text-muted));
+}
 
-/* Grupo input + toggle de contraseña */
+.login__input:focus-visible {
+  outline: none;
+  border-color: var(--state-info, var(--c-primary));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--state-info, var(--c-primary)) 20%, transparent);
+}
+
 .login__input-group {
   position: relative;
   display: flex;
   align-items: center;
 }
-.login__input-group .login__input { flex: 1 1 auto; padding-right: 3rem; }
-.login__toggle {
-  position: absolute;
-  right: 0.5rem;
-  top: 50%;
-  transform: translateY(-50%);
-  height: 2.25rem;
-  min-width: 2.25rem;
-  padding: 0 0.5rem;
-  border: 1px solid transparent;
-  background: transparent;
-  border-radius: var(--radius-sm);
-  font-size: 1rem;
-  line-height: 1;
-  cursor: pointer;
-  transition: border-color .2s, box-shadow .2s, background-color .2s;
-}
-.login__toggle:hover { background-color: rgba(0, 0, 0, 0.04); }
-.login__toggle:focus-visible {
-  outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+
+.login__input-group .login__input {
+  padding-right: var(--space-9);
 }
 
-/* 7. Responsividad */
-@media (min-width: 768px) {
-  .login__container { padding: var(--spacing-lg) var(--spacing-lg); }
+.login__toggle {
+  position: absolute;
+  inset-inline-end: var(--space-2);
+  inset-block-start: 50%;
+  transform: translateY(-50%);
+  min-width: var(--space-7);
+  min-height: var(--space-7);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted, var(--c-text-muted));
+  cursor: pointer;
+}
+
+.login__toggle:hover {
+  background: var(--surface-2, var(--c-surface-muted));
+}
+
+.login__toggle:focus-visible {
+  outline: none;
+  border-color: var(--border-strong, var(--c-border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--state-info, var(--c-primary)) 20%, transparent);
+}
+
+.login__button {
+  margin-top: var(--space-1);
+}
+
+.login__error {
+  margin: 0;
+}
+
+@media (max-width: 640px) {
+  .login {
+    align-items: flex-start;
+    padding: var(--space-3);
+  }
+
+  .login__container {
+    margin-top: var(--space-8);
+    padding: var(--space-4);
+  }
 }
