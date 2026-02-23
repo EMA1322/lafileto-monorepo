@@ -199,26 +199,103 @@
     font-size: var(--fs-base);
   }
 
-  /* ——— Modales ——— */
+  /* ——— Modal v2 ——— */
   .modal {
-    position: fixed; inset: 0; z-index: 50;
-    display: none; align-items: center; justify-content: center;
-    background: rgba(0,0,0,.5);
-    padding: var(--space-4);
+    --modal-padding: var(--space-4);
+    --modal-width: 640px;
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--modal-padding);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity .2s ease;
   }
-  .modal.is-open { display: flex; }
-  .modal__dialog {
-    width: 100%; max-width: 640px;
-    background: var(--c-surface);
-    color: var(--c-text);
-    border: 1px solid var(--c-border);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg);
+  .modal:not(.hidden),
+  .modal.is-open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  .modal-backdrop,
+  .modal__overlay {
+    position: absolute;
+    inset: 0;
+    background: color-mix(in srgb, var(--surface-0, #000) 35%, transparent);
+    opacity: 0;
+    transition: opacity .2s ease;
+  }
+  .modal:not(.hidden) .modal-backdrop,
+  .modal:not(.hidden) .modal__overlay,
+  .modal.is-open .modal-backdrop,
+  .modal.is-open .modal__overlay {
+    opacity: 1;
+  }
+
+  .modal__dialog,
+  .modal__content {
+    position: relative;
+    z-index: 1;
+    width: min(100%, var(--modal-width));
+    max-height: min(calc(100dvh - (var(--modal-padding) * 2)), 880px);
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
+    background: var(--surface-2, var(--c-surface));
+    color: var(--text, var(--c-text));
+    border: 1px solid var(--border-soft, var(--c-border));
+    border-radius: var(--radius-4, var(--radius-lg));
+    box-shadow: var(--shadow-lg, var(--shadow-md));
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity .2s ease, transform .2s ease;
   }
-  .modal__header, .modal__footer { padding: var(--space-4); background: var(--c-surface-muted); }
-  .modal__body { padding: var(--space-4); }
+  .modal:not(.hidden) .modal__dialog,
+  .modal:not(.hidden) .modal__content,
+  .modal.is-open .modal__dialog,
+  .modal.is-open .modal__content {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .modal__header,
+  .modal__footer {
+    padding: var(--space-4);
+    background: var(--surface-1, var(--surface-2, var(--c-surface-muted)));
+  }
+  .modal__header {
+    border-bottom: 1px solid var(--border-soft, var(--c-border));
+  }
+  .modal__footer {
+    border-top: 1px solid var(--border-soft, var(--c-border));
+  }
+  .modal__body {
+    padding: var(--space-4);
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
   .modal__title { font-size: var(--fs-h4); font-weight: var(--fw-semibold); }
+
+  .modal--sm { --modal-width: 420px; }
+  .modal--md { --modal-width: 640px; }
+  .modal--lg { --modal-width: 900px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .modal,
+    .modal-backdrop,
+    .modal__overlay,
+    .modal__dialog,
+    .modal__content {
+      transition: none;
+      animation: none;
+      transform: none;
+    }
+  }
 
   /* ——— Tarjetas ——— */
   .card {

@@ -10,7 +10,6 @@ import './styles/core/icons.css';
 import './styles/components/components.css';
 import './styles/components/admin-list.css';
 // import './styles/global.css'; // REMOVIDO: migrado a tokens/base/components
-import './styles/modals.css';
 
 // A partir de ahora, cada módulo carga SU CSS:
 // - login:     link en /components/login/login.html
