@@ -7,6 +7,7 @@
 import { ensureRbacLoaded, can } from '../../utils/rbac.js';
 import notifyToast from '../../utils/notify.js';
 import { replaceHash } from '../../utils/helpers.js';
+import { initTooltips } from '../../utils/floating.js';
 
 import { renderProductsView } from './products.render.table.js';
 import { bindProductsBindings } from './products.render.bindings.js';
@@ -26,6 +27,45 @@ let cleanupBindings = null;
 let hashChangeHandler = null;
 let skipHashSync = false;
 let lastHashValue = null;
+
+const ACTION_UI = {
+  view: {
+    icon: 'eye',
+    label: 'Ver producto',
+    classes: 'icon-btn icon-btn--sm icon-btn--ghost products__action-btn adminList__actionBtn',
+  },
+  edit: {
+    icon: 'pencil',
+    label: 'Editar producto',
+    classes: 'icon-btn icon-btn--sm icon-btn--ghost products__action-btn adminList__actionBtn',
+  },
+  delete: {
+    icon: 'trash',
+    label: 'Eliminar producto',
+    classes: 'icon-btn icon-btn--sm icon-btn--danger products__action-btn adminList__actionBtn',
+  },
+};
+
+function enhanceActionButtons(container) {
+  if (!(container instanceof Element)) return;
+
+  const actionButtons = container.querySelectorAll('.products__actions button[data-action]');
+  actionButtons.forEach((button) => {
+    if (!(button instanceof HTMLButtonElement)) return;
+
+    const config = ACTION_UI[button.dataset.action];
+    if (!config) return;
+
+    button.className = config.classes;
+    button.setAttribute('aria-label', config.label);
+    button.dataset.tooltip = config.label;
+
+    if (button.querySelector('[data-icon]')) return;
+    button.innerHTML = `<span class="icon" data-icon="${config.icon}" aria-hidden="true"></span>`;
+  });
+
+  initTooltips(container);
+}
 
 function scheduleRetry(attempt) {
   setTimeout(() => {
@@ -68,6 +108,7 @@ export async function initModule(attempt = 0) {
 
   if (container.dataset.productsInit === 'true') {
     renderProductsView(getSnapshot(), container);
+    enhanceActionButtons(container);
     return;
   }
 
@@ -86,9 +127,11 @@ export async function initModule(attempt = 0) {
   }
 
   renderProductsView(getSnapshot(), container);
+  enhanceActionButtons(container);
 
   unsubscribe = subscribe((snapshot) => {
     renderProductsView(snapshot, container);
+    enhanceActionButtons(container);
     syncHashWithState(snapshot);
   });
 

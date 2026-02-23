@@ -15,7 +15,7 @@
     <div class="products__header-actions">
       <button
         id="product-create"
-        class="btn btn--primary"
+        class="btn btn--contained btn--md"
         type="button"
         data-action="create"
         data-rbac-action="write"
@@ -99,7 +99,7 @@
     </div>
 
     <div class="products__filters-group products__filters-group--actions">
-      <button id="filter-clear" class="btn btn--ghost btn--sm" type="reset">Limpiar filtros</button>
+      <button id="filter-clear" class="btn btn--outlined btn--md" type="reset">Limpiar filtros</button>
     </div>
   </form>
 
@@ -114,14 +114,18 @@
       <p>Cargando productos…</p>
     </div>
 
-    <div class="products__state products__state--error" id="products-error" role="alert" hidden>
-      <p id="products-error-message">No pudimos cargar los productos. Intentá nuevamente.</p>
-      <button id="products-retry" class="btn btn--ghost btn--sm" type="button">Reintentar</button>
+    <div class="products__state products__state--error" id="products-error" hidden>
+      <div class="alert alert--error alert--filled" role="alert">
+        <p id="products-error-message">No pudimos cargar los productos. Intentá nuevamente.</p>
+      </div>
+      <button id="products-retry" class="btn btn--contained btn--md" type="button">Reintentar</button>
     </div>
 
-    <div class="products__state products__state--empty" id="products-empty" role="status" hidden>
-      <p>No encontramos productos con estos filtros.</p>
-      <button id="products-empty-clear" class="btn btn--ghost btn--sm" type="button">Limpiar filtros</button>
+    <div class="products__state products__state--empty" id="products-empty" hidden>
+      <div class="alert alert--info alert--outline" role="status">
+        <p>No encontramos productos con estos filtros.</p>
+      </div>
+      <button id="products-empty-clear" class="btn btn--outlined btn--md" type="button">Limpiar filtros</button>
     </div>
 
     <div class="table-wrapper products__table-wrapper" id="products-table-wrapper" hidden>
