@@ -415,6 +415,13 @@
   border-style: dashed;
 }
 
+
+@media (max-width: 639px) {
+  .categories__table.adminList__table {
+    min-width: 36rem;
+  }
+}
+
 @media (min-width: 768px) {
   .categories__toolbar {
     flex-wrap: nowrap;

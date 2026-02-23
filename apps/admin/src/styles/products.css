@@ -708,8 +708,10 @@
   .products {
     padding: var(--space-3);
   }
+}
 
-  .products__table {
-    min-width: 640px;
+@media (max-width: 639px) {
+  .products__table.adminList__table {
+    min-width: 36rem;
   }
 }

@@ -120,6 +120,43 @@
     flex-shrink: 0;
   }
 
+  @media (max-width: 639px) {
+    .adminList__tableWrap {
+      max-width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .adminList__table {
+      min-width: 36rem;
+    }
+
+    .adminList__table thead th,
+    .adminList__table tbody td {
+      padding: var(--space-2) 0.625rem;
+      font-size: var(--fs-sm);
+      line-height: var(--lh-snug);
+    }
+
+    .adminList__td--actions {
+      display: table-cell;
+    }
+
+    .adminList__rowActions {
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: var(--space-2);
+    }
+
+    .adminList__rowActions .icon-btn--sm,
+    .adminList__actionBtn.icon-btn--sm {
+      min-width: 2rem;
+      min-height: 2rem;
+      flex: 0 0 auto;
+    }
+  }
+
   @media (min-width: 768px) {
     .adminList {
       gap: var(--space-5);
