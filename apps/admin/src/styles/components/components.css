@@ -426,10 +426,36 @@
     overflow: auto;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
+    /* Permite que contenido largo (URLs/texto continuo) no fuerce overflow horizontal. */
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
 
   .modal__body > * {
     max-width: 100%;
+    /* En stacks/grid/flex directos dentro del body, habilita shrink correcto. */
+    min-width: 0;
+  }
+
+  /* Hardening scoped a modal: controles no deben crecer más que el body. */
+  .modal__body :is(input, select, textarea) {
+    max-width: 100%;
+  }
+
+  .modal__body textarea {
+    width: 100%;
+  }
+
+  /* Wrappers comunes usados por formularios en modales del admin. */
+  .modal__body :where(.products__form-grid, .users__form-grid, .roles__form-grid, .settings__row, .settings__social-row) {
+    min-width: 0;
+  }
+
+  /* Utilidad opt-in para tablas/listas anchas dentro de .modal__body. */
+  .modal__table-scroll {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .modal--sm { --modal-width: 420px; }
