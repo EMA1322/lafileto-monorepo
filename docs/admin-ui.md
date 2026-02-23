@@ -512,7 +512,113 @@ Formato recomendado (copiar/pegar en PR):
 
 ---
 
-## J) Smokes obligatorios (copy/paste)
+## J) Visual Smoke Checklist (Responsive + States + Network Throttling)
+
+> Objetivo: validar en 10–15 minutos que la UI de Admin sea consistente en responsive, estados de vista y carga de estilos bajo red degradada (incluyendo FOUC).
+
+### 1) Setup
+
+#### DevTools (Chrome)
+
+1. Abrí DevTools y activá Device Toolbar.
+2. Ejecutá tres breakpoints:
+   - Mobile: **390x844** (o ancho 390).
+   - Tablet: **768x1024**.
+   - Desktop: **1440x900**.
+3. En Network, activá throttling:
+   - **Slow 3G** y/o **Fast 3G** (al menos uno).
+4. Opcional: activar **Disable cache** para hacer más visible el comportamiento inicial.
+
+#### Qué observar en cada recorrido
+
+- **FOUC**: contenido visible sin estilos.
+- **Layout shift**: saltos grandes/reacomodos bruscos.
+- **Overflow horizontal**: aparece scroll lateral cuando no debería.
+- **Truncado/clamp de texto**: títulos, badges, tablas y CTAs cortados.
+- **Contraste**: chips, alerts y feedback legibles en todos los breakpoints.
+
+### 2) Matriz por módulo (success + estados UI)
+
+Aplicar en: **Dashboard, Products, Users, Settings, Categories y Login**.
+
+#### Revisión base (success)
+
+- Header correcto y estable.
+- Botones v2, `icon-btn` y tooltips visibles/legibles.
+- Cards y tablas sin overflow horizontal.
+
+#### Estados UI por módulo
+
+- **Loading**: skeleton o `view-state` global coherente.
+- **Empty**: alerta/info + CTA cuando aplique.
+- **Error**: alerta/error + acción de retry.
+
+Si un estado no es fácil de forzar, documentar 2 formas:
+
+- **(A) DevTools**: bloquear request, simular offline o cambiar endpoint temporal.
+- **(B) UI existente**: usar filtros/búsquedas que vacíen resultados o acciones que provoquen error controlado.
+
+### 3) Throttling checklist (FOUC)
+
+#### Paso a paso
+
+1. Activar throttling en **Slow 3G**.
+2. Navegar: **Dashboard -> Products -> Users -> Settings**.
+3. Validar en cada cambio de ruta:
+   - Loader global consistente (`view-state`, PR14).
+   - CSS cargado antes del contenido por ruta (preload/ensure, PR16).
+   - Ausencia de flashes de UI sin estilo.
+
+#### Criterios de falla
+
+- Texto sin estilos visible por más de **200ms**.
+- Layout completamente roto durante carga.
+- Botones o controles sin estilos durante la transición de ruta.
+
+### 4) Checklist rápido (3–5 min)
+
+Alcance mínimo para sanity check:
+
+1. Breakpoint: **390**.
+2. Módulos: **Dashboard + Products**.
+3. Estados: **success + loading**.
+4. Throttling: una pasada en **Slow 3G**.
+
+Resultado esperado: PASS/FAIL por módulo con nota breve y evidencia mínima.
+
+### 5) Checklist completo (10–15 min)
+
+Cobertura estándar:
+
+1. **3 breakpoints**: 390 / 768 / 1440.
+2. **6 módulos**: Dashboard, Products, Users, Settings, Categories, Login.
+3. **4 estados** cuando sea posible: success, loading, empty, error.
+4. **Throttling** al menos una pasada completa con Slow 3G (o Fast 3G si hay limitación).
+
+### 6) Formato de reporte (copy/paste)
+
+```md
+## Visual Smoke Report — Admin UI
+- Fecha: <YYYY-MM-DD>
+- Commit/Branch: <sha-corto> / <branch>
+- Browser: <Chrome versión>
+
+### Resultado por caso
+- Breakpoint: <390|768|1440>
+- Módulo: <Dashboard|Products|Users|Settings|Categories|Login>
+- Estado: <success|loading|empty|error>
+- Resultado: <PASS|FAIL>
+- Evidencia: <link screenshot | nota>
+
+### Hallazgos
+- <Descripción breve del issue>
+- <Impacto (alto/medio/bajo)>
+- <Sugerencia o siguiente paso>
+```
+
+---
+
+## K) Smokes obligatorios (copy/paste)
 
 ```bash
 # 1) Lint/chequeo del workspace
