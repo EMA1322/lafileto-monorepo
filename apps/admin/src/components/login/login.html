@@ -56,11 +56,11 @@
       </div>
 
       <!-- Acciones -->
-      <button type="submit" class="btn btn--block login__button" id="login-submit">Iniciar sesión</button>
-      <a class="btn btn-secondary" href="#login-recover">Recuperar contraseña</a>
+      <button type="submit" class="btn btn--contained btn--lg btn--block login__button" id="login-submit">Iniciar sesión</button>
+      <a class="btn btn--outlined btn--md" href="#login-recover">Recuperar contraseña</a>
 
       <!-- Error accesible -->
-      <p id="login-error" class="login__error" aria-live="polite" hidden></p>
+      <p id="login-error" class="login__error alert alert--error alert--filled" aria-live="polite" role="alert" hidden></p>
 
       <!-- DEBUG: Ping rápido contra backend (hidden) - TODO remover -->
       <button type="button" data-debug-ping hidden>Ping API</button>
