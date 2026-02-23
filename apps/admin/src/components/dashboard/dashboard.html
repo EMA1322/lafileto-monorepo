@@ -180,9 +180,18 @@
             <span>Estado del negocio</span>
           </h3>
           <p id="dashboard-business-badge" class="c-pill c-pill--sm dashboard__business-badge">—</p>
-          <p id="dashboard-business-nextchange" class="dashboard__business-nextchange">Próximo cambio: —</p>
-          <button class="btn btn--outlined btn--md dashboard__business-settings" type="button" data-link="#settings">
-            Revisar configuración
+          <p id="dashboard-business-nextchange" class="dashboard__business-nextchange">
+            <span class="dashboard__next-change-text">Próximo cambio: —</span>
+            <span class="chip chip--warning chip--sm dashboard__next-change-chip" hidden>Requiere configuración</span>
+          </p>
+          <button
+            class="btn btn--text btn--md dashboard__business-settings"
+            type="button"
+            data-link="#settings"
+            data-tooltip="Configurar horarios"
+            aria-label="Configurar horarios"
+          >
+            Configurar horarios
           </button>
         </div>
 
