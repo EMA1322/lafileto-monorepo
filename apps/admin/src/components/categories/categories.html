@@ -18,7 +18,7 @@
     <div class="categories__header-actions">
       <button
         id="categories-create"
-        class="btn btn--primary"
+        class="btn btn--primary btn--contained btn--md"
         type="button"
         data-action="new"
         data-rbac-action="write"
@@ -85,7 +85,7 @@
       </div>
 
       <div class="categories__control categories__control--actions">
-        <button id="categories-filter-clear" class="btn btn--ghost btn--sm" type="button">Limpiar filtros</button>
+        <button id="categories-filter-clear" class="btn btn--ghost btn--sm btn--text" type="button">Limpiar filtros</button>
       </div>
     </div>
   </header>
@@ -102,13 +102,15 @@
     </div>
 
     <div class="categories__state categories__state--error" id="categories-error" role="alert" hidden>
-      <p id="categories-error-message">No pudimos cargar las categorías. Intentá nuevamente.</p>
-      <button id="categories-retry" class="btn btn--ghost btn--sm" type="button">Reintentar</button>
+      <div id="categories-error-message" class="alert alert--error alert--filled" role="alert">
+        Ocurrió un error al cargar categorías. Reintentá.
+      </div>
+      <button id="categories-retry" class="btn btn--outlined btn--md" type="button">Reintentar</button>
     </div>
 
     <div class="categories__state categories__state--empty" id="categories-empty" role="status" hidden>
-      <p>No encontramos categorías con estos filtros.</p>
-      <button id="categories-empty-clear" class="btn btn--ghost btn--sm" type="button">Limpiar filtros</button>
+      <div class="alert alert--info alert--outline" role="status">No hay categorías para mostrar.</div>
+      <button id="categories-empty-clear" class="btn btn--outlined btn--md" type="button">Limpiar filtros</button>
     </div>
 
     <div class="table-wrapper categories__tableWrap" id="categories-table-wrapper" hidden>
@@ -168,8 +170,8 @@
 
   <!-- Templates para modales -->
   <template id="tpl-category-form">
-    <div class="categories__modal">
-      <header class="categories__modalHeader">
+    <div class="categories__modal modal__content modal--md">
+      <header class="categories__modalHeader modal__header">
         <h3 id="category-modal-title" class="categories__modalTitle">Nueva categoría</h3>
       </header>
       <form id="category-form" class="categories__form" novalidate>
@@ -210,35 +212,35 @@
           </div>
         </fieldset>
 
-        <footer class="categories__formActions">
-          <button type="button" class="btn btn--outline" data-close-modal>Cancelar</button>
-          <button id="category-submit" type="submit" class="btn btn--primary">Guardar</button>
+        <footer class="categories__formActions modal__footer">
+          <button type="button" class="btn btn--outline btn--outlined btn--md" data-close-modal>Cancelar</button>
+          <button id="category-submit" type="submit" class="btn btn--primary btn--contained btn--md">Guardar</button>
         </footer>
       </form>
     </div>
   </template>
 
   <template id="tpl-category-delete">
-    <div class="categories__modal">
-      <header class="categories__modalHeader">
+    <div class="categories__modal modal__content modal--sm">
+      <header class="categories__modalHeader modal__header">
         <h3 id="category-delete-title" class="categories__modalTitle">Eliminar categoría</h3>
       </header>
-      <div class="categories__modalBody">
+      <div class="categories__modalBody modal__body">
         <p id="category-delete-message"></p>
       </div>
-      <footer class="categories__formActions">
-        <button type="button" class="btn btn--outline" data-close-modal>Cancelar</button>
-        <button id="category-confirm-delete" type="button" class="btn btn--primary">Eliminar</button>
+      <footer class="categories__formActions modal__footer">
+        <button type="button" class="btn btn--outline btn--outlined btn--md" data-close-modal>Cancelar</button>
+        <button id="category-confirm-delete" type="button" class="btn btn--primary btn--contained btn--md">Eliminar</button>
       </footer>
     </div>
   </template>
 
   <template id="tpl-category-view">
-    <div class="categories__modal categories__modal--view" role="dialog" aria-modal="true">
-      <header class="categories__modalHeader">
+    <div class="categories__modal categories__modal--view modal__content modal--md" role="dialog" aria-modal="true">
+      <header class="categories__modalHeader modal__header">
         <h3 id="category-view-title" class="categories__modalTitle">Detalle de categoría</h3>
       </header>
-      <div class="categories__modalBody categories__modalBody--view">
+      <div class="categories__modalBody categories__modalBody--view modal__body">
         <dl class="categories__details" aria-label="Información de la categoría">
           <div class="categories__detailsRow">
             <dt>Nombre</dt>
@@ -282,9 +284,9 @@
           </button>
         </div>
       </div>
-      <footer class="categories__formActions categories__viewActions">
-        <button id="category-view-close" type="button" class="btn btn--outline" data-close-modal>Cerrar</button>
-        <button id="category-view-confirm" type="button" class="btn btn--primary" data-rbac-action="update" data-rbac-hide disabled>Guardar cambios</button>
+      <footer class="categories__formActions categories__viewActions modal__footer">
+        <button id="category-view-close" type="button" class="btn btn--outline btn--outlined btn--md" data-close-modal>Cerrar</button>
+        <button id="category-view-confirm" type="button" class="btn btn--primary btn--contained btn--md" data-rbac-action="update" data-rbac-hide disabled>Guardar cambios</button>
       </footer>
     </div>
   </template>

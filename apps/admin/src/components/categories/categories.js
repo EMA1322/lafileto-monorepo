@@ -5,6 +5,7 @@ import { ensureRbacLoaded, applyRBAC, canRead, canWrite, canUpdate, canDelete } 
 
 import { MODULE_KEY, MODULE_KEY_ALIAS } from './categories.helpers.js';
 import { fetchCategories, getModuleKey, getSnapshot, subscribe, state, notify } from './categories.state.js';
+import { initTooltips } from '@/utils/floating.js';
 import { renderCategoriesTable } from './categories.render.table.js';
 import { bindCategoriesBindings } from './categories.render.bindings.js';
 
@@ -54,6 +55,7 @@ export async function initCategories(attempt = 0) {
   if (container.dataset.categoriesInit === 'true') {
     renderCategoriesTable(getSnapshot(), container);
     applyRBAC(container);
+    initTooltips(container);
     return;
   }
 
@@ -63,6 +65,7 @@ export async function initCategories(attempt = 0) {
 
   mountSubscriptions(container);
   bindCategoriesBindings(container);
+  initTooltips(container);
 
   if (!permissions.read) {
     state.loading = false;
