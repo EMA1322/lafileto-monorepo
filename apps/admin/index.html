@@ -26,15 +26,15 @@
        - Unificamos atributos ARIA en el CONTENEDOR (#global-modal).
        - role="dialog" y aria-modal/aria-labelledby se gestionan en un único nodo. -->
   <div id="global-modal"
-       class="modal hidden"
+       class="modal modal--md hidden"
        role="dialog"
        aria-modal="true"
        aria-hidden="true"
        aria-labelledby="modal-title">
-    <div class="modal__overlay" id="modal-overlay"></div>
+    <div class="modal-backdrop modal__overlay" id="modal-overlay"></div>
 
     <!-- Contenido del modal (sin role adicional) -->
-    <div class="modal__content" tabindex="-1">
+    <div class="modal__dialog modal__content" tabindex="-1">
       <h2 id="modal-title" class="modal__title"></h2>
       <button class="modal__close" id="modal-close" aria-label="Cerrar"></button>
       <div id="modal-body" class="modal__body"><!-- contenido dinámico --></div>
