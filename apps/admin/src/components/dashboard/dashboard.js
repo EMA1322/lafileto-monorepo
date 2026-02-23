@@ -262,7 +262,21 @@ function renderActivityPanel(items, data) {
   const frag = document.createDocumentFragment();
   displayItems.forEach((item) => {
     const li = document.createElement('li');
-    li.textContent = formatActivityItem(item);
+    li.className = 'dashboard__activity-item';
+
+    const text = document.createElement('span');
+    text.className = 'dashboard__activity-copy';
+    text.textContent = formatActivityItem(item);
+    li.appendChild(text);
+
+    const itemType = String(item?.type || item?.kind || item?.category || '').trim();
+    if (itemType) {
+      const chip = document.createElement('span');
+      chip.className = 'chip chip--outline chip--sm dashboard__activity-chip';
+      chip.textContent = itemType;
+      li.appendChild(chip);
+    }
+
     frag.appendChild(li);
   });
 
@@ -315,23 +329,63 @@ function renderBusinessPanel(isOpen, nextChangeAt) {
 
 function renderTipsPanel(data) {
   const tipsEl = document.getElementById('dashboard-tips-list');
+  const progressEl = document.getElementById('dashboard-tips-progress');
+  const progressBarEl = document.getElementById('dashboard-tips-progress-bar');
   if (!tipsEl) return;
 
   const productsWithoutImage = toNumberNonNegative(data?.insights?.productsWithoutImage);
   const activeOffers = toNumberNonNegative(data?.insights?.activeOffers);
   const isOpen = data?.isOpen;
 
-  const tips = [];
-  if (productsWithoutImage > 0) tips.push(`Revisar productos sin imagen (${productsWithoutImage})`);
-  if (activeOffers > 0) tips.push(`Revisar ofertas activas (${activeOffers})`);
-  if (isOpen === false) tips.push('Revisar horarios de atención');
-  if (tips.length === 0) tips.push('Todo en orden por ahora.');
+  const checklist = [
+    {
+      text: 'Productos con imagen principal',
+      pending: productsWithoutImage > 0,
+      pendingCount: productsWithoutImage,
+    },
+    {
+      text: 'Ofertas activas monitoreadas',
+      pending: activeOffers > 0,
+      pendingCount: activeOffers,
+    },
+    {
+      text: 'Horario comercial validado',
+      pending: isOpen === false,
+      pendingCount: isOpen === false ? 1 : 0,
+    },
+  ];
+
+  const completed = checklist.filter((item) => !item.pending).length;
+  const progress = checklist.length > 0 ? Math.round((completed / checklist.length) * 100) : 0;
+
+  if (progressEl) {
+    progressEl.setAttribute('aria-valuenow', String(progress));
+  }
+  if (progressBarEl) {
+    progressBarEl.style.width = `${progress}%`;
+  }
 
   tipsEl.innerHTML = '';
   const frag = document.createDocumentFragment();
-  tips.forEach((tip) => {
+  checklist.forEach((tip) => {
     const li = document.createElement('li');
-    li.textContent = tip;
+    li.className = 'dashboard__tip-item';
+
+    const copy = document.createElement('span');
+    copy.className = 'dashboard__tip-copy';
+    copy.textContent = tip.text;
+    li.appendChild(copy);
+
+    const chip = document.createElement('span');
+    if (tip.pending) {
+      chip.className = 'chip chip--warning chip--sm';
+      chip.innerHTML = `<span class="chip__count">${tip.pendingCount}</span> pendientes`;
+    } else {
+      chip.className = 'chip chip--success chip--sm';
+      chip.textContent = 'OK';
+    }
+    li.appendChild(chip);
+
     frag.appendChild(li);
   });
   tipsEl.appendChild(frag);
@@ -343,13 +397,17 @@ function renderInsightsPanel(insights) {
   const noImageEl = document.getElementById('dashboard-insights-noimage');
   if (offerPercentEl) {
     const offerPercent = insights?.offerPercent;
-    offerPercentEl.textContent = `% del catálogo en oferta: ${offerPercent === null ? '—' : `${offerPercent}%`}`;
+    offerPercentEl.innerHTML = `<span class="dashboard__insight-copy">% del catálogo en oferta</span>
+      <span class="chip chip--info chip--sm">${offerPercent === null ? '—' : `${offerPercent}%`}</span>`;
   }
   if (activeOffersEl) {
-    activeOffersEl.textContent = `Ofertas activas: ${toNumberNonNegative(insights?.activeOffers)}`;
+    activeOffersEl.innerHTML = `<span class="dashboard__insight-copy">Ofertas activas</span>
+      <span class="chip chip--warning chip--sm"><span class="chip__count">${toNumberNonNegative(insights?.activeOffers)}</span></span>`;
   }
   if (noImageEl) {
-    noImageEl.textContent = `Productos sin imagen: ${toNumberNonNegative(insights?.productsWithoutImage)}`;
+    const noImageCount = toNumberNonNegative(insights?.productsWithoutImage);
+    noImageEl.innerHTML = `<span class="dashboard__insight-copy">Productos sin imagen</span>
+      <span class="chip ${noImageCount > 0 ? 'chip--error' : 'chip--success'} chip--sm"><span class="chip__count">${noImageCount}</span></span>`;
   }
 }
 
@@ -438,7 +496,7 @@ function renderQuickActions() {
     item.className = 'dashboard__quick-item';
 
     const btn = document.createElement('button');
-    btn.className = 'dashboard__quick-btn btn btn--outline';
+    btn.className = 'dashboard__quick-btn btn btn--outlined card card--action';
     btn.type = 'button';
     btn.dataset.link = a.link;
     btn.dataset.module = a.module;
