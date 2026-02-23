@@ -19,7 +19,7 @@
     <div class="users__header-actions">
       <button
         id="btn-user-new"
-        class="btn btn--primary"
+        class="btn btn--primary btn--contained btn--md"
         type="button"
         data-action="user-new"
         data-rbac-action="write"
@@ -107,7 +107,7 @@
       </div>
 
       <div class="users__filters-group users__filters-group--actions">
-        <button id="users-filter-clear" class="btn btn--ghost btn--sm" type="reset">Limpiar filtros</button>
+        <button id="users-filter-clear" class="btn btn--ghost btn--text btn--md" type="reset">Limpiar filtros</button>
       </div>
     </form>
 
@@ -124,14 +124,14 @@
         <p>Cargando usuarios…</p>
       </div>
 
-      <div class="users__state users__state--error" id="users-error" role="alert" hidden>
+      <div class="users__state users__state--error alert alert--error alert--filled" id="users-error" role="alert" hidden>
         <p id="users-error-message">No pudimos cargar los usuarios. Intentá nuevamente.</p>
-        <button id="users-retry" class="btn btn--ghost btn--sm" type="button">Reintentar</button>
+        <button id="users-retry" class="btn btn--outlined btn--md" type="button">Reintentar</button>
       </div>
 
-      <div class="users__state users__state--empty" id="users-empty" role="status" hidden>
+      <div class="users__state users__state--empty alert alert--info alert--outline" id="users-empty" role="status" hidden>
         <p>No encontramos usuarios con estos filtros.</p>
-        <button id="users-empty-clear" class="btn btn--ghost btn--sm" type="button">Limpiar filtros</button>
+        <button id="users-empty-clear" class="btn btn--text btn--md" type="button">Limpiar filtros</button>
       </div>
 
       <div class="table-wrapper users__table-wrap" id="users-table-wrapper" hidden>
@@ -155,11 +155,11 @@
     <footer class="users__footer" id="users-footer" hidden>
       <div class="users__meta" id="users-meta" role="status" aria-live="polite">—</div>
       <nav class="users__pagination" aria-label="Paginación de usuarios">
-        <button id="users-page-first" class="btn btn--ghost btn--sm" type="button" aria-label="Primera página">«</button>
-        <button id="users-page-prev" class="btn btn--ghost btn--sm" type="button" aria-label="Página anterior">‹</button>
+        <button id="users-page-first" class="btn btn--outlined btn--md" type="button" aria-label="Primera página">«</button>
+        <button id="users-page-prev" class="btn btn--outlined btn--md" type="button" aria-label="Página anterior">‹</button>
         <ol class="users__page-list" id="users-page-list" aria-live="polite"></ol>
-        <button id="users-page-next" class="btn btn--ghost btn--sm" type="button" aria-label="Página siguiente">›</button>
-        <button id="users-page-last" class="btn btn--ghost btn--sm" type="button" aria-label="Última página">»</button>
+        <button id="users-page-next" class="btn btn--outlined btn--md" type="button" aria-label="Página siguiente">›</button>
+        <button id="users-page-last" class="btn btn--outlined btn--md" type="button" aria-label="Última página">»</button>
       </nav>
     </footer>
   </section>
@@ -176,7 +176,7 @@
       <div class="roles__actions">
         <button
           id="btn-role-new"
-          class="btn"
+          class="btn btn--contained btn--md"
           type="button"
           data-action="role-new"
           data-rbac-role="admin"
@@ -262,8 +262,8 @@
     </fieldset>
 
     <div class="modal__actions">
-      <button id="user-submit" class="btn" type="submit" data-action="user-submit">Guardar</button>
-      <button class="btn btn-secondary" type="button" data-close-modal>Cancelar</button>
+      <button id="user-submit" class="btn btn--contained btn--md" type="submit" data-action="user-submit">Guardar</button>
+      <button class="btn btn-secondary btn--outlined btn--md" type="button" data-close-modal>Cancelar</button>
     </div>
   </form>
 </template>
@@ -312,8 +312,8 @@
     </fieldset>
 
     <div class="modal__actions">
-      <button id="user-edit-submit" class="btn" type="submit" data-action="user-edit-submit">Guardar</button>
-      <button class="btn btn-secondary" type="button" data-close-modal>Cancelar</button>
+      <button id="user-edit-submit" class="btn btn--contained btn--md" type="submit" data-action="user-edit-submit">Guardar</button>
+      <button class="btn btn-secondary btn--outlined btn--md" type="button" data-close-modal>Cancelar</button>
     </div>
   </form>
 </template>
@@ -322,8 +322,8 @@
   <div class="users__delete">
     <p id="user-delete-message">¿Seguro que querés eliminar este usuario? Esta acción no se puede deshacer.</p>
     <div class="modal__actions">
-      <button class="btn btn-secondary" type="button" data-close-modal>Cancelar</button>
-      <button id="user-delete-confirm" class="btn btn-danger" type="button">Eliminar</button>
+      <button class="btn btn-secondary btn--outlined btn--md" type="button" data-close-modal>Cancelar</button>
+      <button id="user-delete-confirm" class="btn btn-danger btn--contained btn--md" type="button">Eliminar</button>
     </div>
   </div>
 </template>
@@ -342,8 +342,8 @@
     </fieldset>
 
     <div class="modal__actions">
-      <button id="role-submit" class="btn" type="submit">Guardar</button>
-      <button class="btn btn-secondary" type="button" data-close-modal>Cancelar</button>
+      <button id="role-submit" class="btn btn--contained btn--md" type="submit">Guardar</button>
+      <button class="btn btn-secondary btn--outlined btn--md" type="button" data-close-modal>Cancelar</button>
     </div>
   </form>
 </template>
@@ -354,8 +354,8 @@
     <p class="confirm__text">¿Confirmás la eliminación del rol <strong id="role-del-name"></strong>?</p>
     <p class="confirm__warning">Esta acción no se puede deshacer.</p>
     <div class="modal__actions">
-      <button id="btn-role-delete" class="btn btn-danger" type="button">Eliminar</button>
-      <button class="btn btn-secondary" type="button" data-close-modal>Cancelar</button>
+      <button id="btn-role-delete" class="btn btn-danger btn--contained btn--md" type="button">Eliminar</button>
+      <button class="btn btn-secondary btn--outlined btn--md" type="button" data-close-modal>Cancelar</button>
     </div>
   </section>
 </template>
@@ -384,8 +384,8 @@
     </div>
 
     <div class="modal__actions">
-      <button id="perm-submit" class="btn" type="button" data-action="perm-submit">Guardar</button>
-      <button class="btn btn-secondary" type="button" data-close-modal>Cancelar</button>
+      <button id="perm-submit" class="btn btn--contained btn--md" type="button" data-action="perm-submit">Guardar</button>
+      <button class="btn btn-secondary btn--outlined btn--md" type="button" data-close-modal>Cancelar</button>
     </div>
   </section>
 </template>

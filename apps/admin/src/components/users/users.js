@@ -2,6 +2,7 @@ import { ensureRbacLoaded, applyRBAC } from '@/utils/rbac.js';
 import { mountIcons } from '@/utils/icons.js';
 import { toast } from '@/utils/toast.js';
 import { replaceHash } from '@/utils/helpers.js';
+import { initTooltips } from '@/utils/floating.js';
 
 import {
   createButtonTemplate,
@@ -28,6 +29,53 @@ import {
 let hashChangeHandler = null;
 let skipHashSync = false;
 let lastHashValue = null;
+let actionButtonsObserver = null;
+
+function hydrateTableActionButtons(container) {
+  const actionButtons = container.querySelectorAll('[data-action="user-edit"], [data-action="user-delete"]');
+  actionButtons.forEach((button) => {
+    const isDeleteAction = button.dataset.action === 'user-delete';
+    const actionLabel = isDeleteAction ? 'Eliminar usuario' : 'Editar usuario';
+    const iconName = isDeleteAction ? 'trash' : 'edit';
+    const toneClass = isDeleteAction ? 'icon-btn--danger' : 'icon-btn--ghost';
+
+    button.classList.add('icon-btn', 'icon-btn--sm', toneClass);
+    button.classList.remove('btn', 'btn--ghost', 'btn--danger', 'btn--sm');
+    button.setAttribute('aria-label', actionLabel);
+    button.setAttribute('data-tooltip', actionLabel);
+    button.setAttribute('data-tooltip-placement', 'top');
+
+    if (button.dataset.iconified !== 'true') {
+      button.innerHTML = `<span class="icon icon--sm" data-icon="${iconName}" aria-hidden="true"></span><span class="sr-only">${actionLabel}</span>`;
+      button.dataset.iconified = 'true';
+    }
+  });
+
+  const statusToggleButtons = container.querySelectorAll('[data-action="user-toggle-status"]');
+  statusToggleButtons.forEach((button) => {
+    const isActive = button.classList.contains('is-active');
+    button.classList.add('chip', 'chip--sm', 'chip--action');
+    button.classList.remove('btn', 'btn--ghost', 'btn--sm');
+    button.classList.toggle('chip--success', isActive);
+    button.classList.toggle('chip--warning', !isActive);
+    button.dataset.state = isActive ? 'active' : 'inactive';
+  });
+
+  initTooltips(container);
+}
+
+function setupActionButtonsObserver(container) {
+  const tableBody = container.querySelector('#users-tbody');
+  if (!tableBody) return;
+  if (actionButtonsObserver) actionButtonsObserver.disconnect();
+
+  actionButtonsObserver = new MutationObserver(() => {
+    hydrateTableActionButtons(container);
+    mountIcons(container);
+  });
+
+  actionButtonsObserver.observe(tableBody, { childList: true, subtree: true });
+}
 
 function setupToolbarButtons(container) {
   const btnUserNew = container.querySelector('#btn-user-new');
@@ -104,6 +152,8 @@ export async function initUsers(attempt = 0) {
 
   setupToolbarButtons(container);
   mountIcons(container);
+  hydrateTableActionButtons(container);
+  setupActionButtonsObserver(container);
 
   await ensureRbacLoaded();
 
@@ -132,6 +182,7 @@ export async function initUsers(attempt = 0) {
 
   renderBindings(container, { onFiltersChange: syncHashWithState });
   applyRBAC(container);
+  hydrateTableActionButtons(container);
   mountIcons(container);
 
   if (typeof window !== 'undefined') {
