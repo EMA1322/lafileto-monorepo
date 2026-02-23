@@ -276,7 +276,121 @@ function trapTabKey(event, root) {
 
 ---
 
-## G) Convenciones BEM/scoping y anti-duplicación
+## G) A11y Smoke Checklist (Teclado + Motion) — Admin
+
+> Objetivo: correr una validación rápida y repetible de accesibilidad funcional en Admin, usando componentes reales del repo (`focus-trap`, `initTooltips`, `#global-modal`, `#headerDrawer`, `icon-btn`, `shouldReduceMotion`).
+
+### A) Setup rápido
+
+1. Browser: usar **Chrome** o **Firefox**.
+2. Activar `prefers-reduced-motion`:
+   - DevTools (si está disponible): emular `prefers-reduced-motion: reduce`.
+   - Si no, activar “Reducir movimiento” en el sistema operativo.
+3. Abrir Admin con sesión iniciada y dejar DevTools abierto.
+4. Opcional: throttling de CPU/red para hacer más evidentes saltos de foco/motion (la validación visual fina va en PR42).
+
+### B) Walkthrough de teclado (paso a paso)
+
+#### 1) Header drawer (`#headerMenuToggle` / `#headerDrawer` / `#headerOverlay`)
+
+1. Presioná `Tab` hasta enfocar `#headerMenuToggle`.
+2. Presioná `Enter` (o `Space`) para abrir el drawer.
+3. **Pasa** si el foco entra al drawer (`#headerDrawer`) al abrir.
+4. Navegá con `Tab` y `Shift+Tab` dentro del drawer.
+   - **Pasa** si el foco queda atrapado (no salta al contenido detrás).
+5. Presioná `Escape`.
+   - **Pasa** si cierra drawer/overlay y el foco vuelve a `#headerMenuToggle`.
+
+#### 2) Modal global (`#global-modal`, modal v2)
+
+1. Abrí un modal real (ej. create/edit en Products o Categories).
+2. **Pasa** si el foco cae dentro de `#global-modal`.
+3. Navegá con `Tab`/`Shift+Tab`.
+   - **Pasa** si el foco no escapa del modal (focus-trap activo).
+4. Presioná `Escape`.
+   - **Pasa** si el modal cierra y el foco vuelve al trigger que lo abrió.
+
+#### 3) Tooltips en `icon-btn` (`data-tooltip`, `aria-describedby`)
+
+1. Enfocá un botón con `.icon-btn` y `data-tooltip`.
+2. **Pasa** si aparece tooltip al focus y el trigger queda asociado por `aria-describedby`.
+3. Presioná `Escape`.
+   - **Pasa** si el tooltip cierra sin disparar acciones no intencionales.
+
+### C) Focus-visible
+
+Validar ring visible (teclado) en:
+
+- `.btn` (v2)
+- `.icon-btn`
+- `.card--action` (si existe en la pantalla)
+
+**Falla** si ocurre cualquiera de estos casos:
+
+- El foco no se ve.
+- El foco se ve recortado por `overflow`/contenedor.
+- El contraste del ring es insuficiente para distinguir el elemento activo.
+
+### D) Reduced motion (`shouldReduceMotion` / motion guard)
+
+Con reduced-motion activo:
+
+1. Trigger de toast: **pasa** si aparece sin animación o con animación mínima.
+2. Hover/press en botones/cards: **pasa** si no hay “saltos” bruscos.
+3. Transiciones UI generales: **pasa** si se reducen claramente respecto al modo normal.
+
+### E) Checklist Pasa/Falla (copiable)
+
+- [ ] Header drawer: `Enter/Space` abre, foco entra y queda atrapado, `Escape` cierra y retorna foco a `#headerMenuToggle`.
+- [ ] Modal global (`#global-modal`): foco inicial interno, trap con `Tab/Shift+Tab`, `Escape` + retorno al trigger.
+- [ ] Tooltips (`data-tooltip`): aparecen con focus, asignan `aria-describedby`, `Escape` cierra sin efectos colaterales.
+- [ ] Focus-visible correcto en `.btn`, `.icon-btn`, `.card--action`.
+- [ ] Reduced motion activo: toast/transiciones/feedback sin animación invasiva.
+
+### F) Registro de evidencia
+
+Capturar por módulo (Products, Categories, Header):
+
+- Screenshot o nota corta por cada bloque validado (drawer, modal, tooltip, focus, motion).
+- Si falla, incluir selector/ID y paso exacto donde falla.
+
+Formato recomendado (copiar/pegar en PR):
+
+```md
+### Evidencia A11y Smoke — Admin
+- Módulo: <Products|Categories|Header>
+- Fecha: <YYYY-MM-DD>
+- Entorno: <local|staging> / <Chrome|Firefox>
+- Reduced motion: <ON|OFF>
+
+#### Resultado
+- Drawer (`#headerDrawer`): <PASA|FALLA> — <nota breve>
+- Modal (`#global-modal`): <PASA|FALLA> — <nota breve>
+- Tooltips (`.icon-btn` + `data-tooltip`): <PASA|FALLA> — <nota breve>
+- Focus-visible (`.btn`, `.icon-btn`, `.card--action`): <PASA|FALLA> — <nota breve>
+- Motion guard (`shouldReduceMotion`): <PASA|FALLA> — <nota breve>
+
+#### Hallazgos
+- <si aplica>
+```
+
+### Checklist rápido (1 minuto)
+
+- Abrir drawer con teclado (`#headerMenuToggle`) y cerrar con `Escape` verificando retorno de foco.
+- Abrir un modal real (`#global-modal`) y comprobar trap con 3-4 tabs.
+- Enfocar un `.icon-btn` con `data-tooltip` y confirmar `aria-describedby` + cierre con `Escape`.
+- Confirmar que se ve focus ring en al menos `.btn` y `.icon-btn`.
+
+### Checklist completo (5–8 min)
+
+- Ejecutar Setup rápido + walkthrough completo de teclado (drawer, modal, tooltip).
+- Validar focus-visible en `.btn`, `.icon-btn` y `.card--action`.
+- Activar reduced-motion y repetir smoke corto de toast + hover/press + transiciones.
+- Registrar evidencia por módulo con el formato recomendado.
+
+---
+
+## H) Convenciones BEM/scoping y anti-duplicación
 
 - **BEM por módulo**: `products__*`, `users__*`, `categories__*`, etc.
 - Reutilizable global va en `styles/components/components.css` (prefijos neutrales: `.btn`, `.card`, `.badge`, `.data-table`, `.view-state`, `.toast`, `.tooltip`).
@@ -382,7 +496,7 @@ function trapTabKey(event, root) {
 
 ---
 
-## H) Checklist módulo nuevo/refactor (copy/paste)
+## I) Checklist módulo nuevo/refactor (copy/paste)
 
 ```md
 ## Checklist módulo UI
@@ -398,7 +512,7 @@ function trapTabKey(event, root) {
 
 ---
 
-## I) Smokes obligatorios (copy/paste)
+## J) Smokes obligatorios (copy/paste)
 
 ```bash
 # 1) Lint/chequeo del workspace
