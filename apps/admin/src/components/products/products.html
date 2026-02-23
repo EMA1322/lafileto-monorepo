@@ -2,7 +2,7 @@
 <link rel="stylesheet" href="/src/styles/products.css" />
 
 <section
-  class="products page container"
+  class="products page container adminList"
   id="products-module"
   data-rbac-module="products"
   aria-labelledby="products-title"
@@ -128,8 +128,8 @@
       <button id="products-empty-clear" class="btn btn--outlined btn--md" type="button">Limpiar filtros</button>
     </div>
 
-    <div class="table-wrapper products__table-wrapper" id="products-table-wrapper" hidden>
-      <table class="data-table products__table" aria-describedby="products-meta">
+    <div class="table-wrapper products__table-wrapper adminList__tableWrap" id="products-table-wrapper" hidden>
+      <table class="data-table products__table adminList__table" aria-describedby="products-meta">
         <thead>
           <tr>
             <th scope="col" class="products__cell-image">Imagen</th>
