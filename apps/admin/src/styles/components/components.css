@@ -635,18 +635,28 @@
   .toast {
     pointer-events: auto;
     display: grid;
-    grid-template-columns: 1fr auto;
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas: 'icon message close';
     gap: var(--space-3);
-    align-items: start;
+    align-items: flex-start;
     padding: var(--space-3) var(--space-4);
     border-radius: var(--radius-md);
-    border: 1px solid var(--c-border);
-    background: var(--c-surface);
-    color: var(--c-text);
+    border: 1px solid transparent;
+    background: var(--surface-elevated, var(--c-surface));
+    color: var(--c-white);
     box-shadow: var(--shadow-lg);
     opacity: 0;
     transform: translateX(16px);
     transition: opacity .25s ease, transform .25s ease;
+  }
+
+  .toast::before {
+    grid-area: icon;
+    content: '•';
+    font-size: var(--fs-md, 1rem);
+    line-height: 1;
+    opacity: .9;
+    align-self: center;
   }
 
   .toast--visible {
@@ -655,17 +665,19 @@
   }
 
   .toast__message {
+    grid-area: message;
     margin: 0;
     font-size: var(--fs-base);
     line-height: var(--lh-base);
   }
 
   .toast__close {
+    grid-area: close;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: var(--space-1);
-    border: 1px solid color-mix(in srgb, var(--c-border) 70%, transparent);
+    border: 1px solid color-mix(in srgb, currentColor 45%, transparent);
     border-radius: var(--radius-sm);
     background: transparent;
     color: inherit;
@@ -676,8 +688,8 @@
   }
 
   .toast__close:hover {
-    background: color-mix(in srgb, var(--c-secondary) 12%, transparent);
-    border-color: color-mix(in srgb, var(--c-secondary) 45%, transparent);
+    background: color-mix(in srgb, currentColor 16%, transparent);
+    border-color: color-mix(in srgb, currentColor 60%, transparent);
   }
 
   .toast__close:focus-visible {
@@ -686,27 +698,158 @@
   }
 
   .toast--success {
-    border-color: color-mix(in srgb, var(--c-success) 30%, var(--c-border));
-    background: color-mix(in srgb, var(--c-success) 10%, var(--c-surface));
-    color: color-mix(in srgb, var(--c-success) 65%, var(--c-text));
+    border-color: color-mix(in srgb, var(--state-success-dark) 55%, transparent);
+    background: var(--state-success-base);
+    color: var(--c-white);
+  }
+
+  .toast--success::before {
+    content: '✓';
   }
 
   .toast--error {
-    border-color: color-mix(in srgb, var(--c-error) 35%, var(--c-border));
-    background: color-mix(in srgb, var(--c-error) 12%, var(--c-surface));
-    color: color-mix(in srgb, var(--c-error) 70%, var(--c-text));
+    border-color: color-mix(in srgb, var(--state-error-dark) 50%, transparent);
+    background: var(--state-error-base);
+    color: var(--c-white);
+  }
+
+  .toast--error::before {
+    content: '⨯';
   }
 
   .toast--info {
-    border-color: color-mix(in srgb, var(--c-secondary) 30%, var(--c-border));
-    background: color-mix(in srgb, var(--c-secondary) 10%, var(--c-surface));
-    color: color-mix(in srgb, var(--c-secondary) 65%, var(--c-text));
+    border-color: color-mix(in srgb, var(--state-info-dark) 50%, transparent);
+    background: var(--state-info-base);
+    color: var(--c-white);
+  }
+
+  .toast--info::before {
+    content: 'i';
+    font-weight: var(--fw-semibold);
   }
 
   .toast--warning {
-    border-color: color-mix(in srgb, var(--c-warning) 35%, var(--c-border));
-    background: color-mix(in srgb, var(--c-warning) 12%, var(--c-surface));
-    color: color-mix(in srgb, var(--c-warning) 70%, var(--c-text));
+    border-color: color-mix(in srgb, var(--state-warning-dark) 50%, transparent);
+    background: var(--state-warning-base);
+    color: var(--neutral-950, var(--c-text));
+  }
+
+  .toast--warning::before {
+    content: '!';
+    font-weight: var(--fw-bold);
+  }
+
+  /* ——— Inline alerts ——— */
+  /* Accesibilidad: usar role="status" para mensajes informativos y role="alert" para errores críticos. */
+  .alert {
+    --alert-bg: var(--surface-2, var(--c-surface));
+    --alert-border: var(--border-soft, var(--c-border));
+    --alert-text: var(--text, var(--c-text));
+
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--alert-border);
+    background: var(--alert-bg);
+    color: var(--alert-text);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .alert__icon {
+    flex-shrink: 0;
+    line-height: 1;
+    font-size: var(--fs-md, 1rem);
+    margin-top: .125rem;
+  }
+
+  .alert__content {
+    min-width: 0;
+  }
+
+  .alert__title {
+    margin: 0;
+    font-size: var(--fs-md, var(--fs-base));
+    font-weight: var(--fw-semibold);
+    line-height: 1.3;
+  }
+
+  .alert__text {
+    margin: 0;
+    font-size: var(--fs-base);
+    line-height: var(--lh-base);
+  }
+
+  .alert__title + .alert__text {
+    margin-top: var(--space-1);
+  }
+
+  .alert--filled {
+    --alert-text: var(--c-white);
+    border-color: transparent;
+  }
+
+  .alert--outline {
+    --alert-bg: var(--surface-elevated, var(--c-surface));
+  }
+
+  .alert--success {
+    --alert-bg: var(--state-success-base);
+    --alert-border: color-mix(in srgb, var(--state-success-base) 58%, var(--state-success-dark));
+    --alert-text: var(--state-success-dark);
+  }
+
+  .alert--info {
+    --alert-bg: var(--state-info-base);
+    --alert-border: color-mix(in srgb, var(--state-info-base) 58%, var(--state-info-dark));
+    --alert-text: var(--state-info-dark);
+  }
+
+  .alert--warning {
+    --alert-bg: var(--state-warning-base);
+    --alert-border: color-mix(in srgb, var(--state-warning-base) 58%, var(--state-warning-dark));
+    --alert-text: var(--state-warning-dark);
+  }
+
+  .alert--error {
+    --alert-bg: var(--state-error-base);
+    --alert-border: color-mix(in srgb, var(--state-error-base) 58%, var(--state-error-dark));
+    --alert-text: var(--state-error-dark);
+  }
+
+  .alert--filled.alert--success,
+  .alert--filled.alert--info,
+  .alert--filled.alert--error {
+    --alert-text: var(--c-white);
+  }
+
+  .alert--filled.alert--warning {
+    --alert-text: var(--neutral-950, var(--c-text));
+  }
+
+  .alert--outline.alert--success {
+    --alert-bg: color-mix(in srgb, var(--state-success-light) 65%, var(--surface-elevated));
+    --alert-border: color-mix(in srgb, var(--state-success-base) 62%, var(--state-success-dark));
+    --alert-text: var(--state-success-dark);
+  }
+
+  .alert--outline.alert--info {
+    --alert-bg: color-mix(in srgb, var(--state-info-light) 65%, var(--surface-elevated));
+    --alert-border: color-mix(in srgb, var(--state-info-base) 62%, var(--state-info-dark));
+    --alert-text: var(--state-info-dark);
+  }
+
+  .alert--outline.alert--warning {
+    --alert-bg: color-mix(in srgb, var(--state-warning-light) 70%, var(--surface-elevated));
+    --alert-border: color-mix(in srgb, var(--state-warning-base) 62%, var(--state-warning-dark));
+    --alert-text: var(--state-warning-dark);
+  }
+
+  .alert--outline.alert--error {
+    --alert-bg: color-mix(in srgb, var(--state-error-light) 70%, var(--surface-elevated));
+    --alert-border: color-mix(in srgb, var(--state-error-base) 62%, var(--state-error-dark));
+    --alert-text: var(--state-error-dark);
   }
 
   @media (max-width: 480px) {
