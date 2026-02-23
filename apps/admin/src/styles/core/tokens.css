@@ -93,17 +93,38 @@
     --fw-semibold: 600;
     --fw-bold: 700;
 
-    /* Semantic surfaces and UI states */
-    --surface-0: var(--c-bg);
+    /* Semantic tokens (stable contract) – use these in components/modules */
+    --surface-0: var(--neutral-50);
     --surface-1: var(--c-surface);
-    --surface-2: var(--c-surface-muted);
-    --surface-hover: color-mix(in srgb, var(--surface-2) 86%, var(--c-neutral-200));
-    --surface-elevated: color-mix(in srgb, var(--surface-1) 92%, var(--c-neutral-100));
+    --surface-2: var(--neutral-100);
+    --surface-hover: color-mix(in srgb, var(--surface-2) 92%, var(--neutral-900) 8%);
+    --surface-elevated: var(--c-white);
 
-    --border-soft: color-mix(in srgb, var(--c-border) 70%, transparent);
-    --border-strong: color-mix(in srgb, var(--c-border) 88%, var(--c-neutral-300));
+    --text: var(--c-text);
+    --text-subtle: var(--neutral-700);
+    --text-muted: var(--c-text-muted);
 
-    --text-subtle: color-mix(in srgb, var(--c-text) 72%, white);
+    --border-soft: color-mix(in srgb, var(--neutral-900) 12%, transparent);
+    --border-strong: color-mix(in srgb, var(--neutral-900) 20%, transparent);
+
+    --focus-ring: color-mix(in srgb, var(--primary-base) 45%, transparent);
+    --focus-ring-danger: color-mix(in srgb, var(--state-error-base) 45%, transparent);
+
+    --state-success-light: #86efac;
+    --state-success-base: var(--c-success);
+    --state-success-dark: #166534;
+
+    --state-info-light: #93c5fd;
+    --state-info-base: var(--secondary-base);
+    --state-info-dark: #1d4ed8;
+
+    --state-warning-light: #fcd34d;
+    --state-warning-base: var(--c-warning);
+    --state-warning-dark: #b45309;
+
+    --state-error-light: #fca5a5;
+    --state-error-base: var(--c-error);
+    --state-error-dark: #991b1b;
 
     --shadow-med: var(--shadow-md);
 
@@ -134,7 +155,7 @@
     --size-thumb-lg: 6rem;  /* 96px */
 
     /* ——— Anillo de enfoque ——— */
-    --ring-color: rgba(59,130,246,.45);
+    --ring-color: var(--focus-ring);
     --ring-offset: 2px;
     --ring-width: 2px;
 
