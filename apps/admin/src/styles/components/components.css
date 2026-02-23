@@ -926,12 +926,10 @@
   /* ——— Toasts ——— */
   .toast-stack {
     position: fixed;
-    inset-block-start: var(--space-6);
-    inset-inline-end: var(--space-6);
+    inset: auto;
     display: flex;
     flex-direction: column;
     gap: var(--space-3);
-    width: min(340px, 92vw);
     z-index: 120;
     pointer-events: none;
   }
@@ -1156,10 +1154,32 @@
     --alert-text: var(--state-error-dark);
   }
 
-  @media (max-width: 480px) {
+  @media (max-width: 767px) {
     .toast-stack {
-      inset-inline: var(--space-3);
+      left: var(--space-4);
+      right: var(--space-4);
+      bottom: var(--space-4);
+      align-items: stretch;
+    }
+
+    .toast {
+      width: 100%;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .toast-stack {
+      right: var(--space-4);
+      bottom: var(--space-4);
+      left: auto;
+      max-width: 420px;
+      align-items: flex-end;
+    }
+
+    .toast {
       width: auto;
+      min-width: 280px;
+      max-width: 420px;
     }
   }
 
