@@ -1,9 +1,6 @@
 // Admin / Categories table renderer
 // Comentarios en español, código en inglés.
-
-import { applyRBAC } from '@/utils/rbac.js';
-import { mountIcons } from '@/utils/icons.js';
-import { initTooltips } from '@/utils/floating.js';
+// Internal renderer: returns table row HTML only. No DOM side-effects.
 
 import {
   escapeAttr,
@@ -212,7 +209,4 @@ export function renderCategoriesTable(snapshot, root = document.querySelector('#
     btnLast.dataset.page = String(totalPages);
   }
 
-  applyRBAC(container);
-  mountIcons(container);
-  initTooltips(container);
 }
