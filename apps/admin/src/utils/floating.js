@@ -3,10 +3,29 @@ import { computePosition, offset, flip, shift, autoUpdate } from '@floating-ui/d
 const TOOLTIP_BOUND_ATTR = 'tooltipBound';
 const TOOLTIP_ID_PREFIX = 'tooltip';
 const TOOLTIP_GAP_PX = 8;
+const POINTER_FOCUS_GUARD_MS = 500;
 
 let tooltipUid = 0;
+let lastPointerDownAt = 0;
+let pointerGuardBound = false;
 
 const tooltipRegistry = new WeakMap();
+
+function isCoarsePointer() {
+  return window.matchMedia?.('(pointer: coarse)')?.matches ?? false;
+}
+
+function bindPointerModalityGuard() {
+  if (pointerGuardBound) return;
+  document.addEventListener(
+    'pointerdown',
+    () => {
+      lastPointerDownAt = Date.now();
+    },
+    { capture: true }
+  );
+  pointerGuardBound = true;
+}
 
 function nextTooltipId() {
   tooltipUid += 1;
@@ -115,6 +134,8 @@ function openTooltip(triggerEl) {
 }
 
 export function initTooltips(root = document) {
+  bindPointerModalityGuard();
+
   const scope = root instanceof Element || root instanceof Document ? root : document;
   const triggers = scope.querySelectorAll('[data-tooltip]');
 
@@ -124,9 +145,17 @@ export function initTooltips(root = document) {
 
     triggerEl.dataset[TOOLTIP_BOUND_ATTR] = 'true';
 
-    triggerEl.addEventListener('mouseenter', () => openTooltip(triggerEl));
-    triggerEl.addEventListener('mouseleave', () => closeTooltip(triggerEl));
-    triggerEl.addEventListener('focus', () => openTooltip(triggerEl));
+    if (!isCoarsePointer()) {
+      triggerEl.addEventListener('mouseenter', () => openTooltip(triggerEl));
+      triggerEl.addEventListener('mouseleave', () => closeTooltip(triggerEl));
+    }
+
+    triggerEl.addEventListener('focus', () => {
+      if (isCoarsePointer() && Date.now() - lastPointerDownAt < POINTER_FOCUS_GUARD_MS) {
+        return;
+      }
+      openTooltip(triggerEl);
+    });
     triggerEl.addEventListener('blur', () => closeTooltip(triggerEl));
     triggerEl.addEventListener('keydown', (event) => {
       if (event.key !== 'Escape') return;
