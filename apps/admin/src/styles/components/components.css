@@ -8,29 +8,84 @@
 
   /* ——— Botones ——— */
   .btn {
-    --btn-bg: var(--c-neutral-200);
-    --btn-color: var(--c-text);
-    --btn-border: var(--c-border);
+    --btn-bg: var(--surface-2, var(--c-neutral-200));
+    --btn-color: var(--text-color, var(--c-text));
+    --btn-border: var(--border-soft, var(--c-border));
+    --btn-shadow: var(--shadow-sm);
+    --btn-min-height: 2.25rem;
+    --btn-padding-y: .5rem;
+    --btn-padding-x: .9rem;
+    --btn-font-size: var(--fs-md, var(--fs-base));
 
     display: inline-flex; align-items: center; justify-content: center;
     gap: .5rem;
-    padding: .5rem .9rem;
+    min-height: var(--btn-min-height);
+    padding: var(--btn-padding-y) var(--btn-padding-x);
     border-radius: var(--radius-md);
     border: 1px solid var(--btn-border);
     background: var(--btn-bg);
     color: var(--btn-color);
-    box-shadow: var(--shadow-sm);
+    font-family: inherit;
+    font-size: var(--btn-font-size);
+    line-height: 1.2;
+    box-shadow: var(--btn-shadow);
     cursor: pointer;
-    transition: background .2s ease, color .2s ease, border-color .2s ease, box-shadow .2s ease, transform .02s ease;
+    transition: background .2s ease, color .2s ease, border-color .2s ease, box-shadow .2s ease, transform .08s ease;
   }
   .btn:hover { filter: brightness(0.98); }
   .btn:active { transform: translateY(1px); }
   .btn:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 var(--ring-width) var(--ring-color);
+    box-shadow: 0 0 0 3px var(--focus-ring, var(--ring-color));
   }
-  .btn[disabled], .btn:disabled {
-    opacity: .6; cursor: not-allowed; box-shadow: none;
+  .btn[disabled], .btn:disabled, .btn[aria-disabled="true"] {
+    opacity: .6;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+    pointer-events: none;
+  }
+
+  .btn--md {
+    --btn-min-height: 2.25rem;
+    --btn-padding-y: .5rem;
+    --btn-padding-x: .9rem;
+    --btn-font-size: var(--fs-md, var(--fs-base));
+  }
+
+  .btn--contained {
+    --btn-bg: var(--primary-base);
+    --btn-color: var(--c-white);
+    --btn-border: transparent;
+  }
+  .btn--contained:hover {
+    --btn-bg: var(--primary-dark);
+    filter: none;
+  }
+  .btn--contained:active { transform: translateY(0); }
+
+  .btn--outlined,
+  .btn--outline {
+    --btn-bg: var(--surface-0, transparent);
+    --btn-color: var(--text-color, var(--c-text));
+    --btn-border: var(--border-strong, var(--c-border));
+    --btn-shadow: none;
+  }
+  .btn--outlined:hover,
+  .btn--outline:hover {
+    --btn-bg: var(--surface-hover);
+    filter: none;
+  }
+
+  .btn--text {
+    --btn-bg: transparent;
+    --btn-color: var(--primary-base);
+    --btn-border: transparent;
+    --btn-shadow: none;
+  }
+  .btn--text:hover {
+    --btn-bg: var(--surface-hover);
+    filter: none;
   }
 
   .btn--primary {
@@ -59,19 +114,13 @@
   }
   .btn--danger:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 var(--ring-width) var(--ring-color);
+    box-shadow: 0 0 0 3px var(--focus-ring-danger, var(--focus-ring, var(--ring-color)));
   }
   .btn--danger[aria-disabled="true"] {
     opacity: .6;
     cursor: not-allowed;
     box-shadow: none;
     pointer-events: none;
-  }
-  .btn--outline {
-    --btn-bg: transparent;
-    --btn-color: var(--c-text);
-    --btn-border: var(--c-border);
-    background: transparent;
   }
   .btn--ghost {
     --btn-bg: transparent;
@@ -85,9 +134,18 @@
     --btn-border: color-mix(in srgb, var(--c-secondary) 40%, transparent);
   }
   .btn--sm {
-    padding: var(--space-2) var(--space-3);
-    min-height: calc(var(--space-6) + var(--space-1));
-    font-size: var(--fs-h6);
+    --btn-min-height: 2rem;
+    --btn-padding-y: .375rem;
+    --btn-padding-x: .75rem;
+    --btn-font-size: var(--fs-sm, var(--fs-base));
+    gap: .375rem;
+    box-shadow: none;
+  }
+  .btn--lg {
+    --btn-min-height: 2.5rem;
+    --btn-padding-y: .625rem;
+    --btn-padding-x: 1rem;
+    --btn-font-size: var(--fs-md, var(--fs-base));
     box-shadow: none;
   }
   .btn--icon {
@@ -97,6 +155,12 @@
     box-shadow: none;
   }
   .btn--icon .icon { margin: 0; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .btn {
+      transition: none;
+    }
+  }
 
   /* ——— Formularios ——— */
   .form-control {
