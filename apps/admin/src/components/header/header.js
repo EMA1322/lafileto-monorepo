@@ -443,9 +443,13 @@ function renderAccountInfo() {
   const user = getCurrentUser() || null;
   const nameValue = user?.name || user?.fullName || user?.username || user?.email || '';
   const roleValue = getUserRoleLabel(user);
+  const resolvedName = String(nameValue || '').trim() || t('header.userFallback');
+  const resolvedRole = roleValue || '—';
 
-  refs.userNameEl.textContent = String(nameValue || '').trim() || t('header.userFallback');
-  refs.userRoleEl.textContent = roleValue || '—';
+  refs.userNameEl.textContent = resolvedName;
+  refs.userRoleEl.textContent = resolvedRole;
+  refs.userNameEl.setAttribute('title', resolvedName);
+  refs.userRoleEl.setAttribute('title', resolvedRole);
 }
 
 function placeAccountBlock() {

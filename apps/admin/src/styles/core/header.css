@@ -313,6 +313,8 @@
   }
 
   .header__drawer {
+    grid-column: 2;
+    min-width: 0;
     position: static;
     top: auto;
     right: auto;
@@ -340,6 +342,7 @@
   .header__center {
     display: flex;
     justify-content: center;
+    min-width: 0;
   }
 
   .header__right,
@@ -355,22 +358,47 @@
     align-items: center;
     justify-content: center;
     gap: var(--space-2);
-    overflow: visible;
+    min-width: 0;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .header__left {
+    grid-column: 1;
   }
 
   .header__account-slot {
+    grid-column: 3;
     display: flex;
     align-items: center;
     justify-content: flex-end;
     justify-self: end;
     margin-inline-start: auto;
-    min-width: max-content;
+    min-width: 0;
   }
 
   .header__account {
     display: flex;
     align-items: center;
     justify-content: flex-end;
+    min-width: 0;
     white-space: nowrap;
+  }
+
+  .header__account [data-header-user-name],
+  .header__account [data-header-user-role] {
+    display: inline-block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .header__account [data-header-user-name] {
+    max-width: clamp(8rem, 12vw, 14rem);
+  }
+
+  .header__account [data-header-user-role] {
+    max-width: clamp(5rem, 8vw, 9rem);
   }
 }
