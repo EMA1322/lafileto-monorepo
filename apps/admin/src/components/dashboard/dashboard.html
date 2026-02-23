@@ -89,12 +89,12 @@
 
     <div class="dashboard__state dashboard__state--error card card__body" id="dashboard-error" role="alert" hidden>
       <p class="dashboard__error-text">Ocurrió un error al cargar el panel.</p>
-      <button id="dashboard-retry" class="btn btn--ghost btn--sm" type="button">Reintentar</button>
+      <button id="dashboard-retry" class="btn btn--contained btn--md" type="button">Reintentar</button>
     </div>
 
     <div class="dashboard__state dashboard__state--empty card card__body" id="dashboard-empty" role="status" hidden>
       <p>No hay datos para mostrar en este momento.</p>
-      <button id="dashboard-empty-reload" class="btn btn--ghost btn--sm" type="button">Actualizar</button>
+      <button id="dashboard-empty-reload" class="btn btn--outlined btn--md" type="button">Actualizar</button>
     </div>
 
     <div class="dashboard__view" id="dashboard-success" hidden>
@@ -167,7 +167,9 @@
             <span>Actividad reciente</span>
           </h3>
           <ul id="dashboard-activity-list" class="dashboard__activity-list" hidden></ul>
-          <p id="dashboard-activity-empty" class="dashboard__panel-empty">Todavía no hay actividad para mostrar.</p>
+          <div id="dashboard-activity-empty" class="dashboard__panel-empty alert alert--info alert--outline" role="status">
+            Todavía no hay actividad para mostrar.
+          </div>
         </div>
 
         <div class="card dashboard__panel dashboard__panel--business">
@@ -179,7 +181,7 @@
           </h3>
           <p id="dashboard-business-badge" class="c-pill c-pill--sm dashboard__business-badge">—</p>
           <p id="dashboard-business-nextchange" class="dashboard__business-nextchange">Próximo cambio: —</p>
-          <button class="btn btn--outline btn--sm dashboard__business-settings" type="button" data-link="#settings">
+          <button class="btn btn--outlined btn--md dashboard__business-settings" type="button" data-link="#settings">
             Revisar configuración
           </button>
         </div>
@@ -191,6 +193,9 @@
             </span>
             <span>Tips y checklist</span>
           </h3>
+          <div id="dashboard-tips-progress" class="progress progress--info" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div id="dashboard-tips-progress-bar" class="progress__bar" style="width: 0%"></div>
+          </div>
           <ul id="dashboard-tips-list" class="dashboard__tips-list"></ul>
         </div>
 
