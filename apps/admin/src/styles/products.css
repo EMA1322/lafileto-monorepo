@@ -310,6 +310,14 @@
 }
 
 
+
+.products__status-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
 .products__status-toggle {
   display: inline-flex;
   align-items: center;
