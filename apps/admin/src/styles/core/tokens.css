@@ -44,10 +44,29 @@
     --c-on-primary: #1a1a1a;       /* contraste sobre primario */
     --c-secondary: #3b82f6;        /* azul acento */
 
+    /* State palette primitives (HEX - official palette) */
+    /* Source: Official Admin palette (image 4/5) */
+    --success-light: #C2F0D3;
+    --success-base: #22C35D;
+    --success-dark: #0D7332;
+
+    --warning-light: #F7EED4;
+    --warning-base: #E8BA30;
+    --warning-dark: #A57F0D;
+
+    --error-light: #F5D6D6;
+    --error-base: #CF1717;
+    --error-dark: #760A0A;
+
+    --info-light: #D6E5F5;
+    --info-base: #2273C3;
+    --info-dark: #0B4073;
+
     /* ——— Estados ——— */
     --c-success: #16a34a;
     --c-warning: #f59e0b;
     --c-error:   #dc2626;
+    /* legacy tokens will be migrated to state tokens in PR28+ */
 
     /* ——— Superficies ——— */
     --c-bg: #ffffff;
@@ -93,17 +112,38 @@
     --fw-semibold: 600;
     --fw-bold: 700;
 
-    /* Semantic surfaces and UI states */
-    --surface-0: var(--c-bg);
+    /* Semantic tokens (stable contract) – use these in components/modules */
+    --surface-0: var(--neutral-50);
     --surface-1: var(--c-surface);
-    --surface-2: var(--c-surface-muted);
-    --surface-hover: color-mix(in srgb, var(--surface-2) 86%, var(--c-neutral-200));
-    --surface-elevated: color-mix(in srgb, var(--surface-1) 92%, var(--c-neutral-100));
+    --surface-2: var(--neutral-100);
+    --surface-hover: color-mix(in srgb, var(--surface-2) 92%, var(--neutral-900) 8%);
+    --surface-elevated: var(--c-white);
 
-    --border-soft: color-mix(in srgb, var(--c-border) 70%, transparent);
-    --border-strong: color-mix(in srgb, var(--c-border) 88%, var(--c-neutral-300));
+    --text: var(--c-text);
+    --text-subtle: var(--neutral-700);
+    --text-muted: var(--c-text-muted);
 
-    --text-subtle: color-mix(in srgb, var(--c-text) 72%, white);
+    --border-soft: color-mix(in srgb, var(--neutral-900) 12%, transparent);
+    --border-strong: color-mix(in srgb, var(--neutral-900) 20%, transparent);
+
+    --focus-ring: color-mix(in srgb, var(--primary-base) 45%, transparent);
+    --focus-ring-danger: color-mix(in srgb, var(--state-error-base) 45%, transparent);
+
+    --state-success-light: var(--success-light);
+    --state-success-base: var(--success-base);
+    --state-success-dark: var(--success-dark);
+
+    --state-info-light: var(--info-light);
+    --state-info-base: var(--info-base);
+    --state-info-dark: var(--info-dark);
+
+    --state-warning-light: var(--warning-light);
+    --state-warning-base: var(--warning-base);
+    --state-warning-dark: var(--warning-dark);
+
+    --state-error-light: var(--error-light);
+    --state-error-base: var(--error-base);
+    --state-error-dark: var(--error-dark);
 
     --shadow-med: var(--shadow-md);
 
@@ -134,7 +174,7 @@
     --size-thumb-lg: 6rem;  /* 96px */
 
     /* ——— Anillo de enfoque ——— */
-    --ring-color: rgba(59,130,246,.45);
+    --ring-color: var(--focus-ring);
     --ring-offset: 2px;
     --ring-width: 2px;
 
