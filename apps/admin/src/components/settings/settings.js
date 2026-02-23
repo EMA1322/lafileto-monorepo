@@ -120,6 +120,7 @@ function getRefs() {
     loadingState: container.querySelector('#settings-loading'),
     errorState: container.querySelector('#settings-error'),
     emptyState: container.querySelector('#settings-empty'),
+    formSuccess: container.querySelector('#settings-form-success'),
     formError: container.querySelector('#settings-form-error'),
     hoursGrid: container.querySelector('#settings-hours-grid'),
     overrideSelect: container.querySelector('#hours-override'),
@@ -200,6 +201,52 @@ function setFormError(refs, message = '') {
   refs.formError.hidden = !message;
 }
 
+function setFormSuccess(refs, message = '') {
+  if (!refs?.formSuccess) return;
+
+  refs.formSuccess.textContent = message;
+  refs.formSuccess.hidden = !message;
+}
+
+function getFieldNodes(refs, path) {
+  const namedItem = refs?.form?.elements?.namedItem(path);
+  if (!namedItem) return [];
+  if (typeof namedItem.length === 'number' && !namedItem.tagName) {
+    return Array.from(namedItem);
+  }
+  return [namedItem];
+}
+
+function toggleFieldInvalidState(refs, path, invalid) {
+  getFieldNodes(refs, path).forEach((node) => {
+    if (!(node instanceof HTMLElement)) return;
+    node.setAttribute('aria-invalid', invalid ? 'true' : 'false');
+  });
+}
+
+function bindFieldErrorNodes(refs) {
+  const fieldErrors = getFieldErrors(refs);
+  fieldErrors.forEach((node) => {
+    if (!node.id) {
+      const path = String(node.dataset.errorFor || 'field').replace(/[^a-z0-9_-]+/gi, '-');
+      node.id = `settings-error-${path}`;
+    }
+
+    node.classList.add('field-error');
+    getFieldNodes(refs, String(node.dataset.errorFor || '')).forEach((field) => {
+      if (!(field instanceof HTMLElement)) return;
+      const describedBy = field.getAttribute('aria-describedby') || '';
+      const next = describedBy
+        .split(/\s+/)
+        .filter(Boolean)
+        .concat(node.id)
+        .filter((value, index, arr) => arr.indexOf(value) === index)
+        .join(' ');
+      if (next) field.setAttribute('aria-describedby', next);
+    });
+  });
+}
+
 function getFieldErrors(refs) {
   const nodes = refs?.container?.querySelectorAll('[data-error-for]') || [];
   return Array.from(nodes);
@@ -209,6 +256,7 @@ function clearFieldErrors(refs) {
   for (const node of getFieldErrors(refs)) {
     node.hidden = true;
     node.textContent = '';
+    toggleFieldInvalidState(refs, String(node.dataset.errorFor || ''), false);
   }
 }
 
@@ -227,6 +275,7 @@ function setFieldError(refs, path, message) {
   if (fieldErrorNode) {
     fieldErrorNode.textContent = message;
     fieldErrorNode.hidden = false;
+    toggleFieldInvalidState(refs, normalizedPath, true);
     return true;
   }
 
@@ -236,6 +285,7 @@ function setFieldError(refs, path, message) {
     if (nearestError) {
       nearestError.textContent = message;
       nearestError.hidden = false;
+      toggleFieldInvalidState(refs, normalizedPath, true);
       return true;
     }
   }
@@ -330,9 +380,13 @@ function createRow({ day, index }) {
   closeField.append(closeLabel, closeInput);
 
   const inlineError = document.createElement('p');
-  inlineError.className = 'settings__field-error';
+  inlineError.className = 'settings__field-error field-error';
   inlineError.dataset.errorFor = `hours.openingHours.${index}`;
+  inlineError.id = `settings-error-hours-openingHours-${index}`;
   inlineError.hidden = true;
+
+  openInput.setAttribute('aria-describedby', inlineError.id);
+  closeInput.setAttribute('aria-describedby', inlineError.id);
 
   row.append(dayLabel, closedLabel, openField, closeField, inlineError);
 
@@ -454,7 +508,7 @@ function createSocialRow(link, index) {
 
   const removeBtn = document.createElement('button');
   removeBtn.type = 'button';
-  removeBtn.className = 'btn btn--ghost btn--sm';
+  removeBtn.className = 'btn btn--text';
   removeBtn.textContent = 'Quitar';
   removeBtn.dataset.action = 'remove-social';
   removeBtn.dataset.index = String(index);
@@ -463,14 +517,19 @@ function createSocialRow(link, index) {
   removeBtn.hidden = true;
 
   const labelError = document.createElement('p');
-  labelError.className = 'settings__field-error';
+  labelError.className = 'settings__field-error field-error';
   labelError.dataset.errorFor = `socialLinks.${index}.label`;
+  labelError.id = `settings-error-socialLinks-${index}-label`;
   labelError.hidden = true;
 
   const urlError = document.createElement('p');
-  urlError.className = 'settings__field-error';
+  urlError.className = 'settings__field-error field-error';
   urlError.dataset.errorFor = `socialLinks.${index}.url`;
+  urlError.id = `settings-error-socialLinks-${index}-url`;
   urlError.hidden = true;
+
+  labelInput.setAttribute('aria-describedby', labelError.id);
+  urlInput.setAttribute('aria-describedby', urlError.id);
 
   row.append(labelField, urlField, removeBtn, labelError, urlError);
   return row;
@@ -821,6 +880,7 @@ async function saveSettings(refs) {
   if (state.isSaving || !refs?.form) return;
 
   clearFieldErrors(refs);
+  setFormSuccess(refs, '');
   setFormError(refs, '');
 
   const hoursPayload = collectHoursPayload(refs);
@@ -871,11 +931,14 @@ async function saveSettings(refs) {
     persistBrandLogoCache(state.siteConfig);
     emitSettingsBrandLogoUpdate(state.siteConfig);
     prefillForm(refs, state.siteConfig);
+    setFormError(refs, '');
+    setFormSuccess(refs, 'Configuración guardada correctamente.');
     toast.success('Configuración guardada correctamente.');
   } catch (error) {
     const hasMappedFields = error?.status === 400 ? mapBackendFieldErrors(refs, error) : false;
 
     const fallbackMessage = error?.message || 'No se pudo guardar la configuración.';
+    setFormSuccess(refs, '');
     setFormError(refs, hasMappedFields ? 'Hay errores de validación para corregir.' : fallbackMessage);
     toast.error(fallbackMessage);
   } finally {
@@ -886,6 +949,7 @@ async function saveSettings(refs) {
 
 async function loadSettings(refs) {
   setStatus(refs, STATUS.LOADING);
+  setFormSuccess(refs, '');
   setFormError(refs, '');
   clearFieldErrors(refs);
 
@@ -922,6 +986,7 @@ export function initSettings() {
   }
 
   refs.container.dataset.settingsInit = 'true';
+  bindFieldErrorNodes(refs);
 
   refs.retryBtn?.addEventListener('click', () => {
     void loadSettings(refs);
