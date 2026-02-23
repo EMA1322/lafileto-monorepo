@@ -1,8 +1,6 @@
 // Admin / Categories table renderer
 // Comentarios en español, código en inglés.
-
-import { applyRBAC } from '@/utils/rbac.js';
-import { mountIcons } from '@/utils/icons.js';
+// Internal renderer: returns table row HTML only. No DOM side-effects.
 
 import {
   escapeAttr,
@@ -39,26 +37,38 @@ function renderRow(item) {
     <!-- Expose row id for delegated handlers without changing the visible UI -->
     <div class="categories__row-actions adminList__rowActions" role="group" aria-label="Acciones">
       <button
-        class="btn btn--ghost btn--sm categories__actionBtn adminList__actionBtn"
+        class="icon-btn icon-btn--sm icon-btn--ghost categories__actionBtn adminList__actionBtn"
         type="button"
         data-action="view"
         data-id="${idAttr}"
-        >Ver</button>
+        aria-label="Ver categoría"
+        data-tooltip="Ver categoría"
+      >
+        <span class="icon icon--sm" data-icon="eye" aria-hidden="true"></span>
+      </button>
       <button
-        class="btn btn--ghost btn--sm categories__actionBtn adminList__actionBtn"
+        class="icon-btn icon-btn--sm icon-btn--ghost categories__actionBtn adminList__actionBtn"
         type="button"
         data-action="edit"
         data-id="${idAttr}"
         data-rbac-action="update"
         data-rbac-hide
-      >Editar</button>
+        aria-label="Editar categoría"
+        data-tooltip="Editar categoría"
+      >
+        <span class="icon icon--sm" data-icon="edit" aria-hidden="true"></span>
+      </button>
       <button
-        class="btn btn--danger btn--sm categories__actionBtn adminList__actionBtn"
+        class="icon-btn icon-btn--sm icon-btn--danger categories__actionBtn adminList__actionBtn"
         type="button"
         data-action="delete"
         data-id="${idAttr}"
         data-rbac-action="delete"
-      >Eliminar</button>
+        aria-label="Eliminar categoría"
+        data-tooltip="Eliminar categoría"
+      >
+        <span class="icon icon--sm" data-icon="trash" aria-hidden="true"></span>
+      </button>
     </div>
   `;
   return `
@@ -199,6 +209,4 @@ export function renderCategoriesTable(snapshot, root = document.querySelector('#
     btnLast.dataset.page = String(totalPages);
   }
 
-  applyRBAC(container);
-  mountIcons(container);
 }

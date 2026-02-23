@@ -1,19 +1,32 @@
 // Admin / Categories entrypoint
 // Comentarios en español, código en inglés.
+// Module files: categories.html, categories.css, categories.js, categories.render.table.js (table row renderer).
 
 import { ensureRbacLoaded, applyRBAC, canRead, canWrite, canUpdate, canDelete } from '@/utils/rbac.js';
 
 import { MODULE_KEY, MODULE_KEY_ALIAS } from './categories.helpers.js';
 import { fetchCategories, getModuleKey, getSnapshot, subscribe, state, notify } from './categories.state.js';
+import { mountIcons } from '@/utils/icons.js';
+import { initTooltips } from '@/utils/floating.js';
 import { renderCategoriesTable } from './categories.render.table.js';
 import { bindCategoriesBindings } from './categories.render.bindings.js';
 
 let unsubscribe = null;
 
+function decorateRenderedContent(container) {
+  mountIcons(container);
+  initTooltips(container);
+}
+
+function renderAndDecorate(snapshot, container) {
+  renderCategoriesTable(snapshot, container);
+  decorateRenderedContent(container);
+}
+
 function mountSubscriptions(container) {
   if (unsubscribe) return;
   unsubscribe = subscribe((snapshot) => {
-    renderCategoriesTable(snapshot, container);
+    renderAndDecorate(snapshot, container);
   });
 }
 
@@ -52,7 +65,7 @@ export async function initCategories(attempt = 0) {
   }
 
   if (container.dataset.categoriesInit === 'true') {
-    renderCategoriesTable(getSnapshot(), container);
+    renderAndDecorate(getSnapshot(), container);
     applyRBAC(container);
     return;
   }
@@ -73,11 +86,11 @@ export async function initCategories(attempt = 0) {
     return;
   }
 
-  renderCategoriesTable(getSnapshot(), container);
+  renderAndDecorate(getSnapshot(), container);
 
   try {
     await fetchCategories();
   } catch {
-    renderCategoriesTable(getSnapshot(), container);
+    renderAndDecorate(getSnapshot(), container);
   }
 }
