@@ -44,10 +44,25 @@
     --c-on-primary: #1a1a1a;       /* contraste sobre primario */
     --c-secondary: #3b82f6;        /* azul acento */
 
-    /* ——— Estados ——— */
-    --c-success: #16a34a;
-    --c-warning: #f59e0b;
-    --c-error:   #dc2626;
+    /* State palette primitives (HEX - official palette) */
+    /* Source: Official Admin palette (image 4/5) */
+    --success-light: #86efac;
+    --success-base: #16a34a;
+    --success-dark: #166534;
+    --info-light: #93c5fd;
+    --info-base: #3b82f6;
+    --info-dark: #1d4ed8;
+    --warning-light: #fcd34d;
+    --warning-base: #f59e0b;
+    --warning-dark: #b45309;
+    --error-light: #fca5a5;
+    --error-base: #dc2626;
+    --error-dark: #991b1b;
+
+    /* ——— Estados (legacy aliases) ——— */
+    --c-success: var(--success-base);
+    --c-warning: var(--warning-base);
+    --c-error: var(--error-base);
 
     /* ——— Superficies ——— */
     --c-bg: #ffffff;
@@ -110,21 +125,21 @@
     --focus-ring: color-mix(in srgb, var(--primary-base) 45%, transparent);
     --focus-ring-danger: color-mix(in srgb, var(--state-error-base) 45%, transparent);
 
-    --state-success-light: #86efac;
-    --state-success-base: var(--c-success);
-    --state-success-dark: #166534;
+    --state-success-light: var(--success-light);
+    --state-success-base: var(--success-base);
+    --state-success-dark: var(--success-dark);
 
-    --state-info-light: #93c5fd;
-    --state-info-base: var(--secondary-base);
-    --state-info-dark: #1d4ed8;
+    --state-info-light: var(--info-light);
+    --state-info-base: var(--info-base);
+    --state-info-dark: var(--info-dark);
 
-    --state-warning-light: #fcd34d;
-    --state-warning-base: var(--c-warning);
-    --state-warning-dark: #b45309;
+    --state-warning-light: var(--warning-light);
+    --state-warning-base: var(--warning-base);
+    --state-warning-dark: var(--warning-dark);
 
-    --state-error-light: #fca5a5;
-    --state-error-base: var(--c-error);
-    --state-error-dark: #991b1b;
+    --state-error-light: var(--error-light);
+    --state-error-base: var(--error-base);
+    --state-error-dark: var(--error-dark);
 
     --shadow-med: var(--shadow-md);
 
