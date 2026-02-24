@@ -195,9 +195,10 @@
 }
 
 .header__nav-link {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 0.75rem;
+  width: 100%;
   text-decoration: none;
   color: var(--text);
   font-weight: var(--fw-medium);
@@ -208,6 +209,16 @@
   border: 1px solid transparent;
   transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease,
     transform 0.15s ease;
+}
+
+.header__nav-icon {
+  width: 1.125rem;
+  height: 1.125rem;
+  flex: 0 0 auto;
+  color: currentColor;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
 }
 
 .header__nav-link:hover {
@@ -351,6 +362,10 @@
     overflow: visible;
     width: max-content;
     min-width: 100%;
+  }
+
+  .header__nav-link {
+    width: auto;
   }
 
   .header__account-slot {
