@@ -56,6 +56,8 @@ const refs = {
   drawerEl: null,
   overlayEl: null,
   navListEl: null,
+  desktopNavHostEl: null,
+  drawerNavHostEl: null,
   accountEl: null,
   accountSlotEl: null,
   drawerFooterEl: null,
@@ -130,6 +132,9 @@ function reconcileDrawerOnViewportChange() {
     refs.toggleBtnEl.setAttribute('aria-expanded', 'false');
     setBodyScrollLock(false);
   }
+
+  placeAccountBlock();
+  placeNavList();
 }
 
 function resetRefs() {
@@ -144,6 +149,8 @@ function syncRefsFromDOM() {
   refs.drawerEl = document.getElementById('headerDrawer');
   refs.overlayEl = document.getElementById('headerOverlay');
   refs.navListEl = document.getElementById('headerNavList');
+  refs.desktopNavHostEl = document.getElementById('headerDesktopNavHost');
+  refs.drawerNavHostEl = refs.headerEl?.querySelector('.header__center') || null;
   refs.accountEl = refs.headerEl?.querySelector('[data-header-account]') || null;
   refs.accountSlotEl = refs.headerEl?.querySelector('.header__account-slot') || null;
   refs.drawerFooterEl = refs.headerEl?.querySelector('.header__drawer-footer') || null;
@@ -461,6 +468,16 @@ function placeAccountBlock() {
   }
 }
 
+function placeNavList() {
+  if (!refs.navListEl || !refs.desktopNavHostEl || !refs.drawerNavHostEl) return;
+
+  const isDesktop = DESKTOP_MQ.matches;
+  const target = isDesktop ? refs.desktopNavHostEl : refs.drawerNavHostEl;
+  if (refs.navListEl.parentElement !== target) {
+    target.appendChild(refs.navListEl);
+  }
+}
+
 // ------------------------------
 // API pública de inicialización
 // ------------------------------
@@ -486,6 +503,7 @@ export async function initAdminHeader() {
   initTooltips(refs.headerEl);
   renderAccountInfo();
   placeAccountBlock();
+  placeNavList();
   renderBrandLogo();
 
   if (!state.bound) {
