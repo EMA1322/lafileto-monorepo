@@ -58,6 +58,14 @@
   padding-block: var(--space-2);
 }
 
+.header__nav {
+  display: none;
+}
+
+.header__nav-host {
+  min-width: 0;
+}
+
 .header__account-slot {
   display: none;
 }
@@ -307,46 +315,31 @@
     column-gap: var(--space-5);
   }
 
+  .header__left,
+  .header__nav,
+  .header__account-slot {
+    min-width: 0;
+  }
+
   .header__menu-toggle,
   .header__overlay {
     display: none !important;
   }
 
   .header__drawer {
-    position: static;
-    top: auto;
-    right: auto;
-    margin-inline: 0;
-    width: auto;
-    height: auto;
-    max-height: none;
-    border: 0;
-    border-radius: 0;
-    box-shadow: none;
-    transform: none;
-    opacity: 1;
-    pointer-events: auto;
-    transition: none;
-    background: transparent;
-    overflow: visible;
+    display: none;
   }
 
-  .header__drawer-inner {
-    height: auto;
-    padding: 0;
+  .header__nav {
     display: block;
+    min-width: 0;
   }
 
-  .header__center {
-    display: flex;
-    justify-content: center;
-  }
-
-  .header__right,
-  .header__drawer-footer {
-    margin-top: 0;
-    padding: 0;
-    border: 0;
+  .header__nav-host {
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
   }
 
   .header__nav-list {
@@ -356,6 +349,8 @@
     justify-content: center;
     gap: var(--space-2);
     overflow: visible;
+    width: max-content;
+    min-width: 100%;
   }
 
   .header__account-slot {

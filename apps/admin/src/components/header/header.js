@@ -56,6 +56,8 @@ const refs = {
   drawerEl: null,
   overlayEl: null,
   navListEl: null,
+  desktopNavHostEl: null,
+  drawerNavHostEl: null,
   accountEl: null,
   accountSlotEl: null,
   drawerFooterEl: null,
@@ -144,6 +146,8 @@ function syncRefsFromDOM() {
   refs.drawerEl = document.getElementById('headerDrawer');
   refs.overlayEl = document.getElementById('headerOverlay');
   refs.navListEl = document.getElementById('headerNavList');
+  refs.desktopNavHostEl = document.getElementById('headerDesktopNavHost');
+  refs.drawerNavHostEl = refs.navListEl?.parentElement || null;
   refs.accountEl = refs.headerEl?.querySelector('[data-header-account]') || null;
   refs.accountSlotEl = refs.headerEl?.querySelector('.header__account-slot') || null;
   refs.drawerFooterEl = refs.headerEl?.querySelector('.header__drawer-footer') || null;
@@ -450,10 +454,18 @@ function renderAccountInfo() {
 
 function placeAccountBlock() {
   if (!refs.accountEl || !refs.accountSlotEl || !refs.drawerFooterEl) return;
-  const isDesktop = window.matchMedia('(min-width: 1024px)').matches;
+  const isDesktop = DESKTOP_MQ.matches;
   const target = isDesktop ? refs.accountSlotEl : refs.drawerFooterEl;
   if (refs.accountEl.parentElement !== target) {
     target.appendChild(refs.accountEl);
+  }
+}
+
+function placeNavList() {
+  if (!refs.navListEl || !refs.desktopNavHostEl || !refs.drawerNavHostEl) return;
+  const target = DESKTOP_MQ.matches ? refs.desktopNavHostEl : refs.drawerNavHostEl;
+  if (refs.navListEl.parentElement !== target) {
+    target.appendChild(refs.navListEl);
   }
 }
 
@@ -481,6 +493,7 @@ export async function initAdminHeader() {
   mountIcons(refs.headerEl);
   initTooltips(refs.headerEl);
   renderAccountInfo();
+  placeNavList();
   placeAccountBlock();
   renderBrandLogo();
 
@@ -521,7 +534,11 @@ export async function initAdminHeader() {
     const onBrandLogoUpdate = () => renderBrandLogo();
     addListener(document, 'admin:settings-brand-logo-updated', onBrandLogoUpdate);
 
-    const onViewportChange = () => reconcileDrawerOnViewportChange();
+    const onViewportChange = () => {
+      placeNavList();
+      placeAccountBlock();
+      reconcileDrawerOnViewportChange();
+    };
     if (typeof DESKTOP_MQ.addEventListener === 'function') {
       addListener(DESKTOP_MQ, 'change', onViewportChange);
     } else if (typeof DESKTOP_MQ.addListener === 'function') {
@@ -542,7 +559,7 @@ export async function initAdminHeader() {
       });
     }
 
-    reconcileDrawerOnViewportChange();
+    onViewportChange();
 
     state.bound = true;
   }
