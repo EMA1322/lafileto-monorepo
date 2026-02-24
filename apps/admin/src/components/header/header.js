@@ -261,31 +261,7 @@ function updateNavEmptyState() {
   const navListEl = document.getElementById('headerNavList');
   if (!navListEl) return;
 
-  const links = [...navListEl.querySelectorAll('.header__nav-link[data-rbac-action]')];
-  const visibleLinks = links.filter((linkEl) => {
-    if (linkEl.hasAttribute('hidden') || linkEl.getAttribute('aria-hidden') === 'true') return false;
-    return linkEl.offsetParent !== null;
-  });
-
-  const existingEmptyState = navListEl.querySelector('[data-header-nav-empty]');
-  if (visibleLinks.length > 0) {
-    existingEmptyState?.remove();
-    return;
-  }
-
-  if (existingEmptyState) return;
-
-  const emptyStateItemEl = document.createElement('li');
-  emptyStateItemEl.className = 'header__nav-empty';
-  emptyStateItemEl.setAttribute('data-header-nav-empty', 'true');
-  emptyStateItemEl.setAttribute('role', 'status');
-  emptyStateItemEl.setAttribute('aria-live', 'polite');
-  emptyStateItemEl.innerHTML = `
-    <span class="header__nav-empty-title">${t('header.noNavItems')}</span>
-    <a class="header__nav-empty-cta header__nav-link" href="#dashboard">${t('header.goToDashboard')}</a>
-  `;
-
-  navListEl.appendChild(emptyStateItemEl);
+  navListEl.querySelector('[data-header-nav-empty]')?.remove();
 }
 
 // ------------------------------
