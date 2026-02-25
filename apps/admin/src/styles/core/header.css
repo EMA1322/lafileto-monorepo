@@ -124,7 +124,9 @@
   right: 0;
   bottom: 0;
   width: min(88vw, 420px);
+  height: 100vh;
   height: 100dvh;
+  max-height: 100vh;
   max-height: 100dvh;
   background: var(--surface-1);
   border-inline-start: 1px solid var(--border-soft);
