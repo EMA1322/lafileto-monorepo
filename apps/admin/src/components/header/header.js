@@ -54,6 +54,7 @@ const refs = {
   headerEl: null,
   toggleBtnEl: null,
   drawerEl: null,
+  drawerCloseBtnEl: null,
   overlayEl: null,
   navListEl: null,
   desktopNavHostEl: null,
@@ -144,6 +145,7 @@ function syncRefsFromDOM() {
   refs.headerEl = document.querySelector('header.header');
   refs.toggleBtnEl = document.getElementById('headerMenuToggle');
   refs.drawerEl = document.getElementById('headerDrawer');
+  refs.drawerCloseBtnEl = document.getElementById('headerDrawerClose');
   refs.overlayEl = document.getElementById('headerOverlay');
   refs.navListEl = document.getElementById('headerNavList');
   refs.desktopNavHostEl = document.getElementById('headerDesktopNavHost');
@@ -370,7 +372,7 @@ function handleLogout() {
 function onNavClick(e) {
   const anchor = e.target.closest('a.header__nav-link');
   if (!anchor) return;
-  if (window.matchMedia('(max-width: 767.98px)').matches) setDrawer(false);
+  if (!DESKTOP_MQ.matches) setDrawer(false);
 }
 
 function showBrandFallback() {
@@ -481,6 +483,10 @@ export async function initAdminHeader() {
     // Overlay
     const overlayFn = () => setDrawer(false);
     addListener(refs.overlayEl, 'click', overlayFn);
+
+    // Close button (inside drawer)
+    const drawerCloseFn = () => setDrawer(false);
+    addListener(refs.drawerCloseBtnEl, 'click', drawerCloseFn);
 
     // Esc + focus-trap
     const keyFn = (e) => handleKeydown(e);
