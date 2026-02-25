@@ -341,15 +341,16 @@
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-    overflow: visible;
+    flex-wrap: nowrap;
+    gap: var(--space-1);
+    overflow: hidden;
     width: 100%;
     min-width: 0;
   }
 
   .header__nav-link {
     width: auto;
+    min-width: 0;
   }
 
   .header__account-slot {
@@ -359,7 +360,7 @@
     justify-self: end;
     margin-inline-start: auto;
     min-width: 0;
-    max-width: min(32vw, 24rem);
+    max-width: clamp(14rem, 30vw, 24rem);
   }
 
   .header__account {
