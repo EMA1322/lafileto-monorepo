@@ -321,9 +321,11 @@
 }
 
 @media (min-width: 1024px) {
-  .header__container {
-    /* Avoid double horizontal padding from `.container` + `.header__container`. */
-    padding-inline: 0;
+  .header__container.container {
+    max-width: none;
+    width: 100%;
+    margin-inline: 0;
+    padding-inline: clamp(var(--space-4), 2vw, var(--space-6));
   }
 
   .header__bar {
@@ -354,24 +356,26 @@
   .header__nav {
     display: block;
     min-width: 0;
-    overflow: hidden;
+    overflow: visible;
   }
 
   .header__nav-host {
     min-width: 0;
-    overflow: hidden;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
   }
 
   .header__nav-list {
     padding: 0;
     flex-direction: row;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     flex-wrap: nowrap;
     gap: var(--space-1);
-    overflow: hidden;
-    width: 100%;
-    min-width: 0;
+    overflow: visible;
+    width: max-content;
+    min-width: 100%;
   }
 
   .header__nav-link {
