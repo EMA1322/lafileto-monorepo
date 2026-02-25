@@ -32,8 +32,6 @@ export const COPY_ES_AR = {
     currentUser: 'Usuario actual',
     userFallback: 'Usuario',
     signOutAria: 'Cerrar sesión de la cuenta de administración',
-    noNavItems: 'No hay opciones de navegación disponibles para tu rol.',
-    goToDashboard: 'Ir al panel principal',
     confirmLogout: '¿Seguro que querés cerrar sesión?',
     logoutSuccess: 'Sesión cerrada correctamente',
     logoutError: 'No se pudo cerrar sesión',
