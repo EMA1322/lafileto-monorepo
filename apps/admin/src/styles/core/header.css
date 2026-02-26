@@ -356,26 +356,26 @@
   .header__nav {
     display: block;
     min-width: 0;
-    overflow: visible;
+    width: 100%;
+    overflow: hidden;
   }
 
   .header__nav-host {
     min-width: 0;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scrollbar-width: thin;
+    width: 100%;
+    overflow: hidden;
   }
 
   .header__nav-list {
     padding: 0;
     flex-direction: row;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: center;
     flex-wrap: nowrap;
     gap: var(--space-1);
-    overflow: visible;
-    width: max-content;
-    min-width: 100%;
+    overflow: hidden;
+    width: 100%;
+    min-width: 0;
   }
 
   .header__nav-link {
@@ -418,5 +418,38 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+}
+
+
+@media (min-width: 1024px) and (max-width: 1365px) {
+  .header__bar {
+    display: flex;
+  }
+
+  .header__nav,
+  .header__account-slot {
+    display: none;
+  }
+
+  .header__menu-toggle {
+    display: inline-flex !important;
+  }
+
+  .header__overlay:not([hidden]) {
+    display: block !important;
+  }
+
+  .header__drawer {
+    display: block;
+    transform: translateX(100%);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .header__drawer.is-open {
+    transform: translateX(0);
+    opacity: 1;
+    pointer-events: auto;
   }
 }

@@ -76,7 +76,7 @@ const state = {
   drawerTrap: null,
 };
 
-const DESKTOP_MQ = window.matchMedia('(min-width: 1024px)');
+const DESKTOP_MQ = window.matchMedia('(min-width: 1366px)');
 const BODY_SCROLL_LOCK_DATA_ATTR = 'headerDrawerScrollLock';
 const BODY_SCROLL_PREV_OVERFLOW_ATTR = 'headerDrawerPrevOverflow';
 
