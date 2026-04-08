@@ -321,9 +321,11 @@
 }
 
 @media (min-width: 1024px) {
-  .header__container {
-    /* Avoid double horizontal padding from `.container` + `.header__container`. */
-    padding-inline: 0;
+  .header__container.container {
+    max-width: none;
+    width: 100%;
+    margin-inline: 0;
+    padding-inline: clamp(var(--space-4), 2vw, var(--space-6));
   }
 
   .header__bar {
@@ -354,11 +356,13 @@
   .header__nav {
     display: block;
     min-width: 0;
+    width: 100%;
     overflow: hidden;
   }
 
   .header__nav-host {
     min-width: 0;
+    width: 100%;
     overflow: hidden;
   }
 
@@ -414,5 +418,49 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+}
+
+
+@media (min-width: 1024px) and (max-width: 1365px) {
+  .header__bar {
+    display: flex;
+  }
+
+  .header__nav,
+  .header__account-slot {
+    display: none;
+  }
+
+  .header__menu-toggle {
+    display: inline-flex !important;
+  }
+
+  .header__overlay:not([hidden]) {
+    display: block !important;
+  }
+
+  .header__drawer {
+    display: block;
+    transform: translateX(100%);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .header__drawer.is-open {
+    transform: translateX(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .header__drawer .header__nav-list {
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    flex-wrap: nowrap;
+    width: 100%;
+    min-width: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 }
