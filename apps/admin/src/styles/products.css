@@ -342,9 +342,9 @@
 }
 
 .products__status-toggle.is-inactive {
-  color: var(--text-muted, var(--c-text-muted));
-  border-color: color-mix(in srgb, var(--c-border) 60%, white);
-  background: color-mix(in srgb, var(--c-text-muted) 8%, white);
+  color: var(--c-warning);
+  border-color: color-mix(in srgb, var(--c-warning) 55%, white);
+  background: color-mix(in srgb, var(--c-warning) 14%, white);
 }
 
 .products__status-toggle:hover:not(:disabled) {
