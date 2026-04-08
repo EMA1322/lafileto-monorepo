@@ -50,7 +50,7 @@ productsRoutes.put(
 productsRoutes.patch(
   '/:id/status',
   authJWT(),
-  rbacGuard('products', 'changeStatus'),
+  rbacGuard('products', 'u'),
   validator(productIdParamSchema, 'params'),
   validator(productStatusSchema),
   productsController.changeStatus
