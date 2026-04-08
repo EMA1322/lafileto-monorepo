@@ -452,4 +452,15 @@
     opacity: 1;
     pointer-events: auto;
   }
+
+  .header__drawer .header__nav-list {
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    flex-wrap: nowrap;
+    width: 100%;
+    min-width: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
 }
