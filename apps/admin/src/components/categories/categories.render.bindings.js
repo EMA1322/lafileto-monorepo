@@ -18,6 +18,13 @@ import {
   openDeleteCategoryModal,
   openViewCategoryModal,
 } from './categories.modals.js';
+import { mountIcons } from '@/utils/icons.js';
+import { initTooltips } from '@/utils/floating.js';
+
+function decorateRenderedContent(container) {
+  mountIcons(container);
+  initTooltips(container);
+}
 
 /** Debounce util sin dependencias. */
 function debounce(fn, wait = 300) {
@@ -39,9 +46,11 @@ async function refreshAndRender(container) {
     await fetchCategories();
   } catch {
     renderCategoriesTable(getSnapshot(), container);
+    decorateRenderedContent(container);
     return;
   }
   renderCategoriesTable(getSnapshot(), container);
+  decorateRenderedContent(container);
 }
 
 function applyDefaultFiltersToControls(container) {
