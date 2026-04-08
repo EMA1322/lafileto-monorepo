@@ -149,7 +149,7 @@ function syncRefsFromDOM() {
   refs.overlayEl = document.getElementById('headerOverlay');
   refs.navListEl = document.getElementById('headerNavList');
   refs.desktopNavHostEl = document.getElementById('headerDesktopNavHost');
-  refs.drawerNavHostEl = refs.navListEl?.parentElement || null;
+  refs.drawerNavHostEl = refs.drawerEl?.querySelector('.header__center') || null;
   refs.accountEl = refs.headerEl?.querySelector('[data-header-account]') || null;
   refs.accountSlotEl = refs.headerEl?.querySelector('.header__account-slot') || null;
   refs.drawerFooterEl = refs.headerEl?.querySelector('.header__drawer-footer') || null;
