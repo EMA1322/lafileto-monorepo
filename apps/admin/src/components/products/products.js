@@ -8,6 +8,7 @@ import { ensureRbacLoaded, can } from '../../utils/rbac.js';
 import notifyToast from '../../utils/notify.js';
 import { replaceHash } from '../../utils/helpers.js';
 import { initTooltips } from '../../utils/floating.js';
+import { mountIcons } from '../../utils/icons.js';
 
 import { renderProductsView } from './products.render.table.js';
 import { bindProductsBindings } from './products.render.bindings.js';
@@ -35,7 +36,7 @@ const ACTION_UI = {
     classes: 'icon-btn icon-btn--sm icon-btn--ghost products__action-btn adminList__actionBtn',
   },
   edit: {
-    icon: 'pencil',
+    icon: 'edit',
     label: 'Editar producto',
     classes: 'icon-btn icon-btn--sm icon-btn--ghost products__action-btn adminList__actionBtn',
   },
@@ -61,9 +62,10 @@ function enhanceActionButtons(container) {
     button.dataset.tooltip = config.label;
 
     if (button.querySelector('[data-icon]')) return;
-    button.innerHTML = `<span class="icon" data-icon="${config.icon}" aria-hidden="true"></span>`;
+    button.innerHTML = `<span class="icon icon--sm" data-icon="${config.icon}" aria-hidden="true"></span>`;
   });
 
+  mountIcons(container);
   initTooltips(container);
 }
 
