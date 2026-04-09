@@ -21,6 +21,7 @@ function decorateRenderedContent(container) {
 function renderAndDecorate(snapshot, container) {
   renderCategoriesTable(snapshot, container);
   decorateRenderedContent(container);
+  applyRBAC(container);
 }
 
 function mountSubscriptions(container) {

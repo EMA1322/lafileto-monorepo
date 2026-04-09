@@ -18,12 +18,16 @@ import {
   openDeleteCategoryModal,
   openViewCategoryModal,
 } from './categories.modals.js';
+import { MODULE_KEY, MODULE_KEY_ALIAS } from './categories.helpers.js';
 import { mountIcons } from '@/utils/icons.js';
 import { initTooltips } from '@/utils/floating.js';
+import notify from '@/utils/notify.js';
+import { applyRBAC, can } from '@/utils/rbac.js';
 
 function decorateRenderedContent(container) {
   mountIcons(container);
   initTooltips(container);
+  applyRBAC(container);
 }
 
 /** Debounce util sin dependencias. */
@@ -167,6 +171,11 @@ export function bindCategoriesBindings(container) {
 
     // Editar
     if (action === 'edit' && targetId) {
+      const canUpdate = can(MODULE_KEY, 'u') || can(MODULE_KEY_ALIAS, 'u');
+      if (!canUpdate) {
+        notify('No tenés permisos para editar categorías.', { type: 'warning', code: 'PERMISSION_DENIED' });
+        return;
+      }
       const updated = await openEditCategoryModal(targetId);
       if (updated) await refreshAndRender(container);
       return;
@@ -180,6 +189,11 @@ export function bindCategoriesBindings(container) {
 
     // Eliminar
     if (action === 'delete' && targetId) {
+      const canDelete = can(MODULE_KEY, 'd') || can(MODULE_KEY_ALIAS, 'd');
+      if (!canDelete) {
+        notify('No tenés permisos para eliminar categorías.', { type: 'warning', code: 'PERMISSION_DENIED' });
+        return;
+      }
       const removed = await openDeleteCategoryModal(targetId);
       if (removed) await refreshAndRender(container);
       return;

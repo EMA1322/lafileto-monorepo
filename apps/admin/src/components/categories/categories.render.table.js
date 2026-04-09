@@ -64,6 +64,7 @@ function renderRow(item) {
         data-action="delete"
         data-id="${idAttr}"
         data-rbac-action="delete"
+        data-rbac-hide
         aria-label="Eliminar categoría"
         data-tooltip="Eliminar categoría"
       >
