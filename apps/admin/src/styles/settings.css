@@ -135,6 +135,12 @@
   color: var(--text, var(--c-text));
 }
 
+.settings__section-hint {
+  margin: 0;
+  color: var(--text-subtle, var(--c-text-muted));
+  font-size: var(--fs-h6);
+}
+
 .settings__section--identity {
   grid-column: span 8;
 }
@@ -247,13 +253,57 @@
 
 .settings__social-row {
   display: grid;
-  grid-template-columns: minmax(140px, 1fr) minmax(220px, 2fr) auto;
-  gap: var(--space-2);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr) auto;
+  gap: var(--space-2) var(--space-3);
   align-items: end;
   padding: var(--space-2);
   border-radius: var(--radius-md);
   border: 1px solid color-mix(in srgb, var(--border-soft, var(--c-border)) 85%, transparent);
-  background: var(--surface-2, color-mix(in srgb, var(--c-bg) 85%, #000 15%));
+  background: color-mix(in srgb, var(--surface-2, var(--c-surface-muted)) 82%, var(--surface-1, var(--c-surface)));
+  position: relative;
+  overflow: hidden;
+}
+
+.settings__social-row::before {
+  content: '🔗';
+  align-self: center;
+  justify-self: center;
+  grid-column: 1;
+  grid-row: 1;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary-base, var(--c-secondary)) 16%, transparent);
+  display: grid;
+  place-items: center;
+  font-size: 0.9rem;
+}
+
+.settings__social-row .settings__field:first-child {
+  padding-left: calc(var(--space-6) + var(--space-1));
+}
+
+.settings__social-row .settings__field,
+.settings__social-row .settings__field .input {
+  min-width: 0;
+}
+
+.settings__social-row .btn {
+  white-space: nowrap;
+  align-self: center;
+}
+
+#social-links-add {
+  justify-self: flex-start;
+  margin-top: var(--space-1);
+  border: 1px dashed color-mix(in srgb, var(--primary-base, var(--c-secondary)) 35%, var(--border-soft, var(--c-border)));
+  border-radius: var(--radius-md);
+  padding-inline: var(--space-3);
+  background: color-mix(in srgb, var(--primary-base, var(--c-secondary)) 8%, transparent);
+}
+
+#social-links-add:hover {
+  background: color-mix(in srgb, var(--primary-base, var(--c-secondary)) 14%, transparent);
 }
 
 .settings__actions {
@@ -295,6 +345,18 @@
   .settings__row,
   .settings__social-row {
     grid-template-columns: 1fr;
+  }
+
+  .settings__social-row::before {
+    display: none;
+  }
+
+  .settings__social-row .settings__field:first-child {
+    padding-left: 0;
+  }
+
+  .settings__social-row .btn {
+    justify-self: flex-start;
   }
 
   .settings__actions {
