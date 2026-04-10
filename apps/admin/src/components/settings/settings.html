@@ -32,238 +32,239 @@
     </div>
 
     <article class="settings__card" id="settings-success" hidden>
-      <h2 class="settings__card-title">Identidad, contacto, pagos y horarios</h2>
+      <h2 class="settings__card-title">Configuración general del sitio</h2>
+      <p class="settings__card-subtitle">Organizá la información por bloques para una edición más clara y rápida.</p>
 
       <form id="settings-hours-form" class="settings__form" novalidate>
         <div id="settings-form-success" class="settings__form-alert alert alert--success alert--filled" role="status" hidden></div>
         <div id="settings-form-error" class="settings__form-alert alert alert--error alert--filled" role="alert" hidden></div>
 
-        <fieldset class="settings__fieldset">
-          <legend>Identidad y contacto</legend>
+        <div class="settings__sections">
+          <fieldset class="settings__fieldset settings__section settings__section--identity">
+            <legend>Identidad y contacto</legend>
 
-          <label class="settings__field" for="identity-phone">
-            <span class="settings__label">Teléfono</span>
-            <input id="identity-phone" name="identity.phone" type="tel" class="input" autocomplete="tel" />
-          </label>
-          <p class="settings__field-error field-error" data-error-for="identity.phone" hidden></p>
+            <label class="settings__field" for="identity-phone">
+              <span class="settings__label">Teléfono</span>
+              <input id="identity-phone" name="identity.phone" type="tel" class="input" autocomplete="tel" />
+            </label>
+            <p class="settings__field-error field-error" data-error-for="identity.phone" hidden></p>
 
-          <label class="settings__field" for="identity-email">
-            <span class="settings__label">Email</span>
-            <input id="identity-email" name="identity.email" type="email" class="input" autocomplete="email" />
-          </label>
-          <p class="settings__field-error field-error" data-error-for="identity.email" hidden></p>
+            <label class="settings__field" for="identity-email">
+              <span class="settings__label">Email</span>
+              <input id="identity-email" name="identity.email" type="email" class="input" autocomplete="email" />
+            </label>
+            <p class="settings__field-error field-error" data-error-for="identity.email" hidden></p>
 
-          <label class="settings__field" for="identity-address">
-            <span class="settings__label">Dirección</span>
-            <textarea id="identity-address" name="identity.address" class="input" rows="2" maxlength="180"></textarea>
-          </label>
-          <p class="settings__field-error field-error" data-error-for="identity.address" hidden></p>
+            <label class="settings__field" for="identity-address">
+              <span class="settings__label">Dirección</span>
+              <textarea id="identity-address" name="identity.address" class="input" rows="2" maxlength="180"></textarea>
+            </label>
+            <p class="settings__field-error field-error" data-error-for="identity.address" hidden></p>
 
-          <label class="settings__field" for="whatsapp-number">
-            <span class="settings__label">WhatsApp</span>
-            <input id="whatsapp-number" name="whatsapp.number" type="tel" class="input" autocomplete="tel" />
-          </label>
-          <p class="settings__field-error field-error" data-error-for="whatsapp.number" hidden></p>
+            <label class="settings__field" for="whatsapp-number">
+              <span class="settings__label">WhatsApp</span>
+              <input id="whatsapp-number" name="whatsapp.number" type="tel" class="input" autocomplete="tel" />
+            </label>
+            <p class="settings__field-error field-error" data-error-for="whatsapp.number" hidden></p>
 
-          <label class="settings__field" for="whatsapp-message">
-            <span class="settings__label">Mensaje CTA de WhatsApp</span>
-            <textarea id="whatsapp-message" name="whatsapp.message" class="input" rows="3" maxlength="280"></textarea>
-          </label>
-          <p class="settings__field-error field-error" data-error-for="whatsapp.message" hidden></p>
-        </fieldset>
+            <label class="settings__field" for="whatsapp-message">
+              <span class="settings__label">Mensaje CTA de WhatsApp</span>
+              <textarea id="whatsapp-message" name="whatsapp.message" class="input" rows="3" maxlength="280"></textarea>
+            </label>
+            <p class="settings__field-error field-error" data-error-for="whatsapp.message" hidden></p>
+          </fieldset>
 
-        <fieldset class="settings__fieldset">
-          <legend>Redes sociales</legend>
+          <fieldset class="settings__fieldset settings__section settings__section--social">
+            <legend>Redes sociales</legend>
 
-          <div id="social-links-list" class="settings__social-list"></div>
-          <p class="settings__field-error field-error" data-error-for="socialLinks" hidden></p>
-          <button
-            id="social-links-add"
-            type="button"
-            class="btn btn--text"
-            data-rbac-action="write"
-            data-rbac-hide
-            hidden
-          >
-            Agregar red social
-          </button>
-        </fieldset>
+            <div id="social-links-list" class="settings__social-list"></div>
+            <p class="settings__field-error field-error" data-error-for="socialLinks" hidden></p>
+            <button
+              id="social-links-add"
+              type="button"
+              class="btn btn--text"
+              data-rbac-action="write"
+              data-rbac-hide
+              hidden
+            >
+              Agregar red social
+            </button>
+          </fieldset>
 
-        <fieldset class="settings__fieldset">
-          <legend>Mapa</legend>
+          <fieldset class="settings__fieldset settings__section settings__section--map">
+            <legend>Mapa</legend>
 
-          <label class="settings__field" for="map-embed-src">
-            <span class="settings__label">Embed src de Google Maps</span>
-            <textarea
-              id="map-embed-src"
-              name="map.embedSrc"
-              class="input"
-              rows="3"
-              placeholder="https://www.google.com/maps/embed?..."
-            ></textarea>
-          </label>
-          <p class="settings__field-error field-error" data-error-for="map.embedSrc" hidden></p>
-          <p class="settings__field-warning">Pegá sólo el src del iframe o el iframe completo para extraerlo automáticamente.</p>
-        </fieldset>
+            <label class="settings__field" for="map-embed-src">
+              <span class="settings__label">Embed src de Google Maps</span>
+              <textarea
+                id="map-embed-src"
+                name="map.embedSrc"
+                class="input"
+                rows="3"
+                placeholder="https://www.google.com/maps/embed?..."
+              ></textarea>
+            </label>
+            <p class="settings__field-error field-error" data-error-for="map.embedSrc" hidden></p>
+            <p class="settings__field-warning">Pegá sólo el src del iframe o el iframe completo para extraerlo automáticamente.</p>
+          </fieldset>
 
-        <fieldset class="settings__fieldset">
-          <legend>Marca</legend>
+          <fieldset class="settings__fieldset settings__section settings__section--brand">
+            <legend>Marca</legend>
 
-          <label class="settings__field" for="brand-logo">
-            <span class="settings__label">Logo (URL)</span>
-            <input
-              id="brand-logo"
-              name="brand.logo"
-              type="url"
-              class="input"
-              autocomplete="off"
-              placeholder="https://.../logo.png"
-            />
-          </label>
-          <p class="settings__field-error field-error" data-error-for="brand.logo" hidden></p>
+            <label class="settings__field" for="brand-logo">
+              <span class="settings__label">Logo (URL)</span>
+              <input
+                id="brand-logo"
+                name="brand.logo"
+                type="url"
+                class="input"
+                autocomplete="off"
+                placeholder="https://.../logo.png"
+              />
+            </label>
+            <p class="settings__field-error field-error" data-error-for="brand.logo" hidden></p>
 
-          <label class="settings__field" for="brand-favicon">
-            <span class="settings__label">Favicon (URL)</span>
-            <input
-              id="brand-favicon"
-              name="brand.favicon"
-              type="url"
-              class="input"
-              autocomplete="off"
-              placeholder="https://.../favicon.ico"
-            />
-          </label>
-          <p class="settings__field-error field-error" data-error-for="brand.favicon" hidden></p>
-        </fieldset>
+            <label class="settings__field" for="brand-favicon">
+              <span class="settings__label">Favicon (URL)</span>
+              <input
+                id="brand-favicon"
+                name="brand.favicon"
+                type="url"
+                class="input"
+                autocomplete="off"
+                placeholder="https://.../favicon.ico"
+              />
+            </label>
+            <p class="settings__field-error field-error" data-error-for="brand.favicon" hidden></p>
+          </fieldset>
 
-        <fieldset class="settings__fieldset">
-          <legend>SEO público</legend>
+          <fieldset class="settings__fieldset settings__section settings__section--seo">
+            <legend>SEO público</legend>
 
-          <label class="settings__field" for="seo-contact-title">
-            <span class="settings__label">Contacto · Meta título</span>
-            <input id="seo-contact-title" name="seo.contact.title" type="text" class="input" maxlength="70" />
-          </label>
-          <p class="settings__field-error field-error" data-error-for="seo.contact.title" hidden></p>
+            <label class="settings__field" for="seo-contact-title">
+              <span class="settings__label">Contacto · Meta título</span>
+              <input id="seo-contact-title" name="seo.contact.title" type="text" class="input" maxlength="70" />
+            </label>
+            <p class="settings__field-error field-error" data-error-for="seo.contact.title" hidden></p>
 
-          <label class="settings__field" for="seo-contact-description">
-            <span class="settings__label">Contacto · Meta descripción</span>
-            <textarea
-              id="seo-contact-description"
-              name="seo.contact.description"
-              class="input"
-              rows="3"
-              maxlength="180"
-            ></textarea>
-          </label>
-          <p class="settings__field-error field-error" data-error-for="seo.contact.description" hidden></p>
+            <label class="settings__field" for="seo-contact-description">
+              <span class="settings__label">Contacto · Meta descripción</span>
+              <textarea
+                id="seo-contact-description"
+                name="seo.contact.description"
+                class="input"
+                rows="3"
+                maxlength="180"
+              ></textarea>
+            </label>
+            <p class="settings__field-error field-error" data-error-for="seo.contact.description" hidden></p>
 
-          <label class="settings__field" for="seo-about-title">
-            <span class="settings__label">Nosotros · Meta título</span>
-            <input id="seo-about-title" name="seo.about.title" type="text" class="input" maxlength="70" />
-          </label>
-          <p class="settings__field-error field-error" data-error-for="seo.about.title" hidden></p>
+            <label class="settings__field" for="seo-about-title">
+              <span class="settings__label">Nosotros · Meta título</span>
+              <input id="seo-about-title" name="seo.about.title" type="text" class="input" maxlength="70" />
+            </label>
+            <p class="settings__field-error field-error" data-error-for="seo.about.title" hidden></p>
 
-          <label class="settings__field" for="seo-about-description">
-            <span class="settings__label">Nosotros · Meta descripción</span>
-            <textarea
-              id="seo-about-description"
-              name="seo.about.description"
-              class="input"
-              rows="3"
-              maxlength="180"
-            ></textarea>
-          </label>
-          <p class="settings__field-error field-error" data-error-for="seo.about.description" hidden></p>
-        </fieldset>
+            <label class="settings__field" for="seo-about-description">
+              <span class="settings__label">Nosotros · Meta descripción</span>
+              <textarea
+                id="seo-about-description"
+                name="seo.about.description"
+                class="input"
+                rows="3"
+                maxlength="180"
+              ></textarea>
+            </label>
+            <p class="settings__field-error field-error" data-error-for="seo.about.description" hidden></p>
+          </fieldset>
 
-        <fieldset class="settings__fieldset">
-          <legend>Pagos</legend>
+          <fieldset class="settings__fieldset settings__section settings__section--payments">
+            <legend>Pagos</legend>
 
-          <label class="settings__field settings__field--inline" for="payments-enabled">
-            <input id="payments-enabled" name="payments.enabled" type="checkbox" />
-            <span class="settings__label">Habilitar medios de pago por transferencia</span>
-          </label>
-          <p class="settings__field-error field-error" data-error-for="payments.enabled" hidden></p>
+            <label class="settings__field settings__field--inline" for="payments-enabled">
+              <input id="payments-enabled" name="payments.enabled" type="checkbox" />
+              <span class="settings__label">Habilitar medios de pago por transferencia</span>
+            </label>
+            <p class="settings__field-error field-error" data-error-for="payments.enabled" hidden></p>
 
-          <label class="settings__field" for="payments-bank-name">
-            <span class="settings__label">Banco</span>
-            <input id="payments-bank-name" name="payments.bankName" type="text" class="input" maxlength="120" />
-          </label>
-          <p class="settings__field-error field-error" data-error-for="payments.bankName" hidden></p>
+            <label class="settings__field" for="payments-bank-name">
+              <span class="settings__label">Banco</span>
+              <input id="payments-bank-name" name="payments.bankName" type="text" class="input" maxlength="120" />
+            </label>
+            <p class="settings__field-error field-error" data-error-for="payments.bankName" hidden></p>
 
-          <label class="settings__field" for="payments-cbu">
-            <span class="settings__label">CBU</span>
-            <input
-              id="payments-cbu"
-              name="payments.cbu"
-              type="text"
-              class="input"
-              inputmode="numeric"
-              autocomplete="off"
-              maxlength="27"
-              placeholder="0000 0000 0000 0000 0000 00"
-            />
-          </label>
-          <p class="settings__field-error field-error" data-error-for="payments.cbu" hidden></p>
+            <label class="settings__field" for="payments-cbu">
+              <span class="settings__label">CBU</span>
+              <input
+                id="payments-cbu"
+                name="payments.cbu"
+                type="text"
+                class="input"
+                inputmode="numeric"
+                autocomplete="off"
+                maxlength="27"
+                placeholder="0000 0000 0000 0000 0000 00"
+              />
+            </label>
+            <p class="settings__field-error field-error" data-error-for="payments.cbu" hidden></p>
 
-          <label class="settings__field" for="payments-alias">
-            <span class="settings__label">Alias</span>
-            <input id="payments-alias" name="payments.alias" type="text" class="input" maxlength="120" autocomplete="off" />
-          </label>
-          <p class="settings__field-error field-error" data-error-for="payments.alias" hidden></p>
+            <label class="settings__field" for="payments-alias">
+              <span class="settings__label">Alias</span>
+              <input id="payments-alias" name="payments.alias" type="text" class="input" maxlength="120" autocomplete="off" />
+            </label>
+            <p class="settings__field-error field-error" data-error-for="payments.alias" hidden></p>
 
-          <label class="settings__field" for="payments-cuit">
-            <span class="settings__label">CUIT</span>
-            <input
-              id="payments-cuit"
-              name="payments.cuit"
-              type="text"
-              class="input"
-              inputmode="numeric"
-              autocomplete="off"
-              maxlength="13"
-              placeholder="00-00000000-0"
-            />
-          </label>
-          <p class="settings__field-error field-error" data-error-for="payments.cuit" hidden></p>
-        </fieldset>
+            <label class="settings__field" for="payments-cuit">
+              <span class="settings__label">CUIT</span>
+              <input
+                id="payments-cuit"
+                name="payments.cuit"
+                type="text"
+                class="input"
+                inputmode="numeric"
+                autocomplete="off"
+                maxlength="13"
+                placeholder="00-00000000-0"
+              />
+            </label>
+            <p class="settings__field-error field-error" data-error-for="payments.cuit" hidden></p>
+          </fieldset>
 
-        <fieldset class="settings__fieldset" id="settings-opening-hours">
-          <legend>Horario de apertura</legend>
-          <div id="settings-hours-grid" class="settings__hours-grid"></div>
-          <p class="settings__field-error field-error" data-error-for="hours.openingHours" hidden></p>
-        </fieldset>
+          <fieldset class="settings__fieldset settings__section settings__section--hours" id="settings-opening-hours">
+            <legend>Horario de apertura</legend>
+            <div id="settings-hours-grid" class="settings__hours-grid"></div>
+            <p class="settings__field-error field-error" data-error-for="hours.openingHours" hidden></p>
+          </fieldset>
 
-        <fieldset class="settings__fieldset">
-          <legend>Forzado de disponibilidad</legend>
-          <label class="settings__field" for="hours-override">
-            <span class="settings__label">Forzado</span>
-            <select id="hours-override" name="hours.override" class="input"></select>
-          </label>
-          <p class="settings__field-error field-error" data-error-for="hours.override" hidden></p>
-        </fieldset>
+          <fieldset class="settings__fieldset settings__section settings__section--availability">
+            <legend>Disponibilidad y alertas</legend>
 
-        <fieldset class="settings__fieldset">
-          <legend>Banner de alerta</legend>
-          <label class="settings__field settings__field--inline" for="hours-alert-enabled">
-            <input id="hours-alert-enabled" name="hours.alert.enabled" type="checkbox" />
-            <span class="settings__label">Habilitar banner de alerta</span>
-          </label>
-          <label class="settings__field" for="hours-alert-message">
-            <span class="settings__label">Mensaje</span>
-            <textarea
-              id="hours-alert-message"
-              name="hours.alert.message"
-              class="input"
-              rows="3"
-              maxlength="280"
-              placeholder="Ej.: Cerrado por mantenimiento"
-            ></textarea>
-          </label>
-          <p class="settings__field-error field-error" data-error-for="hours.alert.enabled" hidden></p>
-          <p class="settings__field-error field-error" data-error-for="hours.alert.message" hidden></p>
-          <p id="hours-alert-message-warning" class="settings__field-warning" hidden>Recomendado: agregá un mensaje para la alerta.</p>
-        </fieldset>
+            <label class="settings__field" for="hours-override">
+              <span class="settings__label">Forzado de disponibilidad</span>
+              <select id="hours-override" name="hours.override" class="input"></select>
+            </label>
+            <p class="settings__field-error field-error" data-error-for="hours.override" hidden></p>
+
+            <label class="settings__field settings__field--inline" for="hours-alert-enabled">
+              <input id="hours-alert-enabled" name="hours.alert.enabled" type="checkbox" />
+              <span class="settings__label">Habilitar banner de alerta</span>
+            </label>
+            <label class="settings__field" for="hours-alert-message">
+              <span class="settings__label">Mensaje del banner</span>
+              <textarea
+                id="hours-alert-message"
+                name="hours.alert.message"
+                class="input"
+                rows="3"
+                maxlength="280"
+                placeholder="Ej.: Cerrado por mantenimiento"
+              ></textarea>
+            </label>
+            <p class="settings__field-error field-error" data-error-for="hours.alert.enabled" hidden></p>
+            <p class="settings__field-error field-error" data-error-for="hours.alert.message" hidden></p>
+            <p id="hours-alert-message-warning" class="settings__field-warning" hidden>Recomendado: agregá un mensaje para la alerta.</p>
+          </fieldset>
+        </div>
 
         <div class="settings__actions">
           <button
