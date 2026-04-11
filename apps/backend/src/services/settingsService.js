@@ -9,6 +9,45 @@ function normalizeSiteConfig(rawValue) {
   return sanitized;
 }
 
+function mapPublicSettingsContract(normalized) {
+  return {
+    identity: {
+      phone: normalized?.identity?.phone ?? '',
+      email: normalized?.identity?.email ?? '',
+      address: normalized?.identity?.address ?? ''
+    },
+    brand: {
+      logo: normalized?.brand?.logo ?? '',
+      favicon: normalized?.brand?.favicon ?? ''
+    },
+    socialLinks: Array.isArray(normalized?.socialLinks) ? normalized.socialLinks : [],
+    map: {
+      embedSrc: normalized?.map?.embedSrc ?? ''
+    },
+    hours: {
+      timezone: normalized?.hours?.timezone ?? SITE_CONFIG_DEFAULTS.hours.timezone,
+      alert: {
+        enabled: Boolean(normalized?.hours?.alert?.enabled),
+        message: normalized?.hours?.alert?.message ?? ''
+      }
+    },
+    seo: {
+      contact: {
+        title: normalized?.seo?.contact?.title ?? '',
+        description: normalized?.seo?.contact?.description ?? ''
+      },
+      about: {
+        title: normalized?.seo?.about?.title ?? '',
+        description: normalized?.seo?.about?.description ?? ''
+      }
+    },
+    whatsapp: {
+      number: normalized?.whatsapp?.number ?? '',
+      message: normalized?.whatsapp?.message ?? ''
+    }
+  };
+}
+
 async function getOrCreateSiteConfigSetting() {
   const found = await settingRepository.findByKey(SITE_CONFIG_KEY);
 
@@ -39,6 +78,11 @@ export const settingsService = {
     return normalized;
   },
 
+  async getPublicSettingsContract() {
+    const normalized = await this.getPublicSettings();
+    return mapPublicSettingsContract(normalized);
+  },
+
   async updateAdminSettings(sanitizedPayload, actorUserId) {
     const nextValue = {
       ...sanitizedPayload,
@@ -54,4 +98,4 @@ export const settingsService = {
   }
 };
 
-export { SITE_CONFIG_DEFAULTS, SITE_CONFIG_KEY, normalizeSiteConfig };
+export { SITE_CONFIG_DEFAULTS, SITE_CONFIG_KEY, normalizeSiteConfig, mapPublicSettingsContract };

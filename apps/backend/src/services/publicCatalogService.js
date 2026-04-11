@@ -52,31 +52,6 @@ function sanitizePublicOffer(item) {
   };
 }
 
-function buildPublicSettingsSubset(settings) {
-  return {
-    identity: {
-      phone: settings?.identity?.phone ?? '',
-      email: settings?.identity?.email ?? '',
-      address: settings?.identity?.address ?? ''
-    },
-    brand: {
-      logo: settings?.brand?.logo ?? '',
-      favicon: settings?.brand?.favicon ?? ''
-    },
-    socialLinks: Array.isArray(settings?.socialLinks) ? settings.socialLinks : [],
-    map: {
-      embedSrc: settings?.map?.embedSrc ?? ''
-    },
-    hours: {
-      timezone: settings?.hours?.timezone ?? 'America/Argentina/San_Luis',
-      alert: {
-        enabled: Boolean(settings?.hours?.alert?.enabled),
-        message: settings?.hours?.alert?.message ?? ''
-      }
-    }
-  };
-}
-
 export const publicCatalogService = {
   async listProducts() {
     const { items } = await productService.listProducts({
@@ -113,8 +88,7 @@ export const publicCatalogService = {
   },
 
   async getPublicSettings() {
-    const data = await settingsService.getPublicSettings();
-    return buildPublicSettingsSubset(data);
+    return settingsService.getPublicSettingsContract();
   },
 
   async getBusinessStatus() {
