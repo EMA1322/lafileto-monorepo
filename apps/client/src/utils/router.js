@@ -148,8 +148,12 @@ function scrollToTop() {
 // --------------------------------
 // 4) Navegación principal
 // --------------------------------
-async function handleRouteChange() {
+async function handleRouteChange(shouldHandleRoute) {
   const key = getRouteKeyFromHash();
+  if (typeof shouldHandleRoute === "function" && !shouldHandleRoute(key)) {
+    return;
+  }
+
   const route = getRouteConfig(key);
 
   // Opcional: título de documento (no afecta UX si no querés)
@@ -188,9 +192,11 @@ async function handleRouteChange() {
 // --------------------------------
 // 5) Inicialización del router
 // --------------------------------
-export function initRouter() {
-  window.addEventListener("hashchange", handleRouteChange, { passive: true });
-  // Si preferís iniciar explícitamente desde main.js después de montar header/footer:
-  // podés llamar a handleRouteChange() desde allí.
-  handleRouteChange();
+export function initRouter(options = {}) {
+  const { shouldHandleRoute } = options;
+
+  const onRouteChange = () => handleRouteChange(shouldHandleRoute);
+
+  window.addEventListener("hashchange", onRouteChange, { passive: true });
+  onRouteChange();
 }

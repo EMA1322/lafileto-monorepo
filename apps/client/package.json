@@ -15,10 +15,14 @@
   },
   "dependencies": {
     "swiper": "^11",
-    "@lafileto/shared-utils": "workspace:*"
+    "@lafileto/shared-utils": "workspace:*",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.30.1"
   },
   "devDependencies": {
     "rollup-plugin-visualizer": "workspace:*",
-    "vite": "^5.4.0"
+    "vite": "^5.4.0",
+    "@vitejs/plugin-react": "^4.7.0"
   }
 }
