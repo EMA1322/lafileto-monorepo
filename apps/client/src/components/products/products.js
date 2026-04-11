@@ -1,33 +1,18 @@
-// =====================================================
-// products.js — módulo Products (SPA)
-// - Refs A–F: imports arriba, sin waits, precio final si oferta,
-//   compat imageUrl/image, debounce de búsqueda, BEM fino.
-// =====================================================
-
-// A) Imports canónicos (Vite)
-import productsData from "/src/data/products.json";
 import { formatPrice, getDiscountedPrice } from "/src/utils/helpers.js";
 import { setupCartButtons } from "/src/utils/cartButtonsAdd.js";
-import { fetchPublicCategories } from "/src/api/public.js";
-import { showSnackbar } from "/src/utils/showSnackbar.js";
+import { fetchPublicCategories, fetchPublicProducts } from "/src/api/public.js";
 
-// Estado interno (filtro / orden / vista)
 let state = {
   query: "",
   sort: "name-asc",
-  categoryId: null,   // canónico
-  categoryName: "all", // compat legado (mock por nombre)
-  view: "grid"        // "grid" | "list"
+  categoryId: null,
+  view: "grid"
 };
 
-// Referencias a nodos (se resuelven una vez)
 let els = {};
+let productsData = [];
 
-// =====================================================
-// Init
-// =====================================================
 export async function initProducts() {
-  // Resolver elementos de la vista (una sola vez)
   els.grid = document.getElementById("products-grid");
   els.search = document.getElementById("search-input");
   els.sort = document.getElementById("sort-select");
@@ -36,18 +21,27 @@ export async function initProducts() {
   els.categoryList = document.getElementById("category-list");
 
   if (!els.grid || !els.search || !els.sort || !els.btnGrid || !els.btnList || !els.categoryList) {
-    console.error("[Products] Faltan elementos requeridos en el DOM");
+    console.error("[Products] Missing required DOM nodes");
     return;
   }
 
-  // Cargar categorías desde API (si falla, seguimos con 'Todas')
+  els.grid.innerHTML = `<div class="products__empty" role="status">Cargando productos...</div>`;
+
   try {
-    await renderCategories();
-  } catch (e) {
-    console.warn("[Products] No se pudieron cargar categorías:", e);
+    const [categories, products] = await Promise.all([
+      fetchPublicCategories(),
+      fetchPublicProducts()
+    ]);
+
+    productsData = normalizeProducts(products, categories);
+    renderCategories(categories);
+  } catch (error) {
+    console.error("[Products] Failed to load products:", error);
+    els.grid.innerHTML = `<div class="products__empty" role="alert">No pudimos cargar el catálogo en este momento.</div>`;
+    renderCategories([]);
+    productsData = [];
   }
 
-  // Wire de eventos (con debounce en búsqueda)
   els.search.addEventListener("input", debounce((e) => {
     state.query = e.target.value.trim().toLowerCase();
     renderProducts();
@@ -61,23 +55,35 @@ export async function initProducts() {
   els.btnGrid.addEventListener("click", () => setView("grid"));
   els.btnList.addEventListener("click", () => setView("list"));
 
-  // Render inicial
   renderProducts();
 }
 
-// =====================================================
-// Categorías
-// =====================================================
-async function renderCategories() {
-  const cats = await fetchPublicCategories({ page: 1, pageSize: 100 });
-  // Comenzamos por "Todas"
+function normalizeProducts(products, categories) {
+  const categoryMap = new Map((categories || []).map((c) => [c.id, c.name]));
+
+  return (products || []).map((product) => {
+    const discount = Number(product?.offer?.discountPercent || 0);
+    const hasOffer = discount > 0;
+
+    return {
+      id: product.id,
+      name: product.name,
+      description: product.description,
+      imageUrl: product.imageUrl,
+      price: Number(product.price || 0),
+      categoryId: product.categoryId,
+      category: String(categoryMap.get(product.categoryId) || "").toLowerCase(),
+      isOffer: hasOffer,
+      discount,
+      source: hasOffer ? "offers" : "products"
+    };
+  });
+}
+
+function renderCategories(cats) {
   const frag = document.createDocumentFragment();
+  frag.appendChild(createCategoryButton({ id: null, name: "Todas" }, true));
 
-  // Botón "Todas" (activa por defecto)
-  const btnAll = createCategoryButton({ id: null, name: "Todas" }, true);
-  frag.appendChild(btnAll);
-
-  // Resto de categorías activas
   (cats || []).forEach((c) => {
     frag.appendChild(createCategoryButton(c, false));
   });
@@ -92,54 +98,34 @@ function createCategoryButton(category, isActive) {
   btn.className = "products__category-btn" + (isActive ? " is-active" : "");
   btn.textContent = category.name;
   btn.setAttribute("role", "listitem");
-  btn.dataset.categoryId = category.id ?? "";
-  btn.dataset.categoryName = (category.name || "").toLowerCase();
 
   btn.addEventListener("click", () => {
-    // Toggle activos
     els.categoryList.querySelectorAll(".products__category-btn.is-active")
-      .forEach(el => el.classList.remove("is-active"));
+      .forEach((el) => el.classList.remove("is-active"));
     btn.classList.add("is-active");
 
-    // Guardamos estado (id si existe; sino usamos nombre legacy)
     state.categoryId = category.id ?? null;
-    state.categoryName = (category.name || "all").toLowerCase();
-
     renderProducts();
   });
 
   return btn;
 }
 
-// =====================================================
-// Renderizado de productos
-// =====================================================
 function renderProducts() {
   if (!els.grid) return;
 
-  els.grid.setAttribute("aria-busy", "true");
-
-  // Base: mock local
   let list = Array.isArray(productsData) ? productsData.slice() : [];
 
-  // Filtro por búsqueda (nombre)
   if (state.query) {
-    list = list.filter((p) =>
-      String(p.name || "").toLowerCase().includes(state.query)
-    );
+    list = list.filter((p) => String(p.name || "").toLowerCase().includes(state.query));
   }
 
-  // Filtro por categoría (preferimos categoryId; fallback a nombre)
   if (state.categoryId != null) {
     list = list.filter((p) => p.categoryId === state.categoryId);
-  } else if (state.categoryName && state.categoryName !== "todas" && state.categoryName !== "all") {
-    list = list.filter((p) => String(p.category || "").toLowerCase() === state.categoryName);
   }
 
-  // Orden
   sortProducts(list, state.sort);
 
-  // Render
   els.grid.classList.toggle("list-view", state.view === "list");
   els.grid.innerHTML = "";
 
@@ -149,14 +135,13 @@ function renderProducts() {
         No hay productos para mostrar con los filtros seleccionados.
       </div>
     `;
-    els.grid.setAttribute("aria-busy", "false");
     return;
   }
 
   const frag = document.createDocumentFragment();
 
   list.forEach((p) => {
-    const imageSrc = p.imageUrl ?? p.image ?? ""; // D) compat imageUrl/image
+    const imageSrc = p.imageUrl ?? "";
     const hasDiscount = Number(p.discount) > 0 && (p.isOffer === true || p.isOffer === "true");
     const finalPrice = hasDiscount ? getDiscountedPrice(p.price, p.discount) : Number(p.price);
 
@@ -197,13 +182,9 @@ function renderProducts() {
   });
 
   els.grid.appendChild(frag);
-  els.grid.setAttribute("aria-busy", "false");
-
-  // Conectar botones al carrito
   setupCartButtons(".btn-add-to-cart");
 }
 
-// Ordenadores
 function sortProducts(list, sortKey) {
   switch (sortKey) {
     case "name-asc":
@@ -223,9 +204,6 @@ function sortProducts(list, sortKey) {
   }
 }
 
-// =====================================================
-// Vista: grid/list
-// =====================================================
 function setView(view) {
   state.view = view === "list" ? "list" : "grid";
 
@@ -238,9 +216,6 @@ function setView(view) {
   renderProducts();
 }
 
-// =====================================================
-// Utils locales
-// =====================================================
 function debounce(fn, delay = 200) {
   let t = null;
   return (...args) => {

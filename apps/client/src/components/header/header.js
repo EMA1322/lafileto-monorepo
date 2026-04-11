@@ -1,12 +1,13 @@
 // =====================================================
 // header.js — Header global (SPA)
 // - Toggle accesible (mobile), overlay y bloqueo de scroll
-// - Estado del negocio desde /data/estado.json
+// - Estado del negocio desde backend público
 // - Contador del carrito (suma de cantidades) vía cartService
 // - Cierra al cambiar de ruta / ESC / click en overlay o links
 // =====================================================
 
 import { getCart } from "/src/utils/cartService.js";
+import { fetchBusinessStatus } from "/src/api/public.js";
 
 let els = {};
 
@@ -56,10 +57,8 @@ export function initHeader() {
 // --- Estado del negocio (open + label) ---
 async function updateBusinessStatus() {
   try {
-    const res = await fetch("/data/estado.json");
-    if (!res.ok) throw new Error("estado.json");
-    const data = await res.json();
-    const isOpen = data.open === true;
+    const data = await fetchBusinessStatus();
+    const isOpen = data?.isOpen === true;
 
     els.business.textContent = isOpen ? "Abierto" : "Cerrado";
     els.business.classList.toggle("is-open", isOpen);

@@ -1,71 +1,59 @@
-// ================================
-// home.js - Módulo HOME (SPA)
-// ================================
-
-// ===== Imports canónicos (Vite) =====
-import productsData from "/src/data/products.json";
 import { formatPrice, applyDiscount } from "/src/utils/helpers.js";
 import { setupCartButtons } from "/src/utils/cartButtonsAdd.js";
 import { showSnackbar } from "/src/utils/showSnackbar.js";
+import { fetchBusinessStatus, fetchCommercialConfig, fetchPublicOffers } from "/src/api/public.js";
 
 import Swiper from "swiper/bundle";
 import "swiper/css/bundle";
 
-// --- Parallax lifecycle (scope del módulo Home) ---
 let heroImgRef = null;
 let onScrollRef = null;
 let onHashChangeRef = null;
-let ticking = false; // evita pedir múltiples rAF simultáneos
+let ticking = false;
 
-// ================================
-// Inicializa el módulo Home
-// ================================
 export async function initHome() {
   const container = document.querySelector("#main-content");
   if (!container) return;
 
-  // Animaciones y eventos base
   initHeroAnimations();
   attachTeardownOnLeave();
   setupHomeEvents();
 
-  // WhatsApp centralizado (estado del negocio)
   try {
-    const { isOpen, whatsAppNumber } = await fetchBusinessConfig();
-    updateWhatsAppLinks({ isOpen, whatsAppNumber });
+    const [businessStatus, commercialConfig] = await Promise.all([
+      fetchBusinessStatus(),
+      fetchCommercialConfig()
+    ]);
+
+    updateWhatsAppLinks({
+      isOpen: businessStatus.isOpen === true,
+      whatsAppNumber: commercialConfig?.whatsapp?.number || ""
+    });
   } catch (err) {
     console.warn("No se pudo cargar configuración de negocio:", err);
   }
 
-  // ✅ Montar carrusel DIRECTAMENTE (sin wait loops)
-  const mounted = renderOffersCarousel();
+  const mounted = await renderOffersCarousel();
   if (!mounted) {
     console.warn("⚠ No se encontró #offers-carousel en el DOM.");
   }
 }
 
-// ================================
-// Animación Hero (parallax con rAF + cleanup)
-// ================================
 function initHeroAnimations() {
-  // Seleccionamos la imagen del Hero (si existe en la vista)
   heroImgRef = document.querySelector(".home__hero-image img");
   if (!heroImgRef) return;
 
-  // Clase opcional al cargar
   heroImgRef.addEventListener("load", () => {
     heroImgRef.classList.add("loaded");
   });
 
-  // Aplica la transformación (parallax)
   const applyParallax = () => {
-    if (!heroImgRef) return; // por si se desmontó
+    if (!heroImgRef) return;
     const y = window.scrollY || 0;
     heroImgRef.style.transform = `translateY(${y * 0.4}px) scale(1.1)`;
     ticking = false;
   };
 
-  // Listener de scroll con rAF (mejor rendimiento)
   onScrollRef = () => {
     if (!ticking) {
       ticking = true;
@@ -74,10 +62,9 @@ function initHeroAnimations() {
   };
 
   window.addEventListener("scroll", onScrollRef, { passive: true });
-  applyParallax(); // primer render
+  applyParallax();
 }
 
-// Limpia listeners globales al abandonar Home
 function teardownHome() {
   if (onScrollRef) {
     window.removeEventListener("scroll", onScrollRef);
@@ -87,7 +74,6 @@ function teardownHome() {
   ticking = false;
 }
 
-// Programa la limpieza al salir de #home
 function attachTeardownOnLeave() {
   if (onHashChangeRef) {
     window.removeEventListener("hashchange", onHashChangeRef);
@@ -104,11 +90,7 @@ function attachTeardownOnLeave() {
   window.addEventListener("hashchange", onHashChangeRef, { passive: true });
 }
 
-// ================================
-// Eventos CTA principales (sin WhatsApp hardcodeado)
-// ================================
 function setupHomeEvents() {
-  // Botón principal: Ver Menú
   const mainCTA = document.querySelector(".home__hero-btn");
   if (mainCTA) {
     mainCTA.addEventListener("click", () => {
@@ -116,31 +98,12 @@ function setupHomeEvents() {
     });
   }
 
-  // CTA secundaria: Ver Horarios / Contacto (se mantiene)
   const scheduleCTA = document.querySelector(".btn-outline[href^='#contact']");
   if (scheduleCTA) {
     scheduleCTA.addEventListener("click", () => {
       window.location.hash = "#contact";
     });
   }
-}
-
-// ================================
-// Config de negocio (open + WhatsApp)
-// ================================
-async function fetchBusinessConfig() {
-  // /public/data/estado.json se sirve como /data/estado.json
-  const res = await fetch("/data/estado.json");
-  if (!res.ok) throw new Error("Error al cargar /data/estado.json");
-  const json = await res.json();
-
-  // Normalizamos número a dígitos (wa.me exige sin + ni espacios)
-  const normalized = String(json.whatsAppNumber || "").replace(/[^\d]/g, "");
-
-  return {
-    isOpen: json.open === true,
-    whatsAppNumber: normalized,
-  };
 }
 
 function updateWhatsAppLinks({ isOpen, whatsAppNumber }) {
@@ -171,14 +134,10 @@ function updateWhatsAppLinks({ isOpen, whatsAppNumber }) {
   });
 }
 
-// ================================
-// Renderiza carrusel dinámico de ofertas (SIN waits)
-// ================================
-function renderOffersCarousel() {
+async function renderOffersCarousel() {
   const container = document.getElementById("offers-carousel");
   if (!container) return false;
 
-  // Estructura base para Swiper
   container.innerHTML = `
     <div class="swiper-wrapper"></div>
     <div class="swiper-button-prev"></div>
@@ -188,12 +147,16 @@ function renderOffersCarousel() {
 
   const wrapper = container.querySelector(".swiper-wrapper");
 
-  // Filtrar ofertas
-  const offers = productsData.filter((item) => item.isOffer === true);
+  let offers = [];
+  try {
+    offers = await fetchPublicOffers();
+  } catch (error) {
+    console.error("No se pudieron cargar las ofertas:", error);
+  }
 
-  // Renderizar slides
   offers.forEach((offer) => {
-    const discountedPrice = applyDiscount(offer.price, offer.discount);
+    const product = offer.product || {};
+    const discountedPrice = applyDiscount(product.price || 0, offer.discountPercent || 0);
     const slide = document.createElement("div");
     slide.classList.add("swiper-slide", "home__offer-slide");
     slide.innerHTML = `
@@ -203,21 +166,21 @@ function renderOffersCarousel() {
           <span class="home__offer-timer">¡Solo por tiempo limitado!</span>
         </div>
         <div class="home__offer-image">
-          <img src="${offer.image}" alt="${offer.name}" loading="lazy">
+          <img src="${product.imageUrl || ""}" alt="${product.name || "Oferta"}" loading="lazy">
         </div>
         <div class="home__offer-info">
-          <h3 class="home__offer-title">${offer.name}</h3>
+          <h3 class="home__offer-title">${product.name || "Oferta"}</h3>
           <div class="home__offer-price">
-            <span class="home__offer-old-price">${formatPrice(offer.price)}</span>
+            <span class="home__offer-old-price">${formatPrice(product.price || 0)}</span>
             <span class="home__offer-discounted">${formatPrice(discountedPrice)}</span>
-            <span class="home__offer-discount-percent">-${offer.discount}%</span>
+            <span class="home__offer-discount-percent">-${offer.discountPercent || 0}%</span>
           </div>
         </div>
         <button class="btn-add-to-cart"
-          data-id="${offer.id}"
-          data-name="${offer.name}"
+          data-id="${product.id || offer.id}"
+          data-name="${product.name || "Oferta"}"
           data-price="${discountedPrice}"
-          data-image="${offer.image}"
+          data-image="${product.imageUrl || ""}"
           data-source="offers">
           Agregar al carrito
         </button>
@@ -226,8 +189,7 @@ function renderOffersCarousel() {
     wrapper.appendChild(slide);
   });
 
-  // Inicializar Swiper (spaceBetween controla el gap; no tocar .swiper-wrapper en CSS)
-  const swiper = new Swiper(container, {
+  new Swiper(container, {
     slidesPerView: 1,
     spaceBetween: 20,
     autoplay: { delay: 3000, disableOnInteraction: false },
@@ -239,7 +201,6 @@ function renderOffersCarousel() {
     },
   });
 
-  // Conectar botones con carrito
   setupCartButtons(".btn-add-to-cart");
 
   return true;
