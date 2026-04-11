@@ -10,19 +10,17 @@
 import { formatCurrency } from '@shared-utils';
 
 /**
- * Obtiene el estado del negocio desde estado.json
+ * Obtiene el estado del negocio desde backend público
  * @returns {Promise<boolean>} true si está abierto, false si está cerrado
  */
 export async function isBusinessOpen() {
   try {
-    const res = await fetch('/data/estado.json'); // ✅ Ruta correcta desde public
-    if (!res.ok) throw new Error('Error al cargar estado.json');
-
-    const estado = await res.json();
-    return estado.open === true; // Devuelve true si está abierto
+    const [{ fetchBusinessStatus }] = await Promise.all([import('/src/api/public.js')]);
+    const status = await fetchBusinessStatus();
+    return status?.isOpen === true;
   } catch (err) {
     console.error('Error al verificar estado del negocio:', err);
-    return false; // Por defecto, lo consideramos cerrado
+    return false;
   }
 }
 

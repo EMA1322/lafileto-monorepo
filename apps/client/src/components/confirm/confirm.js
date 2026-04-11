@@ -2,7 +2,7 @@
 // confirm.js — módulo Confirm (SPA)
 // - BEM consistente con CSS
 // - Sin wait loops
-// - WhatsApp centralizado desde /data/estado.json
+// - WhatsApp centralizado desde backend público
 // - Mensaje robusto (encodeURIComponent)
 // - Usa cartService (no accede directo a localStorage)
 // - A11y: radios con aria-controls/expanded, address hidden/focus
@@ -12,6 +12,7 @@
 import { formatPrice, isBusinessOpen } from "/src/utils/helpers.js";
 import { getCart, clearCart } from "/src/utils/cartService.js";
 import { showSnackbar } from "/src/utils/showSnackbar.js";
+import { fetchBusinessStatus, fetchCommercialConfig } from "/src/api/public.js";
 
 // Estado del módulo
 let els = {};
@@ -43,9 +44,16 @@ export async function initConfirm() {
 
   // Estado del negocio (open + WhatsApp centralizado)
   try {
-    business = await fetchBusinessConfig();
+    const [status, commercial] = await Promise.all([
+      fetchBusinessStatus(),
+      fetchCommercialConfig()
+    ]);
+
+    business = {
+      isOpen: status?.isOpen === true,
+      whatsAppNumber: String(commercial?.whatsapp?.number || "").replace(/[^\d]/g, "")
+    };
   } catch {
-    // fallback: sólo isOpen por helpers
     try {
       business.isOpen = await isBusinessOpen();
     } catch {}
@@ -77,17 +85,6 @@ export async function initConfirm() {
   renderOrderSummary();
   updateBusinessUI();
   updatePreview();
-}
-
-// ================================
-// Business config (centralizado)
-// ================================
-async function fetchBusinessConfig() {
-  const res = await fetch("/data/estado.json");
-  if (!res.ok) throw new Error("Error al cargar /data/estado.json");
-  const json = await res.json();
-  const normalized = String(json.whatsAppNumber || "").replace(/[^\d]/g, "");
-  return { isOpen: json.open === true, whatsAppNumber: normalized };
 }
 
 // ================================

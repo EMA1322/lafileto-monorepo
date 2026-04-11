@@ -1,13 +1,12 @@
-// contact.js — vínculo dinámico a WhatsApp desde /data/estado.json
+import { fetchCommercialConfig } from "/src/api/public.js";
+
 export async function initContact() {
   const link = document.getElementById("contact-wa");
   if (!link) return;
 
   try {
-    const res = await fetch("/data/estado.json");
-    if (!res.ok) throw new Error("estado.json");
-    const json = await res.json();
-    const num = String(json.whatsAppNumber || "").replace(/[^\d]/g, "");
+    const data = await fetchCommercialConfig();
+    const num = String(data?.whatsapp?.number || "").replace(/[^\d]/g, "");
     if (num) {
       link.href = `https://wa.me/${num}`;
       link.textContent = `+${num}`;
@@ -20,4 +19,3 @@ export async function initContact() {
     link.removeAttribute("href");
   }
 }
-
