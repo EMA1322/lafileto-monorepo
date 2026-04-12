@@ -1,17 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { clearCart, getCart } from '/src/utils/cartService.js';
-import { formatPrice, isBusinessOpen } from '/src/utils/helpers.js';
-import { fetchBusinessStatus, fetchCommercialConfig } from '/src/api/public.js';
+import { formatPrice } from '/src/utils/helpers.js';
+import { loadCommercialContext } from '/src/utils/commercialContext.js';
 import { showSnackbar } from '/src/utils/showSnackbar.js';
 import '/src/styles/confirm.css';
 
 function getSafeCart() {
   const cart = getCart();
   return Array.isArray(cart) ? cart : [];
-}
-
-function sanitizeWhatsappNumber(value) {
-  return String(value || '').replace(/\D/g, '');
 }
 
 function buildWhatsappMessage({ items, total, customerName, deliveryMode, address, notes }) {
@@ -102,32 +98,19 @@ export function ConfirmPage() {
   useEffect(() => {
     let mounted = true;
 
-    async function loadCommercialContext() {
-      try {
-        const [status, commercialConfig] = await Promise.all([
-          fetchBusinessStatus(),
-          fetchCommercialConfig(),
-        ]);
+    async function loadCommercialStatus() {
+      const context = await loadCommercialContext();
+      if (!mounted) return;
 
-        if (!mounted) return;
+      setBusinessOpen(context.businessOpen);
+      setWhatsappNumber(context.whatsappNumber);
 
-        setBusinessOpen(status?.isOpen === true);
-        setWhatsappNumber(sanitizeWhatsappNumber(commercialConfig?.whatsapp?.number));
-      } catch {
-        try {
-          const isOpen = await isBusinessOpen();
-          if (mounted) {
-            setBusinessOpen(isOpen);
-          }
-        } catch {
-          if (mounted) {
-            setBusinessOpen(false);
-          }
-        }
+      if (context.errorMessage) {
+        setStatusMessage(context.errorMessage);
       }
     }
 
-    loadCommercialContext();
+    loadCommercialStatus();
 
     return () => {
       mounted = false;
