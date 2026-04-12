@@ -25,6 +25,11 @@ export default defineConfig(() => {
         '@shared-utils': fileURLToPath(new URL('../../packages/shared-utils/src', import.meta.url)),
       },
     },
+
+    esbuild: {
+      jsx: 'automatic',
+      jsxImportSource: 'react',
+    },
     server: {
       host: true, // 0.0.0.0
       port: 5173,
