@@ -54,7 +54,7 @@ export function validateInput(value, type = 'text') {
 
 /**
  * Muestra un loader simple dentro de un contenedor.
- * (Se conserva por compatibilidad; el loader principal del SPA está en renderView)
+ * (Retained for compatibility with legacy modules that still call this helper)
  * @param {HTMLElement} container
  */
 export function showLoader(container) {
