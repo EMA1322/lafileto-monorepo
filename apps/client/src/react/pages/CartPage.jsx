@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { clearCart, getCart, removeFromCart, updateQuantity } from '/src/utils/cartService.js';
-import { formatPrice, isBusinessOpen } from '/src/utils/helpers.js';
+import { formatPrice } from '/src/utils/helpers.js';
+import { loadCommercialContext } from '/src/utils/commercialContext.js';
 import { showSnackbar } from '/src/utils/showSnackbar.js';
 import '/src/styles/cart.css';
 
@@ -36,21 +37,22 @@ export function CartPage() {
     };
   }, []);
 
-
   useEffect(() => {
     let mounted = true;
 
     async function loadBusinessStatus() {
-      try {
-        const isOpen = await isBusinessOpen();
-        if (mounted) {
-          setBusinessOpen(isOpen);
-          if (!isOpen) {
-            setStatusMessage('We are currently closed.');
-          }
-        }
-      } catch {
-        if (mounted) setBusinessOpen(true);
+      const context = await loadCommercialContext();
+      if (!mounted) return;
+
+      setBusinessOpen(context.businessOpen);
+
+      if (!context.businessOpen) {
+        setStatusMessage('We are currently closed.');
+        return;
+      }
+
+      if (context.errorMessage) {
+        setStatusMessage(context.errorMessage);
       }
     }
 
@@ -83,7 +85,6 @@ export function CartPage() {
     clearCart();
     setStatusMessage('Cart cleared.');
   };
-
 
   const handleConfirm = (event) => {
     if (isEmpty) {
