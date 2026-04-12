@@ -5,12 +5,53 @@
 
 import { loadCart, saveCart } from "./helpers.js";
 
+function toSafeNumber(value, fallback = 0) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function normalizeCartItem(item) {
+  if (!item || item.id == null) return null;
+
+  return {
+    id: String(item.id),
+    name: String(item.name || "Product"),
+    price: toSafeNumber(item.price, 0),
+    image: item.image || "",
+    source: item.source || "products",
+    quantity: Math.max(1, Math.trunc(toSafeNumber(item.quantity, 1))),
+  };
+}
+
+function normalizeCart(cart) {
+  if (!Array.isArray(cart)) return [];
+
+  return cart
+    .map(normalizeCartItem)
+    .filter(Boolean);
+}
+
+function persistCart(cart) {
+  const normalized = normalizeCart(cart);
+  saveCart(normalized);
+  updateCartCount();
+  document.dispatchEvent(new CustomEvent("cart:updated", { detail: { cart: normalized } }));
+  return normalized;
+}
+
 /**
  * ✅ Devuelve el carrito actual desde localStorage
  * @returns {Array} Lista de productos en el carrito
  */
 export function getCart() {
-    return loadCart();
+  const rawCart = loadCart();
+  const normalized = normalizeCart(rawCart);
+
+  if (JSON.stringify(rawCart) !== JSON.stringify(normalized)) {
+    saveCart(normalized);
+  }
+
+  return normalized;
 }
 
 /**
@@ -20,19 +61,19 @@ export function getCart() {
  * @param {Object} product Objeto con {id, name, price, image}
  */
 export function addToCart(product) {
-    const cart = loadCart();
+  const cart = getCart();
+  const productId = String(product?.id ?? "");
+  if (!productId) return;
 
-  // Buscar si el producto ya está en el carrito
-    const existingItem = cart.find((item) => item.id === product.id);
+  const existingItem = cart.find((item) => item.id === productId);
 
-    if (existingItem) {
-    existingItem.quantity += 1; // Incrementar cantidad
-    } else {
-    cart.push({ ...product, quantity: 1 });
-}
+  if (existingItem) {
+    existingItem.quantity += 1;
+  } else {
+    cart.push(normalizeCartItem({ ...product, id: productId, quantity: 1 }));
+  }
 
-    saveCart(cart);
-    updateCartCount();
+  persistCart(cart);
 }
 
 /**
@@ -42,19 +83,21 @@ export function addToCart(product) {
  * @param {number} qty Nueva cantidad
  */
 export function updateQuantity(id, qty) {
-    const cart = loadCart();
+  const cart = getCart();
+  const productId = String(id || "");
+  if (!productId) return;
 
-    const item = cart.find((item) => item.id === id);
-    if (!item) return;
+  const item = cart.find((cartItem) => cartItem.id === productId);
+  if (!item) return;
 
-    if (qty < 1) {
-    removeFromCart(id);
+  const nextQty = Math.trunc(toSafeNumber(qty, item.quantity));
+  if (nextQty < 1) {
+    removeFromCart(productId);
     return;
-    }
+  }
 
-    item.quantity = qty;
-    saveCart(cart);
-    updateCartCount();
+  item.quantity = nextQty;
+  persistCart(cart);
 }
 
 /**
@@ -62,19 +105,18 @@ export function updateQuantity(id, qty) {
  * @param {string} id ID del producto
  */
 export function removeFromCart(id) {
-    let cart = loadCart();
-    cart = cart.filter((item) => item.id !== id);
+  const productId = String(id || "");
+  if (!productId) return;
 
-    saveCart(cart);
-    updateCartCount();
+  const cart = getCart().filter((item) => item.id !== productId);
+  persistCart(cart);
 }
 
 /**
  * ✅ Vacía todo el carrito
  */
 export function clearCart() {
-    saveCart([]);
-    updateCartCount();
+  persistCart([]);
 }
 
 /**
@@ -82,11 +124,11 @@ export function clearCart() {
  * - Calcula la suma total de cantidades
  */
 export function updateCartCount() {
-    const cart = loadCart();
-    const countElement = document.getElementById("cart-count");
+  const cart = getCart();
+  const countElement = document.getElementById("cart-count");
 
-    if (countElement) {
-    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-    countElement.textContent = totalItems;
-    }
+  if (countElement) {
+    const totalItems = cart.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+    countElement.textContent = String(totalItems);
+  }
 }
