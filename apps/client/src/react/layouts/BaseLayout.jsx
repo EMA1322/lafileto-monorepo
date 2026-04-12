@@ -2,10 +2,7 @@ import { Outlet } from 'react-router-dom';
 
 export function BaseLayout() {
   return (
-    <section aria-label="React shell" className="react-shell">
-      <header>
-        <h1>La Fileto React Shell</h1>
-      </header>
+    <section aria-label="React public home" className="react-shell">
       <Outlet />
     </section>
   );

@@ -1,0 +1,146 @@
+.react-home {
+  display: grid;
+  gap: 1.25rem;
+  padding: 1rem;
+}
+
+.react-home__hero {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  background: #fff;
+  border-radius: 14px;
+  padding: 1rem;
+  box-shadow: var(--shadow-soft);
+}
+
+.react-home__hero-copy {
+  display: grid;
+  gap: 0.75rem;
+  align-content: center;
+}
+
+.react-home__kicker {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.react-home__hero-media {
+  margin: 0;
+  min-height: 220px;
+}
+
+.react-home__hero-media img {
+  width: 100%;
+  height: 100%;
+  min-height: 220px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.react-home__status,
+.react-home__section {
+  background: #fff;
+  border-radius: 14px;
+  padding: 1rem;
+  box-shadow: var(--shadow-soft);
+}
+
+.react-home__status-pill {
+  display: inline-flex;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-weight: 600;
+  margin: 0.5rem 0;
+}
+
+.react-home__status-pill.is-open {
+  background: #e9f9ef;
+  color: #116f3f;
+}
+
+.react-home__status-pill.is-closed {
+  background: #fff1f1;
+  color: #8f1e1e;
+}
+
+.react-home__section-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.react-home__state {
+  color: var(--muted-color);
+}
+
+.react-home__state--error {
+  color: var(--danger-color);
+}
+
+.react-home__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+.react-home__card {
+  border: 1px solid #ececec;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.react-home__card img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+}
+
+.react-home__card-body {
+  padding: 0.75rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.react-home__price-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.react-home__old-price {
+  text-decoration: line-through;
+  color: var(--muted-color);
+}
+
+.react-home__chips {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.react-home__chip {
+  border: 1px solid #ececec;
+  border-radius: 999px;
+  padding: 0.4rem 0.8rem;
+  background: var(--secondary-color);
+}
+
+@media (min-width: 900px) {
+  .react-home {
+    gap: 1.5rem;
+    padding: 1.25rem;
+  }
+
+  .react-home__hero {
+    grid-template-columns: 1fr 1fr;
+    min-height: 320px;
+  }
+
+  .react-home__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

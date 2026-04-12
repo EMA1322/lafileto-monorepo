@@ -1,17 +1,18 @@
-import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { HashRouter, Route, Routes } from 'react-router-dom';
 import { BaseLayout } from '../layouts/BaseLayout.jsx';
-import { ShellHomePage } from '../pages/ShellHomePage.jsx';
-import { NotFoundPage } from '../pages/NotFoundPage.jsx';
+import { HomePage } from '../pages/HomePage.jsx';
 
 export function AppRouter() {
   return (
     <HashRouter>
       <Routes>
-        <Route path="/r" element={<BaseLayout />}>
-          <Route index element={<ShellHomePage />} />
-          <Route path="*" element={<NotFoundPage />} />
+        <Route element={<BaseLayout />}>
+          <Route index element={<HomePage />} />
+          <Route path="home" element={<HomePage />} />
+          <Route path="r" element={<HomePage />} />
+          <Route path="r/*" element={<HomePage />} />
+          <Route path="*" element={<HomePage />} />
         </Route>
-        <Route path="*" element={<Navigate to="/r" replace />} />
       </Routes>
     </HashRouter>
   );
