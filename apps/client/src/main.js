@@ -38,7 +38,7 @@ async function loadFooter() {
 }
 
 function syncShellByHash() {
-  if (isReactHashRoute(window.location.hash)) {
+  if (isReactHashRoute(window.location.hash || '#home')) {
     mountReactShell('main-content');
     return;
   }
