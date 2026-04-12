@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { clearCart, getCart, removeFromCart, updateQuantity } from '/src/utils/cartService.js';
-import { formatPrice } from '/src/utils/helpers.js';
+import { formatPrice, isBusinessOpen } from '/src/utils/helpers.js';
+import { showSnackbar } from '/src/utils/showSnackbar.js';
 import '/src/styles/cart.css';
 
 function getSafeCart() {
@@ -11,6 +12,7 @@ function getSafeCart() {
 export function CartPage() {
   const [items, setItems] = useState(() => getSafeCart());
   const [statusMessage, setStatusMessage] = useState('');
+  const [businessOpen, setBusinessOpen] = useState(true);
 
   const total = useMemo(() => {
     return items.reduce((acc, item) => acc + Number(item.price || 0) * Number(item.quantity || 0), 0);
@@ -31,6 +33,31 @@ export function CartPage() {
     return () => {
       window.removeEventListener('storage', onStorage);
       document.removeEventListener('cart:updated', syncCart);
+    };
+  }, []);
+
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadBusinessStatus() {
+      try {
+        const isOpen = await isBusinessOpen();
+        if (mounted) {
+          setBusinessOpen(isOpen);
+          if (!isOpen) {
+            setStatusMessage('We are currently closed.');
+          }
+        }
+      } catch {
+        if (mounted) setBusinessOpen(true);
+      }
+    }
+
+    loadBusinessStatus();
+
+    return () => {
+      mounted = false;
     };
   }, []);
 
@@ -55,6 +82,22 @@ export function CartPage() {
 
     clearCart();
     setStatusMessage('Cart cleared.');
+  };
+
+
+  const handleConfirm = (event) => {
+    if (isEmpty) {
+      event.preventDefault();
+      setStatusMessage('Your cart is empty.');
+      showSnackbar('Your cart is empty.');
+      return;
+    }
+
+    if (!businessOpen) {
+      event.preventDefault();
+      setStatusMessage('We are currently closed.');
+      showSnackbar('We are currently closed.');
+    }
   };
 
   const isEmpty = items.length === 0;
@@ -124,14 +167,17 @@ export function CartPage() {
             </div>
 
             <div className="cart__summary-actions">
-              <a href="#confirm" className="btn cart__confirm-btn" aria-disabled={isEmpty} onClick={(event) => {
-                if (isEmpty) {
-                  event.preventDefault();
-                  setStatusMessage('Your cart is empty.');
-                }
-              }}>
+              <a
+                href="#confirm"
+                className="btn cart__confirm-btn"
+                aria-disabled={isEmpty || !businessOpen}
+                onClick={handleConfirm}
+              >
                 Confirm order
               </a>
+              <p className="cart__closed-note" hidden={businessOpen}>
+                We are currently closed.
+              </p>
               <button id="clear-cart-btn" className="btn btn-outline cart__clear-btn" type="button" disabled={isEmpty} onClick={handleClear}>
                 Clear cart
               </button>
