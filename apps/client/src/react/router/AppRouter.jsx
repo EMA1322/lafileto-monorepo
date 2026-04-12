@@ -3,6 +3,7 @@ import { BaseLayout } from '../layouts/BaseLayout.jsx';
 import { HomePage } from '../pages/HomePage.jsx';
 import { ProductsPage } from '../pages/ProductsPage.jsx';
 import { CartPage } from '../pages/CartPage.jsx';
+import { ConfirmPage } from '../pages/ConfirmPage.jsx';
 
 export function AppRouter() {
   return (
@@ -17,6 +18,8 @@ export function AppRouter() {
           <Route path="r/products" element={<ProductsPage />} />
           <Route path="cart" element={<CartPage />} />
           <Route path="r/cart" element={<CartPage />} />
+          <Route path="confirm" element={<ConfirmPage />} />
+          <Route path="r/confirm" element={<ConfirmPage />} />
           <Route path="*" element={<HomePage />} />
         </Route>
       </Routes>

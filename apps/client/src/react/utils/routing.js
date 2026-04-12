@@ -1,4 +1,4 @@
-const REACT_ROUTE_PATTERNS = ['#/r', '#r', '#/home', '#home', '#/products', '#products', '#/cart', '#cart'];
+const REACT_ROUTE_PATTERNS = ['#/r', '#r', '#/home', '#home', '#/products', '#products', '#/cart', '#cart', '#/confirm', '#confirm'];
 
 export function isReactHashRoute(hash = '') {
   const normalized = String(hash || '').toLowerCase();
@@ -14,9 +14,11 @@ export function isReactRouteKey(routeKey = '') {
     normalized === 'home' ||
     normalized === 'products' ||
     normalized === 'cart' ||
+    normalized === 'confirm' ||
     normalized === 'r' ||
     normalized === 'r/products' ||
     normalized === 'r/cart' ||
+    normalized === 'r/confirm' ||
     normalized.startsWith('r/') ||
     normalized.startsWith('/r')
   );
