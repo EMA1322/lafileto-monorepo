@@ -15,7 +15,10 @@
   },
   "dependencies": {
     "swiper": "^11",
-    "@lafileto/shared-utils": "workspace:*"
+    "@lafileto/shared-utils": "workspace:*",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.30.1"
   },
   "devDependencies": {
     "rollup-plugin-visualizer": "workspace:*",

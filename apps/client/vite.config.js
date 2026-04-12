@@ -7,16 +7,18 @@ export default defineConfig(() => {
   const shouldAnalyze = Boolean(process.env.ANALYZE_BUNDLE) && process.env.ANALYZE_BUNDLE !== 'false';
 
   return {
-    plugins: shouldAnalyze
-      ? [
-          visualizer({
-            filename: path.resolve(fileURLToPath(new URL('.', import.meta.url)), 'dist/stats-client.html'),
-            gzipSize: true,
-            brotliSize: true,
-            open: false,
-          }),
-        ]
-      : [],
+    plugins: [
+      ...(shouldAnalyze
+        ? [
+            visualizer({
+              filename: path.resolve(fileURLToPath(new URL('.', import.meta.url)), 'dist/stats-client.html'),
+              gzipSize: true,
+              brotliSize: true,
+              open: false,
+            }),
+          ]
+        : []),
+    ],
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('./src', import.meta.url)),

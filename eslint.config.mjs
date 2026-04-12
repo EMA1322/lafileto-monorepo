@@ -45,10 +45,15 @@ export default [
     ignores: ['**/dist/**', '**/build/**', 'node_modules'],
   },
   {
-    files: ['**/*.{js,mjs,cjs}'],
+    files: ['**/*.{js,jsx,mjs,cjs}'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
+      parserOptions: {
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
       globals: {
         ...commonGlobals,
         ...browserGlobals,
