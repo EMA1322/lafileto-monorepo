@@ -8,6 +8,8 @@ import {
 } from '../services/publicApi.js';
 import { useAsyncResource } from '../hooks/useAsyncResource.jsx';
 import { formatPrice, getDiscountedPrice } from '/src/utils/helpers.js';
+import { addToCart } from '/src/utils/cartService.js';
+import { showSnackbar } from '/src/utils/showSnackbar.js';
 import '/src/styles/react-home.css';
 
 function SectionState({ label, status, error, isEmpty, emptyText, children }) {
@@ -59,6 +61,25 @@ function resolveBusinessStatus(statusData) {
 }
 
 export function HomePage() {
+  const handleAddOfferToCart = (offer) => {
+    const product = offer?.product || {};
+    const basePrice = Number(product?.price || 0);
+    const discount = Number(offer?.discountPercent || 0);
+    const finalPrice = getDiscountedPrice(basePrice, discount);
+
+    if (product?.id == null) return;
+
+    addToCart({
+      id: String(product.id),
+      name: product.name || 'Special offer',
+      price: finalPrice,
+      image: product.imageUrl || '/img/hero1.png',
+      source: 'offers',
+      quantity: 1,
+    });
+
+    showSnackbar(`Added to cart: ${product.name || 'Special offer'}`);
+  };
   const homeResource = useAsyncResource(async () => {
     const [settings, businessStatus, commercialConfig] = await Promise.all([
       fetchPublicSettings(),
@@ -146,6 +167,13 @@ export function HomePage() {
                       {discount > 0 ? <span className="react-home__old-price">{formatPrice(basePrice)}</span> : null}
                       <strong>{formatPrice(finalPrice)}</strong>
                     </p>
+                    <button
+                      type="button"
+                      className="btn btn-add-to-cart"
+                      onClick={() => handleAddOfferToCart(offer)}
+                    >
+                      Add to cart
+                    </button>
                   </div>
                 </article>
               );

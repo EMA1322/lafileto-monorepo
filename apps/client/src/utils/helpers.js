@@ -132,8 +132,17 @@ export function applyDiscount(price, discount) {
  * @returns {Array}
  */
 export function loadCart() {
+  if (typeof localStorage === 'undefined') return [];
+
   const cartData = localStorage.getItem('cart');
-  return cartData ? JSON.parse(cartData) : [];
+  if (!cartData) return [];
+
+  try {
+    const parsed = JSON.parse(cartData);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
 }
 
 /**
