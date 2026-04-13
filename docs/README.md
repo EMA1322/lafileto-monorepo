@@ -32,6 +32,7 @@ Prioridades de mantenimiento:
 
 ### 03-arquitectura
 - [client-react-architecture.md](./03-arquitectura/client-react-architecture.md)
+- [admin-react-migration-evaluation.md](./03-arquitectura/admin-react-migration-evaluation.md)
 - [c4-context.mmd](./03-arquitectura/c4-context.mmd)
 - [c4-containers.mmd](./03-arquitectura/c4-containers.mmd)
 - [c4-components-client.mmd](./03-arquitectura/c4-components-client.mmd)
