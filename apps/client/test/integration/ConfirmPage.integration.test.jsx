@@ -93,7 +93,7 @@ describe('ConfirmPage integration', () => {
     const status = await screen.findByText(/commercial information is temporarily unavailable/i);
     expect(status.textContent).toContain('status unavailable');
 
-    const closedNote = screen.getByText('We are currently closed.');
-    expect(closedNote.hidden).toBe(true);
+    expect(screen.getByText('WhatsApp number is not available.')).toBeTruthy();
+    expect(screen.queryByText('We are currently closed.')).toBeNull();
   });
 });
