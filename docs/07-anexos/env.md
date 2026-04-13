@@ -1,7 +1,7 @@
 ---
 status: Draft
 owner: Tech Lead
-last_update: 2025-10-09
+last_update: 2026-04-13
 scope: Variables por app y ejemplos por entorno.
 ---
 
@@ -22,18 +22,20 @@ REQUEST_TIMEOUT_MS=15000
 ## Client (SPA pública)
 ```
 VITE_API_BASE=/api
-VITE_DATA_SOURCE=json
 ```
 
 - `VITE_API_BASE` apunta al proxy local (`/api`); en producción puede quedar fijo al dominio del backend.
-- `VITE_DATA_SOURCE` permite continuar usando JSON mocks si aún no está lista la API.
+- El client público productivo consume API pública; no usar JSON local como fuente productiva.
 
 ## Admin (SPA de gestión)
 ```
 VITE_API_BASE=/api
+VITE_DATA_SOURCE=api
 ```
 
 - Todo el tráfico de la Admin pasa por el proxy configurado en `vite.config.js`.
 - El login y el bootstrap de permisos utilizan `POST /api/v1/auth/login` y `GET /api/v1/auth/me`.
+- `VITE_DATA_SOURCE` en admin se conserva para compatibilidad de debug/migración incremental; valor recomendado: `api`.
+
 
 > En producción mover secretos a un gestor seguro; no commitear `.env` reales.

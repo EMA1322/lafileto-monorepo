@@ -1,5 +1,5 @@
 ---
-status: Aprobado
+status: Historico
 owner: Tech Lead + Frontend Lead + Backend Lead
 last_update: 2026-04-11
 scope: Cierre breve de Fase 1 sobre contratos públicos entre client y backend.

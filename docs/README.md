@@ -1,71 +1,93 @@
 ---
-status: Draft
+status: Aprobado
 owner: Tech Lead + Product/UX
-last_update: 2025-10-09
-scope: Índice, propósito, cómo contribuir, mapa del repo y contactos.
+last_update: 2026-04-13
+scope: Índice operativo de /docs y criterios para mantener documentación vigente.
 ---
 
 # Documentación — Menú Digital · La Fileto
 
 ## Propósito
-Centralizar lineamientos de **visión**, **requisitos**, **arquitectura**, **UX/UI**, **procesos** y **APIs** del monorepo (client, admin, backend, packages).
+Esta carpeta es la **fuente de verdad documental operativa** del monorepo `apps/{backend,admin,client}`.
 
-## Índice
-- **01-vision**: [vision.md](./01-vision/vision.md), [roadmap.md](./01-vision/roadmap.md)
-- **02-requisitos**: [requisitos.md](./02-requisitos/requisitos.md), [user-stories.md](./02-requisitos/user-stories.md)
-- **03-arquitectura**: [arquitectura.md](./03-arquitectura/arquitectura.md), [acta-cierre-fase-0-migracion-client-react.md](./03-arquitectura/acta-cierre-fase-0-migracion-client-react.md), [cierre-fase-1-contratos-publicos.md](./03-arquitectura/cierre-fase-1-contratos-publicos.md), [client-react-architecture.md](./03-arquitectura/client-react-architecture.md), C4 ([context](./03-arquitectura/c4-context.mmd), [containers](./03-arquitectura/c4-containers.mmd), [components-admin](./03-arquitectura/c4-components-admin.mmd), [components-client](./03-arquitectura/c4-components-client.mmd)), [datos-y-modelado.md](./03-arquitectura/datos-y-modelado.md), [despliegue.md](./03-arquitectura/despliegue.md)
-- **04-ux-ui**: [ux-ui.md](./04-ux-ui/ux-ui.md), [design-system.md](./04-ux-ui/design-system.md), [accesibilidad.md](./04-ux-ui/accesibilidad.md)
-- **05-procesos**: [procesos.md](./05-procesos/procesos.md), [git-branching.md](./05-procesos/git-branching.md), [coding-standards.md](./05-procesos/coding-standards.md), [testing.md](./05-procesos/testing.md), [ci-cd.md](./05-procesos/ci-cd.md)
-- **06-apis**: [api-guidelines.md](./06-apis/api-guidelines.md), [endpoints.md](./06-apis/endpoints.md), [openapi.yaml](./06-apis/openapi.yaml), [ejemplos.json](./06-apis/ejemplos.json), [postman_collection.json](./06-apis/postman_collection.json)
-- **07-anexos**: [env.md](./07-anexos/env.md), [seguridad.md](./07-anexos/seguridad.md), [troubleshooting.md](./07-anexos/troubleshooting.md), [glosario.md](./07-anexos/glosario.md), [changelog.md](./07-anexos/changelog.md)
+Prioridades de mantenimiento:
+1. Exactitud respecto al estado real del repositorio.
+2. Coherencia entre documentos.
+3. Eliminación de contradicciones y referencias obsoletas.
 
-## Cómo contribuir
-1. Cada cambio de contrato/flujo debe incluir actualización en `/docs` en la **misma PR**.
-2. Validar enlaces relativos antes del merge.
-3. Mantener el tono **conciso** y sin auditorías ni historiales; sólo “Última actualización”.
-4. Para nuevas APIs, actualizar `openapi.yaml`, `endpoints.md` y ejemplos.
+## Estado actual del producto (resumen)
+- El **client público en React** es la base activa.
+- El flujo público principal corre en React: **Home → Products → Cart → Confirm**.
+- El flujo público productivo consume **API pública** (`/api/v1/public/*`).
+- El frontend legacy del client quedó fuera del flujo productivo principal.
 
-## Mapa del repo
-| Workspace | Descripción | Dev URL |
-|---|---|---|
-| `client/` | SPA pública (catálogo + carrito + WhatsApp) | http://localhost:5173/ |
-| `admin/` | SPA de gestión con RBAC | http://localhost:5174/ |
-| `backend/` | API Node/Express + Prisma/MySQL | http://localhost:3000/api/v1 |
+## Índice de documentación vigente
 
-## Contactos / Owners
-| Área | Owner |
-|---|---|
-| Product/UX | Pendiente de completar |
-| Front (Client/Admin) | Pendiente de completar |
-| Backend | Pendiente de completar |
+### 01-vision
+- [vision.md](./01-vision/vision.md)
 
-## Estado general
-- **MVP** en ejecución con migración **JSON→API** por módulo y flag `VITE_DATA_SOURCE`.
+### 02-requisitos
+- [requisitos.md](./02-requisitos/requisitos.md)
+- [user-stories.md](./02-requisitos/user-stories.md)
 
+### 03-arquitectura
+- [client-react-architecture.md](./03-arquitectura/client-react-architecture.md)
+- [c4-context.mmd](./03-arquitectura/c4-context.mmd)
+- [c4-containers.mmd](./03-arquitectura/c4-containers.mmd)
+- [c4-components-client.mmd](./03-arquitectura/c4-components-client.mmd)
+- [c4-components-admin.mmd](./03-arquitectura/c4-components-admin.mmd)
+- [datos-y-modelado.md](./03-arquitectura/datos-y-modelado.md)
+- [despliegue.md](./03-arquitectura/despliegue.md)
 
-## Ejecución en desarrollo
-Comandos para levantar **Client**, **Admin** y **API** simultáneamente (PNPM workspaces):
+#### Históricos de arquitectura (no normativos para nuevas decisiones)
+- [acta-cierre-fase-0-migracion-client-react.md](./03-arquitectura/acta-cierre-fase-0-migracion-client-react.md)
+- [cierre-fase-1-contratos-publicos.md](./03-arquitectura/cierre-fase-1-contratos-publicos.md)
+
+### 04-ux-ui
+- [ux-ui.md](./04-ux-ui/ux-ui.md)
+- [design-system.md](./04-ux-ui/design-system.md)
+- [accesibilidad.md](./04-ux-ui/accesibilidad.md)
+- [admin-products.md](./04-ux-ui/admin-products.md)
+- [admin-list-contract.md](./04-ux-ui/admin-list-contract.md)
+- [img/admin-products.png](./04-ux-ui/img/admin-products.png)
+
+### 05-procesos
+- [procesos.md](./05-procesos/procesos.md)
+- [git-branching.md](./05-procesos/git-branching.md)
+- [coding-standards.md](./05-procesos/coding-standards.md)
+- [testing.md](./05-procesos/testing.md)
+- [ci-cd.md](./05-procesos/ci-cd.md)
+- [debug-login.md](./05-procesos/debug-login.md)
+- [validacion-usuarios.md](./05-procesos/validacion-usuarios.md)
+
+### 06-apis
+- [api-guidelines.md](./06-apis/api-guidelines.md)
+- [endpoints.md](./06-apis/endpoints.md)
+- [ejemplos.json](./06-apis/ejemplos.json)
+- [postman_collection.json](./06-apis/postman_collection.json)
+
+### 07-anexos
+- [env.md](./07-anexos/env.md)
+- [seguridad.md](./07-anexos/seguridad.md)
+- [troubleshooting.md](./07-anexos/troubleshooting.md)
+- [glosario.md](./07-anexos/glosario.md)
+- [ui-kit.md](./07-anexos/ui-kit.md)
+
+### Documento transversal
+- [admin-ui.md](./admin-ui.md)
+
+## Reglas de actualización
+- Si cambia un contrato/flujo real, se actualiza `/docs` en la misma PR.
+- Si un documento queda histórico, debe marcarse explícitamente como histórico.
+- Evitar duplicar contenido: priorizar un documento fuente y referenciarlo.
+
+## Ejecución local rápida
 ```bash
 pnpm install
 pnpm dev
 ```
-URLs en dev:
-- Client → http://localhost:5173
-- Admin  → http://localhost:5174
-- API    → http://localhost:3000/api/v1/health
 
-> Si un puerto está ocupado, podés liberar 5173/5174/3000 con:
-```bash
-pnpm dlx kill-port 5173 5174 3000
-```
-
-## Build de producción
-Construcción de artefactos estáticos para las SPAs:
-```bash
-pnpm -F client build
-pnpm -F admin build
-```
-El **backend** corre como proceso Node (p. ej., con PM2/systemd):
-```bash
-pnpm -F backend start
-```
+URLs de desarrollo (por defecto):
+- Client: `http://localhost:5173`
+- Admin: `http://localhost:5174`
+- API: `http://localhost:3000/api/v1/health`

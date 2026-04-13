@@ -2,27 +2,12 @@
 C4Container
 title La Fileto — Containers
 System_Boundary(sys, "La Fileto") {
-  Container(client, "Client SPA", "Vite", "Catálogo público")
-  Container(admin, "Admin SPA", "Vite", "Gestión con RBAC")
-  Container(api, "API", "Node/Express", "REST JSON")
-  ContainerDb(db, "MySQL", "RDS/local", "Datos persistentes")
+  Container(client, "apps/client", "Vite + React", "Canal público (Home, Products, Cart, Confirm)")
+  Container(admin, "apps/admin", "Vite SPA", "Gestión con autenticación + RBAC")
+  Container(api, "apps/backend", "Node + Express", "API REST v1")
+  ContainerDb(db, "MySQL", "Prisma ORM", "Persistencia de negocio")
 }
-Rel(client, api, "GET público")
-Rel(admin, api, "JWT Bearer")
-Rel(api, db, "Prisma ORM")
-```
-
-```mermaid
-%% Extensión Categorías — Containers
-C4Container
-title La Fileto — Containers (Categorías)
-System_Boundary(sysCat, "La Fileto") {
-  Container(client, "Client SPA", "Vite/JS", "Catálogo público — filtros por categoría (bug envelope actual)")
-  Container(admin, "Admin SPA", "Vite/JS", "CRUD categorías con toasts y RBAC")
-  Container(api, "API Backend", "Node/Express", "REST JSON { ok, data, meta }")
-  ContainerDb(db, "MySQL", "Prisma", "Tabla Category + futuras FK a Products")
-}
-Rel(admin, api, "JWT + moduleKey=categories")
-Rel(api, db, "Prisma Category")
-Rel(client, api, "GET categorías activas (pendiente endpoint público)")
+Rel(client, api, "GET /api/v1/public/*")
+Rel(admin, api, "JWT Bearer /api/v1/*")
+Rel(api, db, "Prisma")
 ```

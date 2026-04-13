@@ -1,32 +1,23 @@
 ```mermaid
-%% C4 Model — Components (Client SPA)
 C4Component
-title La Fileto — Client SPA (Componentes)
+title La Fileto — Componentes del Client público (React)
 
-Container_Boundary(clientSpa, "Client SPA (Vite)") {
-
-  Component(router, "Router", "Hash routing", "Resuelve rutas públicas")
-  Component(apiClient, "ApiClient", "Fetch wrapper", "Lectura de /api/v1 (sin JWT)")
-  Component(cartStore, "CartStore", "State", "Ítems, cantidades, totales")
-  Component(priceHelper, "PriceHelper", "Helper", "Calcula offerPrice")
-  Component(whatsHelper, "WhatsAppHelper", "Helper", "Arma mensaje para deep link")
+Container_Boundary(clientSpa, "apps/client") {
+  Component(mainEntry, "main.js", "Bootstrap", "Carga shell (header/footer) y monta React")
+  Component(reactBootstrap, "mountReactShell", "React bootstrap", "Renderiza App en #main-content")
+  Component(appRouter, "AppRouter", "HashRouter", "Rutas Home/Products/Cart/Confirm")
+  Component(pages, "Pages", "React Pages", "HomePage, ProductsPage, CartPage, ConfirmPage")
+  Component(publicApi, "publicApi", "Data access", "Consumo de /api/v1/public/*")
+  Component(cartService, "cartService", "State helper", "Persistencia de carrito en localStorage")
+  Component(asyncUi, "useAsyncResource + AsyncStateNotice", "UX state", "Estados loading/empty/error")
 }
+
 System_Ext(api, "API Backend", "Express / JSON")
-```
-
-```mermaid
-%% Componentes Client SPA — Categorías
-C4Component
-title Client SPA — Filtros por Categoría
-Container_Boundary(clientCat, "Vista Products") {
-  Component(productsView, "ProductsView", "UI", "Renderiza tarjetas y controla filtros")
-  Component(categoryButtons, "renderCategories", "UI", "Botones 'Todas' + categorías activas")
-  Component(publicApi, "fetchPublicCategories", "Fetch", "GET /api/v1/categories (requiere envelope { items, meta })")
-  Component(state, "products.state", "State", "Mantiene categoryId seleccionado")
-}
-System_Ext(api, "API Backend", "Express JSON")
-Rel(categoryButtons, publicApi, "page=1&pageSize=100&status=active")
-Rel(categoryButtons, state, "Actualiza categoryId y dispara filtrado")
-Rel(productsView, state, "Renderiza según filtros aplicados")
-%% NOTE: La implementación actual trata la respuesta como arreglo plano; ajustar al envelope `{ data.items }`.
+Rel(mainEntry, reactBootstrap, "Monta")
+Rel(reactBootstrap, appRouter, "Renderiza")
+Rel(appRouter, pages, "Navegación")
+Rel(pages, publicApi, "Carga datos")
+Rel(pages, cartService, "Lee/escribe carrito")
+Rel(pages, asyncUi, "Controla estados técnicos")
+Rel(publicApi, api, "HTTP GET público")
 ```

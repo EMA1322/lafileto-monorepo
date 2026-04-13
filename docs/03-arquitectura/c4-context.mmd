@@ -1,32 +1,17 @@
 ```mermaid
 C4Context
-title La Fileto — Context
-Person(cliente, "Cliente")
-Person(admin, "Admin")
-System_Boundary(sys, "La Fileto") {
-  System(client, "Client SPA", "Catálogo + Carrito + WhatsApp")
-  System(adminSpa, "Admin SPA", "Gestión con RBAC")
-  System(api, "API Backend", "Express/Prisma/MySQL")
-}
-Rel(cliente, client, "Navega catálogo")
-Rel(client, api, "HTTP/JSON (público)")
-Rel(admin, adminSpa, "Gestiona")
-Rel(adminSpa, api, "HTTP/JSON con JWT")
-```
-
-```mermaid
-%% Extensión enfocada en Categorías (Admin + Client)
-C4Context
-title La Fileto — Context (Categorías)
+title La Fileto — Contexto del sistema
 Person(cliente, "Cliente")
 Person(admin, "Admin / Operador")
-System_Boundary(sysCat, "La Fileto — Categorías") {
-  System(clientSpa, "Client SPA", "Filtros por categoría")
-  System(adminSpa, "Admin SPA", "CRUD categorías con RBAC")
-  System(api, "API Backend", "Express + Prisma")
+
+System_Boundary(sys, "La Fileto") {
+  System(clientSpa, "Client SPA (React)", "Flujo público: Home, Products, Cart, Confirm")
+  System(adminSpa, "Admin SPA", "Gestión interna con RBAC")
+  System(api, "API Backend", "Express + Prisma + MySQL")
 }
-Rel(cliente, clientSpa, "Filtra productos por categoría (requiere GET público pendiente)")
-Rel(admin, adminSpa, "Gestiona categorías, productos y permisos")
-Rel(adminSpa, api, "HTTP/JSON + JWT (moduleKey=categories)")
-Rel(clientSpa, api, "HTTP/JSON (solo lectura — pendiente de habilitar público)")
+
+Rel(cliente, clientSpa, "Consulta catálogo y confirma pedido por WhatsApp")
+Rel(clientSpa, api, "HTTP/JSON público (/api/v1/public/*)")
+Rel(admin, adminSpa, "Gestiona catálogo, usuarios y configuración")
+Rel(adminSpa, api, "HTTP/JSON con JWT")
 ```
