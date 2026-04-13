@@ -1,7 +1,7 @@
 ---
 status: Draft
 owner: Product/UX + Tech Lead
-last_update: 2025-10-08
+last_update: 2026-04-13
 scope: RF y RNF, reglas de negocio, supuestos, criterios de aceptación.
 ---
 
@@ -27,7 +27,7 @@ scope: RF y RNF, reglas de negocio, supuestos, criterios de aceptación.
 
 ## Supuestos / dependencias
 - WhatsApp disponible en dispositivo del usuario.
-- Migración gradual `json→api` por módulo.
+- Catálogo/configuración pública consumidos desde API (`/api/v1/public/*`) en el flujo productivo actual.
 
 ## Criterios de aceptación (Gherkin)
 ```gherkin

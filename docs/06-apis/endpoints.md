@@ -1,11 +1,11 @@
 ---
 status: Draft
 owner: Backend Lead + Front Leads
-last_update: 2025-03-15
-scope: Tabla sincronizada con OpenAPI v1; filtros/paginación/orden/búsqueda consolidados; “Pendiente” donde falte implementar.
+last_update: 2026-04-13
+scope: Inventario operativo de endpoints v1 consumidos por client/admin; incluye estado y notas de implementación.
 ---
 
-> Fuente de verdad: `openapi.yaml`. Convenciones generales en [`api-guidelines.md`](./api-guidelines.md).
+> Fuente de verdad documental: este archivo + colección Postman versionada en `postman_collection.json`. Convenciones generales en [`api-guidelines.md`](./api-guidelines.md).
 > **Auth**: JWT **solo Admin**. Rutas públicas marcadas como **(público)**. Algunas rutas exigen `role-admin`.
 
 ## Parámetros comunes
@@ -82,7 +82,7 @@ La búsqueda (`q`) utiliza `contains` con `mode: 'insensitive'` en Prisma, por l
 | PATCH | `/api/v1/categories/:id` | `categories:u` | `{ active:boolean }` | `{ ok:true, data:{ id,name,imageUrl,active } }` |
 | DELETE | `/api/v1/categories/:id` | `categories:d` | — | `{ ok:true, data:{ deleted:true } }` |
 
-> NOTE: No existe endpoint público `/categories`; la Client SPA reutiliza estos endpoints protegidos y hoy falla al parsear el envelope (`data.items`).
+> NOTE: Para client público, usar `GET /api/v1/public/categories` (sin JWT).
 
 ### Ejemplos
 
@@ -498,15 +498,16 @@ curl "$API_BASE/api/v1/products?page=1&pageSize=10" \
 ## Settings (Negocio)
 | Método | Path | Auth | Body | Notas | Estado |
 |---|---|---|---|---|---|
-| GET | `/settings` | **(público)** | — | `isOpen`, contacto | **Pendiente (I3)** |
-| PUT | `/settings` | JWT | `{ isOpen?, whatsapp?, address? }` | Admin + RBAC | **Pendiente (I3)** |
+| GET | `/public/settings` | **(público)** | — | Configuración pública (`isOpen`, contacto) | **Activo** |
+| GET | `/settings` | JWT + `settings:r` | — | Vista administrativa de settings | **Activo** |
+| PUT | `/settings` | JWT + `settings:w` | `{ isOpen?, whatsapp?, address? }` | Actualización administrativa | **Activo** |
 
 ### Notas
 - **Idempotencia**: `PUT`/`DELETE` deben ser idempotentes.  
 - **Respuestas**: todas con envelope `{ ok, data?, error?, meta? }`.  
-- **Deuda**: completar `openapi.yaml` con ejemplos por respuesta cuando se implemente cada módulo.
+- **Deuda**: ampliar ejemplos de request/response por endpoint en este documento y Postman.
 
 ### Pendiente de completar (checklist)
 - [ ] Confirmar límites de validación específicos por campo (longitudes, rangos).  
 - [ ] Documentar mensajes de error **estables** por regla de negocio.  
-- [ ] Agregar ejemplos reales a `openapi.yaml` (sección `examples`).  
+- [ ] Agregar ejemplos reales adicionales a `postman_collection.json` y mantenerlos sincronizados con este documento.  

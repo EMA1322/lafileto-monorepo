@@ -1,7 +1,7 @@
 ---
 status: Draft
 owner: Product/UX
-last_update: 2025-10-08
+last_update: 2026-04-13
 scope: Términos del proyecto y referencias cruzadas.
 ---
 
@@ -16,7 +16,7 @@ scope: Términos del proyecto y referencias cruzadas.
 - **Paginación (page/pageSize)**: Parámetros para dividir listados. Sugerido `pageSize` por defecto 20, máximo 100.
 - **Orden (sort)**: Formato `field:asc|desc`; admite múltiples campos separados por coma.
 - **Búsqueda (q)**: Texto libre; semántica por módulo.
-- **VITE_DATA_SOURCE**: Flag de frontend: `json` o `api`, conmutado por **módulo** durante la migración.
+- **VITE_DATA_SOURCE**: Flag heredado usado en Admin para compatibilidad/debug (`json` o `api`). En client público, la fuente productiva es API.
 - **Staging / Producción (prod)**: Entornos previos/finales para pruebas y publicación.
 - **CORS (Cross-Origin Resource Sharing)**: Lista de orígenes permitidos por entorno. Ver [`/docs/07-anexos/seguridad.md`](./seguridad.md).
 - **JWT**: Token de autenticación usado **solo** en Admin SPA.

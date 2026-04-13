@@ -1,5 +1,5 @@
 ---
-status: Aprobado
+status: Historico
 owner: Tech Lead + Frontend Lead + Backend Lead
 last_update: 2026-04-11
 scope: Cierre formal de Fase 0 para migración incremental del client a React.
