@@ -72,6 +72,28 @@ Implicación: RBAC está maduro funcionalmente, pero su implementación es estru
 
 Implicación: hay una base importante reutilizable para una eventual migración por fases (especialmente capa API y validaciones/helpers).
 
+### 3.6 Matriz de evidencia concreta (repo)
+Para evitar teoría genérica, esta evaluación se apoya en evidencia verificable en código:
+
+- **Entry + bootstrap SPA vanilla**: `main.js` arranca con `initModals()` + `initRouter()` en `DOMContentLoaded`.
+- **Router hash + guards + dynamic imports**: `utils/router.js` define rutas (`login/dashboard/products/categories/users/settings`), hace guards de auth/RBAC y carga módulos con `import()` dinámico.
+- **Render por fragmentos HTML**: `utils/renderView.js` hace `fetch(path)` y reemplaza contenido en `#main-content`.
+- **Auth/session por storage + API**: `utils/auth.js` usa `localStorage/sessionStorage`, maneja token y `apiFetch` (`/auth/login`, `/auth/me`, `/auth/logout`).
+- **RBAC DOM-driven**: `utils/rbac.js` usa `data-rbac-*`, `querySelectorAll`, `sessionStorage` y seed `/data/rbac_permissions.json`.
+- **Acoplamiento en templates**: `products.html`, `categories.html`, `users.html`, `settings.html` contienen muchos IDs + `data-rbac-*` + `<template>` para modales.
+- **Acoplamiento en bindings DOM**: módulos usan `querySelector/getElementById/addEventListener` de forma intensiva (`products.render.table.js`, `categories.render.bindings.js`, `users.render.bindings.js`, `settings.js`).
+- **Offers acoplado a Products**: `products.modals.js` integra `offersApi` (create/update/remove) y no existe ruta `#offers` en `router.js`.
+
+Comandos usados en la auditoría:
+
+```bash
+rg -n "data-rbac-|auth|login|router|import\(|localStorage|sessionStorage|fetch|api" apps/admin/src
+rg -n "id=|querySelector|getElementById|addEventListener" apps/admin/src
+find apps/admin/src -maxdepth 4 -type f | sort
+```
+
+Implicación: la recomendación se basa en el estado real del repo (acoplamiento DOM/RBAC/templates + modularidad existente), no en ventajas abstractas de React.
+
 ## 4. Acoplamientos críticos y riesgos
 
 ## 4.1 Acoplamiento a templates HTML
