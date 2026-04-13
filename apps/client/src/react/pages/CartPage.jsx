@@ -3,6 +3,7 @@ import { clearCart, getCart, removeFromCart, updateQuantity } from '/src/utils/c
 import { formatPrice } from '/src/utils/helpers.js';
 import { loadCommercialContext } from '/src/utils/commercialContext.js';
 import { showSnackbar } from '/src/utils/showSnackbar.js';
+import { AsyncStateNotice } from '../components/AsyncStateNotice.jsx';
 import '/src/styles/cart.css';
 
 function getSafeCart() {
@@ -87,31 +88,26 @@ export function CartPage() {
   };
 
   const handleConfirm = (event) => {
-    if (isEmpty) {
+    if (isConfirmBlocked) {
       event.preventDefault();
-      setStatusMessage('Your cart is empty.');
-      showSnackbar('Your cart is empty.');
-      return;
-    }
-
-    if (!businessOpen) {
-      event.preventDefault();
-      setStatusMessage('We are currently closed.');
-      showSnackbar('We are currently closed.');
+      setStatusMessage(confirmBlockedMessage);
+      showSnackbar(confirmBlockedMessage);
     }
   };
 
   const isEmpty = items.length === 0;
+  const isConfirmBlocked = isEmpty || !businessOpen;
+  const confirmBlockedMessage = isEmpty ? 'Your cart is empty.' : 'We are currently closed.';
 
   return (
-    <section className="cart" aria-labelledby="cart-title">
+    <main className="cart" aria-labelledby="cart-title">
       <div className="cart__container">
         <header className="cart__header">
           <h1 id="cart-title" className="cart__title">Your cart</h1>
           <p className="cart__subtitle">Review your products before confirming the order.</p>
         </header>
 
-        <div id="cart-status" className="cart__status" aria-live="polite">{statusMessage}</div>
+        <div id="cart-status" className="cart__status" role="status" aria-live="polite">{statusMessage}</div>
 
         <div className="cart__layout">
           <div className="cart__list">
@@ -123,7 +119,7 @@ export function CartPage() {
                 <a className="btn cart__empty-cta" href="#products">Go to menu</a>
               </div>
             ) : (
-              <ul id="cart-items" className="cart__items" role="list" aria-busy="false">
+              <ul id="cart-items" className="cart__items" aria-busy="false">
                 {items.map((item) => {
                   const lineTotal = Number(item.price || 0) * Number(item.quantity || 0);
                   return (
@@ -137,7 +133,7 @@ export function CartPage() {
                         <div className="cart__price">{formatPrice(item.price)}</div>
 
                         <div className="cart__controls">
-                          <div className="cart__qty-group" role="group" aria-label="Quantity controls">
+                          <div className="cart__qty-group" role="group" aria-label={`Quantity controls for ${item.name}`}>
                             <button className="cart__qty-btn" type="button" aria-label="Decrease quantity" onClick={() => handleChangeQty(item.id, -1)}>−</button>
                             <span className="cart__qty" aria-live="polite">{item.quantity}</span>
                             <button className="cart__qty-btn" type="button" aria-label="Increase quantity" onClick={() => handleChangeQty(item.id, 1)}>+</button>
@@ -167,18 +163,20 @@ export function CartPage() {
               <span id="cart-total">{formatPrice(total)}</span>
             </div>
 
+            {!businessOpen ? (
+              <AsyncStateNotice state="error" message="We are currently closed." className="cart__closed-note" />
+            ) : null}
+
             <div className="cart__summary-actions">
               <a
                 href="#confirm"
                 className="btn cart__confirm-btn"
-                aria-disabled={isEmpty || !businessOpen}
+                aria-disabled={isConfirmBlocked}
                 onClick={handleConfirm}
+                tabIndex={isConfirmBlocked ? -1 : 0}
               >
                 Confirm order
               </a>
-              <p className="cart__closed-note" hidden={businessOpen}>
-                We are currently closed.
-              </p>
               <button id="clear-cart-btn" className="btn btn-outline cart__clear-btn" type="button" disabled={isEmpty} onClick={handleClear}>
                 Clear cart
               </button>
@@ -186,6 +184,6 @@ export function CartPage() {
           </aside>
         </div>
       </div>
-    </section>
+    </main>
   );
 }

@@ -4,6 +4,7 @@ import { showSnackbar } from '/src/utils/showSnackbar.js';
 import { formatPrice, getDiscountedPrice } from '/src/utils/helpers.js';
 import { fetchPublicCategories, fetchPublicProducts } from '../services/publicApi.js';
 import { useAsyncResource } from '../hooks/useAsyncResource.jsx';
+import { AsyncStateNotice } from '../components/AsyncStateNotice.jsx';
 import '/src/styles/products.css';
 
 function normalizeCategories(categories = []) {
@@ -134,6 +135,10 @@ export function ProductsPage() {
     showSnackbar(`Added to cart: ${product.name}`);
   };
 
+  const hasCatalogError = catalogResource.status === 'error';
+  const isLoadingCatalog = catalogResource.status === 'loading';
+  const isCatalogReady = catalogResource.status === 'success';
+
   return (
     <main className="products" aria-labelledby="products-title">
       <header className="products__header">
@@ -156,51 +161,52 @@ export function ProductsPage() {
         </div>
       </header>
 
-      {catalogResource.status === 'loading' ? (
-        <p className="products__empty" role="status">Loading catalog…</p>
+      {isLoadingCatalog ? <AsyncStateNotice message="Loading catalog…" className="products__state" /> : null}
+
+      {hasCatalogError ? (
+        <AsyncStateNotice
+          state="error"
+          message={`We could not load the catalog. ${catalogResource.error?.message || 'Please try again.'}`}
+          className="products__state"
+        />
       ) : null}
 
-      {catalogResource.status === 'error' ? (
-        <p className="products__empty" role="alert">
-          We could not load the catalog. {catalogResource.error?.message || 'Please try again.'}
-        </p>
-      ) : null}
-
-      {catalogResource.status === 'success' ? (
+      {isCatalogReady ? (
         <>
           <nav className="products__categories" aria-label="Product categories">
-            <div className="products__category-list" role="list">
-              <button
-                type="button"
-                className={`products__category-btn ${selectedCategoryId === 'all' ? 'is-active' : ''}`}
-                onClick={() => setSelectedCategoryId('all')}
-                role="listitem"
-              >
-                All
-              </button>
+            <ul className="products__category-list">
+              <li>
+                <button
+                  type="button"
+                  className={`products__category-btn ${selectedCategoryId === 'all' ? 'is-active' : ''}`}
+                  onClick={() => setSelectedCategoryId('all')}
+                  aria-pressed={selectedCategoryId === 'all'}
+                >
+                  All
+                </button>
+              </li>
 
               {categories.map((category) => (
-                <button
-                  key={category.id}
-                  type="button"
-                  className={`products__category-btn ${String(selectedCategoryId) === String(category.id) ? 'is-active' : ''}`}
-                  onClick={() => setSelectedCategoryId(category.id)}
-                  role="listitem"
-                >
-                  {category.name}
-                </button>
+                <li key={category.id}>
+                  <button
+                    type="button"
+                    className={`products__category-btn ${String(selectedCategoryId) === String(category.id) ? 'is-active' : ''}`}
+                    onClick={() => setSelectedCategoryId(category.id)}
+                    aria-pressed={String(selectedCategoryId) === String(category.id)}
+                  >
+                    {category.name}
+                  </button>
+                </li>
               ))}
-            </div>
+            </ul>
           </nav>
 
           {products.length === 0 ? (
-            <p className="products__empty" role="status">There are no products available right now.</p>
+            <AsyncStateNotice message="There are no products available right now." className="products__state" />
           ) : null}
 
           {products.length > 0 && visibleProducts.length === 0 ? (
-            <p className="products__empty" role="status">
-              No products match your current filters.
-            </p>
+            <AsyncStateNotice message="No products match your current filters." className="products__state" />
           ) : null}
 
           {visibleProducts.length > 0 ? (

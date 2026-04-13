@@ -7,6 +7,7 @@ import {
   fetchPublicSettings,
 } from '../services/publicApi.js';
 import { useAsyncResource } from '../hooks/useAsyncResource.jsx';
+import { AsyncStateNotice } from '../components/AsyncStateNotice.jsx';
 import { formatPrice, getDiscountedPrice } from '/src/utils/helpers.js';
 import { addToCart } from '/src/utils/cartService.js';
 import { showSnackbar } from '/src/utils/showSnackbar.js';
@@ -14,19 +15,21 @@ import '/src/styles/react-home.css';
 
 function SectionState({ label, status, error, isEmpty, emptyText, children }) {
   if (status === 'loading') {
-    return <p className="react-home__state" role="status">Loading {label}…</p>;
+    return <AsyncStateNotice message={`Loading ${label}…`} className="react-home__state" />;
   }
 
   if (status === 'error') {
     return (
-      <p className="react-home__state react-home__state--error" role="alert">
-        We could not load {label}. {error?.message || 'Please try again.'}
-      </p>
+      <AsyncStateNotice
+        state="error"
+        message={`We could not load ${label}. ${error?.message || 'Please try again.'}`}
+        className="react-home__state"
+      />
     );
   }
 
   if (isEmpty) {
-    return <p className="react-home__state" role="status">{emptyText}</p>;
+    return <AsyncStateNotice message={emptyText} className="react-home__state" />;
   }
 
   return children;

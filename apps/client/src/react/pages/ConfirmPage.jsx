@@ -3,6 +3,7 @@ import { clearCart, getCart } from '/src/utils/cartService.js';
 import { formatPrice } from '/src/utils/helpers.js';
 import { loadCommercialContext } from '/src/utils/commercialContext.js';
 import { showSnackbar } from '/src/utils/showSnackbar.js';
+import { AsyncStateNotice } from '../components/AsyncStateNotice.jsx';
 import '/src/styles/confirm.css';
 
 function getSafeCart() {
@@ -122,6 +123,13 @@ export function ConfirmPage() {
   const hasAddress = address.trim().length > 0;
   const isFormValid = hasCustomerName && (!requiresAddress || hasAddress);
   const canSubmit = !isEmpty && businessOpen && Boolean(whatsappNumber) && isFormValid;
+  const technicalBlockMessage = isEmpty
+    ? 'Your cart is empty.'
+    : !businessOpen
+      ? 'We are currently closed.'
+      : !whatsappNumber
+        ? 'WhatsApp number is not available.'
+        : '';
 
   const handleSend = () => {
     if (isEmpty) {
@@ -169,23 +177,27 @@ export function ConfirmPage() {
   };
 
   return (
-    <section className="confirm" aria-labelledby="confirm-title">
+    <main className="confirm" aria-labelledby="confirm-title">
       <div className="confirm__container">
         <header className="confirm__header">
           <h1 id="confirm-title" className="confirm__title">Confirm your order</h1>
           <p className="confirm__subtitle">Review your order details and send it through WhatsApp.</p>
         </header>
 
+        {technicalBlockMessage ? (
+          <AsyncStateNotice state="error" message={technicalBlockMessage} className="confirm__status" />
+        ) : null}
+
         <div className="confirm__layout">
           <section className="confirm__summary" aria-labelledby="confirm-summary-title">
             <h2 id="confirm-summary-title" className="confirm__section-title">Order summary</h2>
 
             {isEmpty ? (
-              <ul id="confirm-order-list" className="confirm__list" role="list" aria-busy="false">
+              <ul id="confirm-order-list" className="confirm__list" aria-busy="false">
                 <li className="confirm__item">Your cart is empty.</li>
               </ul>
             ) : (
-              <ul id="confirm-order-list" className="confirm__list" role="list" aria-busy="false">
+              <ul id="confirm-order-list" className="confirm__list" aria-busy="false">
                 {items.map((item) => {
                   const lineTotal = Number(item.price || 0) * Number(item.quantity || 0);
                   return (
@@ -289,10 +301,7 @@ export function ConfirmPage() {
         </div>
 
         <footer className="confirm__footer">
-          <div id="confirm-status" className="confirm__hint" aria-live="polite">{statusMessage}</div>
-          <p id="confirm-closed-note" className="confirm__closed-note" hidden={businessOpen}>
-            We are currently closed.
-          </p>
+          <div id="confirm-status" className="confirm__hint" role="status" aria-live="polite">{statusMessage}</div>
 
           <div className="confirm__actions">
             <a className="btn btn-outline" href="#cart">Back to cart</a>
@@ -302,12 +311,13 @@ export function ConfirmPage() {
               type="button"
               onClick={handleSend}
               disabled={!canSubmit}
+              aria-disabled={!canSubmit}
             >
               Send via WhatsApp
             </button>
           </div>
         </footer>
       </div>
-    </section>
+    </main>
   );
 }
