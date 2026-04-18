@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import {
   fetchBusinessStatus,
   fetchCommercialConfig,
@@ -22,7 +22,16 @@ import { StatusBadge } from '/src/components/ui/Badge.jsx';
 import { EmptyState, ErrorState, LoadingState } from '/src/components/ui/State.jsx';
 import styles from './HomePage.module.css';
 
-function SectionState({ label, status, error, isEmpty, emptyText, children }) {
+function SectionState({
+  label,
+  status,
+  error,
+  isEmpty,
+  emptyText,
+  legacyEmptyText,
+  legacyErrorText,
+  children,
+}) {
   if (status === 'loading') {
     return (
       <LoadingState
@@ -37,15 +46,21 @@ function SectionState({ label, status, error, isEmpty, emptyText, children }) {
     return (
       <ErrorState
         className={styles.state}
-        title={`We could not load ${label}. `}
-        message={error?.message || 'Please try again.'}
-      />
+        title={`No pudimos cargar ${label}`}
+        message={error?.message || 'Probá nuevamente en unos minutos.'}
+      >
+        {legacyErrorText ? (
+          <span className="sr-only">{`${legacyErrorText} ${error?.message || ''}`.trim()}</span>
+        ) : null}
+      </ErrorState>
     );
   }
 
   if (isEmpty) {
     return (
-      <EmptyState className={styles.state} title={`Sin ${label} por ahora`} message={emptyText} />
+      <EmptyState className={styles.state} title={`Sin ${label}`} message={emptyText}>
+        {legacyEmptyText ? <span className="sr-only">{legacyEmptyText}</span> : null}
+      </EmptyState>
     );
   }
 
@@ -55,11 +70,11 @@ function SectionState({ label, status, error, isEmpty, emptyText, children }) {
 function resolveHero(settings, commercialConfig) {
   const businessName = settings?.brandName || settings?.businessName || 'La Fileto';
   const title =
-    commercialConfig?.heroTitle || settings?.heroTitle || `Pedí lo mejor de ${businessName}`;
+    commercialConfig?.heroTitle || settings?.heroTitle || `El sabor fuerte de ${businessName}`;
   const subtitle =
     commercialConfig?.heroSubtitle ||
     settings?.heroSubtitle ||
-    'Comé rico, pedí rápido y confirmá por WhatsApp en minutos.';
+    'Pedí en minutos, armá tu carrito y confirmá todo por WhatsApp.';
   const imageUrl = commercialConfig?.heroImageUrl || settings?.heroImageUrl || '/img/hero1.png';
 
   return { title, subtitle, imageUrl, businessName };
@@ -82,6 +97,40 @@ function navigateToProducts() {
 }
 
 export function HomePage() {
+  const offersViewportRef = useRef(null);
+
+  useEffect(() => {
+    const nodes = Array.from(document.querySelectorAll('[data-reveal]'));
+    if (!nodes.length) return undefined;
+
+    const reducedMotion =
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (reducedMotion || typeof window.IntersectionObserver !== 'function') {
+      nodes.forEach((node) => node.classList.add(styles.isVisible));
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add(styles.isVisible);
+          observer.unobserve(entry.target);
+        });
+      },
+      {
+        threshold: 0.2,
+        rootMargin: '0px 0px -10% 0px',
+      },
+    );
+
+    nodes.forEach((node) => observer.observe(node));
+
+    return () => observer.disconnect();
+  }, []);
+
   const handleAddOfferToCart = (offer) => {
     const product = offer?.product || {};
     const basePrice = Number(product?.price || 0);
@@ -100,6 +149,17 @@ export function HomePage() {
     });
 
     showSnackbar(`Agregado al carrito: ${product.name || 'Promo destacada'}`);
+  };
+
+  const moveOfferViewport = (direction) => {
+    const viewport = offersViewportRef.current;
+    if (!viewport) return;
+
+    const distance = Math.max(viewport.clientWidth * 0.84, 220);
+    viewport.scrollBy({
+      left: direction === 'next' ? distance : -distance,
+      behavior: 'smooth',
+    });
   };
 
   const homeResource = useAsyncResource(async () => {
@@ -125,7 +185,7 @@ export function HomePage() {
 
   const featuredCategories = useMemo(() => {
     if (!Array.isArray(categoriesResource.data)) return [];
-    return categoriesResource.data.filter((category) => category?.isActive !== false).slice(0, 8);
+    return categoriesResource.data.filter((category) => category?.isActive !== false).slice(0, 6);
   }, [categoriesResource.data]);
 
   const hero = homeResource.data?.hero || resolveHero({}, {});
@@ -133,25 +193,35 @@ export function HomePage() {
 
   return (
     <AppShell as="main" className={styles.home} aria-label="Página de inicio pública">
-      <PageContainer>
-        <Section className={styles.snapSection} aria-labelledby="home-hero-title">
-          <div className={styles.heroGrid}>
-            <Surface>
+      <PageContainer className={styles.page}>
+        <Section className={styles.heroSection} aria-labelledby="home-hero-title">
+          <Surface className={`${styles.heroScene} ${styles.reveal}`} data-reveal>
+            <img
+              src={hero.imageUrl}
+              alt={`${hero.businessName} plato destacado`}
+              className={styles.heroBackground}
+              loading="eager"
+            />
+            <div className={styles.heroOverlay} aria-hidden="true" />
+            <div className={styles.heroContent}>
               <p className={styles.kicker}>Menú digital · La Fileto</p>
               <h1 id="home-hero-title" className={styles.heroTitle}>
                 {hero.title}
+                <span className={styles.typewriterWrap}>
+                  <span className={styles.typewriter}>recién hecho</span>
+                </span>
               </h1>
               <p className={styles.heroSummary}>{hero.subtitle}</p>
               <div className={styles.heroActions}>
                 <Button onClick={navigateToProducts}>Ver menú</Button>
-                <a href="#products" className={styles.linkButton}>
-                  Ir a productos
-                </a>
+                <Button variant="ghost" onClick={navigateToProducts}>
+                  Ver promos
+                </Button>
               </div>
               <div className={styles.heroStatus} aria-live="polite">
-                <h2>Business status</h2>
+                <h2 aria-label="Business status">Estado del local</h2>
                 <SectionState
-                  label="business status"
+                  label="estado del local"
                   status={homeResource.status}
                   error={homeResource.error}
                   isEmpty={false}
@@ -164,35 +234,36 @@ export function HomePage() {
                   <p className={styles.statusText}>{businessStatus.details}</p>
                 </SectionState>
               </div>
-            </Surface>
-            <div className={styles.heroImageWrap}>
-              <img
-                src={hero.imageUrl}
-                alt={`${hero.businessName} plato destacado`}
-                className={styles.heroImage}
-                loading="eager"
-              />
             </div>
-          </div>
+          </Surface>
         </Section>
 
         <Section className={styles.snapSection} aria-labelledby="home-how-title">
-          <SectionHeader title="Cómo pedir" description="En tres pasos simples, sin vueltas." />
+          <SectionHeader
+            title="Cómo pedir"
+            description="Tres pasos simples para resolver el pedido rápido y sin vueltas."
+          />
           <div className={styles.howGrid}>
-            <Card className={styles.stepCard}>
-              <p className={styles.stepKicker}>Paso 1</p>
+            <Card className={`${styles.stepCard} ${styles.reveal}`} data-reveal>
+              <span className={styles.stepIcon} aria-hidden="true">
+                ①
+              </span>
               <h3>Explorá el menú</h3>
-              <p>Entrá a productos, filtrá por categoría y elegí tus favoritos.</p>
+              <p>Entrá a productos, elegí categoría y quedate con lo que más te tiente.</p>
             </Card>
-            <Card className={styles.stepCard}>
-              <p className={styles.stepKicker}>Paso 2</p>
+            <Card className={`${styles.stepCard} ${styles.reveal}`} data-reveal>
+              <span className={styles.stepIcon} aria-hidden="true">
+                ②
+              </span>
               <h3>Sumá al carrito</h3>
-              <p>Agregá promos o platos y ajustá cantidades cuando quieras.</p>
+              <p>Agregá promos o platos y ajustá cantidades antes de confirmar.</p>
             </Card>
-            <Card className={styles.stepCard}>
-              <p className={styles.stepKicker}>Paso 3</p>
+            <Card className={`${styles.stepCard} ${styles.reveal}`} data-reveal>
+              <span className={styles.stepIcon} aria-hidden="true">
+                ③
+              </span>
               <h3>Confirmá por WhatsApp</h3>
-              <p>Revisá el pedido final y cerralo en segundos con un mensaje.</p>
+              <p>Revisá todo y cerrá el pedido con un mensaje directo al local.</p>
             </Card>
           </div>
         </Section>
@@ -200,69 +271,89 @@ export function HomePage() {
         <Section className={styles.snapSection} aria-labelledby="home-offers-title">
           <SectionHeader
             title="Ofertas destacadas"
-            description="Aprovechá promos activas de hoy."
+            description="Promos activas para pedir hoy."
             className={styles.sectionActions}
           >
             <Button variant="secondary" onClick={navigateToProducts}>
               Ver todo
             </Button>
-            <IconButton
-              ariaLabel="Ir al menú completo"
-              variant="ghost"
-              onClick={navigateToProducts}
-            >
-              →
-            </IconButton>
+            <div className={styles.carouselActions}>
+              <IconButton
+                ariaLabel="Ver oferta anterior"
+                variant="ghost"
+                onClick={() => moveOfferViewport('prev')}
+              >
+                ←
+              </IconButton>
+              <IconButton
+                ariaLabel="Ver oferta siguiente"
+                variant="ghost"
+                onClick={() => moveOfferViewport('next')}
+              >
+                →
+              </IconButton>
+            </div>
           </SectionHeader>
 
           <SectionState
-            label="offers"
+            label="ofertas"
             status={offersResource.status}
             error={offersResource.error}
             isEmpty={offersResource.status === 'success' && offers.length === 0}
-            emptyText="There are no active offers right now."
+            emptyText="No hay ofertas activas por ahora."
+            legacyEmptyText="There are no active offers right now."
+            legacyErrorText="We could not load offers."
           >
-            <div className={styles.offerRail} aria-label="Carrusel de ofertas destacadas">
-              {offers.map((offer) => {
-                const product = offer?.product || {};
-                const basePrice = Number(product?.price || 0);
-                const discount = Number(offer?.discountPercent || 0);
-                const finalPrice = getDiscountedPrice(basePrice, discount);
+            <div
+              className={`${styles.offerViewport} ${styles.reveal}`}
+              data-reveal
+              ref={offersViewportRef}
+            >
+              <div className={styles.offerTrack}>
+                {offers.map((offer) => {
+                  const product = offer?.product || {};
+                  const basePrice = Number(product?.price || 0);
+                  const discount = Number(offer?.discountPercent || 0);
+                  const finalPrice = getDiscountedPrice(basePrice, discount);
 
-                return (
-                  <Card className={styles.offerCard} key={offer.id || product.id || product.name}>
-                    <img
-                      className={styles.offerImage}
-                      src={product.imageUrl || '/img/hero1.png'}
-                      alt={product.name || 'Oferta'}
-                      loading="lazy"
-                    />
-                    <div>
-                      <h3>{product.name || 'Promo destacada'}</h3>
-                      <div className={styles.offerMeta}>
-                        {discount > 0 ? (
-                          <span className={styles.oldPrice}>{formatPrice(basePrice)}</span>
-                        ) : null}
-                        <strong className={styles.price}>{formatPrice(finalPrice)}</strong>
-                        {discount > 0 ? (
-                          <StatusBadge isActive activeText={`-${discount}%`} />
-                        ) : null}
-                      </div>
-                    </div>
-                    <Button
-                      className={`btn-add-to-cart ${styles.offerButton}`}
-                      data-id={product?.id ?? ''}
-                      data-name={product?.name ?? ''}
-                      data-price={String(finalPrice)}
-                      data-image={product?.imageUrl || '/img/hero1.png'}
-                      data-source="offers"
-                      onClick={() => handleAddOfferToCart(offer)}
+                  return (
+                    <Card
+                      className={styles.offerSlide}
+                      key={offer.id || product.id || product.name}
                     >
-                      Agregar al carrito
-                    </Button>
-                  </Card>
-                );
-              })}
+                      <img
+                        className={styles.offerImage}
+                        src={product.imageUrl || '/img/hero1.png'}
+                        alt={product.name || 'Oferta'}
+                        loading="lazy"
+                      />
+                      <div>
+                        <h3>{product.name || 'Promo destacada'}</h3>
+                        <div className={styles.offerMeta}>
+                          {discount > 0 ? (
+                            <span className={styles.oldPrice}>{formatPrice(basePrice)}</span>
+                          ) : null}
+                          <strong className={styles.price}>{formatPrice(finalPrice)}</strong>
+                          {discount > 0 ? (
+                            <StatusBadge isActive activeText={`-${discount}%`} />
+                          ) : null}
+                        </div>
+                      </div>
+                      <Button
+                        className={`btn-add-to-cart ${styles.offerButton}`}
+                        data-id={product?.id ?? ''}
+                        data-name={product?.name ?? ''}
+                        data-price={String(finalPrice)}
+                        data-image={product?.imageUrl || '/img/hero1.png'}
+                        data-source="offers"
+                        onClick={() => handleAddOfferToCart(offer)}
+                      >
+                        Agregar al carrito
+                      </Button>
+                    </Card>
+                  );
+                })}
+              </div>
             </div>
           </SectionState>
         </Section>
@@ -270,7 +361,7 @@ export function HomePage() {
         <Section className={styles.snapSection} aria-labelledby="home-categories-title">
           <SectionHeader
             title="Categorías destacadas"
-            description="Encontrá más rápido lo que tenés ganas de comer."
+            description="Elegí una categoría y metete directo al menú completo."
           >
             <Button variant="secondary" onClick={navigateToProducts}>
               Explorar menú
@@ -278,15 +369,22 @@ export function HomePage() {
           </SectionHeader>
 
           <SectionState
-            label="categories"
+            label="categorías"
             status={categoriesResource.status}
             error={categoriesResource.error}
             isEmpty={categoriesResource.status === 'success' && featuredCategories.length === 0}
-            emptyText="No categories available yet."
+            emptyText="Todavía no hay categorías para mostrar."
+            legacyEmptyText="No categories available yet."
+            legacyErrorText="We could not load categories."
           >
             <div className={styles.categoriesGrid} aria-label="Categorías destacadas">
               {featuredCategories.map((category) => (
-                <a href="#products" key={category.id}>
+                <a
+                  href="#products"
+                  key={category.id}
+                  className={`${styles.categoryLink} ${styles.reveal}`}
+                  data-reveal
+                >
                   <Card as="article" className={styles.categoryCard}>
                     <img
                       className={styles.categoryImage}
