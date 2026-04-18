@@ -1,9 +1,12 @@
 import { Outlet } from 'react-router-dom';
+import { AppShell, PageContainer } from '/src/components/layout/AppShell.jsx';
 
 export function BaseLayout() {
   return (
-    <section aria-label="React public home" className="react-shell">
-      <Outlet />
-    </section>
+    <AppShell aria-label="React public home" className="react-shell">
+      <PageContainer as="div">
+        <Outlet />
+      </PageContainer>
+    </AppShell>
   );
 }
