@@ -1,7 +1,7 @@
 ---
 status: Aprobado
 owner: Tech Lead + Product/UX
-last_update: 2026-04-13
+last_update: 2026-04-18
 scope: Índice operativo de /docs y criterios para mantener documentación vigente.
 ---
 
@@ -45,6 +45,7 @@ Prioridades de mantenimiento:
 - [cierre-fase-1-contratos-publicos.md](./03-arquitectura/cierre-fase-1-contratos-publicos.md)
 
 ### 04-ux-ui
+- [client-redesign-fase-0-cierre-y-plan.md](./04-ux-ui/client-redesign-fase-0-cierre-y-plan.md)
 - [ux-ui.md](./04-ux-ui/ux-ui.md)
 - [design-system.md](./04-ux-ui/design-system.md)
 - [accesibilidad.md](./04-ux-ui/accesibilidad.md)
