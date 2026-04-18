@@ -1,7 +1,11 @@
 import styles from './AppShell.module.css';
 
-export function AppShell({ children, className = '' }) {
-  return <section className={`${styles.appShell} ${className}`.trim()}>{children}</section>;
+export function AppShell({ as: Tag = 'section', children, className = '', ...props }) {
+  return (
+    <Tag className={`${styles.appShell} ${className}`.trim()} {...props}>
+      {children}
+    </Tag>
+  );
 }
 
 export function PageContainer({ as: Tag = 'div', children, className = '' }) {
