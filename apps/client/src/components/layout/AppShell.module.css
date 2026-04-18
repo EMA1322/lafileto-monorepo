@@ -1,0 +1,35 @@
+.appShell {
+  min-height: 100%;
+  width: 100%;
+}
+
+.pageContainer {
+  width: min(100%, var(--layout-content-max));
+  margin-inline: auto;
+  padding-inline: var(--layout-content-pad-inline);
+  padding-block: var(--space-5);
+}
+
+.section {
+  display: grid;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.sectionHeader {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.sectionTitle {
+  font-size: var(--font-size-xl);
+  line-height: var(--line-height-tight);
+}
+
+.sectionDescription {
+  color: var(--color-fg-muted);
+  font-size: var(--font-size-sm);
+}

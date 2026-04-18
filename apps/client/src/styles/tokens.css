@@ -1,0 +1,81 @@
+:root {
+  /* Colors */
+  --color-bg-canvas: #fff8f3;
+  --color-bg-surface: #ffffff;
+  --color-bg-subtle: #f8f9fa;
+  --color-bg-accent: #ff6f61;
+  --color-fg-default: #212529;
+  --color-fg-muted: #6c757d;
+  --color-fg-inverse: #ffffff;
+  --color-border-default: #e5e7eb;
+  --color-border-strong: #cbd5e1;
+  --color-state-success: #198754;
+  --color-state-danger: #dc3545;
+  --color-state-warning: #f77f00;
+  --color-focus-ring: rgba(255, 111, 97, 0.45);
+
+  /* Typography */
+  --font-family-base: 'Poppins', sans-serif;
+  --font-family-accent: 'Dancing Script', cursive;
+  --font-family-admin: 'Roboto', sans-serif;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.5rem;
+  --font-weight-regular: 400;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --line-height-tight: 1.2;
+  --line-height-base: 1.5;
+
+  /* Spacing */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-8: 3rem;
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-pill: 999px;
+
+  /* Elevation */
+  --elevation-1: 0 2px 6px rgba(15, 23, 42, 0.08);
+  --elevation-2: 0 8px 20px rgba(15, 23, 42, 0.12);
+
+  /* Layout */
+  --layout-content-max: 1200px;
+  --layout-content-pad-inline: var(--space-4);
+
+  /* Motion */
+  --motion-duration-fast: 120ms;
+  --motion-duration-base: 200ms;
+  --motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Z-index */
+  --z-base: 1;
+  --z-sticky: 1000;
+  --z-overlay: 1010;
+  --z-popover: 1020;
+
+  /* Legacy aliases for compatibility */
+  --primary-color: var(--color-bg-accent);
+  --secondary-color: var(--color-bg-subtle);
+  --accent-color: var(--color-state-warning);
+  --muted-color: var(--color-fg-muted);
+  --success-color: var(--color-state-success);
+  --danger-color: var(--color-state-danger);
+  --text-color: var(--color-fg-default);
+  --background-color: var(--color-bg-canvas);
+  --font-base: var(--font-family-base);
+  --font-accent: var(--font-family-accent);
+  --font-admin: var(--font-family-admin);
+  --container-width: var(--layout-content-max);
+  --shadow-soft: var(--elevation-1);
+  --shadow-hover: var(--elevation-2);
+}

@@ -1,0 +1,55 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1;
+  min-height: 2.5rem;
+  padding: 0 var(--space-4);
+  cursor: pointer;
+  transition:
+    background-color var(--motion-duration-base) var(--motion-ease-standard),
+    border-color var(--motion-duration-base) var(--motion-ease-standard),
+    color var(--motion-duration-base) var(--motion-ease-standard);
+}
+
+.primary {
+  background: var(--color-bg-accent);
+  border-color: var(--color-bg-accent);
+  color: var(--color-fg-inverse);
+}
+
+.secondary {
+  background: var(--color-bg-subtle);
+  border-color: var(--color-border-default);
+  color: var(--color-fg-default);
+}
+
+.ghost {
+  background: transparent;
+  border-color: var(--color-border-strong);
+  color: var(--color-fg-default);
+}
+
+.iconButton {
+  width: 2.5rem;
+  min-width: 2.5rem;
+  padding: 0;
+  border-radius: var(--radius-pill);
+}
+
+.button:disabled,
+.button[aria-disabled='true'] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
+}

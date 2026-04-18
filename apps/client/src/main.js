@@ -1,4 +1,5 @@
 import '/src/styles/global.css';
+import '/src/styles/tokens.css';
 import '/src/styles/header.css';
 import '/src/styles/footer.css';
 
