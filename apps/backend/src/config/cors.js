@@ -2,7 +2,7 @@
 import cors from "cors";
 import { env } from "./env.js";
 
-const DEV_LAN_ORIGIN = /^http:\/\/192\.168\.1\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d):5174$/;
+const DEV_LAN_ORIGIN = /^http:\/\/192\.168\.1\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d):517(3|4)$/;
 
 export function buildCorsOptions(allowlistInput = env.cors.allowlist) {
   const normalizedAllowlist = Array.isArray(allowlistInput)

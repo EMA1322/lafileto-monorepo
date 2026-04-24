@@ -21,10 +21,11 @@ REQUEST_TIMEOUT_MS=15000
 
 ## Client (SPA pública)
 ```
-VITE_API_BASE=/api
+# Opcional: override explícito de base API.
+VITE_API_BASE_URL=/api/v1
 ```
 
-- `VITE_API_BASE` apunta al proxy local (`/api`); en producción puede quedar fijo al dominio del backend.
+- `VITE_API_BASE_URL` es opcional. Si no se define, el client usa por defecto `/api/v1` para aprovechar el proxy de Vite en desarrollo.
 - El client público productivo consume API pública; no usar JSON local como fuente productiva.
 
 ## Admin (SPA de gestión)
