@@ -125,7 +125,7 @@ CORS_ALLOWLIST=http://localhost:5173,http://localhost:5174
 
 **Client/Admin**
 ```
-VITE_API_BASE_URL=http://localhost:3000/api/v1
+VITE_API_BASE_URL=/api/v1  # opcional; por defecto client usa /api/v1
 VITE_DATA_SOURCE=json   # client puede iniciar en JSON
 # VITE_DATA_SOURCE=api  # admin suele ir directo a API
 ```

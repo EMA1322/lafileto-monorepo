@@ -84,20 +84,24 @@ test('origin callback allows whitelisted origins and rejects others', async () =
 });
 
 
-test('allows 192.168.1.x:5174 origins only in development', async () => {
+test('allows 192.168.1.x:5173/5174 origins only in development', async () => {
   const devModule = await setCorsEnvAndReload({
     allowlist: 'https://allowlisted.test',
     nodeEnv: 'development',
   });
 
   const devOptions = devModule.buildCorsOptions();
+  const lanAllowedClient = await evaluateOrigin(devOptions, 'http://192.168.1.35:5173');
+  assert.equal(lanAllowedClient.err, null);
+  assert.equal(lanAllowedClient.allowed, true);
+
   const lanAllowed = await evaluateOrigin(devOptions, 'http://192.168.1.35:5174');
   assert.equal(lanAllowed.err, null);
   assert.equal(lanAllowed.allowed, true);
 
-  const wrongPort = await evaluateOrigin(devOptions, 'http://192.168.1.35:5173');
+  const wrongPort = await evaluateOrigin(devOptions, 'http://192.168.1.35:5175');
   assert(wrongPort.err instanceof Error);
-  assert.equal(wrongPort.err.message, 'Not allowed by CORS: http://192.168.1.35:5173');
+  assert.equal(wrongPort.err.message, 'Not allowed by CORS: http://192.168.1.35:5175');
 
   const prodModule = await setCorsEnvAndReload({
     allowlist: 'https://allowlisted.test',
