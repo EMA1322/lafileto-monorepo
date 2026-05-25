@@ -1,41 +1,35 @@
 function resolveApiBase() {
   const fromWindow =
-    typeof window !== "undefined" &&
-    window.__API_BASE &&
-    String(window.__API_BASE).trim();
+    typeof window !== 'undefined' && window.__API_BASE && String(window.__API_BASE).trim();
 
   const fromLS =
-    typeof localStorage !== "undefined" &&
-    localStorage.getItem &&
-    localStorage.getItem("API_BASE");
+    typeof localStorage !== 'undefined' && localStorage.getItem && localStorage.getItem('API_BASE');
 
   const fromEnv =
-    typeof import.meta !== "undefined" &&
-    import.meta.env &&
-    import.meta.env.VITE_API_BASE_URL;
+    typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL;
 
-  const base = fromWindow || fromLS || fromEnv || "http://localhost:3000/api/v1";
-  return String(base).replace(/\/+$/, "");
+  const base = fromWindow || fromLS || fromEnv || '/api/v1';
+  return String(base).replace(/\/+$/, '');
 }
 
 export const API_BASE = resolveApiBase();
 
 function joinUrl(base, path) {
-  const p = String(path || "");
+  const p = String(path || '');
   if (!p) return base;
-  if (p.startsWith("http://") || p.startsWith("https://")) return p;
-  return `${base}${p.startsWith("/") ? p : `/${p}`}`;
+  if (p.startsWith('http://') || p.startsWith('https://')) return p;
+  return `${base}${p.startsWith('/') ? p : `/${p}`}`;
 }
 
 export async function publicFetch(path, options = {}) {
   const url = joinUrl(API_BASE, path);
   const res = await fetch(url, {
-    method: "GET",
+    method: 'GET',
     headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json"
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
     },
-    ...options
+    ...options,
   });
 
   const json = await res.json().catch(() => ({}));
@@ -54,31 +48,31 @@ export async function publicFetch(path, options = {}) {
 }
 
 export async function fetchPublicProducts() {
-  const { data } = await publicFetch("/public/products");
+  const { data } = await publicFetch('/public/products');
   return Array.isArray(data) ? data : [];
 }
 
 export async function fetchPublicCategories() {
-  const { data } = await publicFetch("/public/categories");
+  const { data } = await publicFetch('/public/categories');
   return Array.isArray(data) ? data : [];
 }
 
 export async function fetchPublicOffers() {
-  const { data } = await publicFetch("/public/offers");
+  const { data } = await publicFetch('/public/offers');
   return Array.isArray(data) ? data : [];
 }
 
 export async function fetchPublicSettings() {
-  const { data } = await publicFetch("/public/settings");
+  const { data } = await publicFetch('/public/settings');
   return data || {};
 }
 
 export async function fetchBusinessStatus() {
-  const { data } = await publicFetch("/public/business-status");
+  const { data } = await publicFetch('/public/business-status');
   return data || { isOpen: false };
 }
 
 export async function fetchCommercialConfig() {
-  const { data } = await publicFetch("/public/commercial-config");
-  return data || { whatsapp: { number: "", message: "" } };
+  const { data } = await publicFetch('/public/commercial-config');
+  return data || { whatsapp: { number: '', message: '' } };
 }
