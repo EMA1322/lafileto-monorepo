@@ -1,20 +1,20 @@
 // Middleware CORS con allowlist desde .env
-import cors from "cors";
-import { env } from "./env.js";
+import cors from 'cors';
+import { env } from './env.js';
 
-const DEV_LAN_ORIGIN = /^http:\/\/192\.168\.1\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d):5174$/;
+const DEV_LAN_ORIGIN = /^http:\/\/192\.168\.1\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d):517(?:3|4)$/;
 
-export function buildCorsOptions(allowlistInput = env.cors.allowlist) {
+export function buildCorsOptions(allowlistInput = env.cors.allowlist, nodeEnvInput = env.nodeEnv) {
   const normalizedAllowlist = Array.isArray(allowlistInput)
     ? allowlistInput
-    : String(allowlistInput ?? "")
-        .split(",")
-        .map(origin => origin.trim())
+    : String(allowlistInput ?? '')
+        .split(',')
+        .map((origin) => origin.trim())
         .filter(Boolean);
 
   // Convertimos la allowlist en un Set para búsquedas O(1) y evitar duplicados.
   const allowlist = new Set(normalizedAllowlist);
-  const isDev = env.nodeEnv !== "production";
+  const isDev = nodeEnvInput !== 'production';
 
   return {
     origin(origin, cb) {
@@ -24,9 +24,9 @@ export function buildCorsOptions(allowlistInput = env.cors.allowlist) {
       cb(new Error(`Not allowed by CORS: ${origin}`));
     },
     credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     // Declaramos los headers habituales para JSON + Auth; cubre el preflight completo.
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   };
 }
 

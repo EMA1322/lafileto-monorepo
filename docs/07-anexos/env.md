@@ -6,6 +6,7 @@ scope: Variables por app y ejemplos por entorno.
 ---
 
 ## Backend (Express + Prisma)
+
 ```
 PORT=3000
 DATABASE_URL=mysql://user:pass@localhost:3306/lafileto
@@ -20,14 +21,19 @@ REQUEST_TIMEOUT_MS=15000
 - `REQUEST_TIMEOUT_MS` se usa en el middleware `requestTimeout`.
 
 ## Client (SPA pública)
+
 ```
-VITE_API_BASE=/api
+# Opcional: override explícito de base API.
+VITE_API_BASE_URL=/api/v1
 ```
 
-- `VITE_API_BASE` apunta al proxy local (`/api`); en producción puede quedar fijo al dominio del backend.
+- Si `VITE_API_BASE_URL` no se define, el client usa `/api/v1` por defecto.
+- En desarrollo, `client -> /api/v1/public/* -> Vite proxy -> backend`.
+- Para acceso directo al backend desde una IP LAN, configurar `CORS_ALLOWLIST` según corresponda.
 - El client público productivo consume API pública; no usar JSON local como fuente productiva.
 
 ## Admin (SPA de gestión)
+
 ```
 VITE_API_BASE=/api
 VITE_DATA_SOURCE=api
@@ -36,6 +42,5 @@ VITE_DATA_SOURCE=api
 - Todo el tráfico de la Admin pasa por el proxy configurado en `vite.config.js`.
 - El login y el bootstrap de permisos utilizan `POST /api/v1/auth/login` y `GET /api/v1/auth/me`.
 - `VITE_DATA_SOURCE` en admin se conserva para compatibilidad de debug/migración incremental; valor recomendado: `api`.
-
 
 > En producción mover secretos a un gestor seguro; no commitear `.env` reales.
