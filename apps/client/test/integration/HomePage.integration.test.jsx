@@ -1,31 +1,122 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { beforeEach, describe, it, expect, vi } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { HomePage } from '/src/react/pages/HomePage.jsx';
+import {
+  fetchBusinessStatus,
+  fetchCommercialConfig,
+  fetchPublicCategories,
+  fetchPublicOffers,
+  fetchPublicSettings,
+} from '/src/react/services/publicApi.js';
 
 vi.mock('/src/react/services/publicApi.js', () => ({
-  fetchPublicSettings: vi.fn(async () => ({ brandName: 'La Fileto', heroTitle: 'Hero title' })),
-  fetchBusinessStatus: vi.fn(async () => ({ isOpen: true, message: 'Open now' })),
-  fetchCommercialConfig: vi.fn(async () => ({ whatsapp: { number: '+5411' } })),
-  fetchPublicOffers: vi.fn(async () => []),
-  fetchPublicCategories: vi.fn(async () => []),
+  fetchPublicSettings: vi.fn(),
+  fetchBusinessStatus: vi.fn(),
+  fetchCommercialConfig: vi.fn(),
+  fetchPublicOffers: vi.fn(),
+  fetchPublicCategories: vi.fn(),
 }));
 
 describe('HomePage integration baseline', () => {
-  it('renders fallback states without breaking when public lists are empty', async () => {
-    render(<HomePage />);
-
-    expect(screen.getByRole('heading', { name: /business status/i })).toBeTruthy();
-    expect(await screen.findByText('There are no active offers right now.')).toBeTruthy();
-    expect(await screen.findByText('No categories available yet.')).toBeTruthy();
+  beforeEach(() => {
+    fetchPublicSettings.mockReset().mockResolvedValue({
+      brandName: 'La Fileto',
+      heroTitle: 'Sabor de barrio, recién hecho',
+    });
+    fetchBusinessStatus.mockReset().mockResolvedValue({ isOpen: true, message: 'Abierto hoy' });
+    fetchCommercialConfig.mockReset().mockResolvedValue({ whatsapp: { number: '+5411' } });
+    fetchPublicOffers.mockReset().mockResolvedValue([]);
+    fetchPublicCategories.mockReset().mockResolvedValue([]);
+    window.location.hash = '';
   });
 
-  it('renders controlled error copy when one public source fails', async () => {
-    const { fetchPublicOffers } = await import('/src/react/services/publicApi.js');
-    fetchPublicOffers.mockRejectedValueOnce(new Error('Temporary outage'));
+  it('renders accessible section headings and empty states in Spanish', async () => {
+    render(<HomePage />);
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Sabor de barrio, recién hecho' }),
+    ).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 2, name: 'Cómo pedir' })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 2, name: 'Ofertas destacadas' })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 2, name: 'Categorías destacadas' })).toBeTruthy();
+    expect(await screen.findByText('No hay ofertas activas por ahora.')).toBeTruthy();
+    expect(await screen.findByText('Todavía no hay categorías para mostrar.')).toBeTruthy();
+  });
+
+  it('navigates to products from the primary hero CTA', () => {
+    render(<HomePage />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Ver menú' }));
+
+    expect(window.location.hash).toBe('#products');
+  });
+
+  it('preserves offer cart attributes, storage and update event', async () => {
+    fetchPublicOffers.mockResolvedValueOnce([
+      {
+        id: 7,
+        discountPercent: 20,
+        product: {
+          id: 10,
+          name: 'Milanesa completa',
+          price: 10000,
+          imageUrl: '/img/hero1.png',
+        },
+      },
+    ]);
+    document.body.innerHTML = '<span id="cart-count">0</span>';
+    const cartUpdated = vi.fn();
+    document.addEventListener('cart:updated', cartUpdated, { once: true });
+
+    render(<HomePage />);
+
+    const button = await screen.findByRole('button', { name: 'Agregar al carrito' });
+    expect(button.className).toContain('btn-add-to-cart');
+    expect(button.getAttribute('data-id')).toBe('10');
+    expect(button.getAttribute('data-name')).toBe('Milanesa completa');
+    expect(button.getAttribute('data-price')).toBe('8000');
+    expect(button.getAttribute('data-image')).toBe('/img/hero1.png');
+    expect(button.getAttribute('data-source')).toBe('offers');
+
+    fireEvent.click(button);
+
+    expect(JSON.parse(localStorage.getItem('cart') || '[]')).toEqual([
+      {
+        id: '10',
+        name: 'Milanesa completa',
+        price: 8000,
+        image: '/img/hero1.png',
+        source: 'offers',
+        quantity: 1,
+      },
+    ]);
+    expect(document.getElementById('cart-count').textContent).toBe('1');
+    expect(cartUpdated).toHaveBeenCalledTimes(1);
+  });
+
+  it('limits featured categories to four editorial links', async () => {
+    fetchPublicCategories.mockResolvedValueOnce(
+      ['Bebidas', 'Carnes', 'Ensaladas', 'Pastas', 'Pizzas'].map((name, index) => ({
+        id: index + 1,
+        name,
+        isActive: true,
+      })),
+    );
+
+    render(<HomePage />);
+
+    expect(await screen.findByRole('link', { name: 'Ver productos de Bebidas' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Ver productos de Pastas' })).toBeTruthy();
+    expect(screen.queryByRole('link', { name: 'Ver productos de Pizzas' })).toBeNull();
+  });
+
+  it('shows a localized controlled error when offers cannot load', async () => {
+    fetchPublicOffers.mockRejectedValueOnce(new Error('Temporalmente sin conexión'));
 
     render(<HomePage />);
 
     const alert = await screen.findByRole('alert');
-    expect(alert.textContent).toContain('We could not load offers. Temporary outage');
+    expect(alert.textContent).toContain('No pudimos cargar ofertas');
+    expect(alert.textContent).toContain('Temporalmente sin conexión');
   });
 });
