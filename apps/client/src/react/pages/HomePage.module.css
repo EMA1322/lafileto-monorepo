@@ -1,9 +1,12 @@
 .home {
   --home-accent: #FAA718;
 
-  width: 100vw;
+  box-sizing: border-box;
+  width: calc(100% + (2 * var(--layout-content-pad-inline)));
+  max-width: none;
+  min-width: 0;
   margin-block-start: calc(-1 * var(--space-5));
-  margin-inline: calc(50% - 50vw);
+  margin-inline: calc(-1 * var(--layout-content-pad-inline));
   overflow-x: clip;
   background: #0b1012;
   color: var(--color-fg-inverse);
@@ -171,6 +174,7 @@
 
 .sectionInner {
   width: min(100% - (2 * var(--layout-content-pad-inline)), var(--layout-content-max));
+  min-width: 0;
   margin-inline: auto;
   display: grid;
   gap: clamp(var(--space-5), 5vw, var(--space-8));
@@ -236,6 +240,7 @@
 
 .howGrid {
   display: grid;
+  min-width: 0;
   gap: var(--space-4);
 }
 
@@ -342,6 +347,7 @@
 }
 
 .offerViewport {
+  min-width: 0;
   max-width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
@@ -356,6 +362,7 @@
 
 .offerTrack {
   display: grid;
+  min-width: 0;
   grid-auto-flow: column;
   grid-auto-columns: minmax(82%, 1fr);
   gap: var(--space-4);
@@ -424,6 +431,7 @@
 
 .categoriesGrid {
   display: grid;
+  min-width: 0;
   gap: var(--space-4);
 }
 
