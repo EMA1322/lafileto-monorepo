@@ -7,14 +7,15 @@ import {
   fetchPublicSettings,
 } from '../services/publicApi.js';
 import { useAsyncResource } from '../hooks/useAsyncResource.jsx';
-import { formatPrice, getDiscountedPrice } from '/src/utils/helpers.js';
-import { addToCart } from '/src/utils/cartService.js';
+import { getDiscountedPrice } from '/src/utils/helpers.js';
+import { addToCart, getCart, updateQuantity } from '/src/utils/cartService.js';
 import { showSnackbar } from '/src/utils/showSnackbar.js';
 import { AppShell, Section } from '/src/components/layout/AppShell.jsx';
 import { Button, IconButton } from '/src/components/ui/Button.jsx';
 import { Card } from '/src/components/ui/Surface.jsx';
 import { StatusBadge } from '/src/components/ui/Badge.jsx';
 import { EmptyState, ErrorState, LoadingState } from '/src/components/ui/State.jsx';
+import { ProductCard } from '../components/ProductCard.jsx';
 import styles from './HomePage.module.css';
 
 function SectionState({ label, status, error, isEmpty, emptyText, children }) {
@@ -119,28 +120,38 @@ function navigateToProducts() {
   window.location.hash = '#products';
 }
 
+function normalizeOfferProduct(offer) {
+  const product = offer?.product || {};
+  const originalPrice = Number(product?.price || 0);
+  const discountPercent = Number(offer?.discountPercent || 0);
+
+  return {
+    id: product?.id,
+    name: product?.name || 'Promo destacada',
+    description: product?.description || '',
+    categoryName: product?.category?.name || '',
+    imageUrl: product?.imageUrl || '/img/hero1.png',
+    originalPrice,
+    finalPrice: getDiscountedPrice(originalPrice, discountPercent),
+    discountPercent,
+    source: 'offers',
+  };
+}
+
 export function HomePage() {
   const offersViewportRef = useRef(null);
   const [activeOfferIndex, setActiveOfferIndex] = useState(0);
 
-  const handleAddOfferToCart = (offer) => {
-    const product = offer?.product || {};
-    const basePrice = Number(product?.price || 0);
-    const discount = Number(offer?.discountPercent || 0);
-    const finalPrice = getDiscountedPrice(basePrice, discount);
+  const handleAddOfferToCart = (product) => {
+    if (product.id == null || product.id === '') return;
 
-    if (product?.id == null) return;
-
-    addToCart({
-      id: String(product.id),
-      name: product.name || 'Promo destacada',
-      price: finalPrice,
-      image: product.imageUrl || '/img/hero1.png',
-      source: 'offers',
-      quantity: 1,
-    });
-
-    showSnackbar(`Agregado al carrito: ${product.name || 'Promo destacada'}`);
+    const existingQuantity =
+      getCart().find((item) => item.id === String(product.id))?.quantity || 0;
+    addToCart(product);
+    if (product.quantity > 1) {
+      updateQuantity(product.id, existingQuantity + product.quantity);
+    }
+    showSnackbar(`Agregado al carrito: ${product.name}`);
   };
 
   const homeResource = useAsyncResource(async () => {
@@ -395,51 +406,19 @@ export function HomePage() {
             >
               <div className={styles.offerTrack}>
                 {offers.map((offer, index) => {
-                  const product = offer?.product || {};
-                  const basePrice = Number(product?.price || 0);
-                  const discount = Number(offer?.discountPercent || 0);
-                  const finalPrice = getDiscountedPrice(basePrice, discount);
+                  const product = normalizeOfferProduct(offer);
 
                   return (
-                    <Card
-                      as="article"
+                    <ProductCard
                       className={styles.offerSlide}
-                      data-offer-slide={index}
                       key={offer.id || product.id || product.name}
-                      aria-label={`Oferta ${index + 1} de ${offers.length}`}
-                    >
-                      <img
-                        className={styles.offerImage}
-                        src={product.imageUrl || '/img/hero1.png'}
-                        alt={product.name || 'Oferta destacada'}
-                        loading="lazy"
-                      />
-                      <div className={styles.offerBody}>
-                        <div className={styles.offerCopy}>
-                          <h3>{product.name || 'Promo destacada'}</h3>
-                          <div className={styles.offerMeta}>
-                            {discount > 0 ? (
-                              <span className={styles.oldPrice}>{formatPrice(basePrice)}</span>
-                            ) : null}
-                            <strong className={styles.price}>{formatPrice(finalPrice)}</strong>
-                            {discount > 0 ? (
-                              <StatusBadge isActive activeText={`-${discount}%`} />
-                            ) : null}
-                          </div>
-                        </div>
-                        <Button
-                          className={`btn-add-to-cart ${styles.offerButton}`}
-                          data-id={product?.id ?? ''}
-                          data-name={product?.name ?? ''}
-                          data-price={String(finalPrice)}
-                          data-image={product?.imageUrl || '/img/hero1.png'}
-                          data-source="offers"
-                          onClick={() => handleAddOfferToCart(offer)}
-                        >
-                          Agregar al carrito
-                        </Button>
-                      </div>
-                    </Card>
+                      product={product}
+                      onAddToCart={handleAddOfferToCart}
+                      articleProps={{
+                        'data-offer-slide': index,
+                        'aria-label': `Oferta ${index + 1} de ${offers.length}`,
+                      }}
+                    />
                   );
                 })}
               </div>

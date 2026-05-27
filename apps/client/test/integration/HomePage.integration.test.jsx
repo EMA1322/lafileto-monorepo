@@ -71,6 +71,7 @@ describe('HomePage integration baseline', () => {
     render(<HomePage />);
 
     const button = await screen.findByRole('button', { name: 'Agregar al carrito' });
+    expect(button.closest('article')?.getAttribute('data-offer-slide')).toBe('0');
     expect(button.className).toContain('btn-add-to-cart');
     expect(button.getAttribute('data-id')).toBe('10');
     expect(button.getAttribute('data-name')).toBe('Milanesa completa');
@@ -92,6 +93,36 @@ describe('HomePage integration baseline', () => {
     ]);
     expect(document.getElementById('cart-count').textContent).toBe('1');
     expect(cartUpdated).toHaveBeenCalledTimes(1);
+  });
+
+  it('adds the selected offer quantity through the shared stepper', async () => {
+    fetchPublicOffers.mockResolvedValueOnce([
+      {
+        id: 8,
+        discountPercent: 10,
+        product: {
+          id: 11,
+          name: 'Promo familiar',
+          price: 12000,
+          imageUrl: '/img/hero1.png',
+        },
+      },
+    ]);
+    document.body.innerHTML = '<span id="cart-count">0</span>';
+
+    render(<HomePage />);
+
+    const addButton = await screen.findByRole('button', { name: 'Agregar al carrito' });
+    const increaseButton = screen.getByRole('button', {
+      name: 'Aumentar cantidad de Promo familiar',
+    });
+
+    fireEvent.click(increaseButton);
+    fireEvent.click(increaseButton);
+    fireEvent.click(addButton);
+
+    expect(JSON.parse(localStorage.getItem('cart') || '[]')[0].quantity).toBe(3);
+    expect(document.getElementById('cart-count').textContent).toBe('3');
   });
 
   it('limits featured categories to four editorial links', async () => {

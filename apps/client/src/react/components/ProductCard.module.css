@@ -1,0 +1,205 @@
+.card {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0;
+  background: #161b1e;
+  border: 1px solid rgba(250, 167, 24, 0.16);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 0.65rem 1.8rem rgba(7, 10, 12, 0.18);
+  transition:
+    transform var(--motion-duration-base) var(--motion-ease-standard),
+    border-color var(--motion-duration-base) var(--motion-ease-standard),
+    box-shadow var(--motion-duration-base) var(--motion-ease-standard);
+}
+
+.card:is(:hover, :focus-within) {
+  border-color: rgba(250, 167, 24, 0.42);
+  box-shadow: 0 0.9rem 2.25rem rgba(7, 10, 12, 0.27);
+  transform: translateY(-2px);
+}
+
+.media {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.imagePlaceholder {
+  display: grid;
+  place-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  padding: var(--space-4);
+  background:
+    radial-gradient(circle at 50% 38%, rgba(250, 167, 24, 0.17), transparent 34%),
+    linear-gradient(135deg, #20272a, #111619);
+  color: rgba(255, 255, 255, 0.68);
+  text-align: center;
+}
+
+.imagePlaceholder span {
+  color: #faa718;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.imagePlaceholder strong {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+}
+
+.body {
+  display: grid;
+  align-content: space-between;
+  gap: var(--space-3);
+  min-height: 13.75rem;
+  padding: var(--space-4);
+}
+
+.copy {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.title {
+  color: var(--color-fg-inverse);
+  font-size: clamp(1.1rem, 3vw, 1.3rem);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+}
+
+.description {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-base);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.category {
+  margin: 0;
+  color: #faa718;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.priceRow {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.oldPrice {
+  color: rgba(255, 255, 255, 0.56);
+  font-size: var(--font-size-sm);
+  text-decoration: line-through;
+}
+
+.price {
+  color: #faa718;
+  font-size: clamp(var(--font-size-lg), 3vw, var(--font-size-xl));
+  font-weight: var(--font-weight-bold);
+}
+
+.discountBadge {
+  position: absolute;
+  top: var(--space-3);
+  left: var(--space-3);
+  background: #faa718;
+  color: #2d2113;
+  box-shadow: 0 0.25rem 0.8rem rgba(7, 10, 12, 0.2);
+}
+
+.actions {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.stepper {
+  display: inline-grid;
+  grid-template-columns: 2.35rem minmax(2rem, auto) 2.35rem;
+  align-items: center;
+  justify-self: start;
+  min-height: 2.75rem;
+  border: 1px solid rgba(250, 167, 24, 0.27);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.stepperButton {
+  height: 100%;
+  border: 0;
+  background: transparent;
+  color: #faa718;
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.stepperButton:disabled {
+  color: rgba(255, 255, 255, 0.32);
+  cursor: not-allowed;
+}
+
+.quantity {
+  color: var(--color-fg-inverse);
+  font-weight: var(--font-weight-semibold);
+  text-align: center;
+}
+
+.stepperButton:focus-visible {
+  outline: 2px solid #faa718;
+  outline-offset: -2px;
+  border-radius: var(--radius-pill);
+}
+
+.button {
+  width: 100%;
+  min-height: 2.75rem;
+  padding-inline: var(--space-3);
+  background: #faa718;
+  border-color: #faa718;
+  color: #2d2113;
+  white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+  .actions {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+  }
+}
+
+@media (min-width: 760px) {
+  .body {
+    gap: var(--space-4);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .card:is(:hover, :focus-within) {
+    transform: none;
+    transition: none;
+  }
+}

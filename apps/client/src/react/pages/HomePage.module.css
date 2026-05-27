@@ -371,62 +371,7 @@
 
 .offerSlide {
   scroll-snap-align: start;
-  display: grid;
-  padding: 0;
-  overflow: hidden;
-  background: #171d1f;
-  border-color: rgba(250, 167, 24, 0.2);
-  box-shadow: none;
-}
-
-.offerImage {
-  width: 100%;
-  aspect-ratio: 16 / 11;
-  object-fit: cover;
-}
-
-.offerBody {
-  display: grid;
-  align-content: space-between;
-  gap: var(--space-5);
-  min-height: 12rem;
-  padding: var(--space-4);
-}
-
-.offerCopy {
-  display: grid;
-  gap: var(--space-3);
-}
-
-.offerCopy h3 {
-  font-size: clamp(1.05rem, 3vw, 1.24rem);
-}
-
-.offerMeta {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
-.oldPrice {
-  color: rgba(255, 255, 255, 0.56) !important;
-  font-size: var(--font-size-sm);
-  text-decoration: line-through;
-}
-
-.price {
-  color: white;
-  font-size: var(--font-size-lg);
-}
-
-.offerButton {
-  justify-self: start;
-  min-height: 2.75rem;
-  padding-inline: var(--space-5);
-  background: var(--home-accent);
-  border-color: var(--home-accent);
-  color: #2d2113;
+  min-width: 0;
 }
 
 .categoriesGrid {
