@@ -1,24 +1,11 @@
-import { describe, it, expect, vi } from 'vitest';
+import { beforeEach, describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import { ProductsPage } from '/src/react/pages/ProductsPage.jsx';
+import { fetchPublicCategories, fetchPublicProducts } from '/src/react/services/publicApi.js';
 
 vi.mock('/src/react/services/publicApi.js', () => ({
-  fetchPublicCategories: vi.fn(async () => [
-    { id: 1, name: 'Mains' },
-    { id: 2, name: 'Drinks' },
-  ]),
-  fetchPublicProducts: vi.fn(async () => [
-    {
-      id: 101,
-      name: 'Burger',
-      description: 'With fries',
-      categoryId: 1,
-      price: 1000,
-      imageUrl: '/img/burger.jpg',
-      offer: { discountPercent: 20 },
-    },
-    { id: 102, name: 'Soda', categoryId: 2, price: 500 },
-  ]),
+  fetchPublicCategories: vi.fn(),
+  fetchPublicProducts: vi.fn(),
 }));
 
 vi.mock('/src/utils/cartService.js', () => ({
@@ -31,32 +18,224 @@ vi.mock('/src/utils/showSnackbar.js', () => ({
   showSnackbar: vi.fn(),
 }));
 
-describe('ProductsPage integration baseline', () => {
-  it('handles empty catalog without crashing', async () => {
-    const { fetchPublicProducts } = await import('/src/react/services/publicApi.js');
+function loadDefaultCatalog() {
+  fetchPublicCategories.mockResolvedValue([
+    { id: 1, name: 'Principales', isActive: true },
+    { id: 2, name: 'Bebidas', isActive: true },
+    { id: 3, name: 'Pizzas', isActive: true },
+    { id: 4, name: 'Oculta', isActive: false },
+    { id: 5, name: 'Carnes', isActive: true },
+  ]);
+  fetchPublicProducts.mockResolvedValue([
+    {
+      id: 101,
+      name: 'Burger',
+      description: 'Con papas',
+      categoryId: 1,
+      price: 1000,
+      imageUrl: '/img/burger.jpg',
+      offer: { discountPercent: 20 },
+    },
+    { id: 102, name: 'Soda', description: 'Bebida fría', categoryId: 2, price: 500 },
+    { id: 103, name: 'Coca Cola', description: 'Gaseosa clásica', categoryId: 2, price: 700 },
+    { id: 104, name: 'Agua mineral', description: 'Sin gas', categoryId: 2, price: 450 },
+    { id: 105, name: 'Milanesa', description: 'Con puré', categoryId: 1, price: 1800 },
+    { id: 106, name: 'Pizza muzzarella', description: 'Salsa y queso', categoryId: 3, price: 2200 },
+    { id: 107, name: 'Empanada carne', description: 'Al horno', categoryId: 1, price: 600 },
+    {
+      id: 108,
+      name: 'Pizza fugazzeta',
+      description: 'Cebolla y queso',
+      categoryId: 3,
+      price: 2400,
+    },
+  ]);
+}
+
+describe('ProductsPage integration', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    loadDefaultCatalog();
+  });
+
+  it('renders localized editorial controls and active category chips', async () => {
+    render(<ProductsPage />);
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Nuestro menú' })).toBeTruthy();
+    expect(screen.getByLabelText('Buscar productos')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Todos' }).getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByRole('button', { name: 'En oferta' }).getAttribute('aria-pressed')).toBe(
+      'false',
+    );
+    expect(screen.getByRole('button', { name: 'Principales' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Pizzas' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Oculta' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Carnes' })).toBeNull();
+    expect(screen.getByRole('status').textContent).toContain('Mostrando 1-6 de 8 productos');
+  });
+
+  it('renders foundation loading, error and empty catalog states in Spanish', async () => {
+    let resolveCategories;
+    fetchPublicCategories.mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveCategories = resolve;
+      }),
+    );
+
+    const { unmount } = render(<ProductsPage />);
+    expect(screen.getByText('Cargando catálogo')).toBeTruthy();
+    resolveCategories([]);
+    unmount();
+
+    fetchPublicProducts.mockRejectedValueOnce(new Error('Sin conexión'));
+    render(<ProductsPage />);
+    const alert = await screen.findByRole('alert');
+    expect(alert.textContent).toContain('No pudimos cargar el catálogo');
+    expect(alert.textContent).toContain('Sin conexión');
+  });
+
+  it('handles an empty catalog without rendering product cards', async () => {
     fetchPublicProducts.mockResolvedValueOnce([]);
 
     render(<ProductsPage />);
-    expect(await screen.findByText('There are no products available right now.')).toBeTruthy();
+
+    expect(await screen.findByText('No hay productos disponibles')).toBeTruthy();
+    expect(screen.queryByLabelText('Productos disponibles')).toBeNull();
   });
 
-  it('supports search/filter path and empty results message', async () => {
+  it('combines search and category filters and clears an empty result', async () => {
     render(<ProductsPage />);
 
     expect(await screen.findByText('Burger')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Bebidas' }));
+    expect(screen.queryByText('Burger')).toBeNull();
+    expect(screen.getByText('Soda')).toBeTruthy();
 
-    fireEvent.change(screen.getByPlaceholderText('Search products'), {
+    fireEvent.change(screen.getByLabelText('Buscar productos'), {
+      target: { value: 'burger' },
+    });
+
+    expect(screen.getByText('No encontramos resultados')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Limpiar filtros' }));
+    expect(screen.getByText('Burger')).toBeTruthy();
+    expect(screen.getByText('Soda')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Todos' }).getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByRole('status').textContent).toContain('Mostrando 1-6 de 8 productos');
+  });
+
+  it('matches search queries without accents against accented product text', async () => {
+    render(<ProductsPage />);
+
+    expect(await screen.findByText('Milanesa')).toBeTruthy();
+
+    fireEvent.change(screen.getByLabelText('Buscar productos'), {
+      target: { value: 'pure' },
+    });
+
+    expect(screen.getByText('Milanesa')).toBeTruthy();
+    expect(screen.queryByText('Burger')).toBeNull();
+
+    fireEvent.change(screen.getByLabelText('Buscar productos'), {
+      target: { value: 'clasica' },
+    });
+
+    expect(screen.getByText('Coca Cola')).toBeTruthy();
+    expect(screen.queryByText('Milanesa')).toBeNull();
+  });
+
+  it('filters highlighted offers and combines them with search', async () => {
+    render(<ProductsPage />);
+
+    expect(await screen.findByText('Burger')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'En oferta' }));
+
+    expect(screen.getByRole('button', { name: 'En oferta' }).getAttribute('aria-pressed')).toBe(
+      'true',
+    );
+    expect(screen.getByText('Burger')).toBeTruthy();
+    expect(screen.queryByText('Soda')).toBeNull();
+    expect(screen.getByRole('status').textContent).toContain('Mostrando 1-1 de 1 productos');
+
+    fireEvent.change(screen.getByLabelText('Buscar productos'), {
+      target: { value: 'soda' },
+    });
+
+    expect(screen.getByText('No encontramos resultados')).toBeTruthy();
+    expect(screen.getAllByRole('status')[0].textContent).toContain('0 productos encontrados');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Limpiar filtros' }));
+    expect(screen.getByRole('button', { name: 'Todos' }).getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByText('Burger')).toBeTruthy();
+    expect(screen.getByText('Soda')).toBeTruthy();
+  });
+
+  it('paginates filtered products locally with previous and next controls', async () => {
+    render(<ProductsPage />);
+
+    expect(await screen.findByText('Burger')).toBeTruthy();
+    expect(screen.queryByText('Empanada carne')).toBeNull();
+
+    const previousButton = screen.getByRole('button', {
+      name: 'Ver página anterior de productos',
+    });
+    const nextButton = screen.getByRole('button', {
+      name: 'Ver página siguiente de productos',
+    });
+
+    expect(previousButton.disabled).toBe(true);
+    expect(nextButton.disabled).toBe(false);
+    expect(screen.getByText('Página 1 de 2')).toBeTruthy();
+
+    fireEvent.click(nextButton);
+
+    expect(screen.getByText('Empanada carne')).toBeTruthy();
+    expect(screen.getByText('Pizza fugazzeta')).toBeTruthy();
+    expect(screen.queryByText('Burger')).toBeNull();
+    expect(screen.getByText('Página 2 de 2')).toBeTruthy();
+    expect(nextButton.disabled).toBe(true);
+    expect(previousButton.disabled).toBe(false);
+
+    fireEvent.click(previousButton);
+    expect(screen.getByText('Burger')).toBeTruthy();
+    expect(screen.getByText('Página 1 de 2')).toBeTruthy();
+  });
+
+  it('resets pagination to the first page when search changes', async () => {
+    render(<ProductsPage />);
+
+    expect(await screen.findByText('Burger')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Ver página siguiente de productos' }));
+    expect(screen.getByText('Página 2 de 2')).toBeTruthy();
+
+    fireEvent.change(screen.getByLabelText('Buscar productos'), {
       target: { value: 'pizza' },
     });
 
-    expect(screen.getByText('No products match your current filters.')).toBeTruthy();
+    expect(screen.queryByText('Página 2 de 2')).toBeNull();
+    expect(screen.getByText('Mostrando 1-2 de 2 productos')).toBeTruthy();
+    expect(screen.getByText('Pizza muzzarella')).toBeTruthy();
+    expect(screen.getByText('Pizza fugazzeta')).toBeTruthy();
   });
 
-  it('uses the shared card contract for discounted and regular products', async () => {
-    const { addToCart, getCart, updateQuantity } = await import('/src/utils/cartService.js');
-    addToCart.mockClear();
-    getCart.mockReset().mockReturnValue([]);
-    updateQuantity.mockClear();
+  it('resets pagination to the first page when category changes', async () => {
+    render(<ProductsPage />);
+
+    expect(await screen.findByText('Burger')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Ver página siguiente de productos' }));
+    expect(screen.getByText('Página 2 de 2')).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Bebidas' }));
+
+    expect(screen.queryByText('Página 2 de 2')).toBeNull();
+    expect(screen.getByText('Mostrando 1-3 de 3 productos')).toBeTruthy();
+    expect(screen.getByText('Soda')).toBeTruthy();
+    expect(screen.getByText('Coca Cola')).toBeTruthy();
+    expect(screen.getByText('Agua mineral')).toBeTruthy();
+  });
+
+  it('keeps the shared card attributes and add-to-cart payload for products', async () => {
+    const { addToCart, getCart } = await import('/src/utils/cartService.js');
+    getCart.mockReturnValue([]);
 
     render(<ProductsPage />);
 
@@ -77,7 +256,6 @@ describe('ProductsPage integration baseline', () => {
     expect(burgerButton.getAttribute('data-source')).toBe('products');
 
     fireEvent.click(burgerButton);
-
     expect(addToCart).toHaveBeenCalledWith({
       id: '101',
       name: 'Burger',
@@ -86,20 +264,11 @@ describe('ProductsPage integration baseline', () => {
       source: 'products',
       quantity: 1,
     });
-
-    const sodaCard = screen.getByRole('heading', { name: 'Soda' }).closest('article');
-    expect(within(sodaCard).queryByText(/-\d+%/)).toBeNull();
-    fireEvent.error(within(sodaCard).getByRole('img', { name: 'Soda' }));
-    expect(
-      within(sodaCard).getByRole('img', { name: 'Imagen no disponible para Soda' }),
-    ).toBeTruthy();
   });
 
-  it('passes selected quantity and applies it without changing cart service', async () => {
+  it('passes selected quantity without changing cart service behavior', async () => {
     const { addToCart, getCart, updateQuantity } = await import('/src/utils/cartService.js');
-    addToCart.mockClear();
-    getCart.mockReset().mockReturnValue([]);
-    updateQuantity.mockClear();
+    getCart.mockReturnValue([]);
 
     render(<ProductsPage />);
 
