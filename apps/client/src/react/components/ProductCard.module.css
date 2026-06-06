@@ -135,6 +135,11 @@
   gap: var(--space-3);
 }
 
+.actionButtons {
+  display: grid;
+  gap: var(--space-2);
+}
+
 .stepper {
   display: inline-grid;
   grid-template-columns: 2.35rem minmax(2rem, auto) 2.35rem;
@@ -183,6 +188,20 @@
   white-space: nowrap;
 }
 
+.detailButton {
+  width: 100%;
+  min-height: 2.75rem;
+  border-color: rgba(250, 167, 24, 0.42);
+  color: rgba(255, 248, 237, 0.92);
+  white-space: nowrap;
+}
+
+.detailButton:is(:hover, :focus-visible) {
+  background: rgba(250, 167, 24, 0.12);
+  border-color: rgba(250, 167, 24, 0.72);
+  color: #faa718;
+}
+
 @media (min-width: 640px) {
   .actions {
     grid-template-columns: auto minmax(0, 1fr);
@@ -200,6 +219,10 @@
   .card,
   .card:is(:hover, :focus-within) {
     transform: none;
+    transition: none;
+  }
+
+  .detailButton {
     transition: none;
   }
 }

@@ -1,0 +1,295 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  display: grid;
+  align-items: center;
+  justify-items: center;
+  padding:
+    max(var(--space-3), env(safe-area-inset-top))
+    var(--space-3)
+    max(var(--space-3), env(safe-area-inset-bottom));
+  background: rgba(8, 10, 10, 0.7);
+  backdrop-filter: blur(10px);
+  animation: backdrop-in var(--motion-duration-base) var(--motion-ease-standard) both;
+}
+
+.panel {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  width: min(100%, 42rem);
+  max-height: min(calc(100dvh - (var(--space-3) * 2)), 46rem);
+  overflow: hidden auto;
+  border: 1px solid rgba(250, 167, 24, 0.24);
+  border-radius: calc(var(--radius-lg) + 10px);
+  background:
+    radial-gradient(circle at 18% 0%, rgba(250, 167, 24, 0.14), transparent 18rem),
+    linear-gradient(180deg, #1d1711 0%, #0f1111 100%);
+  box-shadow: 0 1.25rem 3.5rem rgba(0, 0, 0, 0.38);
+  color: var(--color-fg-inverse);
+  animation: mobile-modal-in 240ms var(--motion-ease-standard) both;
+}
+
+.panel:focus {
+  outline: none;
+}
+
+.closeButton {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  z-index: 2;
+  display: inline-grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid rgba(255, 248, 237, 0.2);
+  border-radius: var(--radius-pill);
+  background: rgba(13, 15, 15, 0.76);
+  color: var(--color-fg-inverse);
+  cursor: pointer;
+  transition:
+    background-color var(--motion-duration-base) var(--motion-ease-standard),
+    border-color var(--motion-duration-base) var(--motion-ease-standard),
+    color var(--motion-duration-base) var(--motion-ease-standard);
+}
+
+.closeButton:is(:hover, :focus-visible) {
+  border-color: rgba(250, 167, 24, 0.82);
+  background: rgba(250, 167, 24, 0.14);
+  color: #faa718;
+}
+
+.closeButton:focus-visible,
+.stepperButton:focus-visible {
+  outline: 2px solid #faa718;
+  outline-offset: 2px;
+}
+
+.media {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+  background: #111619;
+}
+
+.image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.imagePlaceholder {
+  display: grid;
+  place-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  padding: var(--space-5);
+  background:
+    radial-gradient(circle at 50% 38%, rgba(250, 167, 24, 0.2), transparent 34%),
+    linear-gradient(135deg, #20272a, #111619);
+  color: rgba(255, 255, 255, 0.72);
+  text-align: center;
+}
+
+.imagePlaceholder span {
+  color: #faa718;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.imagePlaceholder strong {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+}
+
+.discountBadge {
+  position: absolute;
+  left: var(--space-4);
+  bottom: var(--space-4);
+  background: #faa718;
+  color: #2d2113;
+  box-shadow: 0 0.35rem 1rem rgba(7, 10, 12, 0.24);
+}
+
+.content {
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-5);
+}
+
+.category {
+  margin: 0;
+  color: #faa718;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  color: var(--color-fg-inverse);
+  font-size: clamp(1.7rem, 8vw, 2.6rem);
+  line-height: var(--line-height-tight);
+}
+
+.description {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.76);
+  font-size: var(--font-size-md);
+  line-height: 1.7;
+}
+
+.priceRow {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding-block-start: var(--space-2);
+}
+
+.price {
+  color: #faa718;
+  font-size: clamp(1.6rem, 7vw, 2.25rem);
+  font-weight: var(--font-weight-bold);
+}
+
+.oldPrice {
+  color: rgba(255, 255, 255, 0.56);
+  font-size: var(--font-size-md);
+  text-decoration: line-through;
+}
+
+.purchase {
+  display: grid;
+  gap: var(--space-3);
+  padding-block-start: var(--space-3);
+}
+
+.stepper {
+  display: inline-grid;
+  grid-template-columns: 2.75rem minmax(2.5rem, auto) 2.75rem;
+  align-items: center;
+  justify-self: start;
+  min-height: 2.95rem;
+  border: 1px solid rgba(250, 167, 24, 0.3);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.stepperButton {
+  display: inline-grid;
+  place-items: center;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  color: #faa718;
+  cursor: pointer;
+}
+
+.stepperButton:disabled {
+  color: rgba(255, 255, 255, 0.32);
+  cursor: not-allowed;
+}
+
+.quantity {
+  color: var(--color-fg-inverse);
+  font-weight: var(--font-weight-semibold);
+  text-align: center;
+}
+
+.addButton {
+  width: 100%;
+  min-height: 3rem;
+  background: #faa718;
+  border-color: #faa718;
+  color: #2d2113;
+}
+
+@keyframes backdrop-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes mobile-modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (min-width: 820px) {
+  .backdrop {
+    align-items: center;
+    padding: var(--space-6);
+  }
+
+  .panel {
+    grid-template-columns: minmax(0, 1.08fr) minmax(22rem, 0.92fr);
+    grid-template-rows: minmax(0, 1fr);
+    width: min(60rem, calc(100vw - 3rem));
+    max-height: min(84dvh, 42rem);
+    border-radius: calc(var(--radius-lg) + 12px);
+    box-shadow: 0 1.8rem 5rem rgba(0, 0, 0, 0.42);
+    animation-name: modal-in;
+  }
+
+  .media,
+  .image,
+  .imagePlaceholder {
+    height: 100%;
+    min-height: 32rem;
+    aspect-ratio: auto;
+  }
+
+  .content {
+    align-content: center;
+    padding: clamp(var(--space-5), 4vw, var(--space-8));
+  }
+
+  .purchase {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+  }
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .backdrop,
+  .panel {
+    animation: none;
+  }
+
+  .closeButton {
+    transition: none;
+  }
+}

@@ -3,9 +3,17 @@ import { Button } from '/src/components/ui/Button.jsx';
 import { Badge } from '/src/components/ui/Badge.jsx';
 import { Card } from '/src/components/ui/Surface.jsx';
 import { formatPrice } from '/src/utils/helpers.js';
+import { Eye } from 'lucide-react';
+import { buildProductCartPayload } from '../utils/productCartPayload.js';
 import styles from './ProductCard.module.css';
 
-export function ProductCard({ product, onAddToCart, className = '', articleProps = {} }) {
+export function ProductCard({
+  product,
+  onAddToCart,
+  onOpenDetail,
+  className = '',
+  articleProps = {},
+}) {
   const [quantity, setQuantity] = useState(1);
   const [imageFailed, setImageFailed] = useState(false);
   const {
@@ -20,14 +28,7 @@ export function ProductCard({ product, onAddToCart, className = '', articleProps
     source = 'products',
   } = product;
   const hasDiscount = Number(discountPercent) > 0;
-  const cartPayload = {
-    id: String(id ?? ''),
-    name,
-    price: Number(finalPrice),
-    image: imageUrl,
-    source,
-    quantity,
-  };
+  const cartPayload = buildProductCartPayload(product, quantity);
 
   return (
     <Card as="article" {...articleProps} className={`${styles.card} ${className}`.trim()}>
@@ -92,17 +93,29 @@ export function ProductCard({ product, onAddToCart, className = '', articleProps
               +
             </button>
           </div>
-          <Button
-            className={`btn-add-to-cart ${styles.button}`}
-            data-id={id ?? ''}
-            data-name={name}
-            data-price={String(finalPrice)}
-            data-image={imageUrl}
-            data-source={source}
-            onClick={() => onAddToCart(cartPayload)}
-          >
-            Agregar al carrito
-          </Button>
+          <div className={styles.actionButtons}>
+            {onOpenDetail ? (
+              <Button
+                variant="ghost"
+                className={styles.detailButton}
+                onClick={(event) => onOpenDetail(product, event)}
+              >
+                <Eye size={18} aria-hidden="true" />
+                Ver detalle
+              </Button>
+            ) : null}
+            <Button
+              className={`btn-add-to-cart ${styles.button}`}
+              data-id={id ?? ''}
+              data-name={name}
+              data-price={String(finalPrice)}
+              data-image={imageUrl}
+              data-source={source}
+              onClick={() => onAddToCart(cartPayload)}
+            >
+              Agregar al carrito
+            </Button>
+          </div>
         </div>
       </div>
     </Card>

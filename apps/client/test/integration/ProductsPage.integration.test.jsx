@@ -266,6 +266,96 @@ describe('ProductsPage integration', () => {
     });
   });
 
+  it('opens and closes an accessible product detail dialog from products', async () => {
+    render(<ProductsPage />);
+
+    const burgerCard = (await screen.findByRole('heading', { name: 'Burger' })).closest('article');
+    const detailButton = within(burgerCard).getByRole('button', { name: 'Ver detalle' });
+
+    detailButton.focus();
+    fireEvent.click(detailButton);
+
+    const dialog = screen.getByRole('dialog', { name: 'Burger' });
+    expect(dialog.getAttribute('aria-modal')).toBe('true');
+    expect(within(dialog).getByText('Principales')).toBeTruthy();
+    expect(within(dialog).getByText('Con papas')).toBeTruthy();
+    expect(within(dialog).getByText('-20%')).toBeTruthy();
+    expect(within(dialog).getByText('$ 800')).toBeTruthy();
+    expect(within(dialog).getByText('$ 1.000')).toBeTruthy();
+
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Cerrar detalle de Burger' }));
+
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(document.activeElement).toBe(detailButton);
+  });
+
+  it('closes the product detail dialog with Escape and backdrop', async () => {
+    render(<ProductsPage />);
+
+    const burgerCard = (await screen.findByRole('heading', { name: 'Burger' })).closest('article');
+    const detailButton = within(burgerCard).getByRole('button', { name: 'Ver detalle' });
+
+    fireEvent.click(detailButton);
+    expect(screen.getByRole('dialog', { name: 'Burger' })).toBeTruthy();
+
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(screen.queryByRole('dialog')).toBeNull();
+
+    fireEvent.click(detailButton);
+    const dialog = screen.getByRole('dialog', { name: 'Burger' });
+    fireEvent.mouseDown(dialog.parentElement);
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('adds a selected quantity from product detail without changing cart behavior', async () => {
+    const { addToCart, getCart, updateQuantity } = await import('/src/utils/cartService.js');
+    getCart.mockReturnValue([]);
+
+    render(<ProductsPage />);
+
+    const burgerCard = (await screen.findByRole('heading', { name: 'Burger' })).closest('article');
+    fireEvent.click(within(burgerCard).getByRole('button', { name: 'Ver detalle' }));
+
+    const dialog = screen.getByRole('dialog', { name: 'Burger' });
+    const increaseButton = within(dialog).getByRole('button', {
+      name: 'Aumentar cantidad de Burger',
+    });
+
+    fireEvent.click(increaseButton);
+    fireEvent.click(increaseButton);
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Agregar al carrito' }));
+
+    expect(addToCart).toHaveBeenCalledWith({
+      id: '101',
+      name: 'Burger',
+      price: 800,
+      image: '/img/burger.jpg',
+      source: 'products',
+      quantity: 3,
+    });
+    expect(updateQuantity).toHaveBeenCalledWith('101', 3);
+  });
+
+  it('keeps search filters and pagination working after opening product detail', async () => {
+    render(<ProductsPage />);
+
+    const burgerCard = (await screen.findByRole('heading', { name: 'Burger' })).closest('article');
+    fireEvent.click(within(burgerCard).getByRole('button', { name: 'Ver detalle' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Cerrar detalle de Burger' }));
+
+    fireEvent.click(screen.getByRole('button', { name: /Ver p.gina siguiente de productos/ }));
+    expect(screen.getByText('Pizza fugazzeta')).toBeTruthy();
+
+    fireEvent.change(screen.getByLabelText('Buscar productos'), {
+      target: { value: 'pizza' },
+    });
+    expect(screen.getByText('Mostrando 1-2 de 2 productos')).toBeTruthy();
+    expect(screen.getByText('Pizza muzzarella')).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'En oferta' }));
+    expect(screen.getByText('No encontramos resultados')).toBeTruthy();
+  });
+
   it('passes selected quantity without changing cart service behavior', async () => {
     const { addToCart, getCart, updateQuantity } = await import('/src/utils/cartService.js');
     getCart.mockReturnValue([]);

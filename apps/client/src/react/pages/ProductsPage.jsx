@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { addToCart, getCart, updateQuantity } from '/src/utils/cartService.js';
 import { showSnackbar } from '/src/utils/showSnackbar.js';
 import { getDiscountedPrice } from '/src/utils/helpers.js';
@@ -8,6 +8,7 @@ import { EmptyState, ErrorState, LoadingState } from '/src/components/ui/State.j
 import { fetchPublicCategories, fetchPublicProducts } from '../services/publicApi.js';
 import { useAsyncResource } from '../hooks/useAsyncResource.jsx';
 import { ProductCard } from '../components/ProductCard.jsx';
+import { ProductDetailOverlay } from '../components/ProductDetailOverlay.jsx';
 import styles from './ProductsPage.module.css';
 
 const PRODUCTS_PAGE_SIZE = 6;
@@ -95,6 +96,9 @@ export function ProductsPage() {
   const [query, setQuery] = useState('');
   const [selectedFilterId, setSelectedFilterId] = useState(ALL_FILTER_ID);
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const detailTriggerRef = useRef(null);
 
   const catalogResource = useAsyncResource(async () => {
     const [categories, products] = await Promise.all([
@@ -167,6 +171,17 @@ export function ProductsPage() {
     setSelectedFilterId(ALL_FILTER_ID);
     setCurrentPage(1);
   };
+
+  const handleOpenDetail = (product, event) => {
+    detailTriggerRef.current = event?.currentTarget || null;
+    setSelectedProduct(product);
+    setIsDetailOpen(true);
+  };
+
+  const handleCloseDetail = useCallback(() => {
+    setIsDetailOpen(false);
+    setSelectedProduct(null);
+  }, []);
 
   const handleAddToCart = (product) => {
     const existingQuantity =
@@ -321,6 +336,7 @@ export function ProductsPage() {
                   articleProps={{ style: { '--card-index': index } }}
                   product={product}
                   onAddToCart={handleAddToCart}
+                  onOpenDetail={handleOpenDetail}
                 />
               ))}
             </section>
@@ -353,6 +369,14 @@ export function ProductsPage() {
           ) : null}
         </section>
       ) : null}
+      <ProductDetailOverlay
+        key={selectedProduct?.id || selectedProduct?.name || 'closed-product-detail'}
+        product={selectedProduct}
+        isOpen={isDetailOpen}
+        onClose={handleCloseDetail}
+        onAddToCart={handleAddToCart}
+        returnFocusElement={detailTriggerRef.current}
+      />
     </main>
   );
 }
