@@ -71,6 +71,7 @@ describe('HomePage integration baseline', () => {
     render(<HomePage />);
 
     const button = await screen.findByRole('button', { name: 'Agregar al carrito' });
+    expect(screen.queryByRole('button', { name: 'Ver detalle' })).toBeNull();
     expect(button.closest('article')?.getAttribute('data-offer-slide')).toBe('0');
     expect(button.className).toContain('btn-add-to-cart');
     expect(button.getAttribute('data-id')).toBe('10');
