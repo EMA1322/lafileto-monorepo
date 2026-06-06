@@ -3,9 +3,9 @@ import '/src/styles/tokens.css';
 import '/src/styles/header.css';
 import '/src/styles/footer.css';
 
-import { initHeader } from '/src/components/header/header.js';
 import { initFooter } from '/src/components/footer/footer.js';
 import { mountReactShell } from '/src/react/bootstrap.jsx';
+import { mountReactHeader } from '/src/react/headerBootstrap.jsx';
 
 async function loadFragment(hostSelector, htmlPath) {
   const host = document.querySelector(hostSelector);
@@ -21,17 +21,13 @@ async function loadFragment(hostSelector, htmlPath) {
   }
 }
 
-async function loadHeader() {
-  await loadFragment("body > header[role='banner']", '/src/components/header/header.html');
-  initHeader();
-}
-
 async function loadFooter() {
   await loadFragment("body > footer[role='contentinfo']", '/src/components/footer/footer.html');
   initFooter();
 }
 
 window.addEventListener('DOMContentLoaded', async () => {
-  await Promise.all([loadHeader(), loadFooter()]);
+  mountReactHeader();
+  await loadFooter();
   mountReactShell('main-content');
 });
