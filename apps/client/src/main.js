@@ -3,31 +3,12 @@ import '/src/styles/tokens.css';
 import '/src/styles/header.css';
 import '/src/styles/footer.css';
 
-import { initFooter } from '/src/components/footer/footer.js';
 import { mountReactShell } from '/src/react/bootstrap.jsx';
+import { mountReactFooter } from '/src/react/footerBootstrap.jsx';
 import { mountReactHeader } from '/src/react/headerBootstrap.jsx';
 
-async function loadFragment(hostSelector, htmlPath) {
-  const host = document.querySelector(hostSelector);
-  if (!host) return;
-
-  try {
-    const res = await fetch(htmlPath);
-    if (!res.ok) throw new Error(`Fetch ${htmlPath} -> ${res.status}`);
-    const html = await res.text();
-    host.innerHTML = html;
-  } catch (err) {
-    console.error(`[main] Error loading fragment ${htmlPath}:`, err);
-  }
-}
-
-async function loadFooter() {
-  await loadFragment("body > footer[role='contentinfo']", '/src/components/footer/footer.html');
-  initFooter();
-}
-
-window.addEventListener('DOMContentLoaded', async () => {
+window.addEventListener('DOMContentLoaded', () => {
   mountReactHeader();
-  await loadFooter();
+  mountReactFooter();
   mountReactShell('main-content');
 });
