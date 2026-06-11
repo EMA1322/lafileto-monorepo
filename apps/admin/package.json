@@ -14,6 +14,7 @@
     "optimize:images": "node ../../scripts/optimize-images.mjs ./public/img"
   },
   "devDependencies": {
+    "@vitejs/plugin-react": "^4.7.0",
     "rollup-plugin-visualizer": "workspace:*",
     "vite": "^5.4.0"
   },
@@ -23,6 +24,8 @@
     "@motionone/dom": "^10.18.0",
     "date-fns": "^4.1.0",
     "focus-trap": "^8.0.0",
-    "normalize.css": "^8.0.1"
+    "normalize.css": "^8.0.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   }
 }
