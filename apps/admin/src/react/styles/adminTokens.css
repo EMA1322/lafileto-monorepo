@@ -1,0 +1,30 @@
+.adminReactTheme {
+  --admin-react-bg: #090b10;
+  --admin-react-surface: #11151d;
+  --admin-react-surface-elevated: #171c26;
+  --admin-react-surface-muted: #1f2632;
+  --admin-react-border: rgba(255, 255, 255, 0.1);
+  --admin-react-border-strong: rgba(255, 255, 255, 0.18);
+  --admin-react-text: #f8fafc;
+  --admin-react-text-muted: #b7c0cf;
+  --admin-react-text-soft: #8792a3;
+  --admin-react-accent: #faa718;
+  --admin-react-accent-hover: #ffc04d;
+  --admin-react-accent-contrast: #171006;
+  --admin-react-danger: #f87171;
+  --admin-react-success: #34d399;
+  --admin-react-warning: #fbbf24;
+  --admin-react-info: #60a5fa;
+  --admin-react-focus-ring: rgba(250, 167, 24, 0.42);
+  --admin-react-radius-sm: 0.375rem;
+  --admin-react-radius-md: 0.5rem;
+  --admin-react-radius-lg: 0.75rem;
+  --admin-react-space-1: 0.25rem;
+  --admin-react-space-2: 0.5rem;
+  --admin-react-space-3: 0.75rem;
+  --admin-react-space-4: 1rem;
+  --admin-react-space-5: 1.5rem;
+  --admin-react-shadow-soft: 0 18px 50px rgba(0, 0, 0, 0.28);
+  --admin-react-z-drawer: 1100;
+  --admin-react-z-modal: 1200;
+}

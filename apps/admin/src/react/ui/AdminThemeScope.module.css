@@ -1,0 +1,4 @@
+.scope {
+  color: var(--admin-react-text, #f8fafc);
+  background: var(--admin-react-bg, #090b10);
+}

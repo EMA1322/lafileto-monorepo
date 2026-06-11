@@ -1,0 +1,118 @@
+.button {
+  display: inline-flex;
+  min-height: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  gap: var(--admin-react-space-2, 0.5rem);
+  border: 1px solid transparent;
+  border-radius: var(--admin-react-radius-md, 0.5rem);
+  font: inherit;
+  font-weight: 700;
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--admin-react-focus-ring, rgba(250, 167, 24, 0.42));
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.56;
+  transform: none;
+}
+
+.sm {
+  min-height: 2rem;
+  padding: 0 var(--admin-react-space-3, 0.75rem);
+  font-size: 0.875rem;
+}
+
+.md {
+  min-height: 2.5rem;
+  padding: 0 var(--admin-react-space-4, 1rem);
+  font-size: 0.9375rem;
+}
+
+.primary {
+  background: var(--admin-react-accent, #faa718);
+  border-color: var(--admin-react-accent, #faa718);
+  color: var(--admin-react-accent-contrast, #171006);
+}
+
+.primary:hover:not(:disabled) {
+  background: var(--admin-react-accent-hover, #ffc04d);
+  border-color: var(--admin-react-accent-hover, #ffc04d);
+}
+
+.secondary {
+  background: var(--admin-react-surface-muted, #1f2632);
+  border-color: var(--admin-react-border-strong, rgba(255, 255, 255, 0.18));
+  color: var(--admin-react-text, #f8fafc);
+}
+
+.secondary:hover:not(:disabled),
+.ghost:hover:not(:disabled) {
+  background: var(--admin-react-surface-elevated, #171c26);
+  border-color: var(--admin-react-border-strong, rgba(255, 255, 255, 0.18));
+}
+
+.ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--admin-react-text-muted, #b7c0cf);
+}
+
+.danger {
+  background: color-mix(in srgb, var(--admin-react-danger, #f87171) 16%, transparent);
+  border-color: color-mix(in srgb, var(--admin-react-danger, #f87171) 42%, transparent);
+  color: var(--admin-react-danger, #f87171);
+}
+
+.danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--admin-react-danger, #f87171) 24%, transparent);
+}
+
+.spinner {
+  width: 0.9rem;
+  height: 0.9rem;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 999px;
+  animation: spin 800ms linear infinite;
+}
+
+.content {
+  display: inline-flex;
+  align-items: center;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button,
+  .spinner {
+    transition: none;
+    animation: none;
+  }
+
+  .button:hover:not(:disabled) {
+    transform: none;
+  }
+}

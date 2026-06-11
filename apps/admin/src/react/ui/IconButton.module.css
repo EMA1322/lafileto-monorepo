@@ -1,0 +1,64 @@
+.button {
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: var(--admin-react-radius-md, 0.5rem);
+  color: var(--admin-react-text-muted, #b7c0cf);
+  background: transparent;
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--admin-react-focus-ring, rgba(250, 167, 24, 0.42));
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.56;
+}
+
+.sm {
+  width: 2rem;
+  height: 2rem;
+}
+
+.md {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.ghost:hover:not(:disabled) {
+  background: var(--admin-react-surface-muted, #1f2632);
+  color: var(--admin-react-text, #f8fafc);
+}
+
+.secondary {
+  background: var(--admin-react-surface-muted, #1f2632);
+  border-color: var(--admin-react-border, rgba(255, 255, 255, 0.1));
+  color: var(--admin-react-text, #f8fafc);
+}
+
+.secondary:hover:not(:disabled) {
+  border-color: var(--admin-react-border-strong, rgba(255, 255, 255, 0.18));
+}
+
+.danger {
+  color: var(--admin-react-danger, #f87171);
+}
+
+.danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--admin-react-danger, #f87171) 14%, transparent);
+  border-color: color-mix(in srgb, var(--admin-react-danger, #f87171) 38%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button {
+    transition: none;
+  }
+}

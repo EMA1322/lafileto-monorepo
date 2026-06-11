@@ -1,0 +1,77 @@
+.block {
+  display: grid;
+  justify-items: center;
+  gap: var(--admin-react-space-2, 0.5rem);
+  padding: var(--admin-react-space-5, 1.5rem);
+  border: 1px solid var(--admin-react-border, rgba(255, 255, 255, 0.1));
+  border-radius: var(--admin-react-radius-lg, 0.75rem);
+  color: var(--admin-react-text-muted, #b7c0cf);
+  background: var(--admin-react-surface, #11151d);
+  text-align: center;
+}
+
+.title {
+  margin: 0;
+  color: var(--admin-react-text, #f8fafc);
+  font-size: 1rem;
+  line-height: 1.25;
+}
+
+.description {
+  max-width: 34rem;
+  margin: 0;
+  color: var(--admin-react-text-muted, #b7c0cf);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.action {
+  margin-top: var(--admin-react-space-2, 0.5rem);
+}
+
+.loading {
+  border-color: color-mix(in srgb, var(--admin-react-info, #60a5fa) 34%, transparent);
+}
+
+.empty {
+  border-style: dashed;
+}
+
+.error {
+  border-color: color-mix(in srgb, var(--admin-react-danger, #f87171) 42%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--admin-react-danger, #f87171) 10%,
+    var(--admin-react-surface, #11151d)
+  );
+}
+
+.success {
+  border-color: color-mix(in srgb, var(--admin-react-success, #34d399) 42%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--admin-react-success, #34d399) 10%,
+    var(--admin-react-surface, #11151d)
+  );
+}
+
+.spinner {
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 2px solid color-mix(in srgb, var(--admin-react-info, #60a5fa) 42%, transparent);
+  border-top-color: var(--admin-react-info, #60a5fa);
+  border-radius: 999px;
+  animation: spin 800ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+}
