@@ -1,14 +1,30 @@
 import { useEffect, useMemo, useState } from 'react';
+import { ArrowRight, Minus, Plus, ShoppingBag, ShoppingCart, Trash } from 'lucide-react';
 import { clearCart, getCart, removeFromCart, updateQuantity } from '/src/utils/cartService.js';
 import { formatPrice } from '/src/utils/helpers.js';
 import { loadCommercialContext } from '/src/utils/commercialContext.js';
-import { showSnackbar } from '/src/utils/showSnackbar.js';
 import { AsyncStateNotice } from '../components/AsyncStateNotice.jsx';
-import '/src/styles/cart.css';
+import styles from './CartPage.module.css';
+
+const SOURCE_LABELS = {
+  offers: 'Oferta destacada',
+  products: 'Menu',
+};
 
 function getSafeCart() {
   const cart = getCart();
   return Array.isArray(cart) ? cart : [];
+}
+
+function getSourceLabel(source) {
+  const key = String(source || '')
+    .trim()
+    .toLowerCase();
+  return SOURCE_LABELS[key] || 'Producto';
+}
+
+function getLineTotal(item) {
+  return Number(item.price || 0) * Number(item.quantity || 0);
 }
 
 export function CartPage() {
@@ -16,8 +32,19 @@ export function CartPage() {
   const [statusMessage, setStatusMessage] = useState('');
   const [businessOpen, setBusinessOpen] = useState(true);
 
-  const total = useMemo(() => {
-    return items.reduce((acc, item) => acc + Number(item.price || 0) * Number(item.quantity || 0), 0);
+  const totals = useMemo(() => {
+    return items.reduce(
+      (acc, item) => {
+        const quantity = Number(item.quantity || 0);
+        const lineTotal = getLineTotal(item);
+
+        return {
+          amount: acc.amount + lineTotal,
+          units: acc.units + quantity,
+        };
+      },
+      { amount: 0, units: 0 },
+    );
   }, [items]);
 
   useEffect(() => {
@@ -48,7 +75,7 @@ export function CartPage() {
       setBusinessOpen(context.businessOpen);
 
       if (!context.businessOpen) {
-        setStatusMessage('We are currently closed.');
+        setStatusMessage('El local esta cerrado por ahora.');
         return;
       }
 
@@ -68,121 +95,228 @@ export function CartPage() {
     const item = items.find((entry) => String(entry.id) === String(id));
     if (!item) return;
 
-    const nextQty = Math.max(1, Number(item.quantity || 1) + delta);
+    const currentQty = Math.max(1, Number(item.quantity || 1));
+    const nextQty = Math.max(1, currentQty + delta);
+    if (nextQty === currentQty) return;
+
     updateQuantity(String(id), nextQty);
-    setStatusMessage(`Quantity for ${item.name}: ${nextQty}`);
+    setStatusMessage(`Cantidad de ${item.name}: ${nextQty}`);
   };
 
   const handleRemove = (id) => {
+    const item = items.find((entry) => String(entry.id) === String(id));
     removeFromCart(String(id));
+
+    if (item) {
+      setStatusMessage(`${item.name} eliminado del carrito.`);
+    }
   };
 
   const handleClear = () => {
     if (!items.length) return;
 
-    const shouldClear = window.confirm('Clear cart?');
+    const shouldClear = window.confirm('Vaciar carrito?');
     if (!shouldClear) return;
 
     clearCart();
-    setStatusMessage('Cart cleared.');
-  };
-
-  const handleConfirm = (event) => {
-    if (isConfirmBlocked) {
-      event.preventDefault();
-      setStatusMessage(confirmBlockedMessage);
-      showSnackbar(confirmBlockedMessage);
-    }
+    setStatusMessage('Carrito vaciado.');
   };
 
   const isEmpty = items.length === 0;
   const isConfirmBlocked = isEmpty || !businessOpen;
-  const confirmBlockedMessage = isEmpty ? 'Your cart is empty.' : 'We are currently closed.';
 
   return (
-    <main className="cart" aria-labelledby="cart-title">
-      <div className="cart__container">
-        <header className="cart__header">
-          <h1 id="cart-title" className="cart__title">Your cart</h1>
-          <p className="cart__subtitle">Review your products before confirming the order.</p>
+    <main className={styles.page} aria-labelledby="cart-title">
+      <div className={styles.container}>
+        <header className={styles.header}>
+          <div className={styles.eyebrow}>
+            <ShoppingCart size={18} aria-hidden="true" />
+            <span>Carrito</span>
+          </div>
+          <h1 id="cart-title" className={styles.title}>
+            Revision del pedido
+          </h1>
+          <p className={styles.subtitle}>
+            Controla productos, cantidades y total antes de confirmar por WhatsApp.
+          </p>
         </header>
 
-        <div id="cart-status" className="cart__status" role="status" aria-live="polite">{statusMessage}</div>
+        <div id="cart-status" className={styles.status} role="status" aria-live="polite">
+          {statusMessage}
+        </div>
 
-        <div className="cart__layout">
-          <div className="cart__list">
-            {isEmpty ? (
-              <div id="cart-empty" className="cart__empty">
-                <span aria-hidden="true">🛒</span>
-                <h2 className="cart__empty-title">Your cart is empty</h2>
-                <p className="cart__empty-text">Add products from the menu to continue.</p>
-                <a className="btn cart__empty-cta" href="#products">Go to menu</a>
+        {isEmpty ? (
+          <section id="cart-empty" className={styles.empty} aria-label="Carrito vacio">
+            <span className={styles.emptyIcon} aria-hidden="true">
+              <ShoppingBag size={34} />
+            </span>
+            <div className={styles.emptyCopy}>
+              <h2 className={styles.emptyTitle}>Tu carrito esta vacio</h2>
+              <p className={styles.emptyText}>
+                Elegi productos del menu y volve para revisar tu pedido.
+              </p>
+            </div>
+            <a className={styles.primaryLink} href="#products">
+              Ver productos
+              <ArrowRight size={18} aria-hidden="true" />
+            </a>
+          </section>
+        ) : (
+          <div className={styles.layout}>
+            <section className={styles.itemsPanel} aria-labelledby="cart-items-title">
+              <div className={styles.sectionHeader}>
+                <div>
+                  <h2 id="cart-items-title" className={styles.sectionTitle}>
+                    Productos agregados
+                  </h2>
+                  <p className={styles.sectionNote}>
+                    {totals.units} {totals.units === 1 ? 'unidad' : 'unidades'} en el carrito
+                  </p>
+                </div>
               </div>
-            ) : (
-              <ul id="cart-items" className="cart__items" aria-busy="false">
+
+              <ul id="cart-items" className={styles.items} aria-busy="false">
                 {items.map((item) => {
-                  const lineTotal = Number(item.price || 0) * Number(item.quantity || 0);
+                  const quantity = Number(item.quantity || 0);
+                  const lineTotal = getLineTotal(item);
+                  const sourceLabel = getSourceLabel(item.source);
+
                   return (
-                    <li className="cart__item" key={item.id} data-id={String(item.id)}>
-                      <div className="cart__image">
-                        <img src={item.image || '/img/hero1.png'} alt={item.name || 'Cart item'} loading="lazy" />
+                    <li className={styles.item} key={item.id} data-id={String(item.id)}>
+                      <div className={styles.imageWrap}>
+                        <img
+                          className={styles.image}
+                          src={item.image || '/img/hero1.png'}
+                          alt={item.name || 'Producto del carrito'}
+                          loading="lazy"
+                        />
                       </div>
 
-                      <div className="cart__info">
-                        <h3 className="cart__name">{item.name}</h3>
-                        <div className="cart__price">{formatPrice(item.price)}</div>
-
-                        <div className="cart__controls">
-                          <div className="cart__qty-group" role="group" aria-label={`Quantity controls for ${item.name}`}>
-                            <button className="cart__qty-btn" type="button" aria-label="Decrease quantity" onClick={() => handleChangeQty(item.id, -1)}>−</button>
-                            <span className="cart__qty" aria-live="polite">{item.quantity}</span>
-                            <button className="cart__qty-btn" type="button" aria-label="Increase quantity" onClick={() => handleChangeQty(item.id, 1)}>+</button>
+                      <div className={styles.itemBody}>
+                        <div className={styles.itemTop}>
+                          <div className={styles.itemCopy}>
+                            <p className={styles.source}>{sourceLabel}</p>
+                            <h3 className={styles.itemName}>{item.name}</h3>
                           </div>
-
-                          <button className="cart__remove" type="button" onClick={() => handleRemove(item.id)} aria-label={`Remove ${item.name} from cart`}>
-                            Remove
+                          <button
+                            className={styles.removeButton}
+                            type="button"
+                            onClick={() => handleRemove(item.id)}
+                            aria-label={`Eliminar ${item.name} del carrito`}
+                          >
+                            <Trash size={18} aria-hidden="true" />
                           </button>
                         </div>
 
-                        <div className="cart__price">Item subtotal: {formatPrice(lineTotal)}</div>
+                        <dl className={styles.itemMeta}>
+                          <div>
+                            <dt>Precio unitario</dt>
+                            <dd>{formatPrice(item.price)}</dd>
+                          </div>
+                          <div>
+                            <dt>Subtotal</dt>
+                            <dd>{formatPrice(lineTotal)}</dd>
+                          </div>
+                        </dl>
+
+                        <div
+                          className={styles.quantityGroup}
+                          role="group"
+                          aria-label={`Cantidad de ${item.name}`}
+                        >
+                          <button
+                            className={styles.quantityButton}
+                            type="button"
+                            aria-label={`Disminuir cantidad de ${item.name}`}
+                            disabled={quantity <= 1}
+                            onClick={() => handleChangeQty(item.id, -1)}
+                          >
+                            <Minus size={17} aria-hidden="true" />
+                          </button>
+                          <span className={styles.quantityValue} aria-live="polite">
+                            {quantity}
+                          </span>
+                          <button
+                            className={styles.quantityButton}
+                            type="button"
+                            aria-label={`Aumentar cantidad de ${item.name}`}
+                            onClick={() => handleChangeQty(item.id, 1)}
+                          >
+                            <Plus size={17} aria-hidden="true" />
+                          </button>
+                        </div>
                       </div>
                     </li>
                   );
                 })}
               </ul>
-            )}
+            </section>
+
+            <aside className={styles.summary} aria-labelledby="cart-summary-title">
+              <div className={styles.summaryHeader}>
+                <h2 id="cart-summary-title" className={styles.summaryTitle}>
+                  Resumen
+                </h2>
+                <span className={styles.summaryBadge}>
+                  {totals.units} {totals.units === 1 ? 'item' : 'items'}
+                </span>
+              </div>
+
+              <div className={styles.summaryRows} aria-live="polite">
+                <div className={styles.summaryRow}>
+                  <span>Subtotal</span>
+                  <strong id="cart-subtotal">{formatPrice(totals.amount)}</strong>
+                </div>
+                <div className={styles.summaryRow}>
+                  <span>Envio</span>
+                  <span>A coordinar</span>
+                </div>
+                <div className={styles.totalRow}>
+                  <span>Total</span>
+                  <strong id="cart-total">{formatPrice(totals.amount)}</strong>
+                </div>
+              </div>
+
+              {!businessOpen ? (
+                <AsyncStateNotice
+                  state="error"
+                  message="El local esta cerrado por ahora."
+                  className={styles.closedNote}
+                />
+              ) : null}
+
+              <div className={styles.actions}>
+                {isConfirmBlocked ? (
+                  <button
+                    className={styles.primaryButton}
+                    type="button"
+                    disabled
+                    aria-disabled="true"
+                  >
+                    Confirmar pedido
+                    <ArrowRight size={18} aria-hidden="true" />
+                  </button>
+                ) : (
+                  <a className={styles.primaryLink} href="#confirm">
+                    Confirmar pedido
+                    <ArrowRight size={18} aria-hidden="true" />
+                  </a>
+                )}
+                <a className={styles.secondaryLink} href="#products">
+                  Seguir comprando
+                </a>
+                <button
+                  id="clear-cart-btn"
+                  className={styles.clearButton}
+                  type="button"
+                  onClick={handleClear}
+                >
+                  Vaciar carrito
+                </button>
+              </div>
+            </aside>
           </div>
-
-          <aside className="cart__summary" aria-label="Order summary">
-            <div className="cart__summary-row">
-              <span>Subtotal</span>
-              <span id="cart-subtotal">{formatPrice(total)}</span>
-            </div>
-            <div className="cart__summary-row cart__summary-total">
-              <span>Total</span>
-              <span id="cart-total">{formatPrice(total)}</span>
-            </div>
-
-            {!businessOpen ? (
-              <AsyncStateNotice state="error" message="We are currently closed." className="cart__closed-note" />
-            ) : null}
-
-            <div className="cart__summary-actions">
-              <a
-                href="#confirm"
-                className="btn cart__confirm-btn"
-                aria-disabled={isConfirmBlocked}
-                onClick={handleConfirm}
-                tabIndex={isConfirmBlocked ? -1 : 0}
-              >
-                Confirm order
-              </a>
-              <button id="clear-cart-btn" className="btn btn-outline cart__clear-btn" type="button" disabled={isEmpty} onClick={handleClear}>
-                Clear cart
-              </button>
-            </div>
-          </aside>
-        </div>
+        )}
       </div>
     </main>
   );
