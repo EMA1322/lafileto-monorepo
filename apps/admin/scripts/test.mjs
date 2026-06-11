@@ -1,9 +1,11 @@
 import { runProductsContractTests } from '../test/products.contract.test.mjs';
 import { runHashSyncTests } from '../test/hash-sync.test.mjs';
+import { runReactViewAdapterTests } from '../test/react-view-adapter.test.mjs';
 
 const suites = [
   { name: 'products contract helpers', runner: runProductsContractTests },
   { name: 'hash sync helpers', runner: runHashSyncTests },
+  { name: 'react view adapter', runner: runReactViewAdapterTests },
 ];
 
 let hasError = false;

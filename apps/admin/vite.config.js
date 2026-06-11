@@ -1,22 +1,27 @@
 import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 import path from 'path';
 import { visualizer } from 'rollup-plugin-visualizer';
 
 export default defineConfig(() => {
-  const shouldAnalyze = Boolean(process.env.ANALYZE_BUNDLE) && process.env.ANALYZE_BUNDLE !== 'false';
+  const shouldAnalyze =
+    Boolean(process.env.ANALYZE_BUNDLE) && process.env.ANALYZE_BUNDLE !== 'false';
   const backendTarget = process.env.VITE_API_PROXY_TARGET || 'http://localhost:3000';
 
   return {
-    plugins: shouldAnalyze
-      ? [
-          visualizer({
-            filename: path.resolve(__dirname, 'dist/stats-admin.html'),
-            gzipSize: true,
-            brotliSize: true,
-            open: false,
-          }),
-        ]
-      : [],
+    plugins: [
+      react(),
+      ...(shouldAnalyze
+        ? [
+            visualizer({
+              filename: path.resolve(__dirname, 'dist/stats-admin.html'),
+              gzipSize: true,
+              brotliSize: true,
+              open: false,
+            }),
+          ]
+        : []),
+    ],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, 'src'),

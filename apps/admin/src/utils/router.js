@@ -4,53 +4,58 @@
 // ================================
 
 import { renderView } from './renderView.js';
+import { mountReactView, unmountReactView } from './reactViewAdapter.js';
 import headerCssUrl from '@/styles/core/header.css?url';
 import { ensureStylesheetLoaded } from './styles.js';
-import {
-  isAuthenticated,
-  ensureAuthReady,
-  pickHomeRoute,
-  logout
-} from './auth.js';
+import { isAuthenticated, ensureAuthReady, pickHomeRoute, logout } from './auth.js';
 import notify from './notify.js';
 import { isFeatureEnabled } from './featureFlags.js';
 import {
   ensureRbacLoaded,
   moduleKeyFromHash, // convención única de moduleKey (UI ↔ RBAC ↔ API)
-  canRead
+  canRead,
 } from './rbac.js';
 import { uiNotFound } from './ui-templates.js';
 
 const FEATURE_SETTINGS = isFeatureEnabled(import.meta.env.VITE_FEATURE_SETTINGS);
 let headerModuleRef = null;
+const ROUTE_TYPE_LEGACY = 'legacy';
+const ROUTE_TYPE_REACT = 'react';
 
 // Rutas centralizadas (mantener en sync con /src/components/*)
 const routes = {
   login: {
+    type: ROUTE_TYPE_LEGACY,
     viewHtmlPath: '/src/components/login/login.html',
     cssHref: '/src/styles/login.css',
   },
   dashboard: {
+    type: ROUTE_TYPE_LEGACY,
     viewHtmlPath: '/src/components/dashboard/dashboard.html',
     cssHref: '/src/styles/dashboard.css',
   },
   products: {
+    type: ROUTE_TYPE_LEGACY,
     viewHtmlPath: '/src/components/products/products.html',
     cssHref: '/src/styles/products.css',
   },
   categories: {
+    type: ROUTE_TYPE_LEGACY,
     viewHtmlPath: '/src/components/categories/categories.html',
     cssHref: '/src/styles/categories.css',
   },
   users: {
+    type: ROUTE_TYPE_LEGACY,
     viewHtmlPath: '/src/components/users/users.html',
     cssHref: '/src/styles/users.css',
   },
   settings: {
+    type: ROUTE_TYPE_LEGACY,
     viewHtmlPath: '/src/components/settings/settings.html',
     cssHref: '/src/styles/settings.css',
   },
   'not-authorized': {
+    type: ROUTE_TYPE_LEGACY,
     viewHtmlPath: '/src/components/no-access.html',
     cssHref: '/src/styles/no-access.css',
   },
@@ -58,11 +63,16 @@ const routes = {
 
 /** Scrollea arriba en cada navegación (mejora UX) */
 function scrollToTop() {
-  try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch { window.scrollTo(0, 0); }
+  try {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch {
+    window.scrollTo(0, 0);
+  }
 }
 
 /** Renderiza No-Access con CTA dinámico (según permisos) */
 async function renderNoAccess() {
+  unmountReactView();
   const routeConfig = routes['not-authorized'];
   await ensureStylesheetLoaded(routeConfig?.cssHref);
   await renderView(routeConfig?.viewHtmlPath || '/src/components/no-access.html');
@@ -126,6 +136,56 @@ function destroyAdminHeaderIfNeeded() {
   headerContainer.innerHTML = '';
 }
 
+async function loadReactComponent(routeConfig) {
+  if (typeof routeConfig.component === 'function') {
+    const componentModule = await routeConfig.component();
+    return componentModule?.default || componentModule;
+  }
+
+  return routeConfig.component;
+}
+
+function resolveReactViewContainer() {
+  const app = document.getElementById('app');
+  const existingMain = document.getElementById('main-content');
+  const main = existingMain || document.createElement('main');
+
+  if (!existingMain && !app) {
+    throw new Error('React route requires #app or #main-content.');
+  }
+
+  if (!existingMain) {
+    main.id = 'main-content';
+    main.setAttribute('role', 'main');
+    main.setAttribute('tabindex', '-1');
+    app?.replaceChildren(main);
+  }
+
+  const reactMount = document.createElement('div');
+  reactMount.setAttribute('data-admin-react-view-root', 'true');
+  main.replaceChildren(reactMount);
+
+  return reactMount;
+}
+
+async function renderReactRoute(routeConfig) {
+  const component = await loadReactComponent(routeConfig);
+  if (!component) {
+    throw new Error('React route is missing a component.');
+  }
+
+  if (routeConfig.cssHref) {
+    await ensureStylesheetLoaded(routeConfig.cssHref);
+  }
+
+  const container = resolveReactViewContainer();
+  mountReactView({
+    container,
+    component,
+    props: routeConfig.props || {},
+  });
+}
+
 /** Router principal */
 async function router() {
   // Hash normalizado (sin '#', minúsculas)
@@ -174,7 +234,7 @@ async function router() {
     window.location.hash = '#dashboard';
     notify('Configuración deshabilitada en este entorno.', {
       type: 'warning',
-      code: 'FEATURE_DISABLED'
+      code: 'FEATURE_DISABLED',
     });
     return;
   }
@@ -191,6 +251,7 @@ async function router() {
   // -------- 404 si la ruta no existe
   const routeConfig = routes[hashRoute];
   if (!routeConfig) {
+    unmountReactView();
     const app = document.getElementById('app');
     if (app) {
       const message = hashRoute ? `La ruta #${hashRoute} no existe.` : undefined;
@@ -202,6 +263,12 @@ async function router() {
   // -------- Carga de vista
   try {
     scrollToTop();
+    if (routeConfig.type === ROUTE_TYPE_REACT) {
+      await renderReactRoute(routeConfig);
+      return;
+    }
+
+    unmountReactView();
     await ensureStylesheetLoaded(routeConfig.cssHref);
     await renderView(routeConfig.viewHtmlPath);
 
