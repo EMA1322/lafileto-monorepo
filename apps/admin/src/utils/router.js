@@ -25,9 +25,8 @@ const ROUTE_TYPE_REACT = 'react';
 // Rutas centralizadas (mantener en sync con /src/components/*)
 const routes = {
   login: {
-    type: ROUTE_TYPE_LEGACY,
-    viewHtmlPath: '/src/components/login/login.html',
-    cssHref: '/src/styles/login.css',
+    type: ROUTE_TYPE_REACT,
+    component: () => import('../react/pages/LoginPage.jsx'),
   },
   dashboard: {
     type: ROUTE_TYPE_LEGACY,
@@ -264,6 +263,9 @@ async function router() {
   try {
     scrollToTop();
     if (routeConfig.type === ROUTE_TYPE_REACT) {
+      if (isLoginRoute) {
+        destroyAdminHeaderIfNeeded();
+      }
       await renderReactRoute(routeConfig);
       return;
     }
