@@ -1,0 +1,54 @@
+.tabs {
+  display: grid;
+  gap: var(--admin-react-space-3, 0.75rem);
+}
+
+.list {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  gap: var(--admin-react-space-1, 0.25rem);
+  overflow-x: auto;
+  border: 1px solid var(--admin-react-border, rgba(255, 255, 255, 0.1));
+  border-radius: var(--admin-react-radius-lg, 0.75rem);
+  padding: var(--admin-react-space-1, 0.25rem);
+  background: var(--admin-react-surface, #11151d);
+}
+
+.tab {
+  min-height: 2rem;
+  border: 0;
+  border-radius: var(--admin-react-radius-md, 0.5rem);
+  padding: 0 var(--admin-react-space-3, 0.75rem);
+  color: var(--admin-react-text-muted, #b7c0cf);
+  background: transparent;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.tab:hover:not(:disabled) {
+  color: var(--admin-react-text, #f8fafc);
+  background: var(--admin-react-surface-muted, #1f2632);
+}
+
+.tab:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--admin-react-focus-ring, rgba(250, 167, 24, 0.42));
+}
+
+.tab:disabled {
+  cursor: not-allowed;
+  opacity: 0.52;
+}
+
+.selected,
+.selected:hover:not(:disabled) {
+  color: var(--admin-react-accent-contrast, #171006);
+  background: var(--admin-react-accent, #faa718);
+}
+
+.panel {
+  min-width: 0;
+}

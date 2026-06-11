@@ -1,0 +1,50 @@
+.badge {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  align-items: center;
+  gap: var(--admin-react-space-1, 0.25rem);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0.1875rem var(--admin-react-space-2, 0.5rem);
+  font-size: 0.75rem;
+  font-weight: 750;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.neutral {
+  background: var(--admin-react-surface-muted, #1f2632);
+  border-color: var(--admin-react-border, rgba(255, 255, 255, 0.1));
+  color: var(--admin-react-text-muted, #b7c0cf);
+}
+
+.success {
+  background: color-mix(in srgb, var(--admin-react-success, #34d399) 15%, transparent);
+  border-color: color-mix(in srgb, var(--admin-react-success, #34d399) 36%, transparent);
+  color: var(--admin-react-success, #34d399);
+}
+
+.warning {
+  background: color-mix(in srgb, var(--admin-react-warning, #fbbf24) 15%, transparent);
+  border-color: color-mix(in srgb, var(--admin-react-warning, #fbbf24) 36%, transparent);
+  color: var(--admin-react-warning, #fbbf24);
+}
+
+.danger {
+  background: color-mix(in srgb, var(--admin-react-danger, #f87171) 15%, transparent);
+  border-color: color-mix(in srgb, var(--admin-react-danger, #f87171) 36%, transparent);
+  color: var(--admin-react-danger, #f87171);
+}
+
+.info {
+  background: color-mix(in srgb, var(--admin-react-info, #60a5fa) 15%, transparent);
+  border-color: color-mix(in srgb, var(--admin-react-info, #60a5fa) 36%, transparent);
+  color: var(--admin-react-info, #60a5fa);
+}
+
+.accent {
+  background: color-mix(in srgb, var(--admin-react-accent, #faa718) 18%, transparent);
+  border-color: color-mix(in srgb, var(--admin-react-accent, #faa718) 42%, transparent);
+  color: var(--admin-react-accent-hover, #ffc04d);
+}
