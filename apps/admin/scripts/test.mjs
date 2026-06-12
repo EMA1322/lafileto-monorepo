@@ -7,6 +7,7 @@ import { runLoginReactTests } from '../test/login-react.test.mjs';
 import { runProductsListReactTests } from '../test/products-list-react.test.mjs';
 import { runReactViewAdapterTests } from '../test/react-view-adapter.test.mjs';
 import { runReactUiFoundationTests } from '../test/react-ui-foundation.test.mjs';
+import { runCategoriesReactTests } from '../test/categories-react.test.mjs';
 
 const suites = [
   { name: 'products contract helpers', runner: runProductsContractTests },
@@ -16,6 +17,7 @@ const suites = [
   { name: 'dashboard react contract', runner: runDashboardReactTests },
   { name: 'login react contract', runner: runLoginReactTests },
   { name: 'products list react contract', runner: runProductsListReactTests },
+  { name: 'categories react contract', runner: runCategoriesReactTests },
   { name: 'react view adapter', runner: runReactViewAdapterTests },
   { name: 'react ui foundation', runner: runReactUiFoundationTests },
 ];
