@@ -141,6 +141,7 @@ export function normalizeProduct(raw) {
     offer:
       offer && offer.isActive === true
         ? {
+            id: offer.id ?? offer.offerId ?? null,
             discountPercent,
             finalPrice,
             isActive: true,

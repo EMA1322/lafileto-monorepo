@@ -26,6 +26,8 @@ import {
 } from '../products/productsList.helpers.js';
 import ProductDeleteDialog from '../products/ProductDeleteDialog.jsx';
 import ProductForm from '../products/ProductForm.jsx';
+import ProductOfferDeleteDialog from '../products/ProductOfferDeleteDialog.jsx';
+import ProductOfferForm from '../products/ProductOfferForm.jsx';
 import styles from './ProductsPage.module.css';
 
 const VIEW_STATUS = {
@@ -90,6 +92,8 @@ function OfferBadge({ product }) {
     return <Badge variant="neutral">Sin oferta</Badge>;
   }
 
+  const hasFinalPrice = Number.isFinite(Number(product.offer.finalPrice));
+
   return (
     <span className={styles.offerStack}>
       <Badge variant="danger">
@@ -97,13 +101,28 @@ function OfferBadge({ product }) {
           ? `-${Math.round(product.offer.discountPercent)}%`
           : 'Oferta'}
       </Badge>
-      <span>{formatMoney(product.offer.finalPrice)}</span>
+      {hasFinalPrice ? <span>{formatMoney(product.offer.finalPrice)}</span> : null}
     </span>
   );
 }
 
-function ProductActions({ onDelete, onEdit, permissions, product }) {
-  if (!permissions.canUpdate && !permissions.canDelete) {
+function ProductActions({
+  onDelete,
+  onEdit,
+  onOfferCreate,
+  onOfferDelete,
+  onOfferEdit,
+  permissions,
+  product,
+}) {
+  const hasOffer = Boolean(product.offer);
+  const canCreateOffer = !hasOffer && permissions.canWriteOffer;
+  const canEditOffer = hasOffer && permissions.canUpdateOffer;
+  const canDeleteOffer = hasOffer && permissions.canDeleteOffer;
+  const hasProductActions = permissions.canUpdate || permissions.canDelete;
+  const hasOfferActions = canCreateOffer || canEditOffer || canDeleteOffer;
+
+  if (!hasProductActions && !hasOfferActions) {
     return <span className={styles.muted}>Sin acciones</span>;
   }
 
@@ -119,11 +138,35 @@ function ProductActions({ onDelete, onEdit, permissions, product }) {
           Eliminar
         </Button>
       ) : null}
+      {canCreateOffer ? (
+        <Button onClick={() => onOfferCreate(product)} size="sm" variant="secondary">
+          Crear oferta
+        </Button>
+      ) : null}
+      {canEditOffer ? (
+        <Button onClick={() => onOfferEdit(product)} size="sm" variant="secondary">
+          Editar oferta
+        </Button>
+      ) : null}
+      {canDeleteOffer ? (
+        <Button onClick={() => onOfferDelete(product)} size="sm" variant="danger">
+          Quitar oferta
+        </Button>
+      ) : null}
     </div>
   );
 }
 
-function ProductsTable({ categoriesById, items, onDelete, onEdit, permissions }) {
+function ProductsTable({
+  categoriesById,
+  items,
+  onDelete,
+  onEdit,
+  onOfferCreate,
+  onOfferDelete,
+  onOfferEdit,
+  permissions,
+}) {
   return (
     <TableScroll className={styles.tableScroll}>
       <table aria-describedby="products-meta" className={styles.table}>
@@ -169,6 +212,9 @@ function ProductsTable({ categoriesById, items, onDelete, onEdit, permissions })
                 <ProductActions
                   onDelete={onDelete}
                   onEdit={onEdit}
+                  onOfferCreate={onOfferCreate}
+                  onOfferDelete={onOfferDelete}
+                  onOfferEdit={onOfferEdit}
                   permissions={permissions}
                   product={product}
                 />
@@ -181,7 +227,16 @@ function ProductsTable({ categoriesById, items, onDelete, onEdit, permissions })
   );
 }
 
-function ProductsCards({ categoriesById, items, onDelete, onEdit, permissions }) {
+function ProductsCards({
+  categoriesById,
+  items,
+  onDelete,
+  onEdit,
+  onOfferCreate,
+  onOfferDelete,
+  onOfferEdit,
+  permissions,
+}) {
   return (
     <div className={styles.mobileList}>
       {items.map((product) => (
@@ -205,6 +260,9 @@ function ProductsCards({ categoriesById, items, onDelete, onEdit, permissions })
             <ProductActions
               onDelete={onDelete}
               onEdit={onEdit}
+              onOfferCreate={onOfferCreate}
+              onOfferDelete={onOfferDelete}
+              onOfferEdit={onOfferEdit}
               permissions={permissions}
               product={product}
             />
@@ -239,6 +297,8 @@ export default function ProductsPage() {
     ProductDeleteDialog,
     ProductForm,
     ProductImage,
+    ProductOfferDeleteDialog,
+    ProductOfferForm,
     ProductsCards,
     ProductsTable,
     OfferBadge,
@@ -253,6 +313,8 @@ export default function ProductsPage() {
   const [errorMessage, setErrorMessage] = useState('');
   const [formState, setFormState] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [offerFormState, setOfferFormState] = useState(null);
+  const [offerDeleteTarget, setOfferDeleteTarget] = useState(null);
 
   const permissions = useMemo(
     () => ({
@@ -260,6 +322,9 @@ export default function ProductsPage() {
       canWrite: canWrite('products'),
       canUpdate: canUpdate('products'),
       canDelete: canDelete('products'),
+      canWriteOffer: canWrite('offers'),
+      canUpdateOffer: canUpdate('offers'),
+      canDeleteOffer: canDelete('offers'),
     }),
     [],
   );
@@ -341,6 +406,18 @@ export default function ProductsPage() {
     setDeleteTarget(product);
   }
 
+  function handleOfferCreate(product) {
+    setOfferFormState({ mode: 'create', product });
+  }
+
+  function handleOfferEdit(product) {
+    setOfferFormState({ mode: 'edit', product });
+  }
+
+  function handleOfferDelete(product) {
+    setOfferDeleteTarget(product);
+  }
+
   function handleProductSaved({ mode }) {
     setFormState(null);
     if (mode === 'create' && filters.page !== 1) {
@@ -356,6 +433,16 @@ export default function ProductsPage() {
       syncFilters({ page: page - 1 });
       return;
     }
+    void loadProducts();
+  }
+
+  function handleOfferSaved() {
+    setOfferFormState(null);
+    void loadProducts();
+  }
+
+  function handleOfferDeleted() {
+    setOfferDeleteTarget(null);
     void loadProducts();
   }
 
@@ -518,6 +605,9 @@ export default function ProductsPage() {
               items={items}
               onDelete={handleDelete}
               onEdit={handleEdit}
+              onOfferCreate={handleOfferCreate}
+              onOfferDelete={handleOfferDelete}
+              onOfferEdit={handleOfferEdit}
               permissions={permissions}
             />
             <ProductsCards
@@ -525,6 +615,9 @@ export default function ProductsPage() {
               items={items}
               onDelete={handleDelete}
               onEdit={handleEdit}
+              onOfferCreate={handleOfferCreate}
+              onOfferDelete={handleOfferDelete}
+              onOfferEdit={handleOfferEdit}
               permissions={permissions}
             />
           </>
@@ -594,6 +687,19 @@ export default function ProductsPage() {
         onDeleted={handleProductDeleted}
         open={Boolean(deleteTarget)}
         product={deleteTarget}
+      />
+      <ProductOfferForm
+        mode={offerFormState?.mode || 'create'}
+        onClose={() => setOfferFormState(null)}
+        onSaved={handleOfferSaved}
+        open={Boolean(offerFormState)}
+        product={offerFormState?.product}
+      />
+      <ProductOfferDeleteDialog
+        onClose={() => setOfferDeleteTarget(null)}
+        onDeleted={handleOfferDeleted}
+        open={Boolean(offerDeleteTarget)}
+        product={offerDeleteTarget}
       />
     </AdminThemeScope>
   );
