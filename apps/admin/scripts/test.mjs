@@ -1,4 +1,5 @@
 import { runProductsContractTests } from '../test/products.contract.test.mjs';
+import { runProductsCrudReactTests } from '../test/products-crud-react.test.mjs';
 import { runHashSyncTests } from '../test/hash-sync.test.mjs';
 import { runDashboardReactTests } from '../test/dashboard-react.test.mjs';
 import { runLoginReactTests } from '../test/login-react.test.mjs';
@@ -8,6 +9,7 @@ import { runReactUiFoundationTests } from '../test/react-ui-foundation.test.mjs'
 
 const suites = [
   { name: 'products contract helpers', runner: runProductsContractTests },
+  { name: 'products crud react contract', runner: runProductsCrudReactTests },
   { name: 'hash sync helpers', runner: runHashSyncTests },
   { name: 'dashboard react contract', runner: runDashboardReactTests },
   { name: 'login react contract', runner: runLoginReactTests },
