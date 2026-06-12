@@ -21,6 +21,14 @@ function routeBlock(source, routeName, nextRouteName) {
   return source.slice(start, end);
 }
 
+function routeType(source, routeName, nextRouteName) {
+  const match = routeBlock(source, routeName, nextRouteName).match(
+    /^\s*type:\s*(ROUTE_TYPE_[A-Z]+),/m,
+  );
+  assert.ok(match, `${routeName} route should declare a route type`);
+  return match[1];
+}
+
 function testCategoriesRouteIsReactOnly() {
   const source = read('src/utils/router.js');
   const categoriesRoute = routeBlock(source, 'categories', 'users');
@@ -39,16 +47,16 @@ function testRouteBoundariesStayIntact() {
     ['dashboard', 'products'],
     ['products', 'categories'],
     ['categories', 'users'],
+    ['users', 'settings'],
   ]) {
-    assert.match(routeBlock(source, routeName, nextRouteName), /type:\s*ROUTE_TYPE_REACT/);
+    assert.equal(routeType(source, routeName, nextRouteName), 'ROUTE_TYPE_REACT');
   }
 
   for (const [routeName, nextRouteName] of [
-    ['users', 'settings'],
     ['settings', "'not-authorized'"],
     ["'not-authorized'", null],
   ]) {
-    assert.match(routeBlock(source, routeName, nextRouteName), /type:\s*ROUTE_TYPE_LEGACY/);
+    assert.equal(routeType(source, routeName, nextRouteName), 'ROUTE_TYPE_LEGACY');
   }
 }
 

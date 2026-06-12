@@ -41,9 +41,8 @@ const routes = {
     component: () => import('../react/pages/CategoriesPage.jsx'),
   },
   users: {
-    type: ROUTE_TYPE_LEGACY,
-    viewHtmlPath: '/src/components/users/users.html',
-    cssHref: '/src/styles/users.css',
+    type: ROUTE_TYPE_REACT,
+    component: () => import('../react/pages/UsersPage.jsx'),
   },
   settings: {
     type: ROUTE_TYPE_LEGACY,

@@ -1,0 +1,131 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  justify-content: flex-end;
+  background: rgba(5, 10, 18, 0.62);
+}
+
+.drawer,
+.dialog {
+  width: min(100%, 34rem);
+  max-height: 100vh;
+  overflow: auto;
+  border-left: 1px solid var(--admin-react-border, rgba(255, 255, 255, 0.1));
+  background: var(--admin-react-surface, #11151d);
+  color: var(--admin-react-text, #f8fafc);
+  box-shadow: var(--admin-react-shadow-soft, 0 18px 50px rgba(0, 0, 0, 0.28));
+}
+
+.dialog {
+  align-self: center;
+  width: min(calc(100% - 2rem), 30rem);
+  max-height: calc(100vh - 2rem);
+  margin: auto;
+  border: 1px solid var(--admin-react-border, rgba(255, 255, 255, 0.1));
+  border-radius: var(--admin-react-radius-lg, 0.75rem);
+}
+
+.header,
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--admin-react-space-3, 0.75rem);
+  padding: var(--admin-react-space-4, 1rem);
+}
+
+.header {
+  border-bottom: 1px solid var(--admin-react-border, rgba(255, 255, 255, 0.1));
+}
+
+.footer {
+  border-top: 1px solid var(--admin-react-border, rgba(255, 255, 255, 0.1));
+}
+
+.body {
+  display: grid;
+  gap: var(--admin-react-space-4, 1rem);
+  padding: var(--admin-react-space-4, 1rem);
+}
+
+.grid {
+  display: grid;
+  gap: var(--admin-react-space-4, 1rem);
+}
+
+.titleGroup {
+  display: grid;
+  gap: var(--admin-react-space-1, 0.25rem);
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--admin-react-accent, #faa718);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  color: var(--admin-react-text, #f8fafc);
+  font-size: 1.25rem;
+}
+
+.closeButton {
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid var(--admin-react-border, rgba(255, 255, 255, 0.1));
+  border-radius: var(--admin-react-radius-md, 0.5rem);
+  color: var(--admin-react-text, #f8fafc);
+  background: var(--admin-react-surface-muted, #1f2632);
+  cursor: pointer;
+}
+
+.error {
+  margin: 0;
+  color: var(--admin-react-danger, #f87171);
+}
+
+.description {
+  margin: 0;
+  color: var(--admin-react-text-muted, #b7c0cf);
+  line-height: 1.5;
+}
+
+.strong {
+  color: var(--admin-react-text, #f8fafc);
+  font-weight: 700;
+}
+
+.warningBox {
+  display: grid;
+  gap: var(--admin-react-space-2, 0.5rem);
+  padding: var(--admin-react-space-3, 0.75rem);
+  border: 1px solid rgba(250, 167, 24, 0.4);
+  border-radius: var(--admin-react-radius-md, 0.5rem);
+  background: rgba(250, 167, 24, 0.08);
+}
+
+.checkboxRow {
+  display: flex;
+  align-items: center;
+  gap: var(--admin-react-space-2, 0.5rem);
+  color: var(--admin-react-text, #f8fafc);
+}
+
+@media (max-width: 640px) {
+  .overlay {
+    justify-content: stretch;
+  }
+
+  .drawer {
+    width: 100%;
+  }
+
+  .footer {
+    flex-wrap: wrap;
+  }
+}
