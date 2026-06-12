@@ -24,6 +24,8 @@ import {
   parseFiltersFromHash,
   serializeFiltersToHash,
 } from '../products/productsList.helpers.js';
+import ProductDeleteDialog from '../products/ProductDeleteDialog.jsx';
+import ProductForm from '../products/ProductForm.jsx';
 import styles from './ProductsPage.module.css';
 
 const VIEW_STATUS = {
@@ -100,30 +102,20 @@ function OfferBadge({ product }) {
   );
 }
 
-function ProductActions({ permissions }) {
-  if (
-    !permissions.canRead &&
-    !permissions.canWrite &&
-    !permissions.canUpdate &&
-    !permissions.canDelete
-  ) {
+function ProductActions({ onDelete, onEdit, permissions, product }) {
+  if (!permissions.canUpdate && !permissions.canDelete) {
     return <span className={styles.muted}>Sin acciones</span>;
   }
 
   return (
     <div className={styles.actions} aria-label="Acciones de producto">
-      {permissions.canRead ? (
-        <Button disabled size="sm" variant="ghost" title="Proxima fase">
-          Ver
-        </Button>
-      ) : null}
       {permissions.canUpdate ? (
-        <Button disabled size="sm" variant="ghost" title="Proxima fase">
+        <Button onClick={() => onEdit(product)} size="sm" variant="ghost">
           Editar
         </Button>
       ) : null}
       {permissions.canDelete ? (
-        <Button disabled size="sm" variant="danger" title="Proxima fase">
+        <Button onClick={() => onDelete(product)} size="sm" variant="danger">
           Eliminar
         </Button>
       ) : null}
@@ -131,7 +123,7 @@ function ProductActions({ permissions }) {
   );
 }
 
-function ProductsTable({ categoriesById, items, permissions }) {
+function ProductsTable({ categoriesById, items, onDelete, onEdit, permissions }) {
   return (
     <TableScroll className={styles.tableScroll}>
       <table aria-describedby="products-meta" className={styles.table}>
@@ -174,7 +166,12 @@ function ProductsTable({ categoriesById, items, permissions }) {
               </td>
               <td>{formatDateTime(product.updatedAt)}</td>
               <td>
-                <ProductActions permissions={permissions} />
+                <ProductActions
+                  onDelete={onDelete}
+                  onEdit={onEdit}
+                  permissions={permissions}
+                  product={product}
+                />
               </td>
             </tr>
           ))}
@@ -184,7 +181,7 @@ function ProductsTable({ categoriesById, items, permissions }) {
   );
 }
 
-function ProductsCards({ categoriesById, items, permissions }) {
+function ProductsCards({ categoriesById, items, onDelete, onEdit, permissions }) {
   return (
     <div className={styles.mobileList}>
       {items.map((product) => (
@@ -205,7 +202,12 @@ function ProductsCards({ categoriesById, items, permissions }) {
               <span>Stock {product.stock}</span>
             </div>
             <OfferBadge product={product} />
-            <ProductActions permissions={permissions} />
+            <ProductActions
+              onDelete={onDelete}
+              onEdit={onEdit}
+              permissions={permissions}
+              product={product}
+            />
           </div>
         </article>
       ))}
@@ -234,6 +236,8 @@ export default function ProductsPage() {
   // eslint-disable-next-line no-unused-vars -- This ESLint setup does not count JSX member expressions as usage.
   const View = {
     ProductActions,
+    ProductDeleteDialog,
+    ProductForm,
     ProductImage,
     ProductsCards,
     ProductsTable,
@@ -247,6 +251,8 @@ export default function ProductsPage() {
   const [meta, setMeta] = useState({ page: 1, pageSize: 10, total: 0, pageCount: 1 });
   const [status, setStatus] = useState(VIEW_STATUS.loading);
   const [errorMessage, setErrorMessage] = useState('');
+  const [formState, setFormState] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const permissions = useMemo(
     () => ({
@@ -273,10 +279,7 @@ export default function ProductsPage() {
     setErrorMessage('');
 
     try {
-      const [productsResponse, categoriesResponse] = await Promise.all([
-        productsApi.list(buildProductsQuery(filters)),
-        categoriesApi.listAll({ all: 1, pageSize: 100 }),
-      ]);
+      const productsResponse = await productsApi.list(buildProductsQuery(filters));
 
       if (!productsResponse?.ok) {
         throw new Error('No se pudieron cargar los productos.');
@@ -285,8 +288,14 @@ export default function ProductsPage() {
       const productsPayload = normalizeProductsResponse(productsResponse);
       setItems(productsPayload.items);
       setMeta(productsPayload.meta);
-      setCategories(normalizeCategoriesResponse(categoriesResponse));
       setStatus(productsPayload.items.length > 0 ? VIEW_STATUS.success : VIEW_STATUS.empty);
+
+      try {
+        const categoriesResponse = await categoriesApi.listAll({ all: 1, pageSize: 100 });
+        setCategories(normalizeCategoriesResponse(categoriesResponse));
+      } catch {
+        setCategories([]);
+      }
     } catch (error) {
       setItems([]);
       setStatus(VIEW_STATUS.error);
@@ -320,6 +329,36 @@ export default function ProductsPage() {
     syncFilters({ page: nextPage });
   }
 
+  function handleCreate() {
+    setFormState({ mode: 'create', product: null });
+  }
+
+  function handleEdit(product) {
+    setFormState({ mode: 'edit', product });
+  }
+
+  function handleDelete(product) {
+    setDeleteTarget(product);
+  }
+
+  function handleProductSaved({ mode }) {
+    setFormState(null);
+    if (mode === 'create' && filters.page !== 1) {
+      syncFilters({ page: 1 });
+      return;
+    }
+    void loadProducts();
+  }
+
+  function handleProductDeleted() {
+    setDeleteTarget(null);
+    if (items.length <= 1 && page > 1) {
+      syncFilters({ page: page - 1 });
+      return;
+    }
+    void loadProducts();
+  }
+
   const hasData = status === VIEW_STATUS.success;
   const page = Number(meta.page) || 1;
   const pageCount = Math.max(1, Number(meta.pageCount) || 1);
@@ -335,7 +374,7 @@ export default function ProductsPage() {
           <p>Listado operativo con datos reales, filtros y paginacion.</p>
         </div>
         {permissions.canWrite ? (
-          <Button disabled title="Proxima fase" variant="primary">
+          <Button onClick={handleCreate} variant="primary">
             Crear producto
           </Button>
         ) : null}
@@ -477,11 +516,15 @@ export default function ProductsPage() {
             <ProductsTable
               categoriesById={categoriesById}
               items={items}
+              onDelete={handleDelete}
+              onEdit={handleEdit}
               permissions={permissions}
             />
             <ProductsCards
               categoriesById={categoriesById}
               items={items}
+              onDelete={handleDelete}
+              onEdit={handleEdit}
               permissions={permissions}
             />
           </>
@@ -537,6 +580,21 @@ export default function ProductsPage() {
           </Button>
         </nav>
       </footer>
+
+      <ProductForm
+        categories={categories}
+        mode={formState?.mode || 'create'}
+        onClose={() => setFormState(null)}
+        onSaved={handleProductSaved}
+        open={Boolean(formState)}
+        product={formState?.product}
+      />
+      <ProductDeleteDialog
+        onClose={() => setDeleteTarget(null)}
+        onDeleted={handleProductDeleted}
+        open={Boolean(deleteTarget)}
+        product={deleteTarget}
+      />
     </AdminThemeScope>
   );
 }

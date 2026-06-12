@@ -28,6 +28,8 @@ const dateFormatter = new Intl.DateTimeFormat('es-AR', {
   month: 'short',
 });
 
+const PRODUCT_STATUSES = ['draft', 'active', 'archived'];
+
 function toPositiveInteger(value, fallback) {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : fallback;
@@ -123,6 +125,8 @@ export function normalizeProduct(raw) {
   const finalPrice = offer ? toNumber(offer.finalPrice, basePrice) : basePrice;
   const discountPercent = offer ? toNumber(offer.discountPercent, 0) : 0;
 
+  const rawStatus = typeof raw.status === 'string' ? raw.status.toLowerCase() : '';
+
   return {
     id: raw.id ?? '',
     name: raw.name ?? 'Sin nombre',
@@ -130,7 +134,7 @@ export function normalizeProduct(raw) {
     imageUrl: raw.imageUrl ?? null,
     price: basePrice,
     stock: toNumber(raw.stock),
-    status: raw.status === 'active' ? 'active' : 'inactive',
+    status: PRODUCT_STATUSES.includes(rawStatus) ? rawStatus : 'draft',
     categoryId: raw.categoryId ?? raw.category?.id ?? '',
     categoryName: raw.category?.name ?? raw.categoryName ?? '',
     updatedAt: raw.updatedAt ?? null,
