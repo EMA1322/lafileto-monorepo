@@ -47,8 +47,8 @@ function testDashboardRouteIsReactOnly() {
 function testRouteBoundariesStayIntact() {
   const source = read('src/utils/router.js');
   const loginRoute = routeBlock(source, 'login', 'dashboard');
+  const productsRoute = routeBlock(source, 'products', 'categories');
   const legacyRoutes = [
-    ['products', 'categories'],
     ['categories', 'users'],
     ['users', 'settings'],
     ['settings', "'not-authorized'"],
@@ -56,6 +56,7 @@ function testRouteBoundariesStayIntact() {
   ];
 
   assert.match(loginRoute, /type:\s*ROUTE_TYPE_REACT/, 'login should stay React');
+  assert.match(productsRoute, /type:\s*ROUTE_TYPE_REACT/, 'products should now be React');
 
   for (const [routeName, nextRouteName] of legacyRoutes) {
     const block = routeBlock(source, routeName, nextRouteName);
