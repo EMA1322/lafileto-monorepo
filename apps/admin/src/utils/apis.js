@@ -1,13 +1,13 @@
 // /admin/src/utils/apis.js
 // ------------------------------------------------------------
-// Wrapper centralizado de endpoints REST específicos del panel.
-// Comentarios en español; código y nombres en inglés.
-// Cada función usa apiFetch (manejo de token + errores estándar).
+// Wrapper centralizado de endpoints REST especificos del panel.
+// Comentarios en espanol; codigo y nombres en ingles.
+// Cada funcion usa apiFetch (manejo de token + errores estandar).
 // ------------------------------------------------------------
 
 import { apiFetch } from './api.js';
 
-/** Utilidad local para normalizar respuesta según contrato */
+/** Utilidad local para normalizar respuesta segun contrato */
 function ensureEnvelope(response) {
   if (!response || typeof response !== 'object') {
     return { ok: false, data: null, meta: null };
@@ -17,7 +17,7 @@ function ensureEnvelope(response) {
 }
 
 export const productsApi = {
-  /** Lista productos con filtros y paginación */
+  /** Lista productos con filtros y paginacion */
   async list(params = {}, { signal } = {}) {
     const response = await apiFetch('/products', {
       method: 'GET',
@@ -28,7 +28,7 @@ export const productsApi = {
     return ensureEnvelope(response);
   },
 
-  /** Obtiene un producto específico */
+  /** Obtiene un producto especifico */
   async get(id) {
     if (!id) throw new Error('Product id is required');
     const response = await apiFetch(`/products/${encodeURIComponent(id)}`, {
@@ -82,11 +82,74 @@ export const productsApi = {
 };
 
 export const categoriesApi = {
-  /** Lista categorías (para selects y filtros) */
+  /** Lista categorias (para selects y filtros) */
   async listAll(params = {}) {
     const response = await apiFetch('/categories', {
       method: 'GET',
       params: { ...params, all: params.all ?? 1, pageSize: params.pageSize ?? 100 },
+      showErrorToast: false,
+    });
+    return ensureEnvelope(response);
+  },
+
+  /** Lista categorias con filtros y paginacion */
+  async list(params = {}, { signal } = {}) {
+    const response = await apiFetch('/categories', {
+      method: 'GET',
+      params,
+      showErrorToast: false,
+      signal,
+    });
+    return ensureEnvelope(response);
+  },
+
+  /** Obtiene una categoria especifica */
+  async get(id) {
+    if (!id) throw new Error('Category id is required');
+    const response = await apiFetch(`/categories/${encodeURIComponent(id)}`, {
+      method: 'GET',
+      showErrorToast: false,
+    });
+    return ensureEnvelope(response);
+  },
+
+  /** Crea una categoria */
+  async create(payload) {
+    const response = await apiFetch('/categories', {
+      method: 'POST',
+      body: payload,
+      showErrorToast: false,
+    });
+    return ensureEnvelope(response);
+  },
+
+  /** Actualiza una categoria */
+  async update(id, payload) {
+    if (!id) throw new Error('Category id is required');
+    const response = await apiFetch(`/categories/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      body: payload,
+      showErrorToast: false,
+    });
+    return ensureEnvelope(response);
+  },
+
+  /** Cambia el flag active de una categoria */
+  async toggleActive(id, active) {
+    if (!id) throw new Error('Category id is required');
+    const response = await apiFetch(`/categories/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      body: { active: Boolean(active) },
+      showErrorToast: false,
+    });
+    return ensureEnvelope(response);
+  },
+
+  /** Elimina una categoria */
+  async remove(id) {
+    if (!id) throw new Error('Category id is required');
+    const response = await apiFetch(`/categories/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
       showErrorToast: false,
     });
     return ensureEnvelope(response);

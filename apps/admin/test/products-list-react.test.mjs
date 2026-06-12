@@ -45,9 +45,9 @@ function testRouteBoundariesStayIntact() {
     ['login', 'dashboard'],
     ['dashboard', 'products'],
     ['products', 'categories'],
+    ['categories', 'users'],
   ];
   const legacyRoutes = [
-    ['categories', 'users'],
     ['users', 'settings'],
     ['settings', "'not-authorized'"],
     ["'not-authorized'", null],

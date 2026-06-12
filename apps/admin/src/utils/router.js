@@ -37,9 +37,8 @@ const routes = {
     component: () => import('../react/pages/ProductsPage.jsx'),
   },
   categories: {
-    type: ROUTE_TYPE_LEGACY,
-    viewHtmlPath: '/src/components/categories/categories.html',
-    cssHref: '/src/styles/categories.css',
+    type: ROUTE_TYPE_REACT,
+    component: () => import('../react/pages/CategoriesPage.jsx'),
   },
   users: {
     type: ROUTE_TYPE_LEGACY,
@@ -296,12 +295,6 @@ async function router() {
           if (typeof mod.initModule === 'function') mod.initModule();
           else if (typeof mod.initProducts === 'function') mod.initProducts();
         }
-        break;
-      }
-      case 'categories': {
-        await loadAdminHeader();
-        const mod = await import('../components/categories/categories.js');
-        if (mod && typeof mod.initCategories === 'function') mod.initCategories();
         break;
       }
       case 'users': {

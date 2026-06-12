@@ -1,0 +1,156 @@
+.overlay {
+  position: fixed;
+  z-index: 70;
+  inset: 0;
+  display: flex;
+  justify-content: flex-end;
+  background: rgba(3, 7, 18, 0.64);
+}
+
+.drawer,
+.dialog {
+  display: flex;
+  width: min(100%, 34rem);
+  max-height: 100%;
+  flex-direction: column;
+  border-left: 1px solid var(--admin-react-border, rgba(255, 255, 255, 0.1));
+  background: var(--admin-react-surface, #111722);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.36);
+  color: var(--admin-react-text, #f8fafc);
+}
+
+.dialog {
+  width: min(calc(100% - 2rem), 30rem);
+  max-height: calc(100% - 2rem);
+  margin: auto;
+  border: 1px solid var(--admin-react-border, rgba(255, 255, 255, 0.1));
+  border-radius: var(--admin-react-radius-lg, 0.75rem);
+}
+
+.header,
+.footer {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  border-bottom: 1px solid var(--admin-react-border, rgba(255, 255, 255, 0.1));
+}
+
+.footer {
+  align-items: center;
+  justify-content: flex-end;
+  border-top: 1px solid var(--admin-react-border, rgba(255, 255, 255, 0.1));
+  border-bottom: 0;
+}
+
+.titleGroup {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.eyebrow,
+.hint {
+  margin: 0;
+  color: var(--admin-react-text-muted, #b7c0cf);
+  font-size: 0.78rem;
+}
+
+.eyebrow {
+  color: var(--admin-react-accent, #faa718);
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.35rem;
+  line-height: 1.15;
+}
+
+.closeButton {
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid var(--admin-react-border, rgba(255, 255, 255, 0.1));
+  border-radius: var(--admin-react-radius-md, 0.5rem);
+  background: var(--admin-react-surface-muted, #1f2632);
+  color: var(--admin-react-text, #f8fafc);
+  cursor: pointer;
+}
+
+.body {
+  display: grid;
+  gap: 1rem;
+  overflow: auto;
+  padding: 1rem;
+}
+
+.error {
+  margin: 0;
+  padding: 0.75rem;
+  border: 1px solid rgba(248, 113, 113, 0.36);
+  border-radius: var(--admin-react-radius-md, 0.5rem);
+  background: rgba(127, 29, 29, 0.22);
+  color: #fecaca;
+  font-size: 0.9rem;
+}
+
+.preview {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--admin-react-border, rgba(255, 255, 255, 0.1));
+  border-radius: var(--admin-react-radius-md, 0.5rem);
+  background: var(--admin-react-surface-muted, #1f2632);
+}
+
+.previewImage,
+.previewPlaceholder {
+  width: 5.5rem;
+  height: 4.25rem;
+  border: 1px solid var(--admin-react-border, rgba(255, 255, 255, 0.1));
+  border-radius: var(--admin-react-radius-md, 0.5rem);
+  background: #0f172a;
+}
+
+.previewImage {
+  object-fit: cover;
+}
+
+.previewPlaceholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--admin-react-text-soft, #8792a3);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.dangerText {
+  margin: 0;
+  color: var(--admin-react-text-muted, #b7c0cf);
+  line-height: 1.45;
+}
+
+.categoryName {
+  color: var(--admin-react-text, #f8fafc);
+  font-weight: 800;
+}
+
+@media (max-width: 640px) {
+  .overlay {
+    align-items: stretch;
+  }
+
+  .drawer {
+    width: 100%;
+  }
+
+  .preview {
+    grid-template-columns: 1fr;
+  }
+}

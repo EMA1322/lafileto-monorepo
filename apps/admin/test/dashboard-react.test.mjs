@@ -48,8 +48,8 @@ function testRouteBoundariesStayIntact() {
   const source = read('src/utils/router.js');
   const loginRoute = routeBlock(source, 'login', 'dashboard');
   const productsRoute = routeBlock(source, 'products', 'categories');
+  const categoriesRoute = routeBlock(source, 'categories', 'users');
   const legacyRoutes = [
-    ['categories', 'users'],
     ['users', 'settings'],
     ['settings', "'not-authorized'"],
     ["'not-authorized'", null],
@@ -57,6 +57,7 @@ function testRouteBoundariesStayIntact() {
 
   assert.match(loginRoute, /type:\s*ROUTE_TYPE_REACT/, 'login should stay React');
   assert.match(productsRoute, /type:\s*ROUTE_TYPE_REACT/, 'products should now be React');
+  assert.match(categoriesRoute, /type:\s*ROUTE_TYPE_REACT/, 'categories should now be React');
 
   for (const [routeName, nextRouteName] of legacyRoutes) {
     const block = routeBlock(source, routeName, nextRouteName);
