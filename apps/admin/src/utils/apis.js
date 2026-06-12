@@ -200,10 +200,134 @@ export const offersApi = {
   },
 };
 
+export const usersApi = {
+  /** Lista usuarios con filtros y paginacion */
+  async list(params = {}, { signal } = {}) {
+    const response = await apiFetch('/users', {
+      method: 'GET',
+      params,
+      showErrorToast: false,
+      signal,
+    });
+    return ensureEnvelope(response);
+  },
+
+  /** Crea un usuario */
+  async create(payload) {
+    const response = await apiFetch('/users', {
+      method: 'POST',
+      body: payload,
+      showErrorToast: false,
+    });
+    return ensureEnvelope(response);
+  },
+
+  /** Actualiza un usuario */
+  async update(id, payload) {
+    if (!id) throw new Error('User id is required');
+    const response = await apiFetch(`/users/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      body: payload,
+      showErrorToast: false,
+    });
+    return ensureEnvelope(response);
+  },
+
+  /** Elimina un usuario */
+  async remove(id) {
+    if (!id) throw new Error('User id is required');
+    const response = await apiFetch(`/users/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      showErrorToast: false,
+    });
+    return ensureEnvelope(response);
+  },
+};
+
+export const rolesApi = {
+  /** Lista roles */
+  async list(params = {}, { signal } = {}) {
+    const response = await apiFetch('/roles', {
+      method: 'GET',
+      params,
+      showErrorToast: false,
+      signal,
+    });
+    return ensureEnvelope(response);
+  },
+
+  /** Crea un rol */
+  async create(payload) {
+    const response = await apiFetch('/roles', {
+      method: 'POST',
+      body: payload,
+      showErrorToast: false,
+    });
+    return ensureEnvelope(response);
+  },
+
+  /** Actualiza un rol */
+  async update(roleId, payload) {
+    if (!roleId) throw new Error('Role id is required');
+    const response = await apiFetch(`/roles/${encodeURIComponent(roleId)}`, {
+      method: 'PUT',
+      body: payload,
+      showErrorToast: false,
+    });
+    return ensureEnvelope(response);
+  },
+
+  /** Elimina un rol */
+  async remove(roleId) {
+    if (!roleId) throw new Error('Role id is required');
+    const response = await apiFetch(`/roles/${encodeURIComponent(roleId)}`, {
+      method: 'DELETE',
+      showErrorToast: false,
+    });
+    return ensureEnvelope(response);
+  },
+
+  /** Obtiene permisos de un rol */
+  async getPermissions(roleId) {
+    if (!roleId) throw new Error('Role id is required');
+    const response = await apiFetch(`/roles/${encodeURIComponent(roleId)}/permissions`, {
+      method: 'GET',
+      showErrorToast: false,
+    });
+    return ensureEnvelope(response);
+  },
+
+  /** Actualiza permisos de un rol */
+  async updatePermissions(roleId, payload) {
+    if (!roleId) throw new Error('Role id is required');
+    const response = await apiFetch(`/roles/${encodeURIComponent(roleId)}/permissions`, {
+      method: 'PUT',
+      body: payload,
+      showErrorToast: false,
+    });
+    return ensureEnvelope(response);
+  },
+};
+
+export const modulesApi = {
+  /** Lista modulos disponibles para RBAC */
+  async list({ signal } = {}) {
+    const response = await apiFetch('/modules', {
+      method: 'GET',
+      showErrorToast: false,
+      signal,
+    });
+    return ensureEnvelope(response);
+  },
+};
+
 export const apis = {
   products: productsApi,
   categories: categoriesApi,
   offers: offersApi,
+  users: usersApi,
+  roles: rolesApi,
+  modules: modulesApi,
 };
 
 export default apis;

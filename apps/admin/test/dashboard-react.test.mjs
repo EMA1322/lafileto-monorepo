@@ -22,6 +22,14 @@ function routeBlock(source, routeName, nextRouteName) {
   return source.slice(start, end);
 }
 
+function routeType(source, routeName, nextRouteName) {
+  const match = routeBlock(source, routeName, nextRouteName).match(
+    /^\s*type:\s*(ROUTE_TYPE_[A-Z]+),/m,
+  );
+  assert.ok(match, `${routeName} route should declare a route type`);
+  return match[1];
+}
+
 function testDashboardRouteIsReactOnly() {
   const source = read('src/utils/router.js');
   const dashboardRoute = routeBlock(source, 'dashboard', 'products');
@@ -49,8 +57,8 @@ function testRouteBoundariesStayIntact() {
   const loginRoute = routeBlock(source, 'login', 'dashboard');
   const productsRoute = routeBlock(source, 'products', 'categories');
   const categoriesRoute = routeBlock(source, 'categories', 'users');
+  const usersRoute = routeBlock(source, 'users', 'settings');
   const legacyRoutes = [
-    ['users', 'settings'],
     ['settings', "'not-authorized'"],
     ["'not-authorized'", null],
   ];
@@ -58,10 +66,22 @@ function testRouteBoundariesStayIntact() {
   assert.match(loginRoute, /type:\s*ROUTE_TYPE_REACT/, 'login should stay React');
   assert.match(productsRoute, /type:\s*ROUTE_TYPE_REACT/, 'products should now be React');
   assert.match(categoriesRoute, /type:\s*ROUTE_TYPE_REACT/, 'categories should now be React');
+  assert.match(
+    usersRoute,
+    /component:\s*\(\)\s*=>\s*import\(['"]\.\.\/react\/pages\/UsersPage\.jsx['"]\)/,
+  );
+  assert.equal(
+    routeType(source, 'users', 'settings'),
+    'ROUTE_TYPE_REACT',
+    'users should now be React',
+  );
 
   for (const [routeName, nextRouteName] of legacyRoutes) {
-    const block = routeBlock(source, routeName, nextRouteName);
-    assert.match(block, /type:\s*ROUTE_TYPE_LEGACY/, `${routeName} should stay legacy`);
+    assert.equal(
+      routeType(source, routeName, nextRouteName),
+      'ROUTE_TYPE_LEGACY',
+      `${routeName} should stay legacy`,
+    );
   }
 }
 
