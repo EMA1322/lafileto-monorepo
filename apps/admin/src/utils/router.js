@@ -33,9 +33,8 @@ const routes = {
     component: () => import('../react/pages/DashboardPage.jsx'),
   },
   products: {
-    type: ROUTE_TYPE_LEGACY,
-    viewHtmlPath: '/src/components/products/products.html',
-    cssHref: '/src/styles/products.css',
+    type: ROUTE_TYPE_REACT,
+    component: () => import('../react/pages/ProductsPage.jsx'),
   },
   categories: {
     type: ROUTE_TYPE_LEGACY,

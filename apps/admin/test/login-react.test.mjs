@@ -34,14 +34,13 @@ function testLoginRouteIsReactOnly() {
 
 function testOtherRoutesStayLegacy() {
   const source = read('src/utils/router.js');
-  const expectedRoutes = [
-    'dashboard',
-    'products',
-    'categories',
-    'users',
-    'settings',
-    "'not-authorized'",
-  ];
+  const reactRoutes = ['dashboard', 'products'];
+  const expectedRoutes = ['categories', 'users', 'settings', "'not-authorized'"];
+
+  for (const route of reactRoutes) {
+    const pattern = new RegExp(`${route}:\\s*\\{[\\s\\S]*?type:\\s*ROUTE_TYPE_REACT`);
+    assert.match(source, pattern, `${route} should stay React`);
+  }
 
   for (const route of expectedRoutes) {
     const pattern = new RegExp(`${route}:\\s*\\{[\\s\\S]*?type:\\s*ROUTE_TYPE_LEGACY`);
