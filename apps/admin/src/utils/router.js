@@ -29,9 +29,8 @@ const routes = {
     component: () => import('../react/pages/LoginPage.jsx'),
   },
   dashboard: {
-    type: ROUTE_TYPE_LEGACY,
-    viewHtmlPath: '/src/components/dashboard/dashboard.html',
-    cssHref: '/src/styles/dashboard.css',
+    type: ROUTE_TYPE_REACT,
+    component: () => import('../react/pages/DashboardPage.jsx'),
   },
   products: {
     type: ROUTE_TYPE_LEGACY,
@@ -265,6 +264,8 @@ async function router() {
     if (routeConfig.type === ROUTE_TYPE_REACT) {
       if (isLoginRoute) {
         destroyAdminHeaderIfNeeded();
+      } else {
+        await loadAdminHeader();
       }
       await renderReactRoute(routeConfig);
       return;
