@@ -1,0 +1,91 @@
+.theme {
+  min-height: 100%;
+}
+
+.page {
+  display: grid;
+  gap: var(--admin-react-space-5, 1.25rem);
+  padding: var(--admin-react-space-5, 1.25rem);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--admin-react-space-4, 1rem);
+}
+
+.header h1 {
+  margin: 0;
+  color: var(--admin-react-text, #f8fafc);
+}
+
+.header p {
+  margin: var(--admin-react-space-1, 0.25rem) 0 0;
+  color: var(--admin-react-text-muted, #b7c0cf);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--admin-react-space-2, 0.5rem);
+}
+
+.panel {
+  display: grid;
+  gap: var(--admin-react-space-4, 1rem);
+}
+
+.alert {
+  margin: 0;
+  padding: var(--admin-react-space-3, 0.75rem);
+  border: 1px solid var(--admin-react-border, rgba(255, 255, 255, 0.1));
+  border-radius: var(--admin-react-radius-md, 0.5rem);
+  color: var(--admin-react-text, #f8fafc);
+  background: var(--admin-react-surface, #11151d);
+}
+
+.alertInfo {
+  border-color: color-mix(in srgb, var(--admin-react-info, #60a5fa) 38%, transparent);
+}
+
+.alertSuccess {
+  border-color: color-mix(in srgb, var(--admin-react-success, #34d399) 42%, transparent);
+}
+
+.alertError {
+  border-color: color-mix(in srgb, var(--admin-react-danger, #f87171) 42%, transparent);
+}
+
+.footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--admin-react-space-3, 0.75rem);
+  padding: var(--admin-react-space-3, 0.75rem);
+  border: 1px solid var(--admin-react-border, rgba(255, 255, 255, 0.1));
+  border-radius: var(--admin-react-radius-md, 0.5rem);
+  color: var(--admin-react-text-muted, #b7c0cf);
+  background: color-mix(in srgb, var(--admin-react-bg, #090b10) 92%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+@media (max-width: 680px) {
+  .page {
+    padding: var(--admin-react-space-3, 0.75rem);
+  }
+
+  .header,
+  .footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .actions {
+    justify-content: stretch;
+  }
+}

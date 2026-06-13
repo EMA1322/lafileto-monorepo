@@ -321,6 +321,30 @@ export const modulesApi = {
   },
 };
 
+export const settingsApi = {
+  /** Obtiene la configuracion privada del sitio */
+  async get({ signal } = {}) {
+    const response = await apiFetch('/settings', {
+      method: 'GET',
+      showErrorToast: false,
+      redirectOn401: false,
+      signal,
+    });
+    return ensureEnvelope(response);
+  },
+
+  /** Actualiza la configuracion privada del sitio */
+  async update(payload) {
+    const response = await apiFetch('/settings', {
+      method: 'PUT',
+      body: payload,
+      showErrorToast: false,
+      redirectOn401: false,
+    });
+    return ensureEnvelope(response);
+  },
+};
+
 export const apis = {
   products: productsApi,
   categories: categoriesApi,
@@ -328,6 +352,7 @@ export const apis = {
   users: usersApi,
   roles: rolesApi,
   modules: modulesApi,
+  settings: settingsApi,
 };
 
 export default apis;

@@ -48,14 +48,12 @@ function testRouteBoundariesStayIntact() {
     ['products', 'categories'],
     ['categories', 'users'],
     ['users', 'settings'],
+    ['settings', "'not-authorized'"],
   ]) {
     assert.equal(routeType(source, routeName, nextRouteName), 'ROUTE_TYPE_REACT');
   }
 
-  for (const [routeName, nextRouteName] of [
-    ['settings', "'not-authorized'"],
-    ["'not-authorized'", null],
-  ]) {
+  for (const [routeName, nextRouteName] of [["'not-authorized'", null]]) {
     assert.equal(routeType(source, routeName, nextRouteName), 'ROUTE_TYPE_LEGACY');
   }
 }
