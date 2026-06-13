@@ -58,7 +58,7 @@ function testRouteBoundariesStayIntact() {
 
 function testFeatureFlagContract() {
   const routerSource = read('src/utils/router.js');
-  const headerSource = read('src/components/header/header.js');
+  const headerNavigationSource = read('src/react/header/headerNavigation.helpers.js');
   const dashboardSource = read('src/react/pages/DashboardPage.jsx');
 
   assert.match(
@@ -67,20 +67,19 @@ function testFeatureFlagContract() {
   );
   assert.match(routerSource, /hashRoute === ['"]settings['"] && !FEATURE_SETTINGS/);
   assert.match(routerSource, /window\.location\.hash = ['"]#dashboard['"]/);
-  assert.match(headerSource, /item\.key === ['"]settings['"] && !FEATURE_SETTINGS/);
-  assert.match(headerSource, /data-rbac-action="read"/);
-  assert.match(headerSource, /applyRBAC\(itemEl\)/);
+  assert.match(headerNavigationSource, /item\.key === ['"]settings['"] && !featureSettings/);
+  assert.match(headerNavigationSource, /canRead\(item\.key\)/);
   assert.match(dashboardSource, /FEATURE_SETTINGS[\s\S]*href:\s*['"]#settings['"]/);
 }
 
 function testSettingsCanonicalHashContract() {
   const routerSource = read('src/utils/router.js');
-  const headerSource = read('src/components/header/header.js');
+  const headerNavigationSource = read('src/react/header/headerNavigation.helpers.js');
   const dashboardSource = read('src/react/pages/DashboardPage.jsx');
   const rbacSeedSource = read('public/data/rbac_permissions.json');
-  const productiveSources = [routerSource, headerSource, dashboardSource].join('\n');
+  const productiveSources = [routerSource, headerNavigationSource, dashboardSource].join('\n');
 
-  assert.match(headerSource, /key:\s*['"]settings['"][\s\S]*hash:\s*['"]#settings['"]/);
+  assert.match(headerNavigationSource, /key:\s*['"]settings['"][\s\S]*hash:\s*['"]#settings['"]/);
   assert.match(dashboardSource, /href:\s*['"]#settings['"][\s\S]*module:\s*['"]settings['"]/);
   assert.match(rbacSeedSource, /"settings":\s*\{\s*"r":\s*true/);
   assert.doesNotMatch(
@@ -150,6 +149,7 @@ function testSettingsPageContract() {
   const pageSource = read('src/react/pages/SettingsPage.jsx');
   const formSource = read('src/react/settings/SettingsForm.jsx');
   const sideEffectsSource = read('src/react/settings/settingsSideEffects.js');
+  const headerBrandingSource = read('src/react/header/headerBranding.helpers.js');
 
   assert.match(pageSource, /settingsApi\.get/);
   assert.match(pageSource, /settingsApi\.update/);
@@ -170,6 +170,8 @@ function testSettingsPageContract() {
   assert.match(formSource, /DeliverySection/);
   assert.match(sideEffectsSource, /admin\.settings\.brand\.logo/);
   assert.match(sideEffectsSource, /admin:settings-brand-logo-updated/);
+  assert.match(headerBrandingSource, /admin\.settings\.brand\.logo/);
+  assert.match(headerBrandingSource, /admin:settings-brand-logo-updated/);
   assert.match(sideEffectsSource, /new CustomEvent/);
   assert.match(sideEffectsSource, /localStorage\.setItem/);
   assert.match(sideEffectsSource, /localStorage\.removeItem/);
@@ -225,10 +227,25 @@ function testScopeBoundaries() {
     'apps/admin/src/components/settings/settings.js',
     'apps/admin/src/components/settings/settings.html',
     'apps/admin/src/styles/settings.css',
+    'apps/admin/src/react/header/AdminHeader.jsx',
+    'apps/admin/src/react/header/headerBranding.helpers.js',
+    'apps/admin/src/react/header/headerNavigation.helpers.js',
   ];
 
   for (const relativePath of forbiddenExistingFiles) {
     assert.ok(fs.existsSync(path.join(repoRoot, relativePath)), `${relativePath} should exist`);
+  }
+
+  for (const relativePath of [
+    'apps/admin/src/components/header/header.js',
+    'apps/admin/src/components/header/header.html',
+    'apps/admin/src/styles/core/header.css',
+  ]) {
+    assert.equal(
+      fs.existsSync(path.join(repoRoot, relativePath)),
+      false,
+      `${relativePath} should be removed`,
+    );
   }
 
   const scriptSource = read('scripts/test.mjs');

@@ -1,5 +1,11 @@
 # ADMIN React Migration — Fase 0 Baseline contractual
 
+> Actualizacion PR 8A cleanup: el Header global productivo del ADMIN ya es React
+> (`apps/admin/src/react/header/*`) y el Header legacy
+> (`apps/admin/src/components/header/*`, `apps/admin/src/styles/core/header.css`)
+> fue removido. `#not-authorized` sigue legacy con
+> `apps/admin/src/components/no-access.html` y `apps/admin/src/styles/no-access.css`.
+
 ## 1. Objetivo
 
 Esta Fase 0 congela los contratos actuales del ADMIN antes de iniciar cualquier runtime React, bridge, adapter o migración visual/funcional. No agrega React, no instala dependencias, no cambia UI productiva, no modifica backend productivo y no modifica client.
@@ -56,15 +62,15 @@ Evidencia: mapa `routes` y guardias en `apps/admin/src/utils/router.js:28`, `app
 
 ## 5. Mapa de renderizado y lifecycle
 
-| Archivo                                          | Responsabilidad                               | Contrato lifecycle                                                                                     | Riesgo  | Evidencia                                                                               |
-| ------------------------------------------------ | --------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ------- | --------------------------------------------------------------------------------------- |
-| `apps/admin/src/utils/router.js`                 | Router hash, guardias, header, CSS, módulo JS | Debe escuchar `hashchange`, cargar HTML/CSS antes de `initModule`, y destruir header al volver a login | Crítico | `initRouter()` en `:264`; `hashchange` en `:265`; dynamic imports en `:213-246`         |
-| `apps/admin/src/utils/renderView.js`             | Inyección de fragment HTML                    | Debe resolver `#main-content` o crearlo dentro de `#app`; usa `innerHTML`                              | Alto    | `renderView()` en `:49`; `container.innerHTML` en `:60`, `:64`, `:69`                   |
-| `apps/admin/src/components/header/header.js`     | App shell/header/sidebar/drawer               | Registra cleanup propio y listeners; debe evitar duplicados al navegar                                 | Alto    | `addListener`/cleanup en `:87-90`; `hashchange` en `:514`                               |
-| `apps/admin/src/components/products/products.js` | Orquestación Products                         | Mantiene `hashchangeHandler`; exporta `initModule` y `destroyModule`                                   | Crítico | `initModule` en `:104`; listener en `:144`; `destroyModule` en `:164`; remove en `:174` |
-| `apps/admin/src/components/users/users.js`       | Orquestación Users/Roles                      | Sincroniza filtros/tabs con hash y remueve listener antes de agregar                                   | Crítico | `window.removeEventListener` en `:190`; `addEventListener` en `:193`                    |
-| `apps/admin/src/components/settings/settings.js` | Settings form                                 | No exporta destructor; bind de listeners al inicializar                                                | Alto    | `initSettings()` en `:981`; listeners en `:991-1043`                                    |
-| `apps/admin/src/utils/modal.js`                  | Modal DOM global                              | Cierra modal activo, remueve Escape y overlay click                                                    | Alto    | `closeActiveModal()` en `:10`; `openModal()` en `:104`; Escape en `:159`                |
+| Archivo                                          | Responsabilidad                               | Contrato lifecycle                                                                                     | Riesgo  | Evidencia                                                                                           |
+| ------------------------------------------------ | --------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ------- | --------------------------------------------------------------------------------------------------- |
+| `apps/admin/src/utils/router.js`                 | Router hash, guardias, header, CSS, módulo JS | Debe escuchar `hashchange`, cargar HTML/CSS antes de `initModule`, y destruir header al volver a login | Crítico | `initRouter()` en `:264`; `hashchange` en `:265`; dynamic imports en `:213-246`                     |
+| `apps/admin/src/utils/renderView.js`             | Inyección de fragment HTML                    | Debe resolver `#main-content` o crearlo dentro de `#app`; usa `innerHTML`                              | Alto    | `renderView()` en `:49`; `container.innerHTML` en `:60`, `:64`, `:69`                               |
+| `apps/admin/src/react/header/AdminHeader.jsx`    | App shell/header/sidebar/drawer React         | Se monta desde el router con `createRoot`; no carga fragment/CSS legacy de Header                      | Alto    | `loadAdminHeader()` en `apps/admin/src/utils/router.js`; helpers en `apps/admin/src/react/header/*` |
+| `apps/admin/src/components/products/products.js` | Orquestación Products                         | Mantiene `hashchangeHandler`; exporta `initModule` y `destroyModule`                                   | Crítico | `initModule` en `:104`; listener en `:144`; `destroyModule` en `:164`; remove en `:174`             |
+| `apps/admin/src/components/users/users.js`       | Orquestación Users/Roles                      | Sincroniza filtros/tabs con hash y remueve listener antes de agregar                                   | Crítico | `window.removeEventListener` en `:190`; `addEventListener` en `:193`                                |
+| `apps/admin/src/components/settings/settings.js` | Settings form                                 | No exporta destructor; bind de listeners al inicializar                                                | Alto    | `initSettings()` en `:981`; listeners en `:991-1043`                                                |
+| `apps/admin/src/utils/modal.js`                  | Modal DOM global                              | Cierra modal activo, remueve Escape y overlay click                                                    | Alto    | `closeActiveModal()` en `:10`; `openModal()` en `:104`; Escape en `:159`                            |
 
 Contrato para el futuro adapter React: montar React solo dentro de la vista que corresponda, después de que el router legacy haya decidido ruta/guardias; desmontar antes de reemplazar `innerHTML`; no tomar control global de `location.hash`; no duplicar listeners del header ni del módulo legacy.
 
@@ -72,7 +78,7 @@ Contrato para el futuro adapter React: montar React solo dentro de la vista que 
 
 | Módulo                    | IDs críticos                                                                          | Clases hook                               | data-_ / data-rbac-_                                                                     | Selectores JS                                                  | Riesgo  | Evidencia                                                                                 |
 | ------------------------- | ------------------------------------------------------------------------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------- |
-| App shell/header/nav      | `admin-header`, navegación por hash                                                   | `adminHeader`, `adminSidebar`             | `data-rbac-module`, `data-rbac-action`, `data-rbac-hide`                                 | `#admin-header`, nav list, drawer                              | Alto    | `router.js:89-126`; `header.js:227-254`                                                   |
+| App shell/header/nav      | `admin-header`, navegación por hash                                                   | Header React CSS Modules                  | permisos via `canRead` y `featureSettings`                                               | `#admin-header`, drawer React                                  | Alto    | `router.js:loadAdminHeader`; `src/react/header/*`                                         |
 | Login                     | `login-form`, `email`, `password`, `password-toggle`, `login-submit`, `login-error`   | `login__*`                                | `data-debug-ping` oculto                                                                 | Form submit y toggle password                                  | Medio   | `login.html:20`, `:36`, `:46`, `:59`, `:63`; `login.js:170`                               |
 | Dashboard                 | quick actions/nav cards                                                               | `dashboard__*`                            | `data-link` en acciones                                                                  | `[data-link]`, `window.location.hash`                          | Alto    | `dashboard.js:579`, `dashboard.js:585`                                                    |
 | Products                  | `products-module`, `product-create`, filtros, tabla, paginación, templates            | `products__*`, `adminList__*`             | `data-rbac-module`, `data-rbac-action`, `data-action`, `data-offer-fields`, `data-field` | `#products-table-body`, `#tpl-product-form`, `#confirm-delete` | Crítico | `products.html:5-8`, `:17-22`, `:31-102`, `:160-318`; `products.render.bindings.js:27-50` |
@@ -101,15 +107,15 @@ Evidencia: `TOKEN_KEY` en `apps/admin/src/utils/auth.js:204`; storage en `:123`,
 
 ## 8. Contratos RBAC frontend
 
-| Módulo     | Acciones RBAC                   | DOM hooks                                     | Helper                         | Riesgo  | Evidencia                                                                     |
-| ---------- | ------------------------------- | --------------------------------------------- | ------------------------------ | ------- | ----------------------------------------------------------------------------- |
-| Router     | read por módulo                 | ruta hash                                     | `canRead`, `moduleKeyFromHash` | Crítico | `router.js:183`; `rbac.js:100`, `:309-331`                                    |
-| Header/nav | read por item                   | `data-rbac-module`, `data-rbac-action="read"` | `applyRBAC`                    | Alto    | `header.js:227-254`                                                           |
-| Products   | write/read/update/delete        | botones create/view/edit/delete/toggle        | `applyRBAC` + guards de módulo | Crítico | `products.html:17-22`; `products.render.table.js:79`, `:169-183`              |
-| Categories | write/update/delete             | create, status, view confirm, row actions     | `applyRBAC`                    | Alto    | `categories.html:24-25`, `:264-289`; `categories.render.table.js:54-67`       |
-| Users      | write/update/delete             | `btn-user-new`, row buttons, status           | `guardAction`, `applyRBAC`     | Crítico | `users.render.bindings.js:214-252`; `users.render.table.js:55-56`, `:237-239` |
-| Roles      | admin-only create/update/delete | `data-rbac-role="admin"`                      | `applyRBAC`                    | Crítico | `users.render.roles.js:63-84`                                                 |
-| Settings   | write                           | `social-links-add`, `settings-save`           | `canWrite('settings')`         | Crítico | `settings.html:84-88`, `:272-276`; `settings.js:433-452`                      |
+| Módulo     | Acciones RBAC                   | DOM hooks                                 | Helper                         | Riesgo  | Evidencia                                                                     |
+| ---------- | ------------------------------- | ----------------------------------------- | ------------------------------ | ------- | ----------------------------------------------------------------------------- |
+| Router     | read por módulo                 | ruta hash                                 | `canRead`, `moduleKeyFromHash` | Crítico | `router.js:183`; `rbac.js:100`, `:309-331`                                    |
+| Header/nav | read por item                   | navegacion React filtrada por permisos    | `canRead`                      | Alto    | `src/react/header/headerNavigation.helpers.js`; `AdminHeader.jsx`             |
+| Products   | write/read/update/delete        | botones create/view/edit/delete/toggle    | `applyRBAC` + guards de módulo | Crítico | `products.html:17-22`; `products.render.table.js:79`, `:169-183`              |
+| Categories | write/update/delete             | create, status, view confirm, row actions | `applyRBAC`                    | Alto    | `categories.html:24-25`, `:264-289`; `categories.render.table.js:54-67`       |
+| Users      | write/update/delete             | `btn-user-new`, row buttons, status       | `guardAction`, `applyRBAC`     | Crítico | `users.render.bindings.js:214-252`; `users.render.table.js:55-56`, `:237-239` |
+| Roles      | admin-only create/update/delete | `data-rbac-role="admin"`                  | `applyRBAC`                    | Crítico | `users.render.roles.js:63-84`                                                 |
+| Settings   | write                           | `social-links-add`, `settings-save`       | `canWrite('settings')`         | Crítico | `settings.html:84-88`, `:272-276`; `settings.js:433-452`                      |
 
 `applyRBAC` decide visibilidad/disabled según `data-rbac-hide`, `data-rbac-persist-disabled`, permisos `r/w/u/d`, rol admin, usuario actual y tabs Users/Roles (`apps/admin/src/utils/rbac.js:386-581`).
 
@@ -192,7 +198,7 @@ Evidencia: storage auth en `apps/admin/src/utils/auth.js:123-133`, `:190`, `:204
 | `VITE_FEATURE_SETTINGS`            | `apps/admin/.env.example`, router, header, dashboard | `false` | Oculta Settings del header/dashboard cuando está off | `#settings` redirige a `#dashboard` | Alto   |
 | `DATA_SOURCE` / `VITE_DATA_SOURCE` | `apps/admin/src/utils/api.js`                        | `api`   | Define origen de datos legacy/api                    | No cambia ruta                      | Medio  |
 
-Evidencia: default `VITE_FEATURE_SETTINGS=false` en `apps/admin/.env.example:9`; router en `apps/admin/src/utils/router.js:24`, `:173-177`; header en `apps/admin/src/components/header/header.js:36`, `:227`; dashboard en `apps/admin/src/components/dashboard/dashboard.js:36`, `:65`, `:84`, `:320`; `DATA_SOURCE` en `apps/admin/src/utils/api.js:24-35`.
+Evidencia: default `VITE_FEATURE_SETTINGS=false` en `apps/admin/.env.example:9`; router en `apps/admin/src/utils/router.js`; Header React en `apps/admin/src/react/header/headerNavigation.helpers.js`; dashboard en `apps/admin/src/react/pages/DashboardPage.jsx`; `DATA_SOURCE` en `apps/admin/src/utils/api.js:24-35`.
 
 ## 14. Modales, drawers y overlays
 
@@ -203,9 +209,9 @@ Evidencia: default `VITE_FEATURE_SETTINGS=false` en `apps/admin/.env.example:9`;
 | Product delete/view modal | `tpl-product-delete`, `confirm-delete`, `tpl-product-view`, `product-view-close` | Products                    | Confirmar delete y vista solo lectura                                  | Alto         |
 | Category modals           | templates/fields de Categories                                                   | Categories CRUD             | Form/status/delete/view                                                | Alto         |
 | Users modals              | Users/Roles modals                                                               | Users/Roles                 | Crear/editar usuarios, roles/permisos                                  | Crítico      |
-| Header drawer/sidebar     | header refs, drawer media query                                                  | App shell                   | Cierre, scroll lock, focus return, `hashchange` activo                 | Alto         |
+| Header drawer/sidebar     | refs React del drawer                                                            | App shell React             | Cierre, scroll lock, focus return, navegacion hash                     | Alto         |
 
-Evidencia: modal global en `apps/admin/src/utils/modal.js:10-168`; Products templates en `apps/admin/src/components/products/products.html:160-318`; Products modal JS en `apps/admin/src/components/products/products.modals.js:110-113`, `:297-308`, `:356-437`, `:523-531`, `:569-587`; header drawer/listeners en `apps/admin/src/components/header/header.js:79-93`, `:514`.
+Evidencia: modal global en `apps/admin/src/utils/modal.js:10-168`; Products templates en `apps/admin/src/components/products/products.html:160-318`; Products modal JS en `apps/admin/src/components/products/products.modals.js:110-113`, `:297-308`, `:356-437`, `:523-531`, `:569-587`; Header drawer React en `apps/admin/src/react/header/useHeaderDrawer.js`.
 
 ## 15. Estados loading/error/empty/success
 
@@ -233,7 +239,7 @@ Evidencia: Products states en `apps/admin/src/components/products/products.html:
 | `apps/admin/src/utils/rbac.js`                                | RBAC            | Permisos, DOM gating                  | Alto    | Sí       | session/localStorage, CustomEvent | Seed fallback | Crítico      | Crítico | Mantener como fuente hasta extraer contrato     |
 | `apps/admin/src/utils/apis.js`                                | API             | Products/categories/offers helpers    | No      | No       | No                                | Sí            | Medio        | Alto    | Reutilizar helpers en React bridge              |
 | `apps/admin/src/utils/modal.js`                               | Modal           | Overlay/panel global                  | Alto    | No       | Escape listener                   | No            | Alto         | Alto    | Definir ownership si React usa portals          |
-| `apps/admin/src/components/header/header.js`                  | Shell           | Sidebar/topbar/nav/logout             | Alto    | Sí       | listeners/window                  | Auth/logout   | Crítico      | Alto    | Migrar después de bridge y dashboard            |
+| `apps/admin/src/react/header/AdminHeader.jsx`                 | Shell React     | Sidebar/topbar/nav/logout             | Alto    | Sí       | listeners React/drawer            | Auth/logout   | Crítico      | Alto    | Productivo; legacy removido en PR 8A cleanup    |
 | `apps/admin/src/components/login/login.js`                    | Login           | Form auth                             | Medio   | No       | Auth storage                      | Sí            | Alto         | Alto    | Primera pantalla React tras bridge              |
 | `apps/admin/src/components/dashboard/dashboard.js`            | Dashboard       | Summary/quick actions                 | Alto    | Sí       | hash                              | Sí            | Alto         | Alto    | Migrar tras Login para shell operativo          |
 | `apps/admin/src/components/products/products.js`              | Products        | State init/hash lifecycle             | Alto    | Sí       | hash listeners                    | Sí            | Crítico      | Crítico | Separar listado antes de CRUD                   |
@@ -353,7 +359,7 @@ Get-ChildItem -Path apps\admin -Recurse -File
 rg -n --glob '!**/node_modules/**' "renderView|initModule|destroy|hashchange|location\.hash|routes|router|viewHtmlPath|cssHref|fetch\(|innerHTML|insertAdjacentHTML|template|getElementById|querySelector|querySelectorAll|addEventListener|removeEventListener|CustomEvent|dispatchEvent|localStorage|sessionStorage|data-rbac|dataset|auth_token|Authorization|Bearer|login|logout|401|403|canRead|canWrite|canUpdate|canDelete|feature|flag|VITE_FEATURE" apps/admin
 rg -n --glob '!**/node_modules/**' "router|app\.use|/api/v1|auth|login|me|logout|rbac|rbacGuard|requireAdminRole|permission|permissions|role|roles|dashboard|products|offers|categories|users|settings|siteConfig|error|ok|data|code|message|cors|requestId|timeout" apps/backend/src apps/backend/prisma/schema.prisma apps/backend/tests
 rg -n "settings|siteConfig|products|offers|categories|public|logo|branding|cart|imageUrl|price|discount" apps/client/src apps/client/public apps/client/index.html
-rg -n "id=|class=|data-rbac|data-action|template|data-field|data-close-modal|aria-|hidden" apps/admin/src/components/header/header.html apps/admin/src/components/login/login.html apps/admin/src/components/dashboard/dashboard.html apps/admin/src/components/products/products.html apps/admin/src/components/categories/categories.html apps/admin/src/components/users/users.html apps/admin/src/components/settings/settings.html apps/admin/src/components/no-access.html
+rg -n "id=|class=|data-rbac|data-action|template|data-field|data-close-modal|aria-|hidden" apps/admin/src/components/login/login.html apps/admin/src/components/dashboard/dashboard.html apps/admin/src/components/products/products.html apps/admin/src/components/categories/categories.html apps/admin/src/components/users/users.html apps/admin/src/components/settings/settings.html apps/admin/src/components/no-access.html apps/admin/src/react/header
 ```
 
 Referencias principales:

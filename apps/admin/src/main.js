@@ -13,7 +13,7 @@ import './styles/components/admin-list.css';
 
 // A partir de ahora, cada módulo carga SU CSS:
 // - login:     link en /components/login/login.html
-// - header:    link en /components/header/header.html
+// - header:    React; no usa fragment/CSS legacy
 // - dashboard: link en /components/dashboard/dashboard.html
 // - otros:     iremos migrando uno a uno
 // import './styles/dashboard.css'; // ⬅️ REMOVIDO (code-splitting real)

@@ -46,7 +46,11 @@ function testRouterMountsReactHeader() {
   assert.doesNotMatch(routerSource, /headerModuleRef/);
   assert.doesNotMatch(routerSource, /components\/header\/header\.html/);
   assert.doesNotMatch(routerSource, /components\/header\/header\.js/);
-  assert.doesNotMatch(routerSource, /header\.css\?url/);
+  assert.doesNotMatch(routerSource, /styles\/core\/header\.css|header\.css\?url/);
+  assert.doesNotMatch(
+    routerSource,
+    /import\(['"].*components\/(login|dashboard|products|categories|users|settings)\//,
+  );
 }
 
 function testHeaderRouteContracts() {
@@ -146,9 +150,9 @@ function testNoReactRouterOrForbiddenScope() {
   assert.doesNotMatch(checkedSources, /lucide-react|@refinedev|antd|@ant-design/);
 
   for (const relativePath of [
-    'apps/admin/src/components/header/header.js',
-    'apps/admin/src/components/header/header.html',
-    'apps/admin/src/styles/core/header.css',
+    'apps/admin/src/react/header/AdminHeader.jsx',
+    'apps/admin/src/react/header/headerBranding.helpers.js',
+    'apps/admin/src/react/header/headerNavigation.helpers.js',
     'apps/admin/src/react/pages/LoginPage.jsx',
     'apps/admin/src/react/pages/DashboardPage.jsx',
     'apps/admin/src/react/pages/ProductsPage.jsx',
@@ -161,6 +165,18 @@ function testNoReactRouterOrForbiddenScope() {
     assert.ok(
       fs.existsSync(path.join(repoRoot, relativePath)),
       `${relativePath} should remain present`,
+    );
+  }
+
+  for (const relativePath of [
+    'apps/admin/src/components/header/header.js',
+    'apps/admin/src/components/header/header.html',
+    'apps/admin/src/styles/core/header.css',
+  ]) {
+    assert.equal(
+      fs.existsSync(path.join(repoRoot, relativePath)),
+      false,
+      `${relativePath} should be removed`,
     );
   }
 }

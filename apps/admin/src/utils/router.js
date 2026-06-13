@@ -24,7 +24,8 @@ let headerContainerRef = null;
 const ROUTE_TYPE_LEGACY = 'legacy';
 const ROUTE_TYPE_REACT = 'react';
 
-// Rutas centralizadas (mantener en sync con /src/components/*)
+// Rutas centralizadas. Las rutas funcionales ya montan React; #not-authorized
+// conserva el fragment legacy hasta que se migre en una fase dedicada.
 const routes = {
   login: {
     type: ROUTE_TYPE_REACT,
@@ -252,60 +253,16 @@ async function router() {
   // -------- Carga de vista
   try {
     scrollToTop();
-    if (routeConfig.type === ROUTE_TYPE_REACT) {
-      if (isLoginRoute) {
-        destroyAdminHeaderIfNeeded();
-      } else {
-        await loadAdminHeader();
-      }
-      await renderReactRoute(routeConfig);
-      return;
+    if (routeConfig.type !== ROUTE_TYPE_REACT) {
+      throw new Error(`Unsupported legacy route reached after guards: ${hashRoute}`);
     }
 
-    unmountReactView();
-    await ensureStylesheetLoaded(routeConfig.cssHref);
-    await renderView(routeConfig.viewHtmlPath);
-
-    // Import dinámico del JS correspondiente (mismo patrón que ya usás)
-    switch (hashRoute) {
-      case 'login': {
-        // Ocultar header en login
-        destroyAdminHeaderIfNeeded();
-        const mod = await import('../components/login/login.js');
-        if (mod && typeof mod.initLogin === 'function') mod.initLogin();
-        break;
-      }
-      case 'dashboard': {
-        await loadAdminHeader();
-        const mod = await import('../components/dashboard/dashboard.js');
-        if (mod && typeof mod.initDashboard === 'function') mod.initDashboard();
-        break;
-      }
-      case 'products': {
-        await loadAdminHeader();
-        const mod = await import('../components/products/products.js');
-        if (mod) {
-          if (typeof mod.initModule === 'function') mod.initModule();
-          else if (typeof mod.initProducts === 'function') mod.initProducts();
-        }
-        break;
-      }
-      case 'users': {
-        await loadAdminHeader();
-        const mod = await import('../components/users/users.js');
-        if (mod && typeof mod.initUsers === 'function') mod.initUsers();
-        break;
-      }
-      case 'settings': {
-        await loadAdminHeader();
-        const mod = await import('../components/settings/settings.js');
-        if (mod && typeof mod.initSettings === 'function') mod.initSettings();
-        break;
-      }
-      default:
-        // No-op (cubre futuras rutas)
-        break;
+    if (isLoginRoute) {
+      destroyAdminHeaderIfNeeded();
+    } else {
+      await loadAdminHeader();
     }
+    await renderReactRoute(routeConfig);
   } catch (err) {
     console.error('Error en router:', err);
   }

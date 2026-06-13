@@ -4,8 +4,8 @@
 
 ## A) Arquitectura UI (router / renderView / imports)
 
-- **Bootstrap global**: `main.js` carga `tokens.css`, `base.css`, `icons.css`, `components.css`, `admin-list.css` y `modals.css`; luego inicializa `initRouter()` e `initModals()`.  
-- **Router SPA**: `router.js` resuelve hash route, aplica guards de auth + RBAC (`canRead`) + feature flags (`VITE_FEATURE_SETTINGS`) y recién ahí hace `renderView(path)` + import dinámico del módulo JS.  
+- **Bootstrap global**: `main.js` carga `tokens.css`, `base.css`, `icons.css`, `components.css`, `admin-list.css` y `modals.css`; luego inicializa `initRouter()` e `initModals()`.
+- **Router SPA**: `router.js` resuelve hash route, aplica guards de auth + RBAC (`canRead`) + feature flags (`VITE_FEATURE_SETTINGS`) y recién ahí hace `renderView(path)` + import dinámico del módulo JS.
 - **Render de vistas**: `renderView.js` monta en `#main-content`, marca `aria-busy`, muestra loader estándar (`.view-state--loading`) y fallback de vacío/error (`.view-state--empty`) si falla fetch.
 
 Snippet base de módulo (patrón esperado):
@@ -109,7 +109,9 @@ Esta sección es el **contrato visual mandatorio** del Admin UI.
 
 ```html
 <div class="table-wrapper">
-  <table class="data-table">...</table>
+  <table class="data-table">
+    ...
+  </table>
 </div>
 ```
 
@@ -264,13 +266,20 @@ Snippet mínimo de focus-trap (si el modal no lo implementa aún):
 ```js
 function trapTabKey(event, root) {
   if (event.key !== 'Tab') return;
-  const nodes = root.querySelectorAll('button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])');
+  const nodes = root.querySelectorAll(
+    'button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])',
+  );
   const focusables = [...nodes].filter((el) => !el.hasAttribute('disabled'));
   if (!focusables.length) return;
   const first = focusables[0];
   const last = focusables[focusables.length - 1];
-  if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
-  else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
 }
 ```
 
@@ -278,7 +287,7 @@ function trapTabKey(event, root) {
 
 ## G) A11y Smoke Checklist (Teclado + Motion) — Admin
 
-> Objetivo: correr una validación rápida y repetible de accesibilidad funcional en Admin, usando componentes reales del repo (`focus-trap`, `initTooltips`, `#global-modal`, `#headerDrawer`, `icon-btn`, `shouldReduceMotion`).
+> Objetivo: correr una validación rápida y repetible de accesibilidad funcional en Admin, usando componentes reales del repo (`focus-trap`, `initTooltips`, `#global-modal`, `#adminHeaderDrawer`, `icon-btn`, `shouldReduceMotion`). El Header global productivo es React; el Header legacy fue removido en PR 8A cleanup.
 
 ### A) Setup rápido
 
@@ -291,15 +300,15 @@ function trapTabKey(event, root) {
 
 ### B) Walkthrough de teclado (paso a paso)
 
-#### 1) Header drawer (`#headerMenuToggle` / `#headerDrawer` / `#headerOverlay`)
+#### 1) Header drawer React (`[aria-controls="adminHeaderDrawer"]` / `#adminHeaderDrawer`)
 
-1. Presioná `Tab` hasta enfocar `#headerMenuToggle`.
+1. Presioná `Tab` hasta enfocar el botón con `aria-controls="adminHeaderDrawer"`.
 2. Presioná `Enter` (o `Space`) para abrir el drawer.
-3. **Pasa** si el foco entra al drawer (`#headerDrawer`) al abrir.
+3. **Pasa** si el foco entra al drawer (`#adminHeaderDrawer`) al abrir.
 4. Navegá con `Tab` y `Shift+Tab` dentro del drawer.
    - **Pasa** si el foco queda atrapado (no salta al contenido detrás).
 5. Presioná `Escape`.
-   - **Pasa** si cierra drawer/overlay y el foco vuelve a `#headerMenuToggle`.
+   - **Pasa** si cierra drawer/overlay y el foco vuelve al botón que controla `#adminHeaderDrawer`.
 
 #### 2) Modal global (`#global-modal`, modal v2)
 
@@ -341,7 +350,7 @@ Con reduced-motion activo:
 
 ### E) Checklist Pasa/Falla (copiable)
 
-- [ ] Header drawer: `Enter/Space` abre, foco entra y queda atrapado, `Escape` cierra y retorna foco a `#headerMenuToggle`.
+- [ ] Header drawer: `Enter/Space` abre, foco entra y queda atrapado, `Escape` cierra y retorna foco al botón que controla `#adminHeaderDrawer`.
 - [ ] Modal global (`#global-modal`): foco inicial interno, trap con `Tab/Shift+Tab`, `Escape` + retorno al trigger.
 - [ ] Tooltips (`data-tooltip`): aparecen con focus, asignan `aria-describedby`, `Escape` cierra sin efectos colaterales.
 - [ ] Focus-visible correcto en `.btn`, `.icon-btn`, `.card--action`.
@@ -358,25 +367,28 @@ Formato recomendado (copiar/pegar en PR):
 
 ```md
 ### Evidencia A11y Smoke — Admin
+
 - Módulo: <Products|Categories|Header>
 - Fecha: <YYYY-MM-DD>
 - Entorno: <local|staging> / <Chrome|Firefox>
 - Reduced motion: <ON|OFF>
 
 #### Resultado
-- Drawer (`#headerDrawer`): <PASA|FALLA> — <nota breve>
+
+- Drawer (`#adminHeaderDrawer`): <PASA|FALLA> — <nota breve>
 - Modal (`#global-modal`): <PASA|FALLA> — <nota breve>
 - Tooltips (`.icon-btn` + `data-tooltip`): <PASA|FALLA> — <nota breve>
 - Focus-visible (`.btn`, `.icon-btn`, `.card--action`): <PASA|FALLA> — <nota breve>
 - Motion guard (`shouldReduceMotion`): <PASA|FALLA> — <nota breve>
 
 #### Hallazgos
+
 - <si aplica>
 ```
 
 ### Checklist rápido (1 minuto)
 
-- Abrir drawer con teclado (`#headerMenuToggle`) y cerrar con `Escape` verificando retorno de foco.
+- Abrir drawer con teclado (`[aria-controls="adminHeaderDrawer"]`) y cerrar con `Escape` verificando retorno de foco.
 - Abrir un modal real (`#global-modal`) y comprobar trap con 3-4 tabs.
 - Enfocar un `.icon-btn` con `data-tooltip` y confirmar `aria-describedby` + cierre con `Escape`.
 - Confirmar que se ve focus ring en al menos `.btn` y `.icon-btn`.
@@ -469,8 +481,8 @@ Formato recomendado (copiar/pegar en PR):
 <div class="card" role="status" aria-live="polite">
   <div class="card__body">
     <p class="products__inline-alert">
-      Aún no existe primitive `.alert` global en `components.css`.
-      Usá `toast.info()` para feedback temporal o card scoped para mensajes persistentes.
+      Aún no existe primitive `.alert` global en `components.css`. Usá `toast.info()` para feedback
+      temporal o card scoped para mensajes persistentes.
     </p>
   </div>
 </div>
@@ -500,6 +512,7 @@ Formato recomendado (copiar/pegar en PR):
 
 ```md
 ## Checklist módulo UI
+
 - [ ] Ruta agregada/actualizada en `utils/router.js` (`viewHtmlPath`, `cssHref`, import dinámico JS).
 - [ ] HTML del módulo con bloque BEM propio (`<modulo>__*`).
 - [ ] CSS del módulo usa tokens (`var(--...)`) y reutiliza componentes globales (`.btn`, `.card`, etc.).
@@ -599,11 +612,13 @@ Cobertura estándar:
 
 ```md
 ## Visual Smoke Report — Admin UI
+
 - Fecha: <YYYY-MM-DD>
 - Commit/Branch: <sha-corto> / <branch>
 - Browser: <Chrome versión>
 
 ### Resultado por caso
+
 - Breakpoint: <390|768|1440>
 - Módulo: <Dashboard|Products|Users|Settings|Categories|Login>
 - Estado: <success|loading|empty|error>
@@ -611,6 +626,7 @@ Cobertura estándar:
 - Evidencia: <link screenshot | nota>
 
 ### Hallazgos
+
 - <Descripción breve del issue>
 - <Impacto (alto/medio/bajo)>
 - <Sugerencia o siguiente paso>
@@ -649,23 +665,28 @@ Smokes manuales mínimos:
 
 ```md
 ## Scope ✅
+
 - (qué sí cambia)
 
 ## Scope ❌
+
 - (qué no cambia)
 
 ## Archivos tocados
+
 - apps/admin/src/components/...
 - apps/admin/src/styles/...
 - apps/admin/src/utils/...
 
 ## Smokes
+
 - [ ] pnpm -w lint
 - [ ] pnpm --filter admin test
 - [ ] pnpm --filter admin build
 - [ ] Smokes manuales UI/RBAC/A11y
 
 ## Auditoría post-PR (comandos)
+
 - `rg -n "view-state|data-rbac|data-tooltip" apps/admin/src/components apps/admin/src/utils -S`
 - `rg -n "--c-|--space-|--radius-|--shadow-" apps/admin/src/styles -S`
 - `nl -ba apps/admin/src/styles/components/components.css | sed -n '240,620p'`
