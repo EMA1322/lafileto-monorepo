@@ -55,11 +55,9 @@ function testRouteBoundariesStayIntact() {
     ['products', 'categories'],
     ['categories', 'users'],
     ['users', 'settings'],
-  ];
-  const legacyRoutes = [
     ['settings', "'not-authorized'"],
-    ["'not-authorized'", null],
   ];
+  const legacyRoutes = [["'not-authorized'", null]];
 
   for (const [routeName, nextRouteName] of reactRoutes) {
     assert.equal(routeType(source, routeName, nextRouteName), 'ROUTE_TYPE_REACT');

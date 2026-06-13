@@ -58,10 +58,8 @@ function testRouteBoundariesStayIntact() {
   const productsRoute = routeBlock(source, 'products', 'categories');
   const categoriesRoute = routeBlock(source, 'categories', 'users');
   const usersRoute = routeBlock(source, 'users', 'settings');
-  const legacyRoutes = [
-    ['settings', "'not-authorized'"],
-    ["'not-authorized'", null],
-  ];
+  const settingsRoute = routeBlock(source, 'settings', "'not-authorized'");
+  const legacyRoutes = [["'not-authorized'", null]];
 
   assert.match(loginRoute, /type:\s*ROUTE_TYPE_REACT/, 'login should stay React');
   assert.match(productsRoute, /type:\s*ROUTE_TYPE_REACT/, 'products should now be React');
@@ -75,6 +73,12 @@ function testRouteBoundariesStayIntact() {
     'ROUTE_TYPE_REACT',
     'users should now be React',
   );
+  assert.equal(
+    routeType(source, 'settings', "'not-authorized'"),
+    'ROUTE_TYPE_REACT',
+    'settings should now be React',
+  );
+  assert.match(settingsRoute, /import\(['"]\.\.\/react\/pages\/SettingsPage\.jsx['"]\)/);
 
   for (const [routeName, nextRouteName] of legacyRoutes) {
     assert.equal(

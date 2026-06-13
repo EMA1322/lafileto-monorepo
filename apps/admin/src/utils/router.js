@@ -45,9 +45,8 @@ const routes = {
     component: () => import('../react/pages/UsersPage.jsx'),
   },
   settings: {
-    type: ROUTE_TYPE_LEGACY,
-    viewHtmlPath: '/src/components/settings/settings.html',
-    cssHref: '/src/styles/settings.css',
+    type: ROUTE_TYPE_REACT,
+    component: () => import('../react/pages/SettingsPage.jsx'),
   },
   'not-authorized': {
     type: ROUTE_TYPE_LEGACY,
@@ -234,15 +233,6 @@ async function router() {
     return;
   }
 
-  // -------- Guard: permiso de lectura (R)
-  const moduleKey = moduleKeyFromHash(hashRoute);
-  if (!isLoginRoute && moduleKey && !canRead(moduleKey)) {
-    await renderNoAccess();
-    // Emite notificación con código estandarizado (sin cambiar texto visible)
-    notify('No autorizado', { type: 'warning', code: 'PERMISSION_DENIED' });
-    return;
-  }
-
   // -------- 404 si la ruta no existe
   const routeConfig = routes[hashRoute];
   if (!routeConfig) {
@@ -255,6 +245,14 @@ async function router() {
     return;
   }
 
+  // -------- Guard: permiso de lectura (R)
+  const moduleKey = moduleKeyFromHash(hashRoute);
+  if (!isLoginRoute && moduleKey && !canRead(moduleKey)) {
+    await renderNoAccess();
+    // Emite notificación con código estandarizado (sin cambiar texto visible)
+    notify('No autorizado', { type: 'warning', code: 'PERMISSION_DENIED' });
+    return;
+  }
   // -------- Carga de vista
   try {
     scrollToTop();

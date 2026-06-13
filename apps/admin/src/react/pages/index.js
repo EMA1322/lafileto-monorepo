@@ -3,3 +3,4 @@ export { default as LoginPage } from './LoginPage.jsx';
 export { default as ProductsPage } from './ProductsPage.jsx';
 export { default as CategoriesPage } from './CategoriesPage.jsx';
 export { default as UsersPage } from './UsersPage.jsx';
+export { default as SettingsPage } from './SettingsPage.jsx';
