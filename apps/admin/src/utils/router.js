@@ -5,7 +5,8 @@
 
 import { renderView } from './renderView.js';
 import { mountReactView, unmountReactView } from './reactViewAdapter.js';
-import headerCssUrl from '@/styles/core/header.css?url';
+import React from 'react';
+import { createRoot } from 'react-dom/client';
 import { ensureStylesheetLoaded } from './styles.js';
 import { isAuthenticated, ensureAuthReady, pickHomeRoute, logout } from './auth.js';
 import notify from './notify.js';
@@ -18,7 +19,8 @@ import {
 import { uiNotFound } from './ui-templates.js';
 
 const FEATURE_SETTINGS = isFeatureEnabled(import.meta.env.VITE_FEATURE_SETTINGS);
-let headerModuleRef = null;
+let headerRootRef = null;
+let headerContainerRef = null;
 const ROUTE_TYPE_LEGACY = 'legacy';
 const ROUTE_TYPE_REACT = 'react';
 
@@ -66,6 +68,7 @@ function scrollToTop() {
 
 /** Renderiza No-Access con CTA dinámico (según permisos) */
 async function renderNoAccess() {
+  destroyAdminHeaderIfNeeded();
   unmountReactView();
   const routeConfig = routes['not-authorized'];
   await ensureStylesheetLoaded(routeConfig?.cssHref);
@@ -94,28 +97,20 @@ async function loadAdminHeader() {
   const headerContainer = document.getElementById('admin-header');
   if (!headerContainer) return;
 
-  // Si ya existe contenido, no recargar (performance)
-  if (headerContainer.innerHTML.trim() !== '') return;
+  if (headerRootRef && headerContainerRef === headerContainer) return;
 
   try {
-    // Header styles are loaded by router to prevent FOUC.
-    await ensureStylesheetLoaded(headerCssUrl);
-  } catch (err) {
-    console.warn('Header stylesheet could not be preloaded. Continuing with fallback render.', err);
-  }
-
-  try {
-    const res = await fetch('/src/components/header/header.html', { cache: 'no-store' });
-    headerContainer.innerHTML = await res.text();
-
-    // header.js hace su propio ensureRbacLoaded() y filtrado de menú
-    const moduleHeader = await import('../components/header/header.js');
-    headerModuleRef = moduleHeader;
-    if (moduleHeader && typeof moduleHeader.initAdminHeader === 'function') {
-      await moduleHeader.initAdminHeader();
+    if (headerRootRef) {
+      destroyAdminHeaderIfNeeded();
     }
+
+    headerContainer.replaceChildren();
+    const { default: AdminHeader } = await import('../react/header/AdminHeader.jsx');
+    headerRootRef = createRoot(headerContainer);
+    headerContainerRef = headerContainer;
+    headerRootRef.render(React.createElement(AdminHeader, { featureSettings: FEATURE_SETTINGS }));
   } catch (err) {
-    console.error('Error cargando el header del admin:', err);
+    console.error('Error cargando el header React del admin:', err);
   }
 }
 
@@ -123,10 +118,11 @@ function destroyAdminHeaderIfNeeded() {
   const headerContainer = document.getElementById('admin-header');
   if (!headerContainer) return;
 
-  if (headerModuleRef && typeof headerModuleRef.destroyAdminHeader === 'function') {
-    headerModuleRef.destroyAdminHeader();
+  if (headerRootRef) {
+    headerRootRef.unmount();
   }
-  headerModuleRef = null;
+  headerRootRef = null;
+  headerContainerRef = null;
   headerContainer.innerHTML = '';
 }
 

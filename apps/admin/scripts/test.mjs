@@ -10,6 +10,7 @@ import { runReactUiFoundationTests } from '../test/react-ui-foundation.test.mjs'
 import { runCategoriesReactTests } from '../test/categories-react.test.mjs';
 import { runUsersRolesReactTests } from '../test/users-roles-react.test.mjs';
 import { runSettingsReactTests } from '../test/settings-react.test.mjs';
+import { runHeaderReactTests } from '../test/header-react.test.mjs';
 
 const suites = [
   { name: 'products contract helpers', runner: runProductsContractTests },
@@ -22,6 +23,7 @@ const suites = [
   { name: 'categories react contract', runner: runCategoriesReactTests },
   { name: 'users roles react contract', runner: runUsersRolesReactTests },
   { name: 'settings react contract', runner: runSettingsReactTests },
+  { name: 'header react contract', runner: runHeaderReactTests },
   { name: 'react view adapter', runner: runReactViewAdapterTests },
   { name: 'react ui foundation', runner: runReactUiFoundationTests },
 ];
