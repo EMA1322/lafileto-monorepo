@@ -1,5 +1,5 @@
 // ================================
-// main.js – ADMIN PANEL (code-splitting activado)
+// main.js - ADMIN PANEL (code-splitting activado)
 // ================================
 
 // Estilos globales SIEMPRE presentes
@@ -11,12 +11,9 @@ import './styles/components/components.css';
 import './styles/components/admin-list.css';
 // import './styles/global.css'; // REMOVIDO: migrado a tokens/base/components
 
-// A partir de ahora, cada módulo carga SU CSS:
-// - login:     link en /components/login/login.html
-// - header:    React; no usa fragment/CSS legacy
-// - dashboard: link en /components/dashboard/dashboard.html
-// - otros:     iremos migrando uno a uno
-// import './styles/dashboard.css'; // ⬅️ REMOVIDO (code-splitting real)
+// Las pantallas React cargan sus CSS Modules; los modulos legacy restantes
+// mantienen su CSS por fragment cuando corresponda.
+// - header: React; no usa fragment/CSS legacy
 // import './styles/products.css';
 // import './styles/categories.css';
 
