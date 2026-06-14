@@ -10,9 +10,33 @@ function read(relativePath) {
   return fs.readFileSync(path.join(adminRoot, relativePath), 'utf8');
 }
 
+function exists(relativePath) {
+  return fs.existsSync(path.join(adminRoot, relativePath));
+}
+
+function routeBlock(source, routeName, nextRouteName) {
+  const start = source.indexOf(`${routeName}: {`);
+  assert.notEqual(start, -1, `${routeName} route should exist`);
+
+  const end = nextRouteName
+    ? source.indexOf(`${nextRouteName}: {`, start + 1)
+    : source.indexOf('\n};', start + 1);
+  assert.notEqual(end, -1, `${routeName} route block should have a boundary`);
+
+  return source.slice(start, end);
+}
+
+function routeType(source, routeName, nextRouteName) {
+  const match = routeBlock(source, routeName, nextRouteName).match(
+    /^\s*type:\s*(ROUTE_TYPE_[A-Z]+),/m,
+  );
+  assert.ok(match, `${routeName} route should declare a route type`);
+  return match[1];
+}
+
 function testLoginRouteIsReactOnly() {
   const source = read('src/utils/router.js');
-  const loginRoute = source.match(/login:\s*\{[\s\S]*?\n\s*\},\n\s*dashboard:/)?.[0] || '';
+  const loginRoute = routeBlock(source, 'login', 'dashboard');
 
   assert.match(loginRoute, /type:\s*ROUTE_TYPE_REACT/, 'login route should be React');
   assert.match(
@@ -32,20 +56,35 @@ function testLoginRouteIsReactOnly() {
   );
 }
 
-function testOtherRoutesStayLegacy() {
+function testRouteBoundariesStayIntact() {
   const source = read('src/utils/router.js');
-  const reactRoutes = ['dashboard', 'products'];
-  const expectedRoutes = ['categories', 'users', 'settings', "'not-authorized'"];
+  const reactRoutes = [
+    ['login', 'dashboard'],
+    ['dashboard', 'products'],
+    ['products', 'categories'],
+    ['categories', 'users'],
+    ['users', 'settings'],
+    ['settings', "'not-authorized'"],
+  ];
+  const legacyRoutes = [["'not-authorized'", null]];
 
-  for (const route of reactRoutes) {
-    const pattern = new RegExp(`${route}:\\s*\\{[\\s\\S]*?type:\\s*ROUTE_TYPE_REACT`);
-    assert.match(source, pattern, `${route} should stay React`);
+  for (const [routeName, nextRouteName] of reactRoutes) {
+    assert.equal(routeType(source, routeName, nextRouteName), 'ROUTE_TYPE_REACT');
   }
 
-  for (const route of expectedRoutes) {
-    const pattern = new RegExp(`${route}:\\s*\\{[\\s\\S]*?type:\\s*ROUTE_TYPE_LEGACY`);
-    assert.match(source, pattern, `${route} should stay legacy`);
+  for (const [routeName, nextRouteName] of legacyRoutes) {
+    assert.equal(routeType(source, routeName, nextRouteName), 'ROUTE_TYPE_LEGACY');
   }
+}
+
+function testLoginLegacyRemoved() {
+  const routerSource = read('src/utils/router.js');
+  const legacyReferences = /components\/login|login\.html|login\.js|login\.css|initLogin/;
+
+  assert.doesNotMatch(routerSource, legacyReferences);
+  assert.equal(exists('src/components/login/login.html'), false);
+  assert.equal(exists('src/components/login/login.js'), false);
+  assert.equal(exists('src/styles/login.css'), false);
 }
 
 function testNoReactRouter() {
@@ -99,7 +138,8 @@ function testLoginPageStylesContract() {
 
 export function runLoginReactTests() {
   testLoginRouteIsReactOnly();
-  testOtherRoutesStayLegacy();
+  testRouteBoundariesStayIntact();
+  testLoginLegacyRemoved();
   testNoReactRouter();
   testLoginPageContract();
   testLoginPageStylesContract();

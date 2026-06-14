@@ -10,6 +10,10 @@ function read(relativePath) {
   return fs.readFileSync(path.join(adminRoot, relativePath), 'utf8');
 }
 
+function exists(relativePath) {
+  return fs.existsSync(path.join(adminRoot, relativePath));
+}
+
 function routeBlock(source, routeName, nextRouteName) {
   const start = source.indexOf(`${routeName}: {`);
   assert.notEqual(start, -1, `${routeName} route should exist`);
@@ -89,6 +93,17 @@ function testRouteBoundariesStayIntact() {
   }
 }
 
+function testDashboardLegacyRemoved() {
+  const routerSource = read('src/utils/router.js');
+  const legacyReferences =
+    /components\/dashboard|dashboard\.html|dashboard\.js|dashboard\.css|initDashboard/;
+
+  assert.doesNotMatch(routerSource, legacyReferences);
+  assert.equal(exists('src/components/dashboard/dashboard.html'), false);
+  assert.equal(exists('src/components/dashboard/dashboard.js'), false);
+  assert.equal(exists('src/styles/dashboard.css'), false);
+}
+
 function testNoReactRouter() {
   const sourceRoots = [
     'src/utils/router.js',
@@ -149,6 +164,7 @@ function testRunnerRegisteredOnly() {
 export function runDashboardReactTests() {
   testDashboardRouteIsReactOnly();
   testRouteBoundariesStayIntact();
+  testDashboardLegacyRemoved();
   testNoReactRouter();
   testDashboardPageContract();
   testDashboardStylesContract();
