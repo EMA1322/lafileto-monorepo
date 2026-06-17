@@ -14,8 +14,6 @@ import './styles/components/admin-list.css';
 // Las pantallas React cargan sus CSS Modules; los modulos legacy restantes
 // mantienen su CSS por fragment cuando corresponda.
 // - header: React; no usa fragment/CSS legacy
-// import './styles/products.css';
-// import './styles/categories.css';
 
 import { initRouter } from './utils/router.js';
 import { initModals } from './utils/modals.js';

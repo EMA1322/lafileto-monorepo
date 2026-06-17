@@ -2,6 +2,12 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {
+  buildCategoriesQuery,
+  normalizeCategory,
+  normalizeFilters,
+  serializeFiltersToHash,
+} from '../src/react/categories/categoriesList.helpers.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const adminRoot = path.resolve(__dirname, '..');
@@ -119,6 +125,44 @@ function testCategoriesPageContract() {
   assert.doesNotMatch(combined, /deletedAt|restoreCategory|categoriesApi\.restore|\/restore/i);
 }
 
+function testCategoriesDataContract() {
+  assert.deepEqual(normalizeFilters({ status: 'active' }).status, 'active');
+  assert.deepEqual(normalizeFilters({ status: 'inactive' }).status, 'inactive');
+  assert.deepEqual(normalizeFilters({ status: 'all' }).status, 'all');
+  assert.deepEqual(normalizeFilters({ status: 'archived' }).status, 'all');
+
+  assert.deepEqual(buildCategoriesQuery({ status: 'all' }), {
+    orderBy: 'name',
+    orderDir: 'asc',
+    page: 1,
+    pageSize: 10,
+  });
+  assert.deepEqual(buildCategoriesQuery({ status: 'active' }).status, 'active');
+  assert.deepEqual(buildCategoriesQuery({ status: 'inactive' }).status, 'inactive');
+  assert.equal(serializeFiltersToHash({ status: 'active' }), '#categories?status=active');
+  assert.equal(serializeFiltersToHash({ status: 'inactive' }), '#categories?status=inactive');
+  assert.equal(serializeFiltersToHash({ status: 'all' }), '#categories');
+
+  assert.deepEqual(
+    normalizeCategory({
+      id: 'cat-1',
+      name: 'Pastas',
+      active: false,
+      productCount: 4,
+    }),
+    {
+      id: 'cat-1',
+      name: 'Pastas',
+      imageUrl: null,
+      active: false,
+      productCount: 4,
+    },
+  );
+  assert.equal(normalizeCategory({ id: 'cat-2', status: 'inactive' }).active, false);
+  assert.equal(normalizeCategory({ id: 'cat-3', status: 'active' }).active, true);
+  assert.equal(normalizeCategory({ id: 'cat-4', products_count: '7' }).productCount, 7);
+}
+
 function testFieldsValidationAndUi() {
   const pageSource = read('src/react/pages/CategoriesPage.jsx');
   const stylesSource = read('src/react/pages/CategoriesPage.module.css');
@@ -163,7 +207,7 @@ function testFieldsValidationAndUi() {
 }
 
 function testScopeBoundaries() {
-  const forbiddenFiles = [
+  const protectedFiles = [
     'apps/backend/src/routes/categories.routes.js',
     'apps/client/package.json',
     'apps/admin/package.json',
@@ -173,13 +217,35 @@ function testScopeBoundaries() {
     'apps/admin/src/react/pages/LoginPage.jsx',
     'apps/admin/src/react/pages/DashboardPage.jsx',
     'apps/admin/src/react/pages/ProductsPage.jsx',
-    'apps/admin/src/components/categories/categories.js',
-    'apps/admin/src/styles/categories.css',
   ];
 
-  for (const relativePath of forbiddenFiles) {
+  for (const relativePath of protectedFiles) {
     assert.ok(fs.existsSync(path.join(repoRoot, relativePath)), `${relativePath} should exist`);
   }
+
+  const legacyCategoriesDir = path.join(repoRoot, 'apps/admin/src/components/categories');
+  const legacyCategoriesFiles = fs.existsSync(legacyCategoriesDir)
+    ? fs.readdirSync(legacyCategoriesDir)
+    : [];
+  assert.deepEqual(
+    legacyCategoriesFiles,
+    [],
+    'apps/admin/src/components/categories should stay empty',
+  );
+
+  const removedLegacyPaths = [
+    'apps/admin/src/styles/categories.css',
+    'apps/admin/test/categories.categories.test.js',
+  ];
+  for (const relativePath of removedLegacyPaths) {
+    assert.ok(
+      !fs.existsSync(path.join(repoRoot, relativePath)),
+      `${relativePath} should stay removed`,
+    );
+  }
+
+  const mainSource = read('src/main.js');
+  assert.doesNotMatch(mainSource, /styles\/categories\.css/);
 
   const scriptSource = read('scripts/test.mjs');
   assert.match(scriptSource, /runCategoriesReactTests/);
@@ -192,6 +258,7 @@ export function runCategoriesReactTests() {
   testNoReactRouter();
   testCategoriesApiContract();
   testCategoriesPageContract();
+  testCategoriesDataContract();
   testFieldsValidationAndUi();
   testScopeBoundaries();
 }
