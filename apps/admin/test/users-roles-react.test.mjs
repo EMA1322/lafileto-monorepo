@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { normalizeRole } from '../src/react/users/roles.helpers.js';
+import { buildUserPayload, normalizeUser } from '../src/react/users/usersList.helpers.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const adminRoot = path.resolve(__dirname, '..');
@@ -190,6 +192,67 @@ function testFormsAndDangerousActions() {
   assert.match(matrixSource, /Confirmo que quiero modificar permisos sensibles/);
 }
 
+function testCanonicalUserContractAndTemporaryAliases() {
+  const canonicalUser = normalizeUser({
+    id: 7,
+    fullName: 'Ana Gomez',
+    email: 'ana@example.test',
+    phone: '1133445566',
+    roleId: 'role-admin',
+    status: 'ACTIVE',
+  });
+
+  assert.deepEqual(canonicalUser, {
+    id: 7,
+    fullName: 'Ana Gomez',
+    email: 'ana@example.test',
+    phone: '1133445566',
+    roleId: 'role-admin',
+    status: 'active',
+  });
+
+  const legacyUser = normalizeUser({
+    userId: 'legacy-1',
+    name: 'Legacy Name',
+    email: 'legacy@example.test',
+    phone: '0000000000',
+    role_id: 'role-editor',
+    state: 'INACTIVE',
+  });
+
+  assert.deepEqual(legacyUser, {
+    id: 'legacy-1',
+    fullName: 'Legacy Name',
+    email: 'legacy@example.test',
+    phone: '',
+    roleId: 'role-editor',
+    status: 'inactive',
+  });
+
+  assert.deepEqual(
+    buildUserPayload(
+      {
+        fullName: '  Ana Gomez ',
+        email: ' ANA@EXAMPLE.TEST ',
+        phone: ' 1133445566 ',
+        roleId: ' ROLE-ADMIN ',
+        status: 'active',
+      },
+      { mode: 'create' },
+    ),
+    {
+      fullName: 'Ana Gomez',
+      email: 'ana@example.test',
+      phone: '1133445566',
+      password: '',
+      roleId: 'role-admin',
+      status: 'ACTIVE',
+    },
+  );
+
+  assert.equal(normalizeRole({ id: 'role-viewer', name: 'Viewer' }).roleId, 'role-viewer');
+}
+
 function testScopeBoundaries() {
   const forbiddenExistingFiles = [
     'apps/backend/src/routes/users.routes.js',
@@ -202,12 +265,24 @@ function testScopeBoundaries() {
     'apps/admin/src/react/pages/DashboardPage.jsx',
     'apps/admin/src/react/pages/ProductsPage.jsx',
     'apps/admin/src/react/pages/CategoriesPage.jsx',
-    'apps/admin/src/components/users/users.js',
-    'apps/admin/src/styles/users.css',
   ];
 
   for (const relativePath of forbiddenExistingFiles) {
     assert.ok(fs.existsSync(path.join(repoRoot, relativePath)), `${relativePath} should exist`);
+  }
+
+  const removedLegacyPaths = [
+    'apps/admin/src/components/users',
+    'apps/admin/src/components/viewRBAC.js',
+    'apps/admin/src/styles/users.css',
+    'apps/admin/test/users.users.test.js',
+  ];
+
+  for (const relativePath of removedLegacyPaths) {
+    assert.ok(
+      !fs.existsSync(path.join(repoRoot, relativePath)),
+      `${relativePath} should be removed from the Users/Roles React contract`,
+    );
   }
 
   const scriptSource = read('scripts/test.mjs');
@@ -222,5 +297,6 @@ export function runUsersRolesReactTests() {
   testAdminApisContract();
   testUsersPageContract();
   testFormsAndDangerousActions();
+  testCanonicalUserContractAndTemporaryAliases();
   testScopeBoundaries();
 }
