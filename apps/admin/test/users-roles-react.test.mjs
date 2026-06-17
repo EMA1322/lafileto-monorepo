@@ -229,6 +229,24 @@ function testCanonicalUserContractAndTemporaryAliases() {
     status: 'inactive',
   });
 
+  const legacyRoleAliasUser = normalizeUser({
+    id: 'legacy-role-1',
+    fullName: 'Legacy Role Alias',
+    email: 'legacy-role@example.test',
+    phone: '1133445577',
+    role: 'role-operator',
+    status: 'ACTIVE',
+  });
+
+  assert.deepEqual(legacyRoleAliasUser, {
+    id: 'legacy-role-1',
+    fullName: 'Legacy Role Alias',
+    email: 'legacy-role@example.test',
+    phone: '1133445577',
+    roleId: 'role-operator',
+    status: 'active',
+  });
+
   assert.deepEqual(
     buildUserPayload(
       {
