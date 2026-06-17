@@ -36,14 +36,17 @@ function toPositiveInteger(value, fallback) {
 }
 
 export function normalizeFilters(input = {}) {
-  const source = { ...DEFAULT_FILTERS, ...(input || {}) };
+  const inputFilters = input || {};
+  const source = { ...DEFAULT_FILTERS, ...inputFilters };
   const pageSize = toPositiveInteger(source.pageSize, DEFAULT_FILTERS.pageSize);
   const status = ['all', 'active', 'inactive'].includes(source.status) ? source.status : 'all';
-  const hasOffer = ['all', 'true', 'false'].includes(source.hasOffer)
-    ? source.hasOffer
-    : ['true', 'false'].includes(source.offer)
-      ? source.offer
-      : 'all';
+  const hasCanonicalOffer = Object.hasOwn(inputFilters, 'hasOffer');
+  const hasOffer =
+    hasCanonicalOffer && ['all', 'true', 'false'].includes(source.hasOffer)
+      ? source.hasOffer
+      : ['true', 'false'].includes(source.offer)
+        ? source.offer
+        : 'all';
 
   return {
     q: typeof source.q === 'string' ? source.q.trim() : '',

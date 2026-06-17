@@ -115,8 +115,18 @@ function testProductsPageDataContract() {
 
   assert.match(
     combined,
-    /offer[\s\S]*hasOffer|hasOffer[\s\S]*offer/,
-    'legacy offer filter should map to hasOffer',
+    /hasOffer:\s*params\.get\(['"]hasOffer['"]\)\s*\|\|\s*params\.get\(['"]offer['"]\)\s*\|\|\s*['"]all['"]/,
+    'legacy offer hash param should remain a temporary compatibility alias for hasOffer',
+  );
+  assert.match(
+    combined,
+    /if \(normalized\.hasOffer !== 'all'\) query\.hasOffer = normalized\.hasOffer;/,
+    'products API query should use canonical hasOffer',
+  );
+  assert.doesNotMatch(
+    combined,
+    /\b(slug|sku|isFeatured)\b|raw\.currency|\bcurrency:\s*raw/,
+    'React Products should not depend on removed product fields',
   );
 }
 
