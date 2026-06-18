@@ -8,85 +8,99 @@ scope: Inventario operativo de endpoints v1 consumidos por client/admin; incluye
 > Fuente de verdad documental: este archivo + colección Postman versionada en `postman_collection.json`. Convenciones generales en [`api-guidelines.md`](./api-guidelines.md).
 > **Auth**: JWT **solo Admin**. Rutas públicas marcadas como **(público)**. Algunas rutas exigen `role-admin`.
 
+## Base canonica
+
+- Las rutas Admin y publicas documentadas como contrato vigente usan prefijo canonico `/api/v1`.
+- La coleccion Postman recomienda `baseUrl=http://localhost:3000/api/v1`; por eso las requests internas usan paths relativos como `/products`.
+- Aliases sin version o bajo `/api` pueden existir por compatibilidad, pero no son el contrato principal salvo que se indique expresamente.
+
 ## Parámetros comunes
+
 - `page` (>=1), `pageSize` (1..100, **default 10**), `sort` (`field:asc|desc`[, ...]), `q` (texto).
 - `all=1` en `/users` devuelve todos los registros (sin paginar).
-- Filtros de **Products**: `q`, `status`, `categoryId`, `priceMin`, `priceMax`, `orderBy`, `orderDir`, `all`.
-
+- Filtros de **Products**: `q`, `status`, `categoryId`, `hasOffer`, `priceMin`, `priceMax`, `orderBy`, `orderDir`, `all`.
 
 ## Health
-| Método | Path | Auth | 200 (data) | Notas |
-|---|---|---|---|---|
-| GET | `/health` | **(público)** | `{ ok:true, data:{ status, ts } }` | Endpoint de vida del servicio |
-| GET | `/_debug/ping` | **(público)** | `{ ok:true, data:{ pong, ts } }` | Ping sin auth para smoke tests |
+
+| Método | Path           | Auth          | 200 (data)                         | Notas                          |
+| ------ | -------------- | ------------- | ---------------------------------- | ------------------------------ |
+| GET    | `/health`      | **(público)** | `{ ok:true, data:{ status, ts } }` | Endpoint de vida del servicio  |
+| GET    | `/_debug/ping` | **(público)** | `{ ok:true, data:{ pong, ts } }`   | Ping sin auth para smoke tests |
 
 ## Auth
-| Método | Path | Auth | Body | 200 (data) | Errores |
-|---|---|---|---|---|---|
-| POST | `/auth/login` | — | `{ email, password }` | `{ token, user }` | 401, 422, 429 |
-| GET | `/auth/me` | JWT | — | `User` | 401 |
-| POST | `/auth/logout` | JWT | — | `{ loggedOut: true }` | 401 |
+
+| Método | Path           | Auth | Body                  | 200 (data)            | Errores       |
+| ------ | -------------- | ---- | --------------------- | --------------------- | ------------- |
+| POST   | `/auth/login`  | —    | `{ email, password }` | `{ token, user }`     | 401, 422, 429 |
+| GET    | `/auth/me`     | JWT  | —                     | `User`                | 401           |
+| POST   | `/auth/logout` | JWT  | —                     | `{ loggedOut: true }` | 401           |
 
 ## Users (Admin)
-| Método | Path | Auth | Query/Body | Notas | Estado |
-|---|---|---|---|---|---|
-| GET | `/users` | JWT (`role-admin`) | `page,pageSize,search,all=1` | `all=1` devuelve todo sin paginar; orden `fullName ASC`, envelope `{ items[{ id,fullName,email,phone,roleId,status }], meta{ page,pageSize,total } }` | **I2 listo** |
-| POST | `/users` | JWT (`role-admin`) | `{ fullName,email,phone,password,roleId,status }` | Alta de usuario; valida teléfono (`^[0-9()+\s-]{7,20}$`) y evita duplicados de email | **I2 listo** |
-| PUT | `/users/:id` | JWT (`role-admin`) | `{ fullName,phone,roleId,status }` | Actualiza datos (sin cambiar email/password); valida teléfono y existencia de rol | **I2 listo** |
-| DELETE | `/users/:id` | JWT (`role-admin`) | — | Borrado duro; bloquea auto-eliminación (`SELF_DELETE_FORBIDDEN`) y último admin (`LAST_ADMIN_FORBIDDEN`) | **I2 listo** |
+
+| Método | Path         | Auth               | Query/Body                                        | Notas                                                                                                                                                 | Estado       |
+| ------ | ------------ | ------------------ | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| GET    | `/users`     | JWT (`role-admin`) | `page,pageSize,search,all=1`                      | `all=1` devuelve todo sin paginar; orden `fullName ASC`, envelope `{ items[{ id,fullName,email,phone,roleId,status }], meta{ page,pageSize,total } }` | **I2 listo** |
+| POST   | `/users`     | JWT (`role-admin`) | `{ fullName,email,phone,password,roleId,status }` | Alta de usuario; valida teléfono (`^[0-9()+\s-]{7,20}$`) y evita duplicados de email                                                                  | **I2 listo** |
+| PUT    | `/users/:id` | JWT (`role-admin`) | `{ fullName,phone,roleId,status }`                | Actualiza datos (sin cambiar email/password); valida teléfono y existencia de rol                                                                     | **I2 listo** |
+| DELETE | `/users/:id` | JWT (`role-admin`) | —                                                 | Borrado duro; bloquea auto-eliminación (`SELF_DELETE_FORBIDDEN`) y último admin (`LAST_ADMIN_FORBIDDEN`)                                              | **I2 listo** |
+
+> Compatibilidad: helpers Admin pueden normalizar aliases heredados de payload como `userId`, `state`, `role_id` o `name`, pero el contrato canonico documentado para Users es `id`, `fullName`, `email`, `phone`, `roleId` y `status`.
 
 ## Roles (Admin)
-| Método | Path | Auth | Notas | Estado |
-|---|---|---|---|---|
-| GET | `/roles` | JWT (`role-admin`) | Catálogo para UI (`{ items[{ roleId,name }] }`) | **I1 listo** |
-| POST | `/roles` | JWT (`role-admin`) | `{ name, roleId? }` genera `role-<slug>` si no se envía `roleId`; inicializa permisos en `0` | **I1 listo** |
-| PUT | `/roles/:roleId` | JWT (`role-admin`) | Actualiza `name` | **I1 listo** |
-| DELETE | `/roles/:roleId` | JWT (`role-admin`) | No permite borrar `role-admin`; responde `ROLE_IN_USE` si hay usuarios asociados | **I1 listo** |
+
+| Método | Path             | Auth               | Notas                                                                                        | Estado       |
+| ------ | ---------------- | ------------------ | -------------------------------------------------------------------------------------------- | ------------ |
+| GET    | `/roles`         | JWT (`role-admin`) | Catálogo para UI (`{ items[{ roleId,name }] }`)                                              | **I1 listo** |
+| POST   | `/roles`         | JWT (`role-admin`) | `{ name, roleId? }` genera `role-<slug>` si no se envía `roleId`; inicializa permisos en `0` | **I1 listo** |
+| PUT    | `/roles/:roleId` | JWT (`role-admin`) | Actualiza `name`                                                                             | **I1 listo** |
+| DELETE | `/roles/:roleId` | JWT (`role-admin`) | No permite borrar `role-admin`; responde `ROLE_IN_USE` si hay usuarios asociados             | **I1 listo** |
 
 ## Modules (Admin)
-| Método | Path | Auth | Notas | Estado |
-|---|---|---|---|---|
-| GET | `/modules` | JWT (`role-admin`) | Lista `{ items[{ key,name }] }` para armar matriz de permisos | **I1 listo** |
+
+| Método | Path       | Auth               | Notas                                                         | Estado       |
+| ------ | ---------- | ------------------ | ------------------------------------------------------------- | ------------ |
+| GET    | `/modules` | JWT (`role-admin`) | Lista `{ items[{ key,name }] }` para armar matriz de permisos | **I1 listo** |
 
 ## Permissions (Admin)
-| Método | Path | Auth | Body | Notas | Estado |
-|---|---|---|---|---|---|
-| GET | `/roles/:id/permissions` | JWT (`role-admin`) | — | Devuelve `{ roleId, permissions[{ moduleKey,r,w,u,d }] }` | **I1 listo** |
-| PUT | `/roles/:id/permissions` | JWT (`role-admin`) | `{ permissions:[{ moduleKey,r,w,u,d }] }` | Upsert por `moduleKey` dentro de transacción; entradas ausentes no se modifican | **I1 listo** |
 
+| Método | Path                     | Auth               | Body                                      | Notas                                                                           | Estado       |
+| ------ | ------------------------ | ------------------ | ----------------------------------------- | ------------------------------------------------------------------------------- | ------------ |
+| GET    | `/roles/:id/permissions` | JWT (`role-admin`) | —                                         | Devuelve `{ roleId, permissions[{ moduleKey,r,w,u,d }] }`                       | **I1 listo** |
+| PUT    | `/roles/:id/permissions` | JWT (`role-admin`) | `{ permissions:[{ moduleKey,r,w,u,d }] }` | Upsert por `moduleKey` dentro de transacción; entradas ausentes no se modifican | **I1 listo** |
 
 ## Categories (Admin)
 
 ### Parámetros soportados (GET `/api/v1/categories`)
 
-| Parámetro | Tipo | Default | Descripción |
-|-----------|------|---------|-------------|
-| `page` | number | `1` | Página actual (`>=1`). |
-| `pageSize` | number | `10` | Límite por página (`5..100`). |
-| `q` | string | — | Búsqueda parcial por nombre (case-insensitive). |
-| `status` | enum | `all` | `all`, `active`, `inactive`. |
-| `orderBy` | enum | `name` | `name`, `createdAt`, `updatedAt`. |
-| `orderDir` | enum | `asc` | `asc` o `desc`. |
-| `all` | boolean | `false` | Si es `true`, fuerza `page=1` y `pageSize=100`. |
+| Parámetro  | Tipo    | Default | Descripción                                     |
+| ---------- | ------- | ------- | ----------------------------------------------- |
+| `page`     | number  | `1`     | Página actual (`>=1`).                          |
+| `pageSize` | number  | `10`    | Límite por página (`5..100`).                   |
+| `q`        | string  | —       | Búsqueda parcial por nombre (case-insensitive). |
+| `status`   | enum    | `all`   | `all`, `active`, `inactive`.                    |
+| `orderBy`  | enum    | `name`  | `name`, `createdAt`, `updatedAt`.               |
+| `orderDir` | enum    | `asc`   | `asc` o `desc`.                                 |
+| `all`      | boolean | `false` | Si es `true`, fuerza `page=1` y `pageSize=100`. |
 
 La búsqueda (`q`) utiliza `contains` con `mode: 'insensitive'` en Prisma, por lo que ignora mayúsculas y minúsculas.
 
 ### Endpoints
 
-| Método | Path | Permiso | Body / Query | 200 (data) |
-|---|---|---|---|---|
-| GET | `/api/v1/categories` | `categories:r` | Query arriba | `{ ok:true, data:{ items[{ id,name,imageUrl,active }], meta{ page,pageSize,total,pageCount } } }` |
-| GET | `/api/v1/categories/:id` | `categories:r` | — | `{ ok:true, data:{ id,name,imageUrl,active } }` |
-| POST | `/api/v1/categories` | `categories:w` | `{ name:string[2..50], imageUrl?:URL }` | `{ ok:true, data:{ id,name,imageUrl,active:true } }` (201) |
-| PUT | `/api/v1/categories/:id` | `categories:u` | `{ name?, imageUrl? }` | `{ ok:true, data:{ id,name,imageUrl,active } }` |
-| PATCH | `/api/v1/categories/:id` | `categories:u` | `{ active:boolean }` | `{ ok:true, data:{ id,name,imageUrl,active } }` |
-| DELETE | `/api/v1/categories/:id` | `categories:d` | — | `{ ok:true, data:{ deleted:true } }` |
+| Método | Path                     | Permiso        | Body / Query                            | 200 (data)                                                                                        |
+| ------ | ------------------------ | -------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| GET    | `/api/v1/categories`     | `categories:r` | Query arriba                            | `{ ok:true, data:{ items[{ id,name,imageUrl,active }], meta{ page,pageSize,total,pageCount } } }` |
+| GET    | `/api/v1/categories/:id` | `categories:r` | —                                       | `{ ok:true, data:{ id,name,imageUrl,active } }`                                                   |
+| POST   | `/api/v1/categories`     | `categories:w` | `{ name:string[2..50], imageUrl?:URL }` | `{ ok:true, data:{ id,name,imageUrl,active:true } }` (201)                                        |
+| PUT    | `/api/v1/categories/:id` | `categories:u` | `{ name?, imageUrl? }`                  | `{ ok:true, data:{ id,name,imageUrl,active } }`                                                   |
+| PATCH  | `/api/v1/categories/:id` | `categories:u` | `{ active:boolean }`                    | `{ ok:true, data:{ id,name,imageUrl,active } }`                                                   |
+| DELETE | `/api/v1/categories/:id` | `categories:d` | —                                       | `{ ok:true, data:{ deleted:true } }`                                                              |
 
 > NOTE: Para client público, usar `GET /api/v1/public/categories` (sin JWT).
 
 ### Ejemplos
 
 **GET paginado**
+
 ```http
 GET /api/v1/categories?page=1&pageSize=10&status=all&orderBy=name&orderDir=asc
 Authorization: Bearer <token>
@@ -98,7 +112,12 @@ Accept: application/json
   "ok": true,
   "data": {
     "items": [
-      { "id": "cat-001", "name": "Bebidas", "imageUrl": "https://cdn.example.com/cat/bebidas.png", "active": true },
+      {
+        "id": "cat-001",
+        "name": "Bebidas",
+        "imageUrl": "https://cdn.example.com/cat/bebidas.png",
+        "active": true
+      },
       { "id": "cat-002", "name": "Pastas", "imageUrl": null, "active": false }
     ],
     "meta": {
@@ -112,6 +131,7 @@ Accept: application/json
 ```
 
 **POST**
+
 ```http
 POST /api/v1/categories
 Authorization: Bearer <token>
@@ -133,6 +153,7 @@ Content-Type: application/json
 ```
 
 **Error 409**
+
 ```json
 {
   "ok": false,
@@ -145,23 +166,23 @@ Content-Type: application/json
 
 ### RBAC (moduleKey=`categories`)
 
-| Acción | Descripción | `role-admin` | `role-supervisor` (seed) | `role-viewer` |
-|---|---|---|---|---|
-| `r` | Listar / ver detalle | ✔︎ | ✔︎ | ✔︎ |
-| `w` | Crear | ✔︎ | ✔︎ | ✖︎ |
-| `u` | Editar / toggle | ✔︎ | ✔︎ | ✖︎ |
-| `d` | Eliminar | ✔︎ | ✖︎ | ✖︎ |
+| Acción | Descripción          | `role-admin` | `role-supervisor` (seed) | `role-viewer` |
+| ------ | -------------------- | ------------ | ------------------------ | ------------- |
+| `r`    | Listar / ver detalle | ✔︎          | ✔︎                      | ✔︎           |
+| `w`    | Crear                | ✔︎          | ✔︎                      | ✖︎           |
+| `u`    | Editar / toggle      | ✔︎          | ✔︎                      | ✖︎           |
+| `d`    | Eliminar             | ✔︎          | ✖︎                      | ✖︎           |
 
 > NOTE: Suites de integración modelan supervisor solo lectura; alinear fixtures con seeds.
 
 ### Errores frecuentes
 
-| Código | HTTP | Descripción | Acción recomendada |
-|---|---|---|---|
-| `PERMISSION_DENIED` | 403 | Falta permiso requerido (`categories:w/u/d`). | Revisar `effectivePermissions` en sesión o seeds. |
-| `CATEGORY_NOT_FOUND` | 404 | ID inexistente o eliminada previamente. | Confirmar `id` antes de invocar PUT/PATCH/DELETE. |
-| `CATEGORY_NAME_CONFLICT` | 409 | Nombre duplicado (trim/case insensitive). | Ajustar `name` en formulario. |
-| `VALIDATION_ERROR` | 422 | Longitud inválida (`<2` o `>50`) o URL no válida. | Validar campos en UI antes de enviar. |
+| Código                   | HTTP | Descripción                                       | Acción recomendada                                |
+| ------------------------ | ---- | ------------------------------------------------- | ------------------------------------------------- |
+| `PERMISSION_DENIED`      | 403  | Falta permiso requerido (`categories:w/u/d`).     | Revisar `effectivePermissions` en sesión o seeds. |
+| `CATEGORY_NOT_FOUND`     | 404  | ID inexistente o eliminada previamente.           | Confirmar `id` antes de invocar PUT/PATCH/DELETE. |
+| `CATEGORY_NAME_CONFLICT` | 409  | Nombre duplicado (trim/case insensitive).         | Ajustar `name` en formulario.                     |
+| `VALIDATION_ERROR`       | 422  | Longitud inválida (`<2` o `>50`) o URL no válida. | Validar campos en UI antes de enviar.             |
 
 ### Comandos de verificación (smoke manual)
 
@@ -188,47 +209,48 @@ curl -s -X DELETE -H "Authorization: Bearer $ADMIN_JWT" \
   http://localhost:3000/api/v1/categories/<id> | jq '.'
 ```
 
-
-
 ## Products (Admin)
 
 ### Parámetros soportados (GET `/api/v1/products`)
 
-| Parámetro | Tipo | Default | Descripción |
-|-----------|------|---------|-------------|
-| `page` | number | `1` | Página actual (`>=1`). |
-| `pageSize` | number | `10` | Límite por página (`5..100`). |
-| `q` | string | — | Búsqueda parcial por `name` o `description` (case-insensitive según collation de la DB). |
-| `status` | enum | `all` | `all`, `active`, `draft`, `archived`, `inactive` (alias UI para `draft` + `archived`). |
-| `categoryId` | string | — | Filtra por categoría asociada. |
-| `priceMin` | number | — | Precio base mínimo (>=0). |
-| `priceMax` | number | — | Precio base máximo (>= `priceMin`). |
-| `orderBy` | enum | `name` | `name`, `price`, `updatedAt`. |
-| `orderDir` | enum | `asc` | `asc` o `desc`. |
-| `all` | boolean | `false` | Si es `true`, fuerza `page=1` y `pageSize=100`. |
+| Parámetro    | Tipo         | Default | Descripción                                                                              |
+| ------------ | ------------ | ------- | ---------------------------------------------------------------------------------------- |
+| `page`       | number       | `1`     | Página actual (`>=1`).                                                                   |
+| `pageSize`   | number       | `10`    | Límite por página (`5..100`).                                                            |
+| `q`          | string       | —       | Búsqueda parcial por `name` o `description` (case-insensitive según collation de la DB). |
+| `status`     | enum         | `all`   | `all`, `active`, `draft`, `archived`, `inactive` (alias UI para `draft` + `archived`).   |
+| `categoryId` | string       | —       | Filtra por categoría asociada.                                                           |
+| `hasOffer`   | enum/boolean | `all`   | `true` trae productos con oferta activa, `false` sin oferta, `all` no filtra.            |
+| `priceMin`   | number       | —       | Precio base mínimo (>=0).                                                                |
+| `priceMax`   | number       | —       | Precio base máximo (>= `priceMin`).                                                      |
+| `orderBy`    | enum         | `name`  | `name`, `price`, `updatedAt`.                                                            |
+| `orderDir`   | enum         | `asc`   | `asc` o `desc`.                                                                          |
+| `all`        | boolean      | `false` | Si es `true`, fuerza `page=1` y `pageSize=100`.                                          |
 
 ### Endpoints
 
-| Método | Path | Permiso | Body / Query | 200 (data) |
-|---|---|---|---|---|
-| GET | `/api/v1/products` | `products:r` | Query arriba | `{ ok:true, data:{ items[{ id,name,description?,imageUrl,price,stock,status,categoryId,createdAt,updatedAt,offer?{ id?,discountPercent,isActive,finalPrice } }], meta{ page,pageSize,total,pageCount } } }` |
-| GET | `/api/v1/products/:id` | `products:r` | — | `{ ok:true, data:{ id,name,description?,imageUrl,price,stock,status,categoryId,createdAt,updatedAt,offer?{ id?,discountPercent,isActive,finalPrice } } }` |
-| POST | `/api/v1/products` | `products:w` | `{ name, description?, imageUrl?, price, stock, status?, categoryId }` | `{ ok:true, data:ProductConOferta? }` (201) |
-| PUT | `/api/v1/products/:id` | `products:u` | `{ name?, description?, imageUrl?, price?, stock?, status?, categoryId? }` | `{ ok:true, data:ProductConOferta? }` |
-| PATCH | `/api/v1/products/:id/status` | `products:changeStatus` | `{ status:"draft|active|archived" }` | `{ ok:true, data:Product }` |
-| DELETE | `/api/v1/products/:id` | `products:d` | — | `{ ok:true, data:{ id, deleted:true } }` |
+| Método | Path                          | Permiso                 | Body / Query                                                               | 200 (data)                                                                                                                                                                                                  |
+| ------ | ----------------------------- | ----------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | --------------------------- |
+| GET    | `/api/v1/products`            | `products:r`            | Query arriba                                                               | `{ ok:true, data:{ items[{ id,name,description?,imageUrl,price,stock,status,categoryId,createdAt,updatedAt,offer?{ id?,discountPercent,isActive,finalPrice } }], meta{ page,pageSize,total,pageCount } } }` |
+| GET    | `/api/v1/products/:id`        | `products:r`            | —                                                                          | `{ ok:true, data:{ id,name,description?,imageUrl,price,stock,status,categoryId,createdAt,updatedAt,offer?{ id?,discountPercent,isActive,finalPrice } } }`                                                   |
+| POST   | `/api/v1/products`            | `products:w`            | `{ name, description?, imageUrl?, price, stock, status?, categoryId }`     | `{ ok:true, data:ProductConOferta? }` (201)                                                                                                                                                                 |
+| PUT    | `/api/v1/products/:id`        | `products:u`            | `{ name?, description?, imageUrl?, price?, stock?, status?, categoryId? }` | `{ ok:true, data:ProductConOferta? }`                                                                                                                                                                       |
+| PATCH  | `/api/v1/products/:id/status` | `products:changeStatus` | `{ status:"draft                                                           | active                                                                                                                                                                                                      | archived" }` | `{ ok:true, data:Product }` |
+| DELETE | `/api/v1/products/:id`        | `products:d`            | —                                                                          | `{ ok:true, data:{ id, deleted:true } }`                                                                                                                                                                    |
 
 > `imageUrl` es opcional y debe ser una URL absoluta `http`/`https` (máx. 2048 caracteres). Si no se envía, queda en `null`.
 > `offer` aparece únicamente cuando existe una oferta activa para el producto (`discountPercent`, `isActive`, `finalPrice`). Si no hay oferta activa se devuelve `offer: null`.
 > `finalPrice = price * (1 - discountPercent/100)` redondeado a 2 decimales cuando la oferta está activa; caso contrario el precio expuesto es el base.
 > `status=inactive` agrupa `draft` + `archived` para la UI de Admin.
-> Filtros soportados: `q`, `status`, `categoryId`, `priceMin`, `priceMax`, `orderBy`, `orderDir`, `all`. No existen filtros `slug`, `sku`, `currency` ni `isFeatured`.
+> Filtros soportados: `q`, `status`, `categoryId`, `hasOffer`, `priceMin`, `priceMax`, `orderBy`, `orderDir`, `all`. No existen filtros `slug`, `sku`, `currency` ni `isFeatured`.
+> Compatibilidad backend: `slug`, `sku`, `currency` e `isFeatured` pueden tolerarse/descartarse en paths de entrada legacy para no romper consumidores antiguos, pero no son campos ni filtros vigentes de Products.
 
 ### Ejemplos
 
 **GET con filtros y orden**
+
 ```http
-GET /api/v1/products?q=pollo&status=active&categoryId=cat-001&priceMin=2000&priceMax=2600&orderBy=price&orderDir=desc&page=1&pageSize=1
+GET /api/v1/products?q=pollo&status=active&categoryId=cat-001&hasOffer=true&priceMin=2000&priceMax=2600&orderBy=price&orderDir=desc&page=1&pageSize=1
 Authorization: Bearer <token_admin>
 Accept: application/json
 ```
@@ -267,6 +289,7 @@ Accept: application/json
 ```
 
 **POST**
+
 ```http
 POST /api/v1/products
 Authorization: Bearer <token_admin>
@@ -303,6 +326,7 @@ Content-Type: application/json
 ```
 
 **PATCH status**
+
 ```http
 PATCH /api/v1/products/prod-xyz123/status
 Authorization: Bearer <token_supervisor>
@@ -326,21 +350,21 @@ Content-Type: application/json
 
 ### RBAC (moduleKey=`products`)
 
-| Acción | Descripción | `role-admin` | `role-supervisor` (seed) | `role-viewer` |
-|---|---|---|---|---|
-| `r` | Listar / ver detalle | ✔︎ | ✔︎ | ✔︎ |
-| `w` | Crear | ✔︎ | ✔︎ | ✖︎ |
-| `u` | Editar | ✔︎ | ✔︎ | ✖︎ |
-| `d` | Eliminar | ✔︎ | ✖︎ | ✖︎ |
-| `changeStatus` | Cambiar estado (`draft/active/archived`) | ✔︎ | ✔︎ | ✖︎ |
+| Acción         | Descripción                              | `role-admin` | `role-supervisor` (seed) | `role-viewer` |
+| -------------- | ---------------------------------------- | ------------ | ------------------------ | ------------- |
+| `r`            | Listar / ver detalle                     | ✔︎          | ✔︎                      | ✔︎           |
+| `w`            | Crear                                    | ✔︎          | ✔︎                      | ✖︎           |
+| `u`            | Editar                                   | ✔︎          | ✔︎                      | ✖︎           |
+| `d`            | Eliminar                                 | ✔︎          | ✖︎                      | ✖︎           |
+| `changeStatus` | Cambiar estado (`draft/active/archived`) | ✔︎          | ✔︎                      | ✖︎           |
 
 ### Errores frecuentes
 
-| Código | HTTP | Descripción | Acción recomendada |
-|---|---|---|---|
-| `RESOURCE_NOT_FOUND` | 404 | Producto inexistente o ID inválido. | Confirmar `id` antes de invocar GET/PUT/PATCH/DELETE. |
-| `VALIDATION_ERROR` | 422 | Campos fuera de rango (precio <0, stock <0, URL inválida, categoría inexistente). | Validar datos en UI; verificar categoría. |
-| `PERMISSION_DENIED` | 403 | Falta del permiso (`products:w/u/d/changeStatus`). | Revisar rol y seeds. |
+| Código               | HTTP | Descripción                                                                       | Acción recomendada                                    |
+| -------------------- | ---- | --------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `RESOURCE_NOT_FOUND` | 404  | Producto inexistente o ID inválido.                                               | Confirmar `id` antes de invocar GET/PUT/PATCH/DELETE. |
+| `VALIDATION_ERROR`   | 422  | Campos fuera de rango (precio <0, stock <0, URL inválida, categoría inexistente). | Validar datos en UI; verificar categoría.             |
+| `PERMISSION_DENIED`  | 403  | Falta del permiso (`products:w/u/d/changeStatus`).                                | Revisar rol y seeds.                                  |
 
 ### Comandos de verificación (smoke manual)
 
@@ -364,27 +388,27 @@ curl -X PATCH "$API_BASE/api/v1/products/prod-001/status" \
 
 ### Parámetros soportados (GET `/api/v1/offers`)
 
-| Parámetro | Tipo | Default | Descripción |
-|-----------|------|---------|-------------|
-| `page` | number | `1` | Página actual (`>=1`). |
-| `pageSize` | number | `10` | Límite por página (`5..100`). |
-| `q` | string | — | Búsqueda parcial por `product.name` o `product.description` (case-insensitive). |
-| `status` | enum | `all` | Reutiliza filtro de productos (`draft`, `active`, `archived`, `all`). |
-| `categoryId` | string | — | Filtra por categoría exacta. |
-| `priceMin` / `priceMax` | number | — | Rango de precio base. |
-| `orderBy` | enum | `name` | `name`, `price`, `updatedAt`. |
-| `orderDir` | enum | `asc` | `asc` o `desc`. |
-| `activeOnly` | boolean | `false` | Flag legacy (no filtra por fechas). |
-| `all` | boolean | `false` | Devuelve todo el conjunto (sin paginar) respetando `pageSize` normalizado. |
+| Parámetro               | Tipo    | Default | Descripción                                                                     |
+| ----------------------- | ------- | ------- | ------------------------------------------------------------------------------- |
+| `page`                  | number  | `1`     | Página actual (`>=1`).                                                          |
+| `pageSize`              | number  | `10`    | Límite por página (`5..100`).                                                   |
+| `q`                     | string  | —       | Búsqueda parcial por `product.name` o `product.description` (case-insensitive). |
+| `status`                | enum    | `all`   | Reutiliza filtro de productos (`draft`, `active`, `archived`, `all`).           |
+| `categoryId`            | string  | —       | Filtra por categoría exacta.                                                    |
+| `priceMin` / `priceMax` | number  | —       | Rango de precio base.                                                           |
+| `orderBy`               | enum    | `name`  | `name`, `price`, `updatedAt`.                                                   |
+| `orderDir`              | enum    | `asc`   | `asc` o `desc`.                                                                 |
+| `activeOnly`            | boolean | `false` | Flag de compatibilidad vigente; no filtra por fechas.                           |
+| `all`                   | boolean | `false` | Devuelve todo el conjunto (sin paginar) respetando `pageSize` normalizado.      |
 
 > Respuesta: `{ ok:true, data:{ items[{ id,productId,discountPercent,isActive,finalPrice,product{ id,name,description?,imageUrl,price,stock,status,categoryId,createdAt,updatedAt } }], meta{ page,pageSize,total,pageCount } } }`.
 
-| Método | Path | Permiso | Query/Body | 200 (data) |
-|---|---|---|---|---|
-| GET | `/api/v1/offers` | `offers:r` | Query arriba | Lista paginada de ofertas (incluye `product` embebido). |
-| POST | `/api/v1/offers` | `offers:w` | `{ productId, discountPercent }` | `{ ok:true, data:Offer }` (201) |
-| PUT | `/api/v1/offers/:id` | `offers:u` | `{ discountPercent? }` | `{ ok:true, data:Offer }` |
-| DELETE | `/api/v1/offers/:id` | `offers:d` | — | `{ ok:true, data:{ id, deleted:true } }` |
+| Método | Path                 | Permiso    | Query/Body                       | 200 (data)                                              |
+| ------ | -------------------- | ---------- | -------------------------------- | ------------------------------------------------------- |
+| GET    | `/api/v1/offers`     | `offers:r` | Query arriba                     | Lista paginada de ofertas (incluye `product` embebido). |
+| POST   | `/api/v1/offers`     | `offers:w` | `{ productId, discountPercent }` | `{ ok:true, data:Offer }` (201)                         |
+| PUT    | `/api/v1/offers/:id` | `offers:u` | `{ discountPercent? }`           | `{ ok:true, data:Offer }`                               |
+| DELETE | `/api/v1/offers/:id` | `offers:d` | —                                | `{ ok:true, data:{ id, deleted:true } }`                |
 
 **Ejemplo**
 
@@ -467,16 +491,16 @@ Content-Type: application/json
 - `discountPercent` entero `1..100`.
 - Cada producto sólo puede tener **una** oferta vigente a la vez (`CONFLICT` cuando ya existe una oferta para `productId`).
 - El producto asociado debe existir.
-- `activeOnly=1` no filtra por fechas. Las ofertas activas se reflejan automáticamente en `/products` como resumen (`offer.discountPercent`, `offer.finalPrice`, `isActive`). Al eliminar la oferta el resumen vuelve a `null`.
+- `activeOnly=1` se mantiene por compatibilidad y no filtra por fechas. Las ofertas activas se reflejan automáticamente en `/api/v1/products` como resumen (`offer.discountPercent`, `offer.finalPrice`, `isActive`). Al eliminar la oferta el resumen vuelve a `null`.
 
 ### RBAC (moduleKey=`offers`)
 
-| Acción | Descripción | `role-admin` | `role-supervisor` (seed) | `role-viewer` |
-|---|---|---|---|---|
-| `r` | Listar ofertas (paginado, con `product` embebido) | ✔︎ | ✔︎ | ✔︎ |
-| `w` | Crear ofertas | ✔︎ | ✔︎ | ✖︎ |
-| `u` | Editar ofertas | ✔︎ | ✔︎ | ✖︎ |
-| `d` | Eliminar ofertas | ✔︎ | ✖︎ | ✖︎ |
+| Acción | Descripción                                       | `role-admin` | `role-supervisor` (seed) | `role-viewer` |
+| ------ | ------------------------------------------------- | ------------ | ------------------------ | ------------- |
+| `r`    | Listar ofertas (paginado, con `product` embebido) | ✔︎          | ✔︎                      | ✔︎           |
+| `w`    | Crear ofertas                                     | ✔︎          | ✔︎                      | ✖︎           |
+| `u`    | Editar ofertas                                    | ✔︎          | ✔︎                      | ✖︎           |
+| `d`    | Eliminar ofertas                                  | ✔︎          | ✖︎                      | ✖︎           |
 
 ### Comandos de verificación (smoke manual)
 
@@ -496,18 +520,23 @@ curl "$API_BASE/api/v1/products?page=1&pageSize=10" \
 ```
 
 ## Settings (Negocio)
-| Método | Path | Auth | Body | Notas | Estado |
-|---|---|---|---|---|---|
-| GET | `/public/settings` | **(público)** | — | Configuración pública (`isOpen`, contacto) | **Activo** |
-| GET | `/settings` | JWT + `settings:r` | — | Vista administrativa de settings | **Activo** |
-| PUT | `/settings` | JWT + `settings:w` | `{ isOpen?, whatsapp?, address? }` | Actualización administrativa | **Activo** |
+
+| Método | Path                      | Auth               | Body                               | Notas                                      | Estado     |
+| ------ | ------------------------- | ------------------ | ---------------------------------- | ------------------------------------------ | ---------- |
+| GET    | `/api/v1/public/settings` | **(público)**      | —                                  | Configuración pública (`isOpen`, contacto) | **Activo** |
+| GET    | `/api/v1/settings`        | JWT + `settings:r` | —                                  | Vista administrativa de settings           | **Activo** |
+| PUT    | `/api/v1/settings`        | JWT + `settings:w` | `{ isOpen?, whatsapp?, address? }` | Actualización administrativa               | **Activo** |
+
+> Compatibilidad: el Admin llama `apiFetch('/settings')` sobre una base v1, por lo que resuelve a `/api/v1/settings`. El alias `/api/settings` puede existir como compatibilidad transitoria, pero no debe presentarse como contrato principal. No usar `/settings` como path documental salvo cuando se hable de un path relativo a `baseUrl=/api/v1`.
 
 ### Notas
-- **Idempotencia**: `PUT`/`DELETE` deben ser idempotentes.  
-- **Respuestas**: todas con envelope `{ ok, data?, error?, meta? }`.  
+
+- **Idempotencia**: `PUT`/`DELETE` deben ser idempotentes.
+- **Respuestas**: todas con envelope `{ ok, data?, error?, meta? }`.
 - **Deuda**: ampliar ejemplos de request/response por endpoint en este documento y Postman.
 
 ### Pendiente de completar (checklist)
-- [ ] Confirmar límites de validación específicos por campo (longitudes, rangos).  
-- [ ] Documentar mensajes de error **estables** por regla de negocio.  
-- [ ] Agregar ejemplos reales adicionales a `postman_collection.json` y mantenerlos sincronizados con este documento.  
+
+- [ ] Confirmar límites de validación específicos por campo (longitudes, rangos).
+- [ ] Documentar mensajes de error **estables** por regla de negocio.
+- [ ] Agregar ejemplos reales adicionales a `postman_collection.json` y mantenerlos sincronizados con este documento.

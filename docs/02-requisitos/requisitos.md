@@ -6,6 +6,7 @@ scope: RF y RNF, reglas de negocio, supuestos, criterios de aceptación.
 ---
 
 ## Requisitos funcionales (RF)
+
 - **RF-01**: Listar categorías y productos con filtros.
 - **RF-02**: Agregar/editar ítems del carrito y ver total.
 - **RF-03**: Confirmar pedido por **WhatsApp** con mensaje armado.
@@ -15,21 +16,25 @@ scope: RF y RNF, reglas de negocio, supuestos, criterios de aceptación.
 - **RF-07**: `settings.isOpen` para habilitar/inhabilitar compras.
 
 ## Requisitos no funcionales (RNF)
+
 - **RNF-01**: LCP ≤ 2.5s p75 (mobile).
 - **RNF-02**: Accesibilidad mínima (roles/aria, focus).
 - **RNF-03**: API estable con envelope y códigos de error fijos.
 - **RNF-04**: Mobile-first y CSS BEM.
 
 ## Reglas de negocio
-- `discount ∈ [0,100]`; `offerPrice` es **derivado** (no persistido).
+
+- `discountPercent` en una oferta vigente define `finalPrice`; `finalPrice` es **derivado** (no persistido desde la UI).
 - Vigencia de oferta: activa mientras exista una oferta registrada con descuento válido para el producto.
 - Si `settings.isOpen=false`, CTA de compra deshabilitados.
 
 ## Supuestos / dependencias
+
 - WhatsApp disponible en dispositivo del usuario.
 - Catálogo/configuración pública consumidos desde API (`/api/v1/public/*`) en el flujo productivo actual.
 
 ## Criterios de aceptación (Gherkin)
+
 ```gherkin
 Scenario: Agregar producto al carrito
   Given estoy en Products

@@ -1,6 +1,8 @@
 # Admin UI — Guía práctica (Design System + checklist de módulos)
 
 > Documento operativo para construir/refactorizar vistas del Admin sin romper consistencia visual, RBAC ni accesibilidad.
+>
+> Estado post-8C: Products, Categories, Users/Roles y Settings productivos ya usan React + CSS Modules. Las carpetas legacy `components/products`, `components/categories`, `components/users`, `components/settings` y los CSS `styles/products.css`, `styles/categories.css`, `styles/users.css`, `styles/settings.css` fueron removidos y no son contrato vigente. Los snippets legacy de este documento quedan como referencia historica/transicional para modulos que aun no hayan migrado.
 
 ## A) Arquitectura UI (router / renderView / imports)
 
@@ -8,7 +10,7 @@
 - **Router SPA**: `router.js` resuelve hash route, aplica guards de auth + RBAC (`canRead`) + feature flags (`VITE_FEATURE_SETTINGS`) y recién ahí hace `renderView(path)` + import dinámico del módulo JS.
 - **Render de vistas**: `renderView.js` monta en `#main-content`, marca `aria-busy`, muestra loader estándar (`.view-state--loading`) y fallback de vacío/error (`.view-state--empty`) si falla fetch.
 
-Snippet base de módulo (patrón esperado):
+Snippet historico de modulo legacy (no aplicar a Products/Categories/Users/Settings post-8C):
 
 ```js
 // router.js (patrón)
