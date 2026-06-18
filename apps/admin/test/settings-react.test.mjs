@@ -145,6 +145,42 @@ function testNoReactRouterOrLegacyDom() {
   assert.doesNotMatch(combined, /localStorage|sessionStorage|auth_token/);
 }
 
+function testSettingsLegacyFilesAreRemoved() {
+  const legacyFiles = [
+    'apps/admin/src/components/settings/settings.js',
+    'apps/admin/src/components/settings/settings.html',
+    'apps/admin/src/styles/settings.css',
+  ];
+
+  for (const relativePath of legacyFiles) {
+    assert.equal(
+      fs.existsSync(path.join(repoRoot, relativePath)),
+      false,
+      `${relativePath} should be removed after Settings React migration`,
+    );
+  }
+
+  const productiveFiles = [
+    'src/utils/router.js',
+    'src/utils/apis.js',
+    'src/react/pages/SettingsPage.jsx',
+    'src/react/settings/SettingsForm.jsx',
+    'src/react/settings/BrandingSection.jsx',
+    'src/react/settings/ContactSection.jsx',
+    'src/react/settings/SocialSection.jsx',
+    'src/react/settings/HoursSection.jsx',
+    'src/react/settings/PaymentsSection.jsx',
+    'src/react/settings/DeliverySection.jsx',
+    'src/react/settings/settingsForm.helpers.js',
+    'src/react/settings/settingsPayload.helpers.js',
+    'src/react/settings/settingsSideEffects.js',
+    'src/react/settings/settingsValidation.helpers.js',
+  ];
+  const combined = productiveFiles.map(read).join('\n');
+
+  assert.doesNotMatch(combined, /components\/settings|settings\.html|styles\/settings\.css/);
+}
+
 function testSettingsPageContract() {
   const pageSource = read('src/react/pages/SettingsPage.jsx');
   const formSource = read('src/react/settings/SettingsForm.jsx');
@@ -224,9 +260,6 @@ function testScopeBoundaries() {
     'apps/admin/src/react/pages/ProductsPage.jsx',
     'apps/admin/src/react/pages/CategoriesPage.jsx',
     'apps/admin/src/react/pages/UsersPage.jsx',
-    'apps/admin/src/components/settings/settings.js',
-    'apps/admin/src/components/settings/settings.html',
-    'apps/admin/src/styles/settings.css',
     'apps/admin/src/react/header/AdminHeader.jsx',
     'apps/admin/src/react/header/headerBranding.helpers.js',
     'apps/admin/src/react/header/headerNavigation.helpers.js',
@@ -260,6 +293,7 @@ export function runSettingsReactTests() {
   testSettingsCanonicalHashContract();
   testSettingsApiContract();
   testNoReactRouterOrLegacyDom();
+  testSettingsLegacyFilesAreRemoved();
   testSettingsPageContract();
   testSettingsFieldsAndValidationContract();
   testScopeBoundaries();
