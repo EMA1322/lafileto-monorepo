@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createFocusTrap } from 'focus-trap';
 import {
-  fetchBusinessStatus,
-  fetchCommercialConfig,
-  fetchPublicSettings,
-} from '/src/api/public.js';
+  applyClientFavicon,
+  loadPublicClientSettings,
+} from '/src/react/settings/publicClientSettings.js';
 import { getCart } from '/src/utils/cartService.js';
 
 const NAV_LINKS = [
@@ -14,16 +13,11 @@ const NAV_LINKS = [
 ];
 
 const INITIAL_HEADER_DATA = {
-  commercialConfig: {},
-  settings: {},
+  publicSettings: null,
 };
 
 function getString(value) {
   return typeof value === 'string' ? value.trim() : '';
-}
-
-function toArray(value) {
-  return Array.isArray(value) ? value : [];
 }
 
 function compactDigits(value) {
@@ -33,38 +27,6 @@ function compactDigits(value) {
 function getPhoneHref(phone) {
   const compact = compactDigits(phone);
   return compact ? `tel:${compact}` : '';
-}
-
-function isValidHttpUrl(value) {
-  try {
-    const url = new URL(value);
-    return url.protocol === 'http:' || url.protocol === 'https:';
-  } catch {
-    return false;
-  }
-}
-
-function getHeaderSocialLinks(commercialConfig, settings) {
-  const links = [...toArray(commercialConfig?.socialLinks), ...toArray(settings?.socialLinks)];
-  const allowed = new Map([
-    ['facebook', 'FB'],
-    ['instagram', 'IG'],
-  ]);
-  const seen = new Set();
-
-  return links.reduce((acc, link) => {
-    const label = getString(link?.label);
-    const url = getString(link?.url);
-    const key = label.toLowerCase();
-
-    if (!allowed.has(key) || seen.has(key) || !isValidHttpUrl(url)) {
-      return acc;
-    }
-
-    seen.add(key);
-    acc.push({ label, shortLabel: allowed.get(key), url });
-    return acc;
-  }, []);
 }
 
 function getCartCount() {
@@ -86,6 +48,7 @@ export function Header() {
     status: null,
   });
   const [headerData, setHeaderData] = useState(INITIAL_HEADER_DATA);
+  const [logoFailed, setLogoFailed] = useState(false);
 
   const toggleRef = useRef(null);
   const closeRef = useRef(null);
@@ -110,25 +73,17 @@ export function Header() {
     async function loadHeaderData() {
       setBusinessStatus({ error: null, isLoading: true, status: null });
 
-      const [statusResult, settingsResult, commercialResult] = await Promise.allSettled([
-        fetchBusinessStatus(),
-        fetchPublicSettings(),
-        fetchCommercialConfig(),
-      ]);
+      const publicSettings = await loadPublicClientSettings();
 
       if (!isMounted) return;
 
-      if (statusResult.status === 'fulfilled') {
-        setBusinessStatus({ error: null, isLoading: false, status: statusResult.value });
-      } else {
-        setBusinessStatus({ error: statusResult.reason, isLoading: false, status: null });
-      }
-
-      setHeaderData({
-        settings: settingsResult.status === 'fulfilled' ? settingsResult.value || {} : {},
-        commercialConfig:
-          commercialResult.status === 'fulfilled' ? commercialResult.value || {} : {},
+      setBusinessStatus({
+        error: publicSettings.errors.businessStatus,
+        isLoading: false,
+        status: publicSettings,
       });
+      setHeaderData({ publicSettings });
+      applyClientFavicon(publicSettings.brand.faviconUrl);
     }
 
     loadHeaderData();
@@ -254,22 +209,23 @@ export function Header() {
   }, [businessStatus]);
 
   const contactData = useMemo(() => {
-    const { commercialConfig, settings } = headerData;
-    const phone =
-      getString(commercialConfig?.contact?.phone) || getString(settings?.identity?.phone);
-    const whatsapp =
-      getString(commercialConfig?.whatsapp?.number) || getString(settings?.whatsapp?.number);
-    const whatsappDigits = compactDigits(whatsapp);
+    const publicSettings = headerData.publicSettings;
+    const phone = getString(publicSettings?.contact?.phone);
+    const whatsappDigits = compactDigits(publicSettings?.whatsapp?.number);
 
     return {
       phone,
-      phoneHref: getPhoneHref(phone),
+      phoneHref: publicSettings?.contact?.phoneHref || getPhoneHref(phone),
       whatsappHref: whatsappDigits ? `https://wa.me/${whatsappDigits}` : '',
-      socialLinks: getHeaderSocialLinks(commercialConfig, settings),
+      socialLinks: publicSettings?.socialLinks || [],
     };
   }, [headerData]);
 
   const hasDrawerContact = Boolean(contactData.phoneHref || contactData.whatsappHref);
+  const logoUrl = headerData.publicSettings?.brand?.logoUrl || '';
+  const alertMessage = headerData.publicSettings?.alert?.enabled
+    ? headerData.publicSettings.alert.message
+    : '';
 
   function handleToggleMenu() {
     restoreFocusOnCloseRef.current = true;
@@ -292,9 +248,19 @@ export function Header() {
 
       <nav className="header__nav container" role="navigation" aria-label="Navegacion principal">
         <a href="#home" className="header__brand" aria-label="Ir al inicio">
-          <span className="header__brand-mark" aria-hidden="true">
-            LF
-          </span>
+          {logoUrl && !logoFailed ? (
+            <img
+              className="header__brand-mark"
+              src={logoUrl}
+              alt=""
+              aria-hidden="true"
+              onError={() => setLogoFailed(true)}
+            />
+          ) : (
+            <span className="header__brand-mark" aria-hidden="true">
+              LF
+            </span>
+          )}
           <span className="header__brand-copy">
             <span className="header__brand-name">La Fileto</span>
             <span className="header__brand-note">Menu digital</span>
@@ -368,6 +334,12 @@ export function Header() {
         </div>
       </nav>
 
+      {alertMessage ? (
+        <div className="container" role="alert" aria-live="polite" data-client-alert-banner>
+          <span className="header__status is-closed">{alertMessage}</span>
+        </div>
+      ) : null}
+
       <aside
         className="header__menu"
         id="nav-menu"
@@ -378,7 +350,17 @@ export function Header() {
       >
         <div className="header__menu-head">
           <a href="#home" className="header__drawer-brand" aria-label="Ir al inicio">
-            La Fileto
+            {logoUrl && !logoFailed ? (
+              <img
+                className="header__brand-mark"
+                src={logoUrl}
+                alt=""
+                aria-hidden="true"
+                onError={() => setLogoFailed(true)}
+              />
+            ) : (
+              'La Fileto'
+            )}
           </a>
           <button
             className="header__close"

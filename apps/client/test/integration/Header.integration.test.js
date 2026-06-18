@@ -16,11 +16,14 @@ vi.mock('focus-trap', () => ({
 vi.mock('/src/api/public.js', () => ({
   fetchBusinessStatus: vi.fn(async () => ({ isOpen: true })),
   fetchPublicSettings: vi.fn(async () => ({
+    brand: { logoUrl: '/img/logo.png', faviconUrl: '/img/favicon.svg' },
     identity: { phone: '2664123456' },
+    hours: { alert: { enabled: true, message: 'Settings alert' } },
     socialLinks: [
       { label: 'Instagram', url: 'https://instagram.com/lafileto' },
       { label: 'Twitter', url: 'https://x.com/lafileto' },
     ],
+    whatsapp: { number: '5492664000000' },
   })),
   fetchCommercialConfig: vi.fn(async () => ({
     contact: { phone: '2664555666' },
@@ -62,13 +65,25 @@ describe('global header', () => {
 
     await waitFor(() => {
       expect(document.getElementById('business-status').textContent).toContain('Abierto ahora');
-      expect(document.querySelector('[data-header-phone-text]').textContent).toBe('2664555666');
+      expect(document.querySelector('[data-header-phone-text]').textContent).toBe('2664123456');
       expect(document.querySelector('[data-header-whatsapp-link]').href).toContain(
-        'https://wa.me/5492664555666',
+        'https://wa.me/5492664000000',
       );
       expect(document.querySelector('[data-header-socials]').textContent).toContain('FB');
       expect(document.querySelector('[data-header-socials]').textContent).toContain('IG');
-      expect(document.querySelector('[data-header-socials]').textContent).not.toContain('Twitter');
+      expect(document.querySelector('[data-header-socials]').textContent).toContain('TW');
+      expect(screen.getByRole('alert').textContent).toContain('Settings alert');
+      expect(document.querySelector("link[rel='icon']").getAttribute('href')).toBe(
+        '/img/favicon.svg',
+      );
+    });
+  });
+
+  it('uses the dynamic logo in the desktop brand and mobile drawer', async () => {
+    renderHeader();
+
+    await waitFor(() => {
+      expect(document.querySelectorAll("img[src='/img/logo.png']")).toHaveLength(2);
     });
   });
 

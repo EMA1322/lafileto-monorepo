@@ -4,6 +4,10 @@ import { ConfirmPage } from '/src/react/pages/ConfirmPage.jsx';
 
 vi.mock('/src/api/public.js', () => ({
   fetchBusinessStatus: vi.fn(async () => ({ isOpen: true })),
+  fetchPublicSettings: vi.fn(async () => ({
+    identity: { phone: '+54 9 11 9999-0000' },
+    whatsapp: { number: '+54 9 11 2222-3333', message: 'Hola Fileto, quiero pedir:' },
+  })),
   fetchCommercialConfig: vi.fn(async () => ({ whatsapp: { number: '+54 9 11 1234-5678' } })),
 }));
 
@@ -41,7 +45,10 @@ describe('ConfirmPage integration', () => {
     fireEvent.click(sendButton);
 
     expect(window.open).toHaveBeenCalledTimes(1);
-    expect(window.open.mock.calls[0][0]).toContain('https://wa.me/5491112345678?text=');
+    expect(window.open.mock.calls[0][0]).toContain('https://wa.me/5491122223333?text=');
+    expect(decodeURIComponent(window.open.mock.calls[0][0])).toContain(
+      'Hola Fileto, quiero pedir:',
+    );
     expect(JSON.parse(localStorage.getItem('cart') || '[]')).toEqual([]);
     expect(screen.getByText('Order sent via WhatsApp. Cart cleared.')).toBeTruthy();
   });
@@ -64,7 +71,8 @@ describe('ConfirmPage integration', () => {
   });
 
   it('keeps submit disabled when WhatsApp number is missing', async () => {
-    const { fetchCommercialConfig } = await import('/src/api/public.js');
+    const { fetchPublicSettings, fetchCommercialConfig } = await import('/src/api/public.js');
+    fetchPublicSettings.mockResolvedValueOnce({ whatsapp: { number: '' }, identity: {} });
     fetchCommercialConfig.mockResolvedValueOnce({ whatsapp: { number: '' } });
 
     seedCart([{ id: 'p1', name: 'Milanesa', price: 1000, quantity: 1 }]);
@@ -78,11 +86,37 @@ describe('ConfirmPage integration', () => {
     expect(screen.getByText('This is the message that will be sent to WhatsApp.')).toBeTruthy();
   });
 
+  it('falls back to commercial config and then identity phone for WhatsApp number', async () => {
+    const { fetchPublicSettings, fetchCommercialConfig } = await import('/src/api/public.js');
+
+    fetchPublicSettings.mockResolvedValueOnce({
+      identity: { phone: '+54 9 11 8888-0000' },
+      whatsapp: { number: '' },
+    });
+    fetchCommercialConfig.mockResolvedValueOnce({ whatsapp: { number: '' } });
+
+    seedCart([{ id: 'p1', name: 'Milanesa', price: 1000, quantity: 1 }]);
+
+    render(<ConfirmPage />);
+
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Ana' } });
+
+    const sendButton = await screen.findByRole('button', { name: /send via whatsapp/i });
+    await waitFor(() => expect(sendButton.disabled).toBe(false));
+
+    fireEvent.click(sendButton);
+
+    expect(window.open.mock.calls[0][0]).toContain('https://wa.me/5491188880000?text=');
+  });
+
   it('applies fallback business status and shows a uniform commercial-context error message', async () => {
-    const { fetchBusinessStatus, fetchCommercialConfig } = await import('/src/api/public.js');
+    const { fetchBusinessStatus, fetchCommercialConfig, fetchPublicSettings } = await import(
+      '/src/api/public.js'
+    );
     const { isBusinessOpen } = await import('/src/utils/helpers.js');
 
     fetchBusinessStatus.mockRejectedValueOnce(new Error('status unavailable'));
+    fetchPublicSettings.mockResolvedValueOnce({ identity: {}, whatsapp: {} });
     fetchCommercialConfig.mockRejectedValueOnce(new Error('config unavailable'));
     isBusinessOpen.mockResolvedValueOnce(true);
 
