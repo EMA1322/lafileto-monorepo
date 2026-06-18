@@ -51,7 +51,7 @@
 .heroContent {
   position: relative;
   z-index: var(--z-base);
-  width: min(100% - (2 * var(--layout-content-pad-inline)), var(--layout-content-max));
+  width: min(100% - (2 * var(--layout-content-pad-inline)), var(--layout-section-max));
   margin-inline: auto;
   display: grid;
   gap: var(--space-4);
@@ -173,7 +173,7 @@
 }
 
 .sectionInner {
-  width: min(100% - (2 * var(--layout-content-pad-inline)), var(--layout-content-max));
+  width: min(100% - (2 * var(--layout-content-pad-inline)), var(--layout-section-max));
   min-width: 0;
   margin-inline: auto;
   display: grid;

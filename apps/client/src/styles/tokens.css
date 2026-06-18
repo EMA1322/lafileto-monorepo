@@ -8,6 +8,7 @@
   --color-fg-muted: #6c757d;
   --color-fg-inverse: #ffffff;
   --color-border-default: #e5e7eb;
+  --color-border-subtle: rgba(33, 37, 41, 0.1);
   --color-border-strong: #cbd5e1;
   --color-state-success: #198754;
   --color-state-danger: #dc3545;
@@ -36,6 +37,7 @@
   --space-4: 1rem;
   --space-5: 1.5rem;
   --space-6: 2rem;
+  --space-7: 2.5rem;
   --space-8: 3rem;
 
   /* Radius */
@@ -49,8 +51,13 @@
   --elevation-2: 0 8px 20px rgba(15, 23, 42, 0.12);
 
   /* Layout */
-  --layout-content-max: 1200px;
-  --layout-content-pad-inline: var(--space-4);
+  --layout-shell-max: 1440px;
+  --layout-content-max: 1320px;
+  --layout-section-max: 1360px;
+  --layout-surface-max: 1120px;
+  --layout-editorial-max: 760px;
+  --layout-form-max: 720px;
+  --layout-content-pad-inline: clamp(var(--space-4), 4vw, var(--space-8));
 
   /* Motion */
   --motion-duration-fast: 120ms;
@@ -75,7 +82,7 @@
   --font-base: var(--font-family-base);
   --font-accent: var(--font-family-accent);
   --font-admin: var(--font-family-admin);
-  --container-width: var(--layout-content-max);
+  --container-width: var(--layout-shell-max);
   --shadow-soft: var(--elevation-1);
   --shadow-hover: var(--elevation-2);
 }

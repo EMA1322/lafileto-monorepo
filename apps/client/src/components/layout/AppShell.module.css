@@ -4,7 +4,7 @@
 }
 
 .pageContainer {
-  width: min(100%, var(--layout-content-max));
+  width: min(100%, var(--layout-shell-max));
   margin-inline: auto;
   padding-inline: var(--layout-content-pad-inline);
   padding-block: var(--space-5);
