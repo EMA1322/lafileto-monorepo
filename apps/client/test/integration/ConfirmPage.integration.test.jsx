@@ -37,9 +37,11 @@ describe('ConfirmPage integration', () => {
 
     render(<ConfirmPage />);
 
-    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Ana' } });
+    fireEvent.change(screen.getByLabelText('Nombre'), { target: { value: 'Ana' } });
 
-    const sendButton = await screen.findByRole('button', { name: /send via whatsapp/i });
+    const sendButton = await screen.findByRole('button', {
+      name: /mandá el pedido por whatsapp/i,
+    });
     await waitFor(() => expect(sendButton.disabled).toBe(false));
 
     fireEvent.click(sendButton);
@@ -50,7 +52,7 @@ describe('ConfirmPage integration', () => {
       'Hola Fileto, quiero pedir:',
     );
     expect(JSON.parse(localStorage.getItem('cart') || '[]')).toEqual([]);
-    expect(screen.getByText('Order sent via WhatsApp. Cart cleared.')).toBeTruthy();
+    expect(screen.getByText('Pedido enviado por WhatsApp. Vaciamos el carrito.')).toBeTruthy();
   });
 
   it('keeps submit disabled when business is closed', async () => {
@@ -61,12 +63,14 @@ describe('ConfirmPage integration', () => {
 
     render(<ConfirmPage />);
 
-    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Ana' } });
+    fireEvent.change(screen.getByLabelText('Nombre'), { target: { value: 'Ana' } });
 
-    const sendButton = await screen.findByRole('button', { name: /send via whatsapp/i });
+    const sendButton = await screen.findByRole('button', {
+      name: /mandá el pedido por whatsapp/i,
+    });
     expect(sendButton.disabled).toBe(true);
 
-    const closedNote = screen.getByText('We are currently closed.');
+    const closedNote = screen.getByText('Ahora estamos cerrados.');
     expect(closedNote.hidden).toBe(false);
   });
 
@@ -79,11 +83,13 @@ describe('ConfirmPage integration', () => {
 
     render(<ConfirmPage />);
 
-    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Ana' } });
+    fireEvent.change(screen.getByLabelText('Nombre'), { target: { value: 'Ana' } });
 
-    const sendButton = await screen.findByRole('button', { name: /send via whatsapp/i });
+    const sendButton = await screen.findByRole('button', {
+      name: /mandá el pedido por whatsapp/i,
+    });
     expect(sendButton.disabled).toBe(true);
-    expect(screen.getByText('This is the message that will be sent to WhatsApp.')).toBeTruthy();
+    expect(screen.getByText('Elegí, revisá y mandá tu pedido por WhatsApp.')).toBeTruthy();
   });
 
   it('falls back to commercial config and then identity phone for WhatsApp number', async () => {
@@ -99,9 +105,11 @@ describe('ConfirmPage integration', () => {
 
     render(<ConfirmPage />);
 
-    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Ana' } });
+    fireEvent.change(screen.getByLabelText('Nombre'), { target: { value: 'Ana' } });
 
-    const sendButton = await screen.findByRole('button', { name: /send via whatsapp/i });
+    const sendButton = await screen.findByRole('button', {
+      name: /mandá el pedido por whatsapp/i,
+    });
     await waitFor(() => expect(sendButton.disabled).toBe(false));
 
     fireEvent.click(sendButton);
@@ -124,10 +132,10 @@ describe('ConfirmPage integration', () => {
 
     render(<ConfirmPage />);
 
-    const status = await screen.findByText(/commercial information is temporarily unavailable/i);
+    const status = await screen.findByText(/no pudimos cargar toda la información comercial/i);
     expect(status.textContent).toContain('status unavailable');
 
-    expect(screen.getByText('WhatsApp number is not available.')).toBeTruthy();
-    expect(screen.queryByText('We are currently closed.')).toBeNull();
+    expect(screen.getByText('El WhatsApp no está disponible por ahora.')).toBeTruthy();
+    expect(screen.queryByText('Ahora estamos cerrados.')).toBeNull();
   });
 });
