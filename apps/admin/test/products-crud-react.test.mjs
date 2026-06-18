@@ -136,8 +136,6 @@ function testScopeBoundaries() {
     'src/utils/reactViewAdapter.js',
     'src/react/pages/LoginPage.jsx',
     'src/react/pages/DashboardPage.jsx',
-    'src/components/products/products.js',
-    'src/components/products/products.modals.js',
   ];
 
   for (const relativePath of forbiddenFiles) {
@@ -150,6 +148,19 @@ function testScopeBoundaries() {
   assert.match(scriptSource, /products crud react contract/);
 }
 
+function testLegacyProductsFilesAreRemoved() {
+  const removedPaths = [
+    'src/components/products',
+    'src/styles/products.css',
+    'test/products.products.test.js',
+  ];
+
+  for (const relativePath of removedPaths) {
+    const fullPath = path.join(adminRoot, relativePath);
+    assert.equal(fs.existsSync(fullPath), false, `${relativePath} should be removed`);
+  }
+}
+
 export function runProductsCrudReactTests() {
   testProductsPageStillOwnsReactList();
   testProductsPageHasVisibleStates();
@@ -157,4 +168,5 @@ export function runProductsCrudReactTests() {
   testFormContract();
   testUiFlowAndRbac();
   testScopeBoundaries();
+  testLegacyProductsFilesAreRemoved();
 }
