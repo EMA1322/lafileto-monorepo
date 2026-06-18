@@ -42,6 +42,20 @@ export function isValidAssetUrl(value) {
   return isValidHttpUrl(url);
 }
 
+export function isValidGoogleMapsEmbedUrl(value) {
+  try {
+    const url = new URL(value);
+    const hostname = url.hostname.toLowerCase();
+    return (
+      (url.protocol === 'http:' || url.protocol === 'https:') &&
+      ['google.com', 'www.google.com', 'maps.google.com'].includes(hostname) &&
+      url.pathname.startsWith('/maps/embed')
+    );
+  } catch {
+    return false;
+  }
+}
+
 function getFirstString(candidates) {
   return candidates.map(getString).find(Boolean) || '';
 }
@@ -127,6 +141,8 @@ export function normalizePublicClientSettings({
     settings?.map?.href,
     settings?.map?.embedSrc,
   ]);
+  const mapEmbedSrc = getString(settings?.map?.embedSrc);
+  const seoContact = settings?.seo?.contact || {};
 
   return {
     alert: normalizeAlert(settings, businessStatus),
@@ -144,6 +160,13 @@ export function normalizePublicClientSettings({
     },
     errors,
     isOpen: businessStatus?.isOpen === true,
+    map: {
+      embedSrc: isValidGoogleMapsEmbedUrl(mapEmbedSrc) ? mapEmbedSrc : '',
+    },
+    seo: {
+      contactDescription: getString(seoContact.description),
+      contactTitle: getString(seoContact.title),
+    },
     socialLinks: normalizeSocialLinks(settings?.socialLinks, commercialConfig?.socialLinks),
     whatsapp: {
       messageCta: whatsappMessageCta,

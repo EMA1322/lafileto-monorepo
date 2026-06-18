@@ -4,6 +4,7 @@ import { HomePage } from '../pages/HomePage.jsx';
 import { ProductsPage } from '../pages/ProductsPage.jsx';
 import { CartPage } from '../pages/CartPage.jsx';
 import { ConfirmPage } from '../pages/ConfirmPage.jsx';
+import { ContactPage } from '../pages/ContactPage.jsx';
 
 export function AppRouter() {
   return (
@@ -16,6 +17,10 @@ export function AppRouter() {
           <Route path="r/*" element={<HomePage />} />
           <Route path="products" element={<ProductsPage />} />
           <Route path="r/products" element={<ProductsPage />} />
+          <Route path="contact" element={<ContactPage />} />
+          <Route path="contacto" element={<ContactPage />} />
+          <Route path="r/contact" element={<ContactPage />} />
+          <Route path="r/contacto" element={<ContactPage />} />
           <Route path="cart" element={<CartPage />} />
           <Route path="r/cart" element={<CartPage />} />
           <Route path="confirm" element={<ConfirmPage />} />

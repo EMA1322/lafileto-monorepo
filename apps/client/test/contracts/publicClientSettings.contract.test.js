@@ -16,6 +16,8 @@ describe('public client settings normalizer', () => {
           { label: 'Instagram', url: 'https://instagram.com/lafileto' },
           { label: 'Facebook', url: 'notaurl' },
         ],
+        map: { embedSrc: 'https://www.google.com/maps/embed?pb=settings-map' },
+        seo: { contact: { title: 'Contacto La Fileto', description: 'Escribinos.' } },
         whatsapp: { number: '+54 9 266 400-0000', message: 'Settings CTA' },
       },
       businessStatus: {
@@ -43,6 +45,9 @@ describe('public client settings normalizer', () => {
     expect(context.contact.address).toBe('Settings address');
     expect(context.whatsapp.numberDigits).toBe('5492664000000');
     expect(context.whatsapp.messageCta).toBe('Settings CTA');
+    expect(context.map.embedSrc).toBe('https://www.google.com/maps/embed?pb=settings-map');
+    expect(context.seo.contactTitle).toBe('Contacto La Fileto');
+    expect(context.seo.contactDescription).toBe('Escribinos.');
     expect(context.alert).toEqual({ enabled: true, message: 'Status alert' });
     expect(context.socialLinks.map((link) => link.label)).toEqual(['Instagram', 'Facebook']);
   });
@@ -73,6 +78,24 @@ describe('public client settings normalizer', () => {
     expect(context.brand.logoUrl).toBe('');
     expect(context.brand.faviconUrl).toBe('');
     expect(context.contact.mapHref).toBe('');
+    expect(context.map.embedSrc).toBe('');
     expect(context.socialLinks).toEqual([]);
+  });
+
+  it('keeps only Google Maps embed URLs for the iframe contract', () => {
+    const blocked = normalizePublicClientSettings({
+      settings: {
+        map: { embedSrc: 'https://evil.example.com/maps/embed?pb=test' },
+      },
+    });
+    const allowed = normalizePublicClientSettings({
+      settings: {
+        map: { embedSrc: 'https://www.google.com/maps/embed?pb=valid' },
+      },
+    });
+
+    expect(blocked.map.embedSrc).toBe('');
+    expect(blocked.contact.mapHref).toBe('https://evil.example.com/maps/embed?pb=test');
+    expect(allowed.map.embedSrc).toBe('https://www.google.com/maps/embed?pb=valid');
   });
 });
