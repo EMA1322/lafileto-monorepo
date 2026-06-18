@@ -112,6 +112,31 @@ function normalizeAlert(settings, businessStatus) {
   return { enabled: false, message: '' };
 }
 
+function normalizePayments(payments) {
+  const transferEnabled = payments?.transferEnabled === true;
+
+  if (!transferEnabled) {
+    return { transferEnabled: false };
+  }
+
+  return {
+    transferEnabled: true,
+    bankName: getString(payments?.bankName),
+    cbu: getString(payments?.cbu),
+    alias: getString(payments?.alias),
+    cuit: getString(payments?.cuit),
+  };
+}
+
+function normalizeOpeningHours(openingHours) {
+  return toArray(openingHours).map((entry) => ({
+    day: getString(entry?.day),
+    open: getString(entry?.open),
+    close: getString(entry?.close),
+    closed: entry?.closed === true,
+  }));
+}
+
 export function normalizePublicClientSettings({
   settings = {},
   businessStatus = {},
@@ -163,6 +188,12 @@ export function normalizePublicClientSettings({
     map: {
       embedSrc: isValidGoogleMapsEmbedUrl(mapEmbedSrc) ? mapEmbedSrc : '',
     },
+    hours: {
+      alert: normalizeAlert(settings, businessStatus),
+      openingHours: normalizeOpeningHours(settings?.hours?.openingHours),
+      timezone: getString(settings?.hours?.timezone),
+    },
+    payments: normalizePayments(settings?.payments),
     seo: {
       contactDescription: getString(seoContact.description),
       contactTitle: getString(seoContact.title),

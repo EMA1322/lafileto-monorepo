@@ -10,7 +10,7 @@ const { settingRepository } = await import('../../src/repositories/settingReposi
 
 const originalRepository = {
   findByKey: settingRepository.findByKey,
-  upsertByKey: settingRepository.upsertByKey
+  upsertByKey: settingRepository.upsertByKey,
 };
 
 test.after(() => {
@@ -49,9 +49,9 @@ test('getPublicSettings no expone datos bancarios cuando payments.enabled=false'
         bankName: 'Banco Test',
         cbu: '123456789',
         alias: 'MI.ALIAS',
-        cuit: '20-12345678-9'
-      }
-    }
+        cuit: '20-12345678-9',
+      },
+    },
   });
   settingRepository.upsertByKey = async () => {
     throw new Error('No debería crear default cuando ya existe siteConfig');
@@ -67,8 +67,8 @@ test('getAdminSettings devuelve shape completo', async () => {
     key: SITE_CONFIG_KEY,
     value: {
       identity: { phone: '2660000000' },
-      payments: { enabled: true, bankName: 'Banco Admin', cbu: '123', alias: 'ALIAS', cuit: '20' }
-    }
+      payments: { enabled: true, bankName: 'Banco Admin', cbu: '123', alias: 'ALIAS', cuit: '20' },
+    },
   });
 
   const response = await settingsService.getAdminSettings();
@@ -90,9 +90,9 @@ test('updateAdminSettings persiste siteConfig sanitizado con metadata de actuali
   const response = await settingsService.updateAdminSettings(
     {
       identity: { phone: '2661230000', email: 'admin@lafileto.com' },
-      payments: { enabled: true, cbu: '0000123456789012345678' }
+      payments: { enabled: true, cbu: '0000123456789012345678' },
     },
-    'user-123'
+    'user-123',
   );
 
   assert.equal(calls.length, 1);
@@ -110,12 +110,81 @@ test('getPublicSettings nunca expone meta', async () => {
       payments: { enabled: false },
       meta: {
         updatedByUserId: 'admin-1',
-        updatedAt: '2026-01-01T00:00:00.000Z'
-      }
-    }
+        updatedAt: '2026-01-01T00:00:00.000Z',
+      },
+    },
   });
 
   const response = await settingsService.getPublicSettings();
 
   assert.equal(response.meta, undefined);
+});
+
+test('getPublicSettingsContract expone pagos publicos cuando transferencia esta habilitada', async () => {
+  settingRepository.findByKey = async () => ({
+    key: SITE_CONFIG_KEY,
+    value: {
+      payments: {
+        enabled: true,
+        bankName: ' Banco Publico ',
+        cbu: '0000-1234 5678 9012 3456-78',
+        alias: ' LA.FILETO ',
+        cuit: '20-12345678-9',
+      },
+    },
+  });
+
+  const response = await settingsService.getPublicSettingsContract();
+
+  assert.deepEqual(response.payments, {
+    transferEnabled: true,
+    bankName: 'Banco Publico',
+    cbu: '0000123456789012345678',
+    alias: 'LA.FILETO',
+    cuit: '20123456789',
+  });
+});
+
+test('getPublicSettingsContract no expone datos bancarios cuando transferencia esta deshabilitada', async () => {
+  settingRepository.findByKey = async () => ({
+    key: SITE_CONFIG_KEY,
+    value: {
+      payments: {
+        enabled: false,
+        bankName: 'Banco Oculto',
+        cbu: '0000123456789012345678',
+        alias: 'OCULTO',
+        cuit: '20123456789',
+      },
+    },
+  });
+
+  const response = await settingsService.getPublicSettingsContract();
+
+  assert.deepEqual(response.payments, { transferEnabled: false });
+});
+
+test('getPublicSettingsContract expone openingHours y conserva alert', async () => {
+  settingRepository.findByKey = async () => ({
+    key: SITE_CONFIG_KEY,
+    value: {
+      hours: {
+        timezone: 'America/Argentina/Buenos_Aires',
+        openingHours: [
+          { day: 'monday', open: '09:00', close: '13:00', closed: false },
+          { day: 'sunday', open: '', close: '', closed: true },
+        ],
+        alert: { enabled: true, message: 'Horario especial' },
+      },
+    },
+  });
+
+  const response = await settingsService.getPublicSettingsContract();
+
+  assert.deepEqual(response.hours.openingHours, [
+    { day: 'monday', open: '09:00', close: '13:00', closed: false },
+    { day: 'sunday', open: '', close: '', closed: true },
+  ]);
+  assert.equal(response.hours.timezone, 'America/Argentina/Buenos_Aires');
+  assert.deepEqual(response.hours.alert, { enabled: true, message: 'Horario especial' });
 });
