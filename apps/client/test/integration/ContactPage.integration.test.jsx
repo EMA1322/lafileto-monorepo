@@ -12,6 +12,19 @@ vi.mock('/src/api/public.js', () => ({
       phone: '+54 266 400-0000',
     },
     map: { embedSrc: 'https://www.google.com/maps/embed?pb=settings-map' },
+    payments: {
+      transferEnabled: true,
+      bankName: 'Banco Publico',
+      cbu: '0000123456789012345678',
+      alias: 'LA.FILETO',
+      cuit: '20123456789',
+    },
+    hours: {
+      openingHours: [
+        { day: 'monday', open: '09:00', close: '13:00', closed: false },
+        { day: 'sunday', open: '', close: '', closed: true },
+      ],
+    },
     seo: {
       contact: {
         title: 'Contacto La Fileto',
@@ -50,6 +63,19 @@ describe('ContactPage integration', () => {
         phone: '+54 266 400-0000',
       },
       map: { embedSrc: 'https://www.google.com/maps/embed?pb=settings-map' },
+      payments: {
+        transferEnabled: true,
+        bankName: 'Banco Publico',
+        cbu: '0000123456789012345678',
+        alias: 'LA.FILETO',
+        cuit: '20123456789',
+      },
+      hours: {
+        openingHours: [
+          { day: 'monday', open: '09:00', close: '13:00', closed: false },
+          { day: 'sunday', open: '', close: '', closed: true },
+        ],
+      },
       seo: {
         contact: {
           title: 'Contacto La Fileto',
@@ -110,11 +136,73 @@ describe('ContactPage integration', () => {
     });
   });
 
+  it('renders transfer payments only when transferEnabled is true', async () => {
+    renderContactPage();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('heading', { level: 2, name: 'Pagos por transferencia' }),
+      ).toBeTruthy();
+      expect(document.body.textContent).toContain('Banco Publico');
+      expect(document.body.textContent).toContain('0000123456789012345678');
+      expect(document.body.textContent).toContain('LA.FILETO');
+      expect(document.body.textContent).toContain('20123456789');
+    });
+  });
+
+  it('does not render bank data when transfer payments are disabled', async () => {
+    const api = await import('/src/api/public.js');
+    api.fetchPublicSettings.mockResolvedValueOnce({
+      identity: {
+        address: 'Settings address 123',
+        email: 'settings@lafileto.test',
+        phone: '+54 266 400-0000',
+      },
+      payments: {
+        transferEnabled: false,
+        bankName: 'Banco Oculto',
+        cbu: '0000123456789012345678',
+        alias: 'OCULTO',
+        cuit: '20123456789',
+      },
+      hours: { openingHours: [] },
+      map: { embedSrc: '' },
+      seo: { contact: {} },
+      whatsapp: {},
+    });
+
+    renderContactPage();
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('heading', { level: 2, name: 'Pagos por transferencia' }),
+      ).toBeNull();
+      expect(document.body.textContent).not.toContain('Banco Oculto');
+      expect(document.body.textContent).not.toContain('0000123456789012345678');
+      expect(document.body.textContent).not.toContain('OCULTO');
+    });
+  });
+
+  it('renders opening hours and closed days from public settings', async () => {
+    renderContactPage();
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { level: 2, name: 'Horarios' })).toBeTruthy();
+      expect(document.body.textContent).toContain('Abierto ahora');
+      expect(document.body.textContent).toContain('Lunes');
+      expect(document.body.textContent).toContain('09:00 a 13:00');
+      expect(document.body.textContent).toContain('Domingo');
+      expect(document.body.textContent).toContain('Cerrado');
+    });
+  });
+
   it('falls back cleanly when contact data and map are missing', async () => {
     const api = await import('/src/api/public.js');
     api.fetchPublicSettings.mockResolvedValueOnce({
       identity: {},
       map: { embedSrc: '' },
+      hours: {},
+      payments: { transferEnabled: false },
       seo: { contact: {} },
       whatsapp: {},
     });
@@ -127,6 +215,7 @@ describe('ContactPage integration', () => {
     await waitFor(() => {
       expect(screen.getByText('Contacto en preparacion')).toBeTruthy();
       expect(screen.getByText('Mapa no disponible por ahora.')).toBeTruthy();
+      expect(screen.getByText('Horarios no disponibles por ahora.')).toBeTruthy();
       expect(document.querySelector('[data-contact-map]')).toBeNull();
       expect(screen.queryByRole('link', { name: 'Escribir por WhatsApp' })).toBeNull();
     });

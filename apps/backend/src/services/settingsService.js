@@ -9,42 +9,71 @@ function normalizeSiteConfig(rawValue) {
   return sanitized;
 }
 
+function addPublicString(target, key, value) {
+  const normalized = typeof value === 'string' ? value.trim() : '';
+  if (normalized) {
+    target[key] = normalized;
+  }
+}
+
+function mapPublicPayments(payments) {
+  const transferEnabled = payments?.enabled === true;
+
+  if (!transferEnabled) {
+    return { transferEnabled: false };
+  }
+
+  const publicPayments = { transferEnabled: true };
+  addPublicString(publicPayments, 'bankName', payments?.bankName);
+  addPublicString(publicPayments, 'cbu', payments?.cbu);
+  addPublicString(publicPayments, 'alias', payments?.alias);
+  addPublicString(publicPayments, 'cuit', payments?.cuit);
+
+  return publicPayments;
+}
+
+function mapPublicOpeningHours(hours) {
+  return Array.isArray(hours?.openingHours) ? hours.openingHours : [];
+}
+
 function mapPublicSettingsContract(normalized) {
   return {
     identity: {
       phone: normalized?.identity?.phone ?? '',
       email: normalized?.identity?.email ?? '',
-      address: normalized?.identity?.address ?? ''
+      address: normalized?.identity?.address ?? '',
     },
     brand: {
       logo: normalized?.brand?.logo ?? '',
-      favicon: normalized?.brand?.favicon ?? ''
+      favicon: normalized?.brand?.favicon ?? '',
     },
     socialLinks: Array.isArray(normalized?.socialLinks) ? normalized.socialLinks : [],
     map: {
-      embedSrc: normalized?.map?.embedSrc ?? ''
+      embedSrc: normalized?.map?.embedSrc ?? '',
     },
     hours: {
       timezone: normalized?.hours?.timezone ?? SITE_CONFIG_DEFAULTS.hours.timezone,
+      openingHours: mapPublicOpeningHours(normalized?.hours),
       alert: {
         enabled: Boolean(normalized?.hours?.alert?.enabled),
-        message: normalized?.hours?.alert?.message ?? ''
-      }
+        message: normalized?.hours?.alert?.message ?? '',
+      },
     },
+    payments: mapPublicPayments(normalized?.payments),
     seo: {
       contact: {
         title: normalized?.seo?.contact?.title ?? '',
-        description: normalized?.seo?.contact?.description ?? ''
+        description: normalized?.seo?.contact?.description ?? '',
       },
       about: {
         title: normalized?.seo?.about?.title ?? '',
-        description: normalized?.seo?.about?.description ?? ''
-      }
+        description: normalized?.seo?.about?.description ?? '',
+      },
     },
     whatsapp: {
       number: normalized?.whatsapp?.number ?? '',
-      message: normalized?.whatsapp?.message ?? ''
-    }
+      message: normalized?.whatsapp?.message ?? '',
+    },
   };
 }
 
@@ -71,7 +100,7 @@ export const settingsService = {
     if (!normalized.payments.enabled) {
       return {
         ...normalized,
-        payments: { enabled: false }
+        payments: { enabled: false },
       };
     }
 
@@ -88,14 +117,14 @@ export const settingsService = {
       ...sanitizedPayload,
       meta: {
         updatedByUserId: actorUserId ?? null,
-        updatedAt: new Date().toISOString()
-      }
+        updatedAt: new Date().toISOString(),
+      },
     };
 
     await settingRepository.upsertByKey(SITE_CONFIG_KEY, nextValue);
 
     return sanitizedPayload;
-  }
+  },
 };
 
 export { SITE_CONFIG_DEFAULTS, SITE_CONFIG_KEY, normalizeSiteConfig, mapPublicSettingsContract };

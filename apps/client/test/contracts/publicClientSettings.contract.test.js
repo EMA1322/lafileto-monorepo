@@ -11,12 +11,26 @@ describe('public client settings normalizer', () => {
           email: 'settings@lafileto.test',
           phone: '+54 266 400-0000',
         },
-        hours: { alert: { enabled: true, message: 'Settings alert' } },
         socialLinks: [
           { label: 'Instagram', url: 'https://instagram.com/lafileto' },
           { label: 'Facebook', url: 'notaurl' },
         ],
         map: { embedSrc: 'https://www.google.com/maps/embed?pb=settings-map' },
+        payments: {
+          transferEnabled: true,
+          bankName: 'Banco Publico',
+          cbu: '0000123456789012345678',
+          alias: 'LA.FILETO',
+          cuit: '20123456789',
+        },
+        hours: {
+          timezone: 'America/Argentina/Buenos_Aires',
+          openingHours: [
+            { day: 'monday', open: '09:00', close: '13:00', closed: false },
+            { day: 'sunday', open: '', close: '', closed: true },
+          ],
+          alert: { enabled: true, message: 'Settings alert' },
+        },
         seo: { contact: { title: 'Contacto La Fileto', description: 'Escribinos.' } },
         whatsapp: { number: '+54 9 266 400-0000', message: 'Settings CTA' },
       },
@@ -49,6 +63,18 @@ describe('public client settings normalizer', () => {
     expect(context.seo.contactTitle).toBe('Contacto La Fileto');
     expect(context.seo.contactDescription).toBe('Escribinos.');
     expect(context.alert).toEqual({ enabled: true, message: 'Status alert' });
+    expect(context.payments).toEqual({
+      transferEnabled: true,
+      bankName: 'Banco Publico',
+      cbu: '0000123456789012345678',
+      alias: 'LA.FILETO',
+      cuit: '20123456789',
+    });
+    expect(context.hours.timezone).toBe('America/Argentina/Buenos_Aires');
+    expect(context.hours.openingHours).toEqual([
+      { day: 'monday', open: '09:00', close: '13:00', closed: false },
+      { day: 'sunday', open: '', close: '', closed: true },
+    ]);
     expect(context.socialLinks.map((link) => link.label)).toEqual(['Instagram', 'Facebook']);
   });
 
@@ -97,5 +123,28 @@ describe('public client settings normalizer', () => {
     expect(blocked.map.embedSrc).toBe('');
     expect(blocked.contact.mapHref).toBe('https://evil.example.com/maps/embed?pb=test');
     expect(allowed.map.embedSrc).toBe('https://www.google.com/maps/embed?pb=valid');
+  });
+
+  it('keeps disabled payments minimal and tolerates incomplete hours payloads', () => {
+    const context = normalizePublicClientSettings({
+      settings: {
+        payments: {
+          transferEnabled: false,
+          bankName: 'Banco Oculto',
+          cbu: '0000123456789012345678',
+          alias: 'OCULTO',
+          cuit: '20123456789',
+        },
+        hours: {
+          openingHours: [{ day: 'friday', open: '20:00' }, null],
+        },
+      },
+    });
+
+    expect(context.payments).toEqual({ transferEnabled: false });
+    expect(context.hours.openingHours).toEqual([
+      { day: 'friday', open: '20:00', close: '', closed: false },
+      { day: '', open: '', close: '', closed: false },
+    ]);
   });
 });

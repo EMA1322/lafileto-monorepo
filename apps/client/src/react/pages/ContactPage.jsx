@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { Mail, MapPin, MessageCircle, Phone } from 'lucide-react';
+import { Clock, CreditCard, Mail, MapPin, MessageCircle, Phone } from 'lucide-react';
 import { EmptyState, ErrorState, LoadingState } from '/src/components/ui/State.jsx';
 import { loadPublicClientSettings } from '/src/react/settings/publicClientSettings.js';
 import { useAsyncResource } from '../hooks/useAsyncResource.jsx';
@@ -8,6 +8,15 @@ import styles from './ContactPage.module.css';
 const DEFAULT_WHATSAPP_MESSAGE = 'Hola La Fileto, quiero hacer una consulta.';
 const DEFAULT_TITLE = 'Contacto';
 const DEFAULT_DESCRIPTION = 'Comunicate con La Fileto o encontranos en el mapa.';
+const DAY_LABELS = {
+  monday: 'Lunes',
+  tuesday: 'Martes',
+  wednesday: 'Miercoles',
+  thursday: 'Jueves',
+  friday: 'Viernes',
+  saturday: 'Sabado',
+  sunday: 'Domingo',
+};
 
 function getString(value) {
   return typeof value === 'string' ? value.trim() : '';
@@ -24,6 +33,37 @@ function getWhatsappHref(numberDigits, message) {
 
   const text = getString(message) || DEFAULT_WHATSAPP_MESSAGE;
   return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
+}
+
+function getDayLabel(day) {
+  const value = getString(day).toLowerCase();
+  return DAY_LABELS[value] || getString(day) || 'Dia';
+}
+
+function getPaymentRows(payments) {
+  if (payments?.transferEnabled !== true) return [];
+
+  return [
+    ['Banco', payments.bankName],
+    ['CBU', payments.cbu],
+    ['Alias', payments.alias],
+    ['CUIT', payments.cuit],
+  ]
+    .map(([label, value]) => ({ label, value: getString(value) }))
+    .filter((row) => row.value);
+}
+
+function getHourRows(hours) {
+  return (Array.isArray(hours) ? hours : []).map((entry) => {
+    const isClosed = entry?.closed === true;
+    const open = getString(entry?.open);
+    const close = getString(entry?.close);
+
+    return {
+      day: getDayLabel(entry?.day),
+      value: isClosed || !open || !close ? 'Cerrado' : `${open} a ${close}`,
+    };
+  });
 }
 
 function ContactItem({ icon, label, value, href, external = false, fallback }) {
@@ -104,6 +144,9 @@ export function ContactPage() {
       whatsappHref,
       whatsappMessage: whatsappMessage || DEFAULT_WHATSAPP_MESSAGE,
       whatsappNumber: getString(settings?.whatsapp?.number),
+      paymentRows: getPaymentRows(settings?.payments),
+      hourRows: getHourRows(settings?.hours?.openingHours),
+      isOpen: settings?.isOpen === true,
     };
   }, [settings]);
 
@@ -196,6 +239,45 @@ export function ContactPage() {
                 </a>
               </div>
             ) : null}
+
+            {contactData.paymentRows.length ? (
+              <section className={styles.infoPanel} aria-labelledby="contact-payments-title">
+                <div className={styles.panelHeading}>
+                  <CreditCard size={20} strokeWidth={1.8} aria-hidden="true" />
+                  <h2 id="contact-payments-title">Pagos por transferencia</h2>
+                </div>
+                <dl className={styles.dataList}>
+                  {contactData.paymentRows.map((row) => (
+                    <div key={row.label} className={styles.dataRow}>
+                      <dt>{row.label}</dt>
+                      <dd>{row.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </section>
+            ) : null}
+
+            <section className={styles.infoPanel} aria-labelledby="contact-hours-title">
+              <div className={styles.panelHeading}>
+                <Clock size={20} strokeWidth={1.8} aria-hidden="true" />
+                <h2 id="contact-hours-title">Horarios</h2>
+              </div>
+              <p className={styles.statusBadge}>
+                {contactData.isOpen ? 'Abierto ahora' : 'Cerrado ahora'}
+              </p>
+              {contactData.hourRows.length ? (
+                <dl className={styles.dataList}>
+                  {contactData.hourRows.map((row) => (
+                    <div key={row.day} className={styles.dataRow}>
+                      <dt>{row.day}</dt>
+                      <dd>{row.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              ) : (
+                <p className={styles.panelFallback}>Horarios no disponibles por ahora.</p>
+              )}
+            </section>
           </div>
 
           <section className={styles.mapPanel} aria-labelledby="contact-map-title">

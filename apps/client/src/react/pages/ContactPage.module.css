@@ -154,6 +154,77 @@
   color: white;
 }
 
+.infoPanel {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-surface);
+}
+
+.panelHeading {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  min-width: 0;
+  color: var(--contact-accent);
+}
+
+.panelHeading h2 {
+  margin: 0;
+  color: var(--contact-ink);
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-tight);
+}
+
+.dataList {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.dataRow {
+  display: grid;
+  grid-template-columns: minmax(6.5rem, 0.34fr) minmax(0, 1fr);
+  gap: var(--space-3);
+  min-width: 0;
+  padding-block: var(--space-2);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.dataRow dt {
+  color: var(--color-fg-muted);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.dataRow dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--contact-ink);
+  font-weight: var(--font-weight-semibold);
+}
+
+.statusBadge {
+  width: fit-content;
+  margin: 0;
+  padding: 0.35rem var(--space-3);
+  border-radius: var(--radius-pill);
+  background: rgba(217, 95, 36, 0.1);
+  color: var(--contact-ink);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.panelFallback {
+  margin: 0;
+  color: var(--color-fg-muted);
+  line-height: 1.6;
+}
+
 .mapPanel {
   display: grid;
   gap: var(--space-3);
@@ -191,5 +262,12 @@
   .content {
     grid-template-columns: minmax(0, 0.86fr) minmax(0, 1.14fr);
     align-items: start;
+  }
+}
+
+@media (max-width: 520px) {
+  .dataRow {
+    grid-template-columns: 1fr;
+    gap: var(--space-1);
   }
 }
