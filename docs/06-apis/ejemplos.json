@@ -23,8 +23,11 @@
       "id": 12,
       "name": "Milanesa Napolitana",
       "price": 5000,
-      "discount": 10,
-      "isOffer": true,
+      "offer": {
+        "discountPercent": 10,
+        "isActive": true,
+        "finalPrice": 4500
+      },
       "categoryId": 3
     }
   },
@@ -32,7 +35,7 @@
     "ok": false,
     "error": {
       "code": "VALIDATION_ERROR",
-      "message": "discount must be between 0 and 100"
+      "message": "discountPercent must be between 1 and 100"
     }
   }
 }

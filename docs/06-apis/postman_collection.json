@@ -1,877 +1,753 @@
 {
-    "info": {
-        "name": "La Fileto API v1",
-        "_postman_id": "placeholder-la-fileto-api-v1",
-        "description": "Colecci\u00f3n base con variables y carpetas por m\u00f3dulo. Alinear con /docs/06-apis/endpoints.md.",
-        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  "info": {
+    "name": "La Fileto API v1",
+    "_postman_id": "placeholder-la-fileto-api-v1",
+    "description": "Colecci\u00f3n base v1 con variables y carpetas por m\u00f3dulo. Usar baseUrl con /api/v1 (por ejemplo http://localhost:3000/api/v1); no mezclar /settings, /api/settings y /api/v1/settings.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api/v1",
+      "description": "Base recomendada y canonica para endpoints Admin/Public v1."
     },
-    "variable": [
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "categoryId",
+      "value": "<replace-with-category-id>"
+    },
+    {
+      "key": "productId",
+      "value": "<replace-with-product-id>"
+    },
+    {
+      "key": "offerId",
+      "value": "<replace-with-offer-id>"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
         {
-            "key": "baseUrl",
-            "value": "http://localhost:3000/api/v1"
+          "name": "POST /auth/login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"admin@lafileto.com\",\"password\":\"secret123\"}"
+            }
+          }
         },
         {
-            "key": "token",
-            "value": ""
-        },
-        {
-            "key": "categoryId",
-            "value": "<replace-with-category-id>"
-        },
-        {
-            "key": "productId",
-            "value": "<replace-with-product-id>"
-        },
-        {
-            "key": "offerId",
-            "value": "<replace-with-offer-id>"
+          "name": "GET /auth/me",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "me"]
+            }
+          }
         }
-    ],
-    "item": [
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
         {
-            "name": "Auth",
-            "item": [
+          "name": "GET /users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users?page=1&pageSize=20&q=&sort=name:asc",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"],
+              "query": [
                 {
-                    "name": "POST /auth/login",
-                    "request": {
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{baseUrl}}/auth/login",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "auth",
-                                "login"
-                            ]
-                        },
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\"email\":\"admin@lafileto.com\",\"password\":\"secret123\"}"
-                        }
-                    }
+                  "key": "page",
+                  "value": "1"
                 },
                 {
-                    "name": "GET /auth/me",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{token}}"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{baseUrl}}/auth/me",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "auth",
-                                "me"
-                            ]
-                        }
-                    }
+                  "key": "pageSize",
+                  "value": "20"
+                },
+                {
+                  "key": "q",
+                  "value": ""
+                },
+                {
+                  "key": "sort",
+                  "value": "name:asc"
                 }
-            ]
+              ]
+            }
+          }
         },
         {
-            "name": "Users",
-            "item": [
-                {
-                    "name": "GET /users",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{token}}"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{baseUrl}}/users?page=1&pageSize=20&q=&sort=name:asc",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "users"
-                            ],
-                            "query": [
-                                {
-                                    "key": "page",
-                                    "value": "1"
-                                },
-                                {
-                                    "key": "pageSize",
-                                    "value": "20"
-                                },
-                                {
-                                    "key": "q",
-                                    "value": ""
-                                },
-                                {
-                                    "key": "sort",
-                                    "value": "name:asc"
-                                }
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "POST /users",
-                    "request": {
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{token}}"
-                            },
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{baseUrl}}/users",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "users"
-                            ]
-                        },
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\"name\":\"User\",\"email\":\"user@example.com\",\"password\":\"secret123\",\"roleId\":2}"
-                        }
-                    }
-                },
-                {
-                    "name": "GET /users/:id",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{token}}"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{baseUrl}}/users/1",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "users",
-                                "1"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "PUT /users/:id",
-                    "request": {
-                        "method": "PUT",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{token}}"
-                            },
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{baseUrl}}/users/1",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "users",
-                                "1"
-                            ]
-                        },
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\"name\":\"Updated Name\"}"
-                        }
-                    }
-                },
-                {
-                    "name": "DELETE /users/:id",
-                    "request": {
-                        "method": "DELETE",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{token}}"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{baseUrl}}/users/1",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "users",
-                                "1"
-                            ]
-                        }
-                    }
-                }
-            ]
+          "name": "POST /users",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"User\",\"email\":\"user@example.com\",\"password\":\"secret123\",\"roleId\":2}"
+            }
+          }
         },
         {
-            "name": "Categories",
-            "item": [
-                {
-                    "name": "GET /api/v1/categories",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{token}}"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{baseUrl}}/categories?page=1&pageSize=10&status=all&orderBy=name&orderDir=asc",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "categories"
-                            ],
-                            "query": [
-                                {
-                                    "key": "page",
-                                    "value": "1"
-                                },
-                                {
-                                    "key": "pageSize",
-                                    "value": "10"
-                                },
-                                {
-                                    "key": "status",
-                                    "value": "all"
-                                },
-                                {
-                                    "key": "orderBy",
-                                    "value": "name"
-                                },
-                                {
-                                    "key": "orderDir",
-                                    "value": "asc"
-                                }
-                            ]
-                        }
-                    },
-                    "event": [
-                        {
-                            "listen": "test",
-                            "script": {
-                                "exec": [
-                                    "pm.test('status 200', () => pm.response.code === 200);",
-                                    "const json = pm.response.json();",
-                                    "pm.test('ok true', () => json.ok === true);",
-                                    "pm.test('items es array', () => Array.isArray(json.data.items));",
-                                    "pm.test('meta incluye total', () => json.data.meta && typeof json.data.meta.total === 'number');"
-                                ]
-                            }
-                        }
-                    ]
-                },
-                {
-                    "name": "POST /api/v1/categories",
-                    "request": {
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{token}}"
-                            },
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"name\": \"Bebidas {{timestamp}}\",\n  \"imageUrl\": \"https://cdn.example.com/cat/{{timestamp}}.webp\"\n}"
-                        },
-                        "url": {
-                            "raw": "{{baseUrl}}/categories",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "categories"
-                            ]
-                        }
-                    },
-                    "event": [
-                        {
-                            "listen": "test",
-                            "script": {
-                                "exec": [
-                                    "pm.test('status 201', () => pm.response.code === 201);",
-                                    "const json = pm.response.json();",
-                                    "pm.test('ok true', () => json.ok === true);",
-                                    "pm.test('incluye id', () => json.data && json.data.id);"
-                                ]
-                            }
-                        }
-                    ]
-                },
-                {
-                    "name": "PUT /api/v1/categories/:id",
-                    "request": {
-                        "method": "PUT",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{token}}"
-                            },
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n  \"name\": \"Bebidas Actualizadas\",\n  \"imageUrl\": \"https://cdn.example.com/cat/bebidas-actualizado.webp\"\n}"
-                        },
-                        "url": {
-                            "raw": "{{baseUrl}}/categories/{{categoryId}}",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "categories",
-                                "{{categoryId}}"
-                            ]
-                        }
-                    },
-                    "event": [
-                        {
-                            "listen": "test",
-                            "script": {
-                                "exec": [
-                                    "pm.test('status 200', () => pm.response.code === 200);",
-                                    "const json = pm.response.json();",
-                                    "pm.test('ok true', () => json.ok === true);",
-                                    "pm.test('mantiene id', () => json.data && json.data.id === pm.collectionVariables.get('categoryId') || true);"
-                                ]
-                            }
-                        }
-                    ]
-                },
-                {
-                    "name": "DELETE /api/v1/categories/:id",
-                    "request": {
-                        "method": "DELETE",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{token}}"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{baseUrl}}/categories/{{categoryId}}",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "categories",
-                                "{{categoryId}}"
-                            ]
-                        }
-                    },
-                    "event": [
-                        {
-                            "listen": "test",
-                            "script": {
-                                "exec": [
-                                    "pm.test('status 200', () => pm.response.code === 200);",
-                                    "pm.test('deleted true', () => pm.response.json().data?.deleted === true);"
-                                ]
-                            }
-                        }
-                    ]
-                }
-            ]
+          "name": "GET /users/:id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "1"]
+            }
+          }
         },
         {
-            "name": "Roles",
-            "item": [
-                {
-                    "name": "GET /roles",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{token}}"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{baseUrl}}/roles",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "roles"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "GET /roles/:id",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{token}}"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{baseUrl}}/roles/1",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "roles",
-                                "1"
-                            ]
-                        }
-                    }
-                }
-            ]
+          "name": "PUT /users/:id",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "1"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Updated Name\"}"
+            }
+          }
         },
         {
-            "name": "Permissions",
-            "item": [
-                {
-                    "name": "GET /permissions",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{token}}"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{baseUrl}}/permissions",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "permissions"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "GET /roles/:id/permissions",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{token}}"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{baseUrl}}/roles/1/permissions",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "roles",
-                                "1",
-                                "permissions"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "PUT /roles/:id/permissions",
-                    "request": {
-                        "method": "PUT",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{token}}"
-                            },
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{baseUrl}}/roles/1/permissions",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "roles",
-                                "1",
-                                "permissions"
-                            ]
-                        },
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\"permissions\":[{\"moduleKey\":\"products\",\"action\":\"READ\"}]}"
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "Products",
-            "item": [
-                {
-                    "name": "GET /products",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{token}}"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{baseUrl}}/products?page=1&pageSize=10&q=pollo&status=active&categoryId={{categoryId}}&priceMin=2000&priceMax=2600&orderBy=price&orderDir=desc&all=false",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "products"
-                            ],
-                            "query": [
-                                { "key": "page", "value": "1" },
-                                { "key": "pageSize", "value": "10" },
-                                { "key": "q", "value": "pollo" },
-                                { "key": "status", "value": "active" },
-                                { "key": "categoryId", "value": "{{categoryId}}" },
-                                { "key": "priceMin", "value": "2000" },
-                                { "key": "priceMax", "value": "2600" },
-                                { "key": "orderBy", "value": "price" },
-                                { "key": "orderDir", "value": "desc" },
-                                { "key": "all", "value": "false" }
-                            ]
-                        }
-                    },
-                    "description": "Listado paginado con resumen de oferta activa (discountPercent + finalPrice)."
-                },
-                {
-                    "name": "GET /products/:id",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{token}}"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{baseUrl}}/products/{{productId}}",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "products",
-                                "{{productId}}"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "POST /products",
-                    "request": {
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{token}}"
-                            },
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{baseUrl}}/products",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "products"
-                            ]
-                        },
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\"name\":\"Ravioles de espinaca\",\"description\":\"Con salsa rosa\",\"imageUrl\":\"https://cdn.test/products/ravioles.png\",\"price\":1850.5,\"stock\":30,\"status\":\"draft\",\"categoryId\":\"{{categoryId}}\"}"
-                        }
-                    }
-                },
-                {
-                    "name": "PUT /products/:id",
-                    "request": {
-                        "method": "PUT",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{token}}"
-                            },
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{baseUrl}}/products/{{productId}}",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "products",
-                                "{{productId}}"
-                            ]
-                        },
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\"price\":1990.75,\"stock\":12,\"imageUrl\":\"https://cdn.test/products/prod-002.png\"}"
-                        }
-                    }
-                },
-                {
-                    "name": "PATCH /products/:id/status",
-                    "request": {
-                        "method": "PATCH",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{token}}"
-                            },
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{baseUrl}}/products/{{productId}}/status",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "products",
-                                "{{productId}}",
-                                "status"
-                            ]
-                        },
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\"status\":\"archived\"}"
-                        }
-                    }
-                },
-                {
-                    "name": "DELETE /products/:id",
-                    "request": {
-                        "method": "DELETE",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{token}}"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{baseUrl}}/products/{{productId}}",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "products",
-                                "{{productId}}"
-                            ]
-                        }
-                    }
-                },
-                }
-            ]
-        },
-        {
-            "name": "Offers",
-            "item": [
-                {
-                    "name": "GET /offers",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{token}}"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{baseUrl}}/offers?page=1&pageSize=10&orderBy=price&orderDir=asc",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "offers"
-                            ],
-                            "query": [
-                                { "key": "page", "value": "1" },
-                                { "key": "pageSize", "value": "10" },
-                                { "key": "orderBy", "value": "price" },
-                                { "key": "orderDir", "value": "asc" }
-                            ]
-                        }
-                    },
-                    "description": "Listado paginado de ofertas; usar `activeOnly=true` para traer sólo vigentes."
-                },
-                {
-                    "name": "POST /offers",
-                    "request": {
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{token}}"
-                            },
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{baseUrl}}/offers",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "offers"
-                            ]
-                        },
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\"productId\":\"{{productId}}\",\"discountPercent\":25}"
-                        }
-                    }
-                },
-                {
-                    "name": "PUT /offers/:id",
-                    "request": {
-                        "method": "PUT",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{token}}"
-                            },
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{baseUrl}}/offers/{{offerId}}",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "offers",
-                                "{{offerId}}"
-                            ]
-                        },
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\"discountPercent\":15}"
-                        }
-                    }
-                },
-                {
-                    "name": "DELETE /offers/:id",
-                    "request": {
-                        "method": "DELETE",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{token}}"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{baseUrl}}/offers/{{offerId}}",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "offers",
-                                "{{offerId}}"
-                            ]
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "Settings",
-            "item": [
-                {
-                    "name": "GET /settings",
-                    "request": {
-                        "method": "GET",
-                        "url": {
-                            "raw": "{{baseUrl}}/settings",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "settings"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "PUT /settings",
-                    "request": {
-                        "method": "PUT",
-                        "header": [
-                            {
-                                "key": "Authorization",
-                                "value": "Bearer {{token}}"
-                            },
-                            {
-                                "key": "Content-Type",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{baseUrl}}/settings",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "settings"
-                            ]
-                        },
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\"isOpen\": false, \"whatsapp\": \"+54 9 266 555-0000\"}"
-                        }
-                    }
-                }
-            ]
+          "name": "DELETE /users/:id",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "1"]
+            }
+          }
         }
-    ]
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "GET /api/v1/categories",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/categories?page=1&pageSize=10&status=all&orderBy=name&orderDir=asc",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                },
+                {
+                  "key": "status",
+                  "value": "all"
+                },
+                {
+                  "key": "orderBy",
+                  "value": "name"
+                },
+                {
+                  "key": "orderDir",
+                  "value": "asc"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.code === 200);",
+                  "const json = pm.response.json();",
+                  "pm.test('ok true', () => json.ok === true);",
+                  "pm.test('items es array', () => Array.isArray(json.data.items));",
+                  "pm.test('meta incluye total', () => json.data.meta && typeof json.data.meta.total === 'number');"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/v1/categories",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Bebidas {{timestamp}}\",\n  \"imageUrl\": \"https://cdn.example.com/cat/{{timestamp}}.webp\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 201', () => pm.response.code === 201);",
+                  "const json = pm.response.json();",
+                  "pm.test('ok true', () => json.ok === true);",
+                  "pm.test('incluye id', () => json.data && json.data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT /api/v1/categories/:id",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Bebidas Actualizadas\",\n  \"imageUrl\": \"https://cdn.example.com/cat/bebidas-actualizado.webp\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/categories/{{categoryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories", "{{categoryId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.code === 200);",
+                  "const json = pm.response.json();",
+                  "pm.test('ok true', () => json.ok === true);",
+                  "pm.test('mantiene id', () => json.data && json.data.id === pm.collectionVariables.get('categoryId') || true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE /api/v1/categories/:id",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/categories/{{categoryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories", "{{categoryId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.code === 200);",
+                  "pm.test('deleted true', () => pm.response.json().data?.deleted === true);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Roles",
+      "item": [
+        {
+          "name": "GET /roles",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["roles"]
+            }
+          }
+        },
+        {
+          "name": "GET /roles/:id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/roles/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["roles", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Permissions",
+      "item": [
+        {
+          "name": "GET /permissions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/permissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["permissions"]
+            }
+          }
+        },
+        {
+          "name": "GET /roles/:id/permissions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/roles/1/permissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["roles", "1", "permissions"]
+            }
+          }
+        },
+        {
+          "name": "PUT /roles/:id/permissions",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/roles/1/permissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["roles", "1", "permissions"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"permissions\":[{\"moduleKey\":\"products\",\"action\":\"READ\"}]}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "GET /products",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/products?page=1&pageSize=10&q=pollo&status=active&categoryId={{categoryId}}&priceMin=2000&priceMax=2600&orderBy=price&orderDir=desc&all=false",
+              "host": ["{{baseUrl}}"],
+              "path": ["products"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "10" },
+                { "key": "q", "value": "pollo" },
+                { "key": "status", "value": "active" },
+                { "key": "categoryId", "value": "{{categoryId}}" },
+                { "key": "priceMin", "value": "2000" },
+                { "key": "priceMax", "value": "2600" },
+                { "key": "orderBy", "value": "price" },
+                { "key": "orderDir", "value": "desc" },
+                { "key": "all", "value": "false" }
+              ]
+            }
+          },
+          "description": "Listado paginado con resumen de oferta activa (discountPercent + finalPrice)."
+        },
+        {
+          "name": "GET /products/:id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/products/{{productId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["products", "{{productId}}"]
+            }
+          }
+        },
+        {
+          "name": "POST /products",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["products"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Ravioles de espinaca\",\"description\":\"Con salsa rosa\",\"imageUrl\":\"https://cdn.test/products/ravioles.png\",\"price\":1850.5,\"stock\":30,\"status\":\"draft\",\"categoryId\":\"{{categoryId}}\"}"
+            }
+          }
+        },
+        {
+          "name": "PUT /products/:id",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/products/{{productId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["products", "{{productId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"price\":1990.75,\"stock\":12,\"imageUrl\":\"https://cdn.test/products/prod-002.png\"}"
+            }
+          }
+        },
+        {
+          "name": "PATCH /products/:id/status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/products/{{productId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["products", "{{productId}}", "status"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"status\":\"archived\"}"
+            }
+          }
+        },
+        {
+          "name": "DELETE /products/:id",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/products/{{productId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["products", "{{productId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Offers",
+      "item": [
+        {
+          "name": "GET /offers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/offers?page=1&pageSize=10&orderBy=price&orderDir=asc&activeOnly=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["offers"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "10" },
+                { "key": "orderBy", "value": "price" },
+                { "key": "orderDir", "value": "asc" },
+                {
+                  "key": "activeOnly",
+                  "value": "true",
+                  "description": "Compatibilidad vigente; no filtra por fechas."
+                }
+              ]
+            }
+          },
+          "description": "Listado paginado de ofertas. `activeOnly=true` se mantiene como compatibilidad vigente; no filtra por fechas."
+        },
+        {
+          "name": "POST /offers",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/offers",
+              "host": ["{{baseUrl}}"],
+              "path": ["offers"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"productId\":\"{{productId}}\",\"discountPercent\":25}"
+            }
+          }
+        },
+        {
+          "name": "PUT /offers/:id",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/offers/{{offerId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["offers", "{{offerId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"discountPercent\":15}"
+            }
+          }
+        },
+        {
+          "name": "DELETE /offers/:id",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/offers/{{offerId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["offers", "{{offerId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Settings",
+      "item": [
+        {
+          "name": "GET /api/v1/settings",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/settings",
+              "host": ["{{baseUrl}}"],
+              "path": ["settings"]
+            }
+          },
+          "description": "Settings admin canonico. Con baseUrl=/api/v1 este request resuelve a /api/v1/settings; no usar /api/settings como contrato principal."
+        },
+        {
+          "name": "PUT /api/v1/settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/settings",
+              "host": ["{{baseUrl}}"],
+              "path": ["settings"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"isOpen\": false, \"whatsapp\": \"+54 9 266 555-0000\"}"
+            }
+          },
+          "description": "Actualizacion admin canonica en /api/v1/settings. El alias /api/settings, si existe, queda como compatibilidad transitoria."
+        }
+      ]
+    }
+  ]
 }

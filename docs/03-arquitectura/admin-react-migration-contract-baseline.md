@@ -10,6 +10,14 @@
 > (`apps/admin/src/react/pages/LoginPage.jsx` y
 > `apps/admin/src/react/pages/DashboardPage.jsx`). Los fragments, modulos JS y CSS
 > legacy de Login/Dashboard fueron removidos. `#not-authorized` sigue legacy.
+>
+> Actualizacion PR 8D docs finales: este documento queda como baseline historico de Fase 0.
+> Tras el cierre de PR 8C-1, 8C-1B, 8C-2, 8C-3 y 8C-4,
+> Products, Categories, Users/Roles y Settings productivos ya usan React.
+> Las carpetas legacy `apps/admin/src/components/products`,
+> `components/categories`, `components/users`, `components/settings`
+> y los CSS legacy `styles/products.css`, `styles/categories.css`,
+> `styles/users.css`, `styles/settings.css` ya no son contrato vigente para esos modulos.
 
 ## 1. Objetivo
 
@@ -52,16 +60,16 @@ El backend convive vía `API_BASE` y `apiFetch`, que agrega `Authorization: Bear
 
 ## 4. Mapa de rutas hash
 
-| Ruta hash            | Módulo                       | HTML/View                                    | JS módulo                             | CSS                          | Guard/RBAC                                             | Redirección/Fallback                 | Riesgo React                                          |
-| -------------------- | ---------------------------- | -------------------------------------------- | ------------------------------------- | ---------------------------- | ------------------------------------------------------ | ------------------------------------ | ----------------------------------------------------- |
-| `#login`             | Login React                  | `LoginPage.jsx`                              | React route                           | CSS Module                   | Si ya hay auth, redirige a home permitido              | `pickHomeRoute()`                    | Medio: debe mantener redirect post-login y formulario |
-| `#dashboard`         | Dashboard React              | `DashboardPage.jsx`                          | React route                           | CSS Module                   | `canRead('dashboard')`                                 | Si no hay permiso, `#not-authorized` | Alto: dashboard + quick actions + Settings flag       |
-| `#products`          | Products + offers integradas | `/src/components/products/products.html`     | `components/products/products.js`     | `/src/styles/products.css`   | `canRead('products')`; acciones `data-rbac-action`     | Sin read => `#not-authorized`        | Crítico: DOM + filtros hash + CRUD + offers           |
-| `#categories`        | Categories                   | `/src/components/categories/categories.html` | `components/categories/categories.js` | `/src/styles/categories.css` | `canRead('categories')`                                | Sin read => `#not-authorized`        | Alto: CRUD + modales + estado                         |
-| `#users`             | Users / Roles                | `/src/components/users/users.html`           | `components/users/users.js`           | `/src/styles/users.css`      | `canRead('users')`; roles con `data-rbac-role="admin"` | Sin read => `#not-authorized`        | Crítico: RBAC sensible y tabs users/roles             |
-| `#settings`          | Settings                     | `/src/components/settings/settings.html`     | `components/settings/settings.js`     | `/src/styles/settings.css`   | `FEATURE_SETTINGS` + `canRead('settings')`             | Flag off => `#dashboard`             | Crítico: settings públicos/privados y branding        |
-| `#not-authorized`    | No access                    | `/src/components/no-access.html`             | sin módulo dedicado                   | `/src/styles/no-access.css`  | Ruta pública especial con CTA                          | CTA a home permitido o login         | Medio: fallback de permisos                           |
-| fallback desconocida | Not found                    | `uiNotFound()`                               | router                                | CSS actual                   | Auth si no es login/no-access                          | Mensaje en `#app`                    | Medio: mantener UX de rutas inválidas                 |
+| Ruta hash            | Módulo                             | HTML/View                           | JS módulo           | CSS                         | Guard/RBAC                                      | Redirección/Fallback                 | Riesgo React                                          |
+| -------------------- | ---------------------------------- | ----------------------------------- | ------------------- | --------------------------- | ----------------------------------------------- | ------------------------------------ | ----------------------------------------------------- |
+| `#login`             | Login React                        | `LoginPage.jsx`                     | React route         | CSS Module                  | Si ya hay auth, redirige a home permitido       | `pickHomeRoute()`                    | Medio: debe mantener redirect post-login y formulario |
+| `#dashboard`         | Dashboard React                    | `DashboardPage.jsx`                 | React route         | CSS Module                  | `canRead('dashboard')`                          | Si no hay permiso, `#not-authorized` | Alto: dashboard + quick actions + Settings flag       |
+| `#products`          | Products React + offers integradas | `apps/admin/src/react/products/*`   | React route         | CSS Modules                 | `canRead('products')`; permisos Products/Offers | Sin read => `#not-authorized`        | Critico: filtros hash + CRUD + offers                 |
+| `#categories`        | Categories React                   | `apps/admin/src/react/categories/*` | React route         | CSS Modules                 | `canRead('categories')`                         | Sin read => `#not-authorized`        | Alto: CRUD + modales + estado                         |
+| `#users`             | Users / Roles React                | `apps/admin/src/react/users/*`      | React route         | CSS Modules                 | `canRead('users')`; roles admin                 | Sin read => `#not-authorized`        | Critico: RBAC sensible y tabs users/roles             |
+| `#settings`          | Settings React                     | `apps/admin/src/react/settings/*`   | React route         | CSS Modules                 | `FEATURE_SETTINGS` + `canRead('settings')`      | Flag off => `#dashboard`             | Critico: settings publicos/privados y branding        |
+| `#not-authorized`    | No access                          | `/src/components/no-access.html`    | sin módulo dedicado | `/src/styles/no-access.css` | Ruta pública especial con CTA                   | CTA a home permitido o login         | Medio: fallback de permisos                           |
+| fallback desconocida | Not found                          | `uiNotFound()`                      | router              | CSS actual                  | Auth si no es login/no-access                   | Mensaje en `#app`                    | Medio: mantener UX de rutas inválidas                 |
 
 Evidencia: mapa `routes` y guardias en `apps/admin/src/utils/router.js:28`, `apps/admin/src/utils/router.js:141`, `apps/admin/src/utils/router.js:153`, `apps/admin/src/utils/router.js:173`, `apps/admin/src/utils/router.js:183`, `apps/admin/src/utils/router.js:192`.
 
@@ -77,7 +85,7 @@ Evidencia: mapa `routes` y guardias en `apps/admin/src/utils/router.js:28`, `app
 | `apps/admin/src/components/settings/settings.js` | Settings form                                 | No exporta destructor; bind de listeners al inicializar                                                | Alto    | `initSettings()` en `:981`; listeners en `:991-1043`                                                |
 | `apps/admin/src/utils/modal.js`                  | Modal DOM global                              | Cierra modal activo, remueve Escape y overlay click                                                    | Alto    | `closeActiveModal()` en `:10`; `openModal()` en `:104`; Escape en `:159`                            |
 
-Contrato para el futuro adapter React: montar React solo dentro de la vista que corresponda, después de que el router legacy haya decidido ruta/guardias; desmontar antes de reemplazar `innerHTML`; no tomar control global de `location.hash`; no duplicar listeners del header ni del módulo legacy.
+Contrato vigente post-8C: el adapter React ya es frontera productiva para Products, Categories, Users/Roles y Settings. El router hash sigue decidiendo ruta/guardias; no tomar control global de `location.hash` ni duplicar listeners. Las referencias siguientes a fragments, templates y CSS legacy quedan como inventario historico de Fase 0, no como contrato activo.
 
 ## 6. Contratos DOM críticos
 

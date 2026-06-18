@@ -8,9 +8,11 @@ scope: Términos del proyecto y referencias cruzadas.
 ## Glosario
 
 - **Catálogo (catalog)**: Conjunto de categorías y productos visibles en el Client SPA. Ver [`/docs/02-requisitos/requisitos.md`](../02-requisitos/requisitos.md).
-- **Oferta (offer / isOffer)**: Bandera que indica si un producto está en promoción.
-- **Descuento (discount)**: Porcentaje (0–100). Se aplica sobre `price` para derivar `offerPrice`.
-- **Precio de oferta (offerPrice)**: `price - (price * discount/100)`. No se persiste en DB.
+- **Oferta (`offer`)**: Resumen embebido de una promocion activa asociada a un producto. Incluye `discountPercent`, `isActive` y `finalPrice`.
+- **Filtro de oferta (`hasOffer`)**: Parametro canonico de Products para listar productos con o sin oferta.
+- **Descuento (`discountPercent`)**: Porcentaje aplicado sobre `price` para calcular el precio final.
+- **Precio final (`finalPrice`)**: Precio derivado de `price` y `discountPercent` cuando `isActive=true`; no se persiste desde la UI.
+- **Oferta activa (`isActive`)**: Estado booleano expuesto por el resumen de oferta.
 - **RBAC (Role-Based Access Control)**: Autorización por **módulo/acción** en Admin. Ver [`/docs/06-apis/endpoints.md`](../06-apis/endpoints.md).
 - **Envelope**: Estructura estándar de respuesta `{ ok, data?, error?, meta? }`. Ver [`/docs/06-apis/api-guidelines.md`](../06-apis/api-guidelines.md).
 - **Paginación (page/pageSize)**: Parámetros para dividir listados. Sugerido `pageSize` por defecto 20, máximo 100.
