@@ -153,5 +153,13 @@ describe('global header', () => {
     expect(toggle.getAttribute('aria-expanded')).toBe('false');
     expect(menu.getAttribute('aria-hidden')).toBe('true');
     expect(document.body.classList.contains('body-locked')).toBe(false);
+
+    fireEvent.click(toggle);
+    const drawerContactLink = screen.getAllByRole('link', { name: 'Contacto' })[1];
+    expect(drawerContactLink.getAttribute('href')).toBe('#contact');
+    fireEvent.click(drawerContactLink);
+
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    expect(menu.getAttribute('aria-hidden')).toBe('true');
   });
 });
