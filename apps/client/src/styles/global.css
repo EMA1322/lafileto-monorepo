@@ -55,7 +55,7 @@ body {
   --spacing-lg: 2rem;
 
   /* Contenedor */
-  --container-width: 1200px;
+  --container-width: var(--layout-shell-max, 1440px);
 
   /* Sombras y bordes */
   --shadow-soft: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -93,7 +93,7 @@ a:hover {
 
 /* 6. Contenedor base */
 .container {
-  width: 95%;
+  width: min(100% - (2 * var(--layout-content-pad-inline, 1rem)), var(--container-width));
   max-width: var(--container-width);
   margin: 0 auto;
 }
