@@ -1,10 +1,13 @@
-import { fetchBusinessStatus, fetchCommercialConfig } from '/src/api/public.js';
 import { isBusinessOpen } from '/src/utils/helpers.js';
+import {
+  compactDigits,
+  loadPublicClientSettings,
+} from '/src/react/settings/publicClientSettings.js';
 
 const COMMERCIAL_CONTEXT_ERROR = 'Commercial information is temporarily unavailable.';
 
 export function sanitizeWhatsappNumber(value) {
-  return String(value || '').replace(/\D/g, '');
+  return compactDigits(value);
 }
 
 export function getCommercialContextErrorMessage(error) {
@@ -15,15 +18,21 @@ export function getCommercialContextErrorMessage(error) {
 
 export async function loadCommercialContext() {
   try {
-    const [status, commercialConfig] = await Promise.all([
-      fetchBusinessStatus(),
-      fetchCommercialConfig(),
-    ]);
+    const context = await loadPublicClientSettings();
+    let businessOpen = context.isOpen;
+
+    if (context.errors.businessStatus) {
+      businessOpen = await isBusinessOpen();
+    }
+
+    const contextError =
+      context.errors.businessStatus || context.errors.settings || context.errors.commercialConfig;
 
     return {
-      businessOpen: status?.isOpen === true,
-      whatsappNumber: sanitizeWhatsappNumber(commercialConfig?.whatsapp?.number),
-      errorMessage: '',
+      businessOpen,
+      whatsappMessageCta: context.whatsapp.messageCta,
+      whatsappNumber: context.whatsapp.numberDigits,
+      errorMessage: contextError ? getCommercialContextErrorMessage(contextError) : '',
     };
   } catch (error) {
     try {

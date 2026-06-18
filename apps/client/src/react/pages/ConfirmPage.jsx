@@ -11,8 +11,16 @@ function getSafeCart() {
   return Array.isArray(cart) ? cart : [];
 }
 
-function buildWhatsappMessage({ items, total, customerName, deliveryMode, address, notes }) {
-  const lines = ['Hola, quisiera hacer un pedido:'];
+function buildWhatsappMessage({
+  items,
+  total,
+  customerName,
+  deliveryMode,
+  address,
+  notes,
+  messageCta,
+}) {
+  const lines = [messageCta || 'Hola, quisiera hacer un pedido:'];
 
   if (customerName) {
     lines.push(`Cliente: ${customerName}`);
@@ -52,6 +60,7 @@ export function ConfirmPage() {
   const [items, setItems] = useState(() => getSafeCart());
   const [businessOpen, setBusinessOpen] = useState(true);
   const [whatsappNumber, setWhatsappNumber] = useState('');
+  const [whatsappMessageCta, setWhatsappMessageCta] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
 
   const [customerName, setCustomerName] = useState('');
@@ -75,8 +84,9 @@ export function ConfirmPage() {
       deliveryMode,
       address: address.trim(),
       notes: notes.trim(),
+      messageCta: whatsappMessageCta,
     });
-  }, [items, total, customerName, deliveryMode, address, notes]);
+  }, [items, total, customerName, deliveryMode, address, notes, whatsappMessageCta]);
 
   useEffect(() => {
     const syncCart = () => setItems(getSafeCart());
@@ -105,6 +115,7 @@ export function ConfirmPage() {
 
       setBusinessOpen(context.businessOpen);
       setWhatsappNumber(context.whatsappNumber);
+      setWhatsappMessageCta(context.whatsappMessageCta || '');
 
       if (context.errorMessage) {
         setStatusMessage(context.errorMessage);
@@ -180,17 +191,27 @@ export function ConfirmPage() {
     <main className="confirm" aria-labelledby="confirm-title">
       <div className="confirm__container">
         <header className="confirm__header">
-          <h1 id="confirm-title" className="confirm__title">Confirm your order</h1>
-          <p className="confirm__subtitle">Review your order details and send it through WhatsApp.</p>
+          <h1 id="confirm-title" className="confirm__title">
+            Confirm your order
+          </h1>
+          <p className="confirm__subtitle">
+            Review your order details and send it through WhatsApp.
+          </p>
         </header>
 
         {technicalBlockMessage ? (
-          <AsyncStateNotice state="error" message={technicalBlockMessage} className="confirm__status" />
+          <AsyncStateNotice
+            state="error"
+            message={technicalBlockMessage}
+            className="confirm__status"
+          />
         ) : null}
 
         <div className="confirm__layout">
           <section className="confirm__summary" aria-labelledby="confirm-summary-title">
-            <h2 id="confirm-summary-title" className="confirm__section-title">Order summary</h2>
+            <h2 id="confirm-summary-title" className="confirm__section-title">
+              Order summary
+            </h2>
 
             {isEmpty ? (
               <ul id="confirm-order-list" className="confirm__list" aria-busy="false">
@@ -203,7 +224,11 @@ export function ConfirmPage() {
                   return (
                     <li key={item.id} className="confirm__item">
                       <div className="confirm__product-image">
-                        <img src={item.image || '/img/hero1.png'} alt={item.name || 'Product'} loading="lazy" />
+                        <img
+                          src={item.image || '/img/hero1.png'}
+                          alt={item.name || 'Product'}
+                          loading="lazy"
+                        />
                       </div>
                       <div>
                         <div className="confirm__product-name">{item.name}</div>
@@ -223,10 +248,14 @@ export function ConfirmPage() {
           </section>
 
           <section className="confirm__form" aria-labelledby="confirm-form-title">
-            <h2 id="confirm-form-title" className="confirm__section-title">Your details</h2>
+            <h2 id="confirm-form-title" className="confirm__section-title">
+              Your details
+            </h2>
 
             <div className="confirm__field">
-              <label htmlFor="confirm-name" className="confirm__label">Name</label>
+              <label htmlFor="confirm-name" className="confirm__label">
+                Name
+              </label>
               <input
                 id="confirm-name"
                 className="confirm__input"
@@ -267,7 +296,9 @@ export function ConfirmPage() {
 
             {requiresAddress ? (
               <div id="confirm-address-wrapper" className="confirm__field">
-                <label htmlFor="confirm-address" className="confirm__label">Address</label>
+                <label htmlFor="confirm-address" className="confirm__label">
+                  Address
+                </label>
                 <input
                   id="confirm-address"
                   className="confirm__input"
@@ -281,7 +312,9 @@ export function ConfirmPage() {
             ) : null}
 
             <div className="confirm__field">
-              <label htmlFor="confirm-notes" className="confirm__label">Notes (optional)</label>
+              <label htmlFor="confirm-notes" className="confirm__label">
+                Notes (optional)
+              </label>
               <textarea
                 id="confirm-notes"
                 className="confirm__textarea"
@@ -294,17 +327,31 @@ export function ConfirmPage() {
           </section>
 
           <section className="confirm__preview" aria-labelledby="confirm-preview-title">
-            <h2 id="confirm-preview-title" className="confirm__section-title">Message preview</h2>
-            <textarea id="confirm-message" className="confirm__preview-text" rows="10" readOnly value={previewMessage} />
-            <p className="confirm__hint" role="note">This is the message that will be sent to WhatsApp.</p>
+            <h2 id="confirm-preview-title" className="confirm__section-title">
+              Message preview
+            </h2>
+            <textarea
+              id="confirm-message"
+              className="confirm__preview-text"
+              rows="10"
+              readOnly
+              value={previewMessage}
+            />
+            <p className="confirm__hint" role="note">
+              This is the message that will be sent to WhatsApp.
+            </p>
           </section>
         </div>
 
         <footer className="confirm__footer">
-          <div id="confirm-status" className="confirm__hint" role="status" aria-live="polite">{statusMessage}</div>
+          <div id="confirm-status" className="confirm__hint" role="status" aria-live="polite">
+            {statusMessage}
+          </div>
 
           <div className="confirm__actions">
-            <a className="btn btn-outline" href="#cart">Back to cart</a>
+            <a className="btn btn-outline" href="#cart">
+              Back to cart
+            </a>
             <button
               id="confirm-send-btn"
               className="btn confirm__send-btn"

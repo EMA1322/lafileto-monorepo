@@ -1,9 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import {
-  fetchBusinessStatus,
-  fetchCommercialConfig,
-  fetchPublicSettings,
-} from '/src/api/public.js';
+import { loadPublicClientSettings } from '/src/react/settings/publicClientSettings.js';
 
 const BRAND_NAME = 'La Fileto';
 const BRAND_TAGLINE = 'Sabores auténticos a domicilio';
@@ -12,8 +8,7 @@ const DELIVERY_ZONE = 'Quines – San Luis';
 const CURRENT_YEAR = new Date().getFullYear();
 
 const INITIAL_FOOTER_DATA = {
-  commercialConfig: {},
-  settings: {},
+  publicSettings: null,
 };
 
 const MENU_LINKS = [
@@ -44,53 +39,14 @@ function getString(value) {
   return typeof value === 'string' ? value.trim() : '';
 }
 
-function toArray(value) {
-  return Array.isArray(value) ? value : [];
-}
-
-function compactDigits(value) {
-  return getString(value).replace(/\D/g, '');
-}
-
-function getPhoneHref(phone) {
-  const digits = compactDigits(phone);
-  return digits ? `tel:${digits}` : '';
-}
-
-function getWhatsappHref(whatsapp) {
-  const digits = compactDigits(whatsapp);
-  return digits ? `https://wa.me/${digits}` : '';
-}
-
 function getEmailHref(email) {
   const value = getString(email);
   return value && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? `mailto:${value}` : '';
 }
 
-function isValidHttpUrl(value) {
-  try {
-    const url = new URL(value);
-    return url.protocol === 'http:' || url.protocol === 'https:';
-  } catch {
-    return false;
-  }
-}
+function getSocialIcon(link) {
+  const type = link.type;
 
-function isValidImageUrl(value) {
-  const url = getString(value);
-  if (!url) return false;
-  if (url.startsWith('/')) return true;
-  if (url.startsWith('data:image/')) return true;
-  return isValidHttpUrl(url);
-}
-
-function getLogoUrl(settings) {
-  const candidates = [settings?.brand?.logo, settings?.brand?.logoUrl, settings?.identity?.logo];
-
-  return candidates.find(isValidImageUrl) || '';
-}
-
-function getSocialIcon(type) {
   if (type === 'instagram') {
     return (
       <svg className="footer__social-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -101,6 +57,14 @@ function getSocialIcon(type) {
     );
   }
 
+  if (type !== 'facebook') {
+    return (
+      <span className="footer__social-icon" aria-hidden="true">
+        {link.shortLabel}
+      </span>
+    );
+  }
+
   return (
     <svg className="footer__social-icon" viewBox="0 0 24 24" aria-hidden="true">
       <path d="M14.2 8.4V6.9c0-.7.5-1 1.1-1h1.4V3.2A19 19 0 0 0 14.4 3c-2.4 0-4 1.5-4 4.1v1.3H7.8v3h2.6V21h3.2v-9.6h2.7l.4-3h-3z" />
@@ -108,59 +72,29 @@ function getSocialIcon(type) {
   );
 }
 
-function getFooterSocialLinks(commercialConfig, settings) {
-  const links = [...toArray(commercialConfig?.socialLinks), ...toArray(settings?.socialLinks)];
-  const allowed = new Map([
-    ['facebook', 'Facebook'],
-    ['instagram', 'Instagram'],
-  ]);
-  const seen = new Set();
-
-  return links.reduce((acc, link) => {
-    const label = getString(link?.label);
-    const url = getString(link?.url);
-    const key = label.toLowerCase();
-
-    if (!allowed.has(key) || seen.has(key) || !isValidHttpUrl(url)) {
-      return acc;
-    }
-
-    seen.add(key);
-    acc.push({ label: allowed.get(key), type: key, url });
-    return acc;
-  }, []);
-}
-
-function getFooterContactData(commercialConfig, settings) {
-  const phone = getString(commercialConfig?.contact?.phone) || getString(settings?.identity?.phone);
-  const whatsapp =
-    getString(commercialConfig?.whatsapp?.number) || getString(settings?.whatsapp?.number);
-  const email = getString(commercialConfig?.contact?.email) || getString(settings?.identity?.email);
-  const address =
-    getString(commercialConfig?.contact?.address) || getString(settings?.identity?.address);
-  const mapUrl = getString(settings?.map?.embedSrc);
+function getFooterContactData(publicSettings) {
+  const email = getString(publicSettings?.contact?.email);
+  const whatsappDigits = getString(publicSettings?.whatsapp?.numberDigits);
 
   return {
-    address,
+    address: getString(publicSettings?.contact?.address),
     email,
     emailHref: getEmailHref(email),
-    mapHref: isValidHttpUrl(mapUrl) ? mapUrl : '',
-    phone,
-    phoneHref: getPhoneHref(phone),
-    socialLinks: getFooterSocialLinks(commercialConfig, settings),
-    whatsappHref: getWhatsappHref(whatsapp),
+    mapHref: getString(publicSettings?.contact?.mapHref),
+    phone: getString(publicSettings?.contact?.phone),
+    phoneHref: getString(publicSettings?.contact?.phoneHref),
+    socialLinks: publicSettings?.socialLinks || [],
+    whatsappHref: whatsappDigits ? `https://wa.me/${whatsappDigits}` : '',
   };
 }
 
-function getStatusView(businessStatus) {
-  if (businessStatus.isLoading || businessStatus.error || !businessStatus.status) {
+function getStatusView(publicSettings, businessStatus) {
+  if (businessStatus.isLoading || businessStatus.error || !publicSettings) {
     return null;
   }
 
-  const isOpen = businessStatus.status.isOpen === true;
-  const alertMessage = businessStatus.status?.alert?.enabled
-    ? getString(businessStatus.status.alert.message)
-    : '';
+  const isOpen = publicSettings.isOpen === true;
+  const alertMessage = publicSettings.alert?.enabled ? getString(publicSettings.alert.message) : '';
 
   return {
     className: isOpen ? 'is-open' : 'is-closed',
@@ -182,25 +116,16 @@ export function Footer() {
     let isMounted = true;
 
     async function loadFooterData() {
-      const [settingsResult, commercialResult, statusResult] = await Promise.allSettled([
-        fetchPublicSettings(),
-        fetchCommercialConfig(),
-        fetchBusinessStatus(),
-      ]);
+      const publicSettings = await loadPublicClientSettings();
 
       if (!isMounted) return;
 
-      setFooterData({
-        commercialConfig:
-          commercialResult.status === 'fulfilled' ? commercialResult.value || {} : {},
-        settings: settingsResult.status === 'fulfilled' ? settingsResult.value || {} : {},
+      setFooterData({ publicSettings });
+      setBusinessStatus({
+        error: publicSettings.errors.businessStatus,
+        isLoading: false,
+        status: publicSettings,
       });
-
-      if (statusResult.status === 'fulfilled') {
-        setBusinessStatus({ error: null, isLoading: false, status: statusResult.value });
-      } else {
-        setBusinessStatus({ error: statusResult.reason, isLoading: false, status: null });
-      }
     }
 
     loadFooterData();
@@ -210,12 +135,12 @@ export function Footer() {
     };
   }, []);
 
-  const logoUrl = useMemo(() => getLogoUrl(footerData.settings), [footerData.settings]);
-  const contactData = useMemo(
-    () => getFooterContactData(footerData.commercialConfig, footerData.settings),
-    [footerData],
+  const logoUrl = footerData.publicSettings?.brand?.logoUrl || '';
+  const contactData = useMemo(() => getFooterContactData(footerData.publicSettings), [footerData]);
+  const statusView = useMemo(
+    () => getStatusView(footerData.publicSettings, businessStatus),
+    [businessStatus, footerData.publicSettings],
   );
-  const statusView = useMemo(() => getStatusView(businessStatus), [businessStatus]);
   const hasContactLinks = Boolean(
     contactData.phoneHref ||
       contactData.whatsappHref ||
@@ -364,9 +289,9 @@ export function Footer() {
                   className="footer__social-link"
                   target="_blank"
                   rel="noopener noreferrer"
-                  key={link.type}
+                  key={`${link.type}-${link.url}`}
                 >
-                  {getSocialIcon(link.type)}
+                  {getSocialIcon(link)}
                 </a>
               ))}
             </div>

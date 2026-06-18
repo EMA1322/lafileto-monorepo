@@ -47,7 +47,7 @@ describe('global footer', () => {
     const api = await import('/src/api/public.js');
     api.fetchBusinessStatus.mockResolvedValue({ isOpen: true });
     api.fetchPublicSettings.mockResolvedValue({
-      brand: { logo: '/img/logo.png' },
+      brand: { logoUrl: '/img/logo.png' },
       identity: {
         address: 'Settings address',
         email: 'settings@lafileto.test',
@@ -57,7 +57,7 @@ describe('global footer', () => {
       socialLinks: [
         { label: 'Instagram', url: 'https://instagram.com/lafileto' },
         { label: 'Facebook', url: 'notaurl' },
-        { label: 'Twitter', url: 'https://x.com/lafileto' },
+        { label: 'TikTok', url: 'https://tiktok.com/@lafileto' },
       ],
       whatsapp: { number: '5492664000000' },
     });
@@ -107,34 +107,35 @@ describe('global footer', () => {
     expect(document.body.textContent).toContain(String(new Date().getFullYear()));
   });
 
-  it('prioritizes commercial config contact data and builds safe contact links', async () => {
+  it('prioritizes public settings contact data and builds safe contact links', async () => {
     renderFooter();
 
     await waitFor(() => {
       expect(document.querySelector('[data-footer-phone-link]').getAttribute('href')).toBe(
-        'tel:2664555666',
+        'tel:2664000000',
       );
-      expect(document.querySelector("a[href='mailto:pedidos@lafileto.test']")).toBeTruthy();
-      expect(document.querySelector("a[href='https://wa.me/5492664555666']")).toBeTruthy();
-      expect(document.body.textContent).toContain('Commercial address');
-      expect(document.body.textContent).not.toContain('Settings address');
+      expect(document.querySelector("a[href='mailto:settings@lafileto.test']")).toBeTruthy();
+      expect(document.querySelector("a[href='https://wa.me/5492664000000']")).toBeTruthy();
+      expect(document.body.textContent).toContain('Settings address');
+      expect(document.body.textContent).not.toContain('Commercial address');
     });
   });
 
-  it('renders valid Instagram and Facebook social links once with secure external attributes', async () => {
+  it('renders valid social links once with secure external attributes', async () => {
     renderFooter();
 
     await waitFor(() => {
       const instagram = screen.getByLabelText('Instagram de La Fileto');
       const facebook = screen.getByLabelText('Facebook de La Fileto');
+      const tiktok = screen.getByLabelText('TikTok de La Fileto');
 
       expect(instagram.getAttribute('href')).toBe('https://instagram.com/lafileto');
       expect(facebook.getAttribute('href')).toBe('https://facebook.com/lafileto');
+      expect(tiktok.getAttribute('href')).toBe('https://tiktok.com/@lafileto');
       expect(instagram.getAttribute('target')).toBe('_blank');
       expect(instagram.getAttribute('rel')).toBe('noopener noreferrer');
       expect(facebook.getAttribute('target')).toBe('_blank');
       expect(facebook.getAttribute('rel')).toBe('noopener noreferrer');
-      expect(screen.queryByLabelText('Twitter de La Fileto')).toBeNull();
       expect(screen.getAllByLabelText('Instagram de La Fileto')).toHaveLength(1);
       expect(screen.getAllByLabelText('Facebook de La Fileto')).toHaveLength(1);
     });
