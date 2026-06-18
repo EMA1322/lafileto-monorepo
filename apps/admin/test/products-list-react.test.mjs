@@ -45,6 +45,11 @@ function testProductsRouteIsReactOnly() {
     /viewHtmlPath|products\.html|products\.css/,
     'products route should not load the legacy fragment',
   );
+  assert.doesNotMatch(
+    source,
+    /components\/products|components\\products|styles\/products\.css|styles\\products\.css/,
+    'router should not reference removed Products legacy assets',
+  );
 }
 
 function testRouteBoundariesStayIntact() {
@@ -157,6 +162,10 @@ function testProductsScopeExclusions() {
     .join('\n');
 
   assert.doesNotMatch(combined, /products\.modals|openProductModal|openDeleteModal/);
+  assert.doesNotMatch(
+    combined,
+    /components\/products|components\\products|styles\/products\.css|styles\\products\.css/,
+  );
   assert.doesNotMatch(combined, /productsApi\.(create|update|delete|remove|changeStatus)/);
   assert.doesNotMatch(combined, /offersApi\.(create|update|remove)/);
   assert.doesNotMatch(
