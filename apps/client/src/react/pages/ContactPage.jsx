@@ -1,5 +1,15 @@
 import { useEffect, useMemo } from 'react';
-import { Clock, CreditCard, Mail, MapPin, MessageCircle, Phone } from 'lucide-react';
+import {
+  Clock,
+  CreditCard,
+  ExternalLink,
+  Mail,
+  MapPin,
+  MessageCircle,
+  Phone,
+  ShieldCheck,
+  Store,
+} from 'lucide-react';
 import { EmptyState, ErrorState, LoadingState } from '/src/components/ui/State.jsx';
 import { loadPublicClientSettings } from '/src/react/settings/publicClientSettings.js';
 import { useAsyncResource } from '../hooks/useAsyncResource.jsx';
@@ -7,7 +17,8 @@ import styles from './ContactPage.module.css';
 
 const DEFAULT_WHATSAPP_MESSAGE = 'Hola La Fileto, quiero hacer una consulta.';
 const DEFAULT_TITLE = 'Contacto';
-const DEFAULT_DESCRIPTION = 'Comunicate con La Fileto o encontranos en el mapa.';
+const DEFAULT_DESCRIPTION =
+  'Hablamos por WhatsApp, te contamos horarios y te esperamos en el local.';
 const DAY_LABELS = {
   monday: 'Lunes',
   tuesday: 'Martes',
@@ -96,6 +107,20 @@ function ContactItem({ icon, label, value, href, external = false, fallback }) {
   );
 }
 
+function TrustNote({ icon, title, text }) {
+  return (
+    <li className={styles.trustNote}>
+      <span className={styles.trustIcon} aria-hidden="true">
+        {icon}
+      </span>
+      <span>
+        <strong>{title}</strong>
+        <span>{text}</span>
+      </span>
+    </li>
+  );
+}
+
 function applyContactMeta(seo) {
   const title = getString(seo?.contactTitle);
   const description = getString(seo?.contactDescription);
@@ -136,6 +161,7 @@ export function ContactPage() {
       address,
       email,
       emailHref: getEmailHref(email),
+      mapHref: getString(settings?.contact?.mapHref),
       mapEmbedSrc: getString(settings?.map?.embedSrc),
       phone,
       phoneHref: getString(settings?.contact?.phoneHref),
@@ -162,9 +188,29 @@ export function ContactPage() {
     <main className={styles.contact} aria-labelledby="contact-title">
       <section className={styles.hero}>
         <div className={styles.heroInner}>
-          <p className={styles.eyebrow}>Atencion directa</p>
-          <h1 id="contact-title">{contactData.title}</h1>
-          <p>{contactData.description}</p>
+          <div className={styles.heroCopy}>
+            <p className={styles.eyebrow}>Atencion directa</p>
+            <h1 id="contact-title">{contactData.title}</h1>
+            <p>{contactData.description}</p>
+          </div>
+
+          <ul className={styles.trustList} aria-label="Senales de confianza">
+            <TrustNote
+              icon={<MessageCircle size={20} strokeWidth={1.9} />}
+              title="Habla con nosotros"
+              text="Te respondemos al toque por WhatsApp."
+            />
+            <TrustNote
+              icon={<Store size={20} strokeWidth={1.9} />}
+              title="Local real"
+              text="Pasa a retirar o consultanos por delivery."
+            />
+            <TrustNote
+              icon={<ShieldCheck size={20} strokeWidth={1.9} />}
+              title="Sin vueltas"
+              text="Horarios, pagos y ubicacion siempre a mano."
+            />
+          </ul>
         </div>
       </section>
 
@@ -187,8 +233,36 @@ export function ContactPage() {
       {settingsResource.status === 'success' ? (
         <section className={styles.content} aria-label="Datos de contacto">
           <div className={styles.details}>
+            {contactData.whatsappHref ? (
+              <div className={styles.cta} data-contact-whatsapp-cta>
+                <span className={styles.ctaIcon} aria-hidden="true">
+                  <MessageCircle size={24} strokeWidth={1.9} />
+                </span>
+                <div className={styles.ctaCopy}>
+                  <p className={styles.ctaLabel}>Pedi por WhatsApp</p>
+                  <p>{contactData.whatsappMessage}</p>
+                </div>
+                <a
+                  className={styles.ctaLink}
+                  href={contactData.whatsappHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Escribir por WhatsApp
+                </a>
+              </div>
+            ) : null}
+
             {hasAnyContactData ? (
               <ul className={styles.contactList}>
+                <ContactItem
+                  icon={<MessageCircle size={20} strokeWidth={1.8} />}
+                  label="WhatsApp"
+                  value={contactData.whatsappNumber}
+                  href={contactData.whatsappHref}
+                  external
+                  fallback="WhatsApp no disponible por ahora."
+                />
                 <ContactItem
                   icon={<Phone size={20} strokeWidth={1.8} />}
                   label="Telefono"
@@ -207,15 +281,9 @@ export function ContactPage() {
                   icon={<MapPin size={20} strokeWidth={1.8} />}
                   label="Direccion"
                   value={contactData.address}
+                  href={contactData.mapHref}
+                  external={Boolean(contactData.mapHref)}
                   fallback="Direccion no disponible por ahora."
-                />
-                <ContactItem
-                  icon={<MessageCircle size={20} strokeWidth={1.8} />}
-                  label="WhatsApp"
-                  value={contactData.whatsappNumber}
-                  href={contactData.whatsappHref}
-                  external
-                  fallback="WhatsApp no disponible por ahora."
                 />
               </ul>
             ) : (
@@ -226,62 +294,56 @@ export function ContactPage() {
               />
             )}
 
-            {contactData.whatsappHref ? (
-              <div className={styles.cta} data-contact-whatsapp-cta>
-                <p>{contactData.whatsappMessage}</p>
-                <a
-                  className={styles.ctaLink}
-                  href={contactData.whatsappHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Escribir por WhatsApp
-                </a>
-              </div>
-            ) : null}
-
-            {contactData.paymentRows.length ? (
-              <section className={styles.infoPanel} aria-labelledby="contact-payments-title">
+            <div className={styles.infoGrid}>
+              <section className={styles.infoPanel} aria-labelledby="contact-hours-title">
                 <div className={styles.panelHeading}>
-                  <CreditCard size={20} strokeWidth={1.8} aria-hidden="true" />
-                  <h2 id="contact-payments-title">Pagos por transferencia</h2>
+                  <Clock size={20} strokeWidth={1.8} aria-hidden="true" />
+                  <span>Estos son nuestros horarios</span>
+                  <h2 id="contact-hours-title">Horarios</h2>
                 </div>
-                <dl className={styles.dataList}>
-                  {contactData.paymentRows.map((row) => (
-                    <div key={row.label} className={styles.dataRow}>
-                      <dt>{row.label}</dt>
-                      <dd>{row.value}</dd>
-                    </div>
-                  ))}
-                </dl>
+                <p className={styles.statusBadge}>
+                  {contactData.isOpen ? 'Abierto ahora' : 'Cerrado ahora'}
+                </p>
+                {contactData.hourRows.length ? (
+                  <dl className={styles.dataList}>
+                    {contactData.hourRows.map((row) => (
+                      <div key={row.day} className={styles.dataRow}>
+                        <dt>{row.day}</dt>
+                        <dd>{row.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                ) : (
+                  <p className={styles.panelFallback}>Horarios no disponibles por ahora.</p>
+                )}
               </section>
-            ) : null}
 
-            <section className={styles.infoPanel} aria-labelledby="contact-hours-title">
-              <div className={styles.panelHeading}>
-                <Clock size={20} strokeWidth={1.8} aria-hidden="true" />
-                <h2 id="contact-hours-title">Horarios</h2>
-              </div>
-              <p className={styles.statusBadge}>
-                {contactData.isOpen ? 'Abierto ahora' : 'Cerrado ahora'}
-              </p>
-              {contactData.hourRows.length ? (
-                <dl className={styles.dataList}>
-                  {contactData.hourRows.map((row) => (
-                    <div key={row.day} className={styles.dataRow}>
-                      <dt>{row.day}</dt>
-                      <dd>{row.value}</dd>
-                    </div>
-                  ))}
-                </dl>
-              ) : (
-                <p className={styles.panelFallback}>Horarios no disponibles por ahora.</p>
-              )}
-            </section>
+              {contactData.paymentRows.length ? (
+                <section className={styles.infoPanel} aria-labelledby="contact-payments-title">
+                  <div className={styles.panelHeading}>
+                    <CreditCard size={20} strokeWidth={1.8} aria-hidden="true" />
+                    <span>Paga como te quede mas comodo</span>
+                    <h2 id="contact-payments-title">Pagos por transferencia</h2>
+                  </div>
+                  <dl className={styles.dataList}>
+                    {contactData.paymentRows.map((row) => (
+                      <div key={row.label} className={styles.dataRow}>
+                        <dt>{row.label}</dt>
+                        <dd>{row.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </section>
+              ) : null}
+            </div>
           </div>
 
           <section className={styles.mapPanel} aria-labelledby="contact-map-title">
-            <h2 id="contact-map-title">Ubicacion</h2>
+            <div className={styles.mapHeading}>
+              <p className={styles.eyebrow}>Tambien podes encontrarnos aca</p>
+              <h2 id="contact-map-title">Ubicacion</h2>
+              <p>Te esperamos con comida rica y sin vueltas.</p>
+            </div>
             {contactData.mapEmbedSrc ? (
               <iframe
                 className={styles.map}
@@ -299,6 +361,17 @@ export function ContactPage() {
                   : 'Mapa no disponible por ahora.'}
               </p>
             )}
+            {contactData.mapHref ? (
+              <a
+                className={styles.mapLink}
+                href={contactData.mapHref}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Abrir mapa
+                <ExternalLink size={16} strokeWidth={1.9} aria-hidden="true" />
+              </a>
+            ) : null}
           </section>
         </section>
       ) : null}
