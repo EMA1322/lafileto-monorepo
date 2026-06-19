@@ -16,6 +16,7 @@ import { Card } from '/src/components/ui/Surface.jsx';
 import { StatusBadge } from '/src/components/ui/Badge.jsx';
 import { EmptyState, ErrorState, LoadingState } from '/src/components/ui/State.jsx';
 import { ProductCard } from '../components/ProductCard.jsx';
+import { ArrowRight, MessageCircle, ShoppingCart, Utensils } from 'lucide-react';
 import styles from './HomePage.module.css';
 
 function SectionState({ label, status, error, isEmpty, emptyText, children }) {
@@ -61,34 +62,14 @@ function HomeSectionHeading({ eyebrow, id, title, description, actions, centered
 }
 
 function renderStepIcon(icon) {
-  if (icon === 'choose') {
-    return (
-      <svg className={styles.stepIcon} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path d="M7 3.75v16.5" />
-        <path d="M4.5 3.75v5.1a2.5 2.5 0 0 0 5 0v-5.1" />
-        <path d="M15.5 20.25V3.75c2.45 1.05 3.35 3.32 3.35 6.05v2.45H15.5" />
-      </svg>
-    );
-  }
+  const icons = {
+    choose: Utensils,
+    add: ShoppingCart,
+    confirm: MessageCircle,
+  };
+  const StepIcon = icons[icon] || MessageCircle;
 
-  if (icon === 'add') {
-    return (
-      <svg className={styles.stepIcon} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path d="M3.75 5.25h2.2l2.1 9h8.75l2.1-6.25H6.7" />
-        <path d="M9.2 18.5h.1" />
-        <path d="M16 18.5h.1" />
-        <path d="M12.8 9.5v4.1" />
-        <path d="M10.75 11.55h4.1" />
-      </svg>
-    );
-  }
-
-  return (
-    <svg className={styles.stepIcon} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M12 4.5a7.5 7.5 0 0 1 6.15 11.8l.95 3.2-3.35-.82A7.5 7.5 0 1 1 12 4.5Z" />
-      <path d="M9.1 9.1c.45-.45.92-.3 1.18.16l.58 1.03c.18.32.12.62-.1.88l-.43.5a5.15 5.15 0 0 0 2.12 2.12l.5-.43c.26-.22.56-.28.88-.1l1.03.58c.46.26.61.73.16 1.18-.54.54-1.2.72-1.92.5-2.36-.72-4.16-2.52-4.88-4.88-.22-.72-.04-1.38.5-1.92Z" />
-    </svg>
-  );
+  return <StepIcon className={styles.stepIcon} aria-hidden="true" strokeWidth={1.7} />;
 }
 
 function resolveHero(settings, commercialConfig) {
@@ -118,6 +99,18 @@ function resolveBusinessStatus(statusData) {
 
 function navigateToProducts() {
   window.location.hash = '#products';
+}
+
+function scrollToOffers() {
+  const offersTitle = document.getElementById('home-offers-title');
+  const reducedMotion =
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  offersTitle?.scrollIntoView({
+    behavior: reducedMotion ? 'auto' : 'smooth',
+    block: 'start',
+  });
 }
 
 function normalizeOfferProduct(offer) {
@@ -270,21 +263,35 @@ export function HomePage() {
         />
         <div className={styles.heroOverlay} aria-hidden="true" />
         <div className={`${styles.heroContent} ${styles.reveal}`} data-reveal>
-          <p className={styles.eyebrow}>Menú digital · La Fileto</p>
-          <h1 id="home-hero-title" className={styles.heroTitle}>
-            {hero.title}
-          </h1>
-          <p className={styles.heroSummary}>{hero.subtitle}</p>
-          <div className={styles.heroActions}>
-            <Button className={styles.heroPrimary} onClick={navigateToProducts}>
-              Ver menú
-            </Button>
-            <Button className={styles.heroSecondary} variant="ghost" onClick={navigateToProducts}>
-              Ver ofertas
-            </Button>
+          <div className={styles.heroCopy}>
+            <p className={styles.eyebrow}>Menú digital · {hero.businessName}</p>
+            <h1 id="home-hero-title" className={styles.heroTitle}>
+              {hero.title}
+            </h1>
+            <p className={styles.heroSummary}>{hero.subtitle}</p>
+            <div className={styles.heroActions}>
+              <Button className={styles.heroPrimary} onClick={navigateToProducts}>
+                Ver menú
+                <ArrowRight size={18} aria-hidden="true" />
+              </Button>
+              <Button className={styles.heroSecondary} variant="ghost" onClick={scrollToOffers}>
+                Ver ofertas
+              </Button>
+            </div>
+            <div className={styles.heroPromises} aria-label="Ventajas del pedido">
+              <span>Pedí rico y sin vueltas</span>
+              <span>Te lo preparamos al toque</span>
+              <span>Confirmá por WhatsApp</span>
+            </div>
           </div>
-          <div className={styles.heroStatus} aria-live="polite">
-            <p className={styles.statusLabel}>Estado del local</p>
+
+          <div className={styles.heroPanel} aria-live="polite">
+            <div className={styles.heroPanelHeader}>
+              <p className={styles.statusLabel}>Estado del local</p>
+              <span className={styles.panelMark} aria-hidden="true">
+                LF
+              </span>
+            </div>
             <SectionState
               label="estado del local"
               status={homeResource.status}
@@ -300,6 +307,23 @@ export function HomePage() {
                 <p className={styles.statusText}>{businessStatus.details}</p>
               </div>
             </SectionState>
+            <div className={styles.panelRows} aria-label="Resumen del pedido">
+              <div>
+                <span>01</span>
+                <strong>Elegí</strong>
+                <p>Menú y promos activas.</p>
+              </div>
+              <div>
+                <span>02</span>
+                <strong>Revisá</strong>
+                <p>Carrito claro antes de confirmar.</p>
+              </div>
+              <div>
+                <span>03</span>
+                <strong>Mandá</strong>
+                <p>Pedido directo por WhatsApp.</p>
+              </div>
+            </div>
           </div>
         </div>
       </Section>
@@ -464,12 +488,23 @@ export function HomePage() {
                     <div className={styles.categoryContent}>
                       <p className={styles.categoryTag}>Categoría</p>
                       <h3 className={styles.categoryName}>{category.name || 'Categoría'}</h3>
+                      <span className={styles.categoryAction}>
+                        Ver menú
+                        <ArrowRight size={16} aria-hidden="true" />
+                      </span>
                     </div>
                   </Card>
                 </a>
               ))}
             </div>
           </SectionState>
+          <div className={`${styles.bottomCta} ${styles.reveal}`} data-reveal>
+            <p>Mirá el menú completo y armá tu pedido en minutos.</p>
+            <Button className={styles.bottomCtaButton} onClick={navigateToProducts}>
+              Armar pedido
+              <ArrowRight size={18} aria-hidden="true" />
+            </Button>
+          </div>
         </div>
       </Section>
     </AppShell>
