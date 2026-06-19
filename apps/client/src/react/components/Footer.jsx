@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Clock, MessageCircle, ShieldCheck } from 'lucide-react';
 import { loadPublicClientSettings } from '/src/react/settings/publicClientSettings.js';
 
 const BRAND_NAME = 'La Fileto';
@@ -33,6 +34,12 @@ const POLICY_ITEMS = [
   'Datos sujetos a disponibilidad del local.',
   'Los precios pueden actualizarse.',
   'La confirmación final se realiza por WhatsApp.',
+];
+
+const TRUST_ITEMS = [
+  { icon: MessageCircle, label: 'Pedido por WhatsApp' },
+  { icon: Clock, label: 'Te lo preparamos al toque' },
+  { icon: ShieldCheck, label: 'Confirmación directa' },
 ];
 
 function getString(value) {
@@ -158,6 +165,8 @@ export function Footer() {
                 className="footer__logo-image"
                 src={logoUrl}
                 alt={`${BRAND_NAME} - ${BRAND_SUBTITLE}`}
+                width="40"
+                height="40"
                 onError={() => setLogoFailed(true)}
               />
             ) : (
@@ -174,6 +183,16 @@ export function Footer() {
           <p className="footer__tagline">{BRAND_TAGLINE}</p>
           <p className="footer__intro">Pedidos simples y confirmación directa.</p>
           <p className="footer__delivery">Zona de reparto: {DELIVERY_ZONE}</p>
+          {contactData.whatsappHref ? (
+            <a
+              href={contactData.whatsappHref}
+              className="footer__primary-link"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Pedi por WhatsApp
+            </a>
+          ) : null}
         </section>
 
         <nav className="footer__column" aria-label="Navegacion secundaria">
@@ -187,16 +206,28 @@ export function Footer() {
           </ul>
         </nav>
 
-        <section className="footer__column" aria-label="Informacion del local">
+        <section className="footer__column footer__trust-column" aria-label="Informacion del local">
           <h2 className="footer__heading">Nosotros</h2>
           <p className="footer__text">Cocina de barrio y atención directa.</p>
           <p className="footer__text">Zona de reparto: {DELIVERY_ZONE}</p>
+          <ul className="footer__trust-list">
+            {TRUST_ITEMS.map((item) => {
+              const TrustIcon = item.icon;
+
+              return (
+                <li key={item.label}>
+                  <TrustIcon size={16} strokeWidth={2} aria-hidden="true" />
+                  <span>{item.label}</span>
+                </li>
+              );
+            })}
+          </ul>
           <a className="footer__text-link" href="#contact">
             Contacto
           </a>
         </section>
 
-        <section className="footer__column" aria-label="Preguntas frecuentes">
+        <section className="footer__column footer__faq-column" aria-label="Preguntas frecuentes">
           <h2 className="footer__heading">Preguntas frecuentes</h2>
           <dl className="footer__faq">
             {FAQ_ITEMS.map((item) => (

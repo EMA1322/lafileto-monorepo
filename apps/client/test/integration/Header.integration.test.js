@@ -87,6 +87,27 @@ describe('global header', () => {
     });
   });
 
+  it('marks Contact as active for public contact hash aliases', () => {
+    const previousHash = window.location.hash;
+    const contactAliases = ['#contact', '#contacto', '#r/contact', '#r/contacto'];
+
+    try {
+      contactAliases.forEach((hash) => {
+        window.location.hash = hash;
+        const { unmount } = renderHeader();
+        const activeLinks = [...document.querySelectorAll('a[aria-current="page"]')];
+
+        expect(activeLinks).toHaveLength(2);
+        expect(activeLinks.every((link) => link.getAttribute('href') === '#contact')).toBe(true);
+
+        unmount();
+        document.body.innerHTML = '';
+      });
+    } finally {
+      window.location.hash = previousHash;
+    }
+  });
+
   it('keeps cart badge synced from initial cart, cartService events, and storage', async () => {
     localStorage.setItem(
       'cart',
