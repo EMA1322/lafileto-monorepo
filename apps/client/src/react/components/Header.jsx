@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createFocusTrap } from 'focus-trap';
+import { Menu, Phone, ShoppingCart, X } from 'lucide-react';
 import {
   applyClientFavicon,
   loadPublicClientSettings,
@@ -39,9 +40,14 @@ function getCartCount() {
   }
 }
 
+function getCurrentHash() {
+  return window.location.hash || '#home';
+}
+
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [cartCount, setCartCount] = useState(() => getCartCount());
+  const [currentHash, setCurrentHash] = useState(() => getCurrentHash());
   const [businessStatus, setBusinessStatus] = useState({
     error: null,
     isLoading: true,
@@ -111,6 +117,7 @@ export function Header() {
 
   useEffect(() => {
     function handleHashChange() {
+      setCurrentHash(getCurrentHash());
       closeMenu({ restoreFocus: false });
     }
 
@@ -253,6 +260,8 @@ export function Header() {
               className="header__brand-mark"
               src={logoUrl}
               alt=""
+              width="42"
+              height="42"
               aria-hidden="true"
               onError={() => setLogoFailed(true)}
             />
@@ -263,14 +272,20 @@ export function Header() {
           )}
           <span className="header__brand-copy">
             <span className="header__brand-name">La Fileto</span>
-            <span className="header__brand-note">Menu digital</span>
+            <span className="header__brand-note">Pedi rico y sin vueltas</span>
           </span>
         </a>
 
         <ul className="header__links" aria-label="Secciones principales">
           {NAV_LINKS.map((link) => (
             <li key={link.href}>
-              <a href={link.href}>{link.label}</a>
+              <a
+                href={link.href}
+                className={currentHash === link.href ? 'is-active' : undefined}
+                aria-current={currentHash === link.href ? 'page' : undefined}
+              >
+                {link.label}
+              </a>
             </li>
           ))}
         </ul>
@@ -282,9 +297,7 @@ export function Header() {
             data-header-phone-link
             aria-label="Llamar a La Fileto"
           >
-            <svg className="header__icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.7.6 2.5a2 2 0 0 1-.5 2.1L8 9.5a16 16 0 0 0 6.5 6.5l1.2-1.2a2 2 0 0 1 2.1-.5c.8.3 1.6.5 2.5.6A2 2 0 0 1 22 16.9z" />
-            </svg>
+            <Phone className="header__icon" size={18} strokeWidth={2} aria-hidden="true" />
             <span data-header-phone-text>{contactData.phone}</span>
           </a>
 
@@ -301,10 +314,19 @@ export function Header() {
         </div>
 
         <div className="header__actions">
+          {contactData.whatsappHref ? (
+            <a
+              href={contactData.whatsappHref}
+              className="header__order-link"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Pedi por WhatsApp
+            </a>
+          ) : null}
+
           <a href="#cart" className="header__cart" aria-label="Ir al carrito">
-            <svg className="header__icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M6.4 6H21l-2 8.5a2 2 0 0 1-2 1.5H8.2a2 2 0 0 1-2-1.6L4.8 3.8H2V2h4.4L6.8 5.8 6.4 6zm2 8h8.7l1.4-6H7.1l1.3 6zM9 22a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm8 0a2 2 0 1 1 0-4 2 2 0 0 1 0 4z" />
-            </svg>
+            <ShoppingCart className="header__icon" size={19} strokeWidth={2.1} aria-hidden="true" />
             <span
               id="cart-count"
               className="header__cart-count"
@@ -326,9 +348,7 @@ export function Header() {
             onClick={handleToggleMenu}
             ref={toggleRef}
           >
-            <span className="header__bar"></span>
-            <span className="header__bar"></span>
-            <span className="header__bar"></span>
+            <Menu className="header__icon" size={21} strokeWidth={2.2} aria-hidden="true" />
             <span className="sr-only">Menu</span>
           </button>
         </div>
@@ -355,6 +375,8 @@ export function Header() {
                 className="header__brand-mark"
                 src={logoUrl}
                 alt=""
+                width="42"
+                height="42"
                 aria-hidden="true"
                 onError={() => setLogoFailed(true)}
               />
@@ -370,16 +392,19 @@ export function Header() {
             onClick={() => closeMenu()}
             ref={closeRef}
           >
-            <svg className="header__icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="m6.4 5 12.6 12.6-1.4 1.4L5 6.4 6.4 5zm12.6 1.4L6.4 19 5 17.6 17.6 5 19 6.4z" />
-            </svg>
+            <X className="header__icon" size={21} strokeWidth={2.2} aria-hidden="true" />
           </button>
         </div>
 
         <ul className="header__menu-list">
           {NAV_LINKS.map((link) => (
             <li key={link.href}>
-              <a href={link.href} onClick={handleInternalLinkClick}>
+              <a
+                href={link.href}
+                className={currentHash === link.href ? 'is-active' : undefined}
+                aria-current={currentHash === link.href ? 'page' : undefined}
+                onClick={handleInternalLinkClick}
+              >
                 {link.label}
               </a>
             </li>
