@@ -13,6 +13,12 @@ const NAV_LINKS = [
   { href: '#contact', label: 'Contacto' },
 ];
 
+const NAV_HASH_ALIASES = {
+  '#contacto': '#contact',
+  '#r/contact': '#contact',
+  '#r/contacto': '#contact',
+};
+
 const INITIAL_HEADER_DATA = {
   publicSettings: null,
 };
@@ -42,6 +48,10 @@ function getCartCount() {
 
 function getCurrentHash() {
   return window.location.hash || '#home';
+}
+
+function getCanonicalNavHash(hash) {
+  return NAV_HASH_ALIASES[hash] || hash;
 }
 
 export function Header() {
@@ -233,6 +243,7 @@ export function Header() {
   const alertMessage = headerData.publicSettings?.alert?.enabled
     ? headerData.publicSettings.alert.message
     : '';
+  const activeNavHash = getCanonicalNavHash(currentHash);
 
   function handleToggleMenu() {
     restoreFocusOnCloseRef.current = true;
@@ -281,8 +292,8 @@ export function Header() {
             <li key={link.href}>
               <a
                 href={link.href}
-                className={currentHash === link.href ? 'is-active' : undefined}
-                aria-current={currentHash === link.href ? 'page' : undefined}
+                className={activeNavHash === link.href ? 'is-active' : undefined}
+                aria-current={activeNavHash === link.href ? 'page' : undefined}
               >
                 {link.label}
               </a>
@@ -401,8 +412,8 @@ export function Header() {
             <li key={link.href}>
               <a
                 href={link.href}
-                className={currentHash === link.href ? 'is-active' : undefined}
-                aria-current={currentHash === link.href ? 'page' : undefined}
+                className={activeNavHash === link.href ? 'is-active' : undefined}
+                aria-current={activeNavHash === link.href ? 'page' : undefined}
                 onClick={handleInternalLinkClick}
               >
                 {link.label}

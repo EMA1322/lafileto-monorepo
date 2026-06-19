@@ -39,7 +39,7 @@ const POLICY_ITEMS = [
 const TRUST_ITEMS = [
   { icon: MessageCircle, label: 'Pedido por WhatsApp' },
   { icon: Clock, label: 'Te lo preparamos al toque' },
-  { icon: ShieldCheck, label: 'Confirmacion directa' },
+  { icon: ShieldCheck, label: 'Confirmación directa' },
 ];
 
 function getString(value) {
