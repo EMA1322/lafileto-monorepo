@@ -29,6 +29,7 @@ export function ProductCard({
   } = product;
   const hasDiscount = Number(discountPercent) > 0;
   const cartPayload = buildProductCartPayload(product, quantity);
+  const discountLabel = hasDiscount ? `-${discountPercent}%` : '';
 
   return (
     <Card as="article" {...articleProps} className={`${styles.card} ${className}`.trim()}>
@@ -47,13 +48,17 @@ export function ProductCard({
             className={styles.image}
             src={imageUrl}
             alt={name}
+            width="640"
+            height="512"
             loading="lazy"
+            decoding="async"
             onError={() => setImageFailed(true)}
           />
         )}
         {hasDiscount ? (
           <Badge tone="warning" className={styles.discountBadge}>
-            -{discountPercent}%
+            <span aria-hidden="true">Oferta</span>
+            <strong>{discountLabel}</strong>
           </Badge>
         ) : null}
       </div>
@@ -63,11 +68,17 @@ export function ProductCard({
           <h3 className={styles.title}>{name}</h3>
           {description ? <p className={styles.description}>{description}</p> : null}
         </div>
-        <div className={styles.priceRow}>
-          <strong className={styles.price}>{formatPrice(finalPrice)}</strong>
-          {hasDiscount ? (
-            <span className={styles.oldPrice}>{formatPrice(originalPrice)}</span>
-          ) : null}
+        <div className={styles.commercialRow}>
+          <div className={styles.priceGroup}>
+            <span className={styles.priceLabel}>Precio</span>
+            <div className={styles.priceRow}>
+              <strong className={styles.price}>{formatPrice(finalPrice)}</strong>
+              {hasDiscount ? (
+                <span className={styles.oldPrice}>{formatPrice(originalPrice)}</span>
+              ) : null}
+            </div>
+          </div>
+          {hasDiscount ? <span className={styles.offerNote}>Promo activa</span> : null}
         </div>
         <div className={styles.actions}>
           <div className={styles.stepper} role="group" aria-label={`Cantidad de ${name}`}>
