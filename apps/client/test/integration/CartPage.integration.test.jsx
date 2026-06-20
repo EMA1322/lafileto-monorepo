@@ -28,15 +28,15 @@ describe('CartPage integration', () => {
     document.body.innerHTML = '';
   });
 
-  it('renders a professional empty state with products CTA and no confirm action', async () => {
+  it('renders a professional empty state with menu CTA and no confirm action', async () => {
     render(<CartPage />);
 
-    expect(await screen.findByRole('heading', { name: /tu carrito esta vacio/i })).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: /te falta elegir algo rico/i })).toBeTruthy();
 
-    const productsLink = screen.getByRole('link', { name: /ver productos/i });
+    const productsLink = screen.getByRole('link', { name: /ver menú/i });
     expect(productsLink.getAttribute('href')).toBe('#products');
-    expect(screen.queryByRole('link', { name: /confirmar pedido/i })).toBeNull();
-    expect(screen.queryByRole('button', { name: /confirmar pedido/i })).toBeNull();
+    expect(screen.queryByRole('link', { name: /continuar con mis datos/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /continuar con mis datos/i })).toBeNull();
   });
 
   it('renders cart items from localStorage with unit price, quantity, subtotal and total', () => {
@@ -64,7 +64,7 @@ describe('CartPage integration', () => {
     expect(screen.getByText('Milanesa')).toBeTruthy();
     expect(screen.getByText('Papas')).toBeTruthy();
     expect(screen.getByText('Oferta destacada')).toBeTruthy();
-    expect(screen.getByText('Menu')).toBeTruthy();
+    expect(screen.getByText('Menú')).toBeTruthy();
     expect(
       screen.getAllByText((_content, node) => node?.textContent.includes('1.000')).length,
     ).toBeGreaterThan(0);
@@ -166,7 +166,7 @@ describe('CartPage integration', () => {
     fireEvent.click(screen.getByRole('button', { name: /vaciar carrito/i }));
 
     await waitFor(() => {
-      expect(screen.getByText('Tu carrito esta vacio')).toBeTruthy();
+      expect(screen.getByText('Te falta elegir algo rico.')).toBeTruthy();
     });
 
     expect(getStoredCart()).toEqual([]);
@@ -177,12 +177,12 @@ describe('CartPage integration', () => {
 
     render(<CartPage />);
 
-    expect(screen.getByRole('link', { name: /seguir comprando/i }).getAttribute('href')).toBe(
+    expect(screen.getByRole('link', { name: /seguir mirando el menú/i }).getAttribute('href')).toBe(
       '#products',
     );
-    expect(screen.getByRole('link', { name: /confirmar pedido/i }).getAttribute('href')).toBe(
-      '#confirm',
-    );
+    expect(
+      screen.getByRole('link', { name: /continuar con mis datos/i }).getAttribute('href'),
+    ).toBe('#confirm');
   });
 
   it('blocks confirm with a real disabled button when business is closed', async () => {
@@ -197,9 +197,9 @@ describe('CartPage integration', () => {
 
     render(<CartPage />);
 
-    const confirmButton = await screen.findByRole('button', { name: /confirmar pedido/i });
+    const confirmButton = await screen.findByRole('button', { name: /continuar con mis datos/i });
     expect(confirmButton.disabled).toBe(true);
-    expect(screen.queryByRole('link', { name: /confirmar pedido/i })).toBeNull();
+    expect(screen.queryByRole('link', { name: /continuar con mis datos/i })).toBeNull();
     expect(screen.getAllByText('El local esta cerrado por ahora.').length).toBeGreaterThan(0);
   });
 

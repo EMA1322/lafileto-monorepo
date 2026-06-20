@@ -1,5 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowRight, Minus, Plus, ShoppingBag, ShoppingCart, Trash } from 'lucide-react';
+import {
+  ArrowRight,
+  BadgeCheck,
+  MessageCircle,
+  Minus,
+  Plus,
+  ShoppingBag,
+  ShoppingCart,
+  Store,
+  Trash,
+} from 'lucide-react';
 import { clearCart, getCart, removeFromCart, updateQuantity } from '/src/utils/cartService.js';
 import { formatPrice } from '/src/utils/helpers.js';
 import { loadCommercialContext } from '/src/utils/commercialContext.js';
@@ -8,7 +18,7 @@ import styles from './CartPage.module.css';
 
 const SOURCE_LABELS = {
   offers: 'Oferta destacada',
-  products: 'Menu',
+  products: 'Menú',
 };
 
 function getSafeCart() {
@@ -129,16 +139,22 @@ export function CartPage() {
     <main className={styles.page} aria-labelledby="cart-title">
       <div className={styles.container}>
         <header className={styles.header}>
-          <div className={styles.eyebrow}>
-            <ShoppingCart size={18} aria-hidden="true" />
-            <span>Carrito</span>
+          <div className={styles.headerCopy}>
+            <div className={styles.eyebrow}>
+              <ShoppingCart size={18} aria-hidden="true" />
+              <span>Tu pedido</span>
+            </div>
+            <h1 id="cart-title" className={styles.title}>
+              Revisá tu pedido antes de enviarlo
+            </h1>
+            <p className={styles.subtitle}>
+              Ajustá cantidades, chequeá el total y seguí con tus datos para mandarlo por WhatsApp.
+            </p>
           </div>
-          <h1 id="cart-title" className={styles.title}>
-            Revision del pedido
-          </h1>
-          <p className={styles.subtitle}>
-            Controla productos, cantidades y total antes de confirmar por WhatsApp.
-          </p>
+          <div className={styles.headerAside} aria-label="Resumen rápido del pedido">
+            <span className={styles.headerMetric}>{totals.units}</span>
+            <span>{totals.units === 1 ? 'producto elegido' : 'productos elegidos'}</span>
+          </div>
         </header>
 
         <div id="cart-status" className={styles.status} role="status" aria-live="polite">
@@ -146,18 +162,22 @@ export function CartPage() {
         </div>
 
         {isEmpty ? (
-          <section id="cart-empty" className={styles.empty} aria-label="Carrito vacio">
-            <span className={styles.emptyIcon} aria-hidden="true">
-              <ShoppingBag size={34} />
-            </span>
+          <section id="cart-empty" className={styles.empty} aria-label="Carrito vacío">
+            <div className={styles.emptyPlate} aria-hidden="true">
+              <span className={styles.emptyIcon}>
+                <ShoppingBag size={34} />
+              </span>
+              <span className={styles.emptySteam} />
+            </div>
             <div className={styles.emptyCopy}>
-              <h2 className={styles.emptyTitle}>Tu carrito esta vacio</h2>
+              <p className={styles.emptyKicker}>Pedí rico y sin vueltas</p>
+              <h2 className={styles.emptyTitle}>Te falta elegir algo rico.</h2>
               <p className={styles.emptyText}>
-                Elegi productos del menu y volve para revisar tu pedido.
+                Volvé al menú, sumá tus favoritos y acá vas a ver todo listo para revisar.
               </p>
             </div>
             <a className={styles.primaryLink} href="#products">
-              Ver productos
+              Ver menú
               <ArrowRight size={18} aria-hidden="true" />
             </a>
           </section>
@@ -167,12 +187,14 @@ export function CartPage() {
               <div className={styles.sectionHeader}>
                 <div>
                   <h2 id="cart-items-title" className={styles.sectionTitle}>
-                    Productos agregados
+                    Lo que vas a pedir
                   </h2>
                   <p className={styles.sectionNote}>
-                    {totals.units} {totals.units === 1 ? 'unidad' : 'unidades'} en el carrito
+                    {totals.units} {totals.units === 1 ? 'unidad' : 'unidades'} para revisar antes
+                    de confirmar.
                   </p>
                 </div>
+                <span className={styles.sectionPill}>Pedido en curso</span>
               </div>
 
               <ul id="cart-items" className={styles.items} aria-busy="false">
@@ -188,6 +210,8 @@ export function CartPage() {
                           className={styles.image}
                           src={item.image || '/img/hero1.png'}
                           alt={item.name || 'Producto del carrito'}
+                          width="112"
+                          height="112"
                           loading="lazy"
                         />
                       </div>
@@ -210,7 +234,7 @@ export function CartPage() {
 
                         <dl className={styles.itemMeta}>
                           <div>
-                            <dt>Precio unitario</dt>
+                            <dt>Precio</dt>
                             <dd>{formatPrice(item.price)}</dd>
                           </div>
                           <div>
@@ -254,9 +278,12 @@ export function CartPage() {
 
             <aside className={styles.summary} aria-labelledby="cart-summary-title">
               <div className={styles.summaryHeader}>
-                <h2 id="cart-summary-title" className={styles.summaryTitle}>
-                  Resumen
-                </h2>
+                <div>
+                  <p className={styles.summaryKicker}>Siguiente paso</p>
+                  <h2 id="cart-summary-title" className={styles.summaryTitle}>
+                    Resumen de pedido
+                  </h2>
+                </div>
                 <span className={styles.summaryBadge}>
                   {totals.units} {totals.units === 1 ? 'item' : 'items'}
                 </span>
@@ -268,7 +295,7 @@ export function CartPage() {
                   <strong id="cart-subtotal">{formatPrice(totals.amount)}</strong>
                 </div>
                 <div className={styles.summaryRow}>
-                  <span>Envio</span>
+                  <span>Entrega</span>
                   <span>A coordinar</span>
                 </div>
                 <div className={styles.totalRow}>
@@ -276,6 +303,21 @@ export function CartPage() {
                   <strong id="cart-total">{formatPrice(totals.amount)}</strong>
                 </div>
               </div>
+
+              <ul className={styles.trustList} aria-label="Detalles del checkout">
+                <li>
+                  <BadgeCheck size={17} aria-hidden="true" />
+                  Revisás tus datos antes de mandar.
+                </li>
+                <li>
+                  <MessageCircle size={17} aria-hidden="true" />
+                  El pedido sale por WhatsApp.
+                </li>
+                <li>
+                  <Store size={17} aria-hidden="true" />
+                  La entrega se coordina con el local.
+                </li>
+              </ul>
 
               {!businessOpen ? (
                 <AsyncStateNotice
@@ -293,17 +335,17 @@ export function CartPage() {
                     disabled
                     aria-disabled="true"
                   >
-                    Confirmar pedido
+                    Continuar con mis datos
                     <ArrowRight size={18} aria-hidden="true" />
                   </button>
                 ) : (
                   <a className={styles.primaryLink} href="#confirm">
-                    Confirmar pedido
+                    Continuar con mis datos
                     <ArrowRight size={18} aria-hidden="true" />
                   </a>
                 )}
                 <a className={styles.secondaryLink} href="#products">
-                  Seguir comprando
+                  Seguir mirando el menú
                 </a>
                 <button
                   id="clear-cart-btn"
