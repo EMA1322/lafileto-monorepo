@@ -81,7 +81,7 @@ export default function AdminHeader({ featureSettings = false }) {
       </div>
     `;
 
-    openModal(modalHtml, '#confirmHeaderLogoutBtn');
+    openModal(modalHtml, '#confirmHeaderLogoutBtn', 'Cerrar sesion');
 
     const confirmBtn = document.getElementById('confirmHeaderLogoutBtn');
     if (!confirmBtn) return;
@@ -170,6 +170,8 @@ export default function AdminHeader({ featureSettings = false }) {
         data-open={isDrawerOpen ? 'true' : 'false'}
         aria-hidden={!isDrawerOpen}
         aria-labelledby="adminHeaderDrawerTitle"
+        inert={isDrawerOpen ? undefined : ''}
+        tabIndex={-1}
       >
         <div className={styles.drawerHeader}>
           <h2 id="adminHeaderDrawerTitle" className={styles.drawerTitle}>

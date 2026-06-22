@@ -299,7 +299,7 @@ export default function SettingsPage() {
 
   return (
     <AdminThemeScope className={styles.theme}>
-      <main className={styles.page} aria-labelledby="settings-page-title">
+      <section className={styles.page} aria-labelledby="settings-page-title">
         <header className={styles.header}>
           <div>
             <h1 id="settings-page-title">Configuracion</h1>
@@ -317,7 +317,7 @@ export default function SettingsPage() {
         </header>
 
         {content}
-      </main>
+      </section>
     </AdminThemeScope>
   );
 }

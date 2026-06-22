@@ -147,7 +147,6 @@ function resolveReactViewContainer() {
 
   if (!existingMain) {
     main.id = 'main-content';
-    main.setAttribute('role', 'main');
     main.setAttribute('tabindex', '-1');
     app?.replaceChildren(main);
   }

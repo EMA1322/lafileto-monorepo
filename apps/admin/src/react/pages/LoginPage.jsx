@@ -85,7 +85,7 @@ export default function LoginPage() {
 
   return (
     <Ui.AdminThemeScope className={styles.theme}>
-      <main className={styles.screen} aria-labelledby="login-title">
+      <section className={styles.screen} aria-labelledby="login-title">
         <Ui.Card className={styles.panel} aria-label="Inicio de sesión administrador">
           <div className={styles.brandBlock}>
             <p className={styles.eyebrow}>Panel administrador</p>
@@ -172,7 +172,7 @@ export default function LoginPage() {
             </Ui.Button>
           </form>
         </Ui.Card>
-      </main>
+      </section>
     </Ui.AdminThemeScope>
   );
 }

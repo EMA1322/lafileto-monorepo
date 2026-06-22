@@ -81,7 +81,6 @@ function resolveContainer() {
 
   const main = document.createElement('main');
   main.id = 'main-content';
-  main.setAttribute('role', 'main');
   main.setAttribute('tabindex', '-1');
   app.innerHTML = '';
   app.appendChild(main);
