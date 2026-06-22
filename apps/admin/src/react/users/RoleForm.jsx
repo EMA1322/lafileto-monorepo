@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { rolesApi } from '@/utils/apis.js';
 import { Button, Input } from '../ui/index.js';
+import useDialogFocusTrap from '../hooks/useDialogFocusTrap.js';
 import {
   buildRolePayload,
   createRoleFormState,
@@ -14,7 +15,7 @@ export default function RoleForm({ mode = 'create', onClose, onSaved, open = fal
   // eslint-disable-next-line no-unused-vars -- This ESLint setup does not count JSX member expressions as usage.
   const Ui = { Button, Input };
   const isEdit = mode === 'edit';
-  const previousFocusRef = useRef(null);
+  const dialogRef = useRef(null);
   const [values, setValues] = useState(() => createRoleFormState(role));
   const [errors, setErrors] = useState({});
   const [generalError, setGeneralError] = useState('');
@@ -28,23 +29,13 @@ export default function RoleForm({ mode = 'create', onClose, onSaved, open = fal
     setPending(false);
   }, [open, role]);
 
-  useEffect(() => {
-    if (!open) return undefined;
-    previousFocusRef.current =
-      document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const focusTimer = window.setTimeout(() => {
-      document.getElementById('role-form-name')?.focus();
-    }, 0);
-    const handleKeydown = (event) => {
-      if (event.key === 'Escape' && !pending) onClose?.();
-    };
-    document.addEventListener('keydown', handleKeydown);
-    return () => {
-      window.clearTimeout(focusTimer);
-      document.removeEventListener('keydown', handleKeydown);
-      previousFocusRef.current?.focus?.();
-    };
-  }, [onClose, open, pending]);
+  useDialogFocusTrap({
+    closeOnEscape: !pending,
+    containerRef: dialogRef,
+    initialFocus: isEdit ? '#role-form-name' : '#role-form-roleId',
+    onClose,
+    open,
+  });
 
   if (!open) return null;
 
@@ -60,6 +51,13 @@ export default function RoleForm({ mode = 'create', onClose, onSaved, open = fal
     setErrors(nextErrors);
     if (hasRoleFormErrors(nextErrors)) {
       setGeneralError('Revisa los campos marcados.');
+      window.requestAnimationFrame(() => {
+        document
+          .querySelector(
+            '#role-form-roleId[aria-invalid="true"], #role-form-name[aria-invalid="true"]',
+          )
+          ?.focus?.({ preventScroll: true });
+      });
       return;
     }
 
@@ -89,6 +87,7 @@ export default function RoleForm({ mode = 'create', onClose, onSaved, open = fal
         aria-labelledby="role-form-title"
         aria-modal="true"
         className={styles.drawer}
+        ref={dialogRef}
         role="dialog"
       >
         <header className={styles.header}>

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { productsApi } from '@/utils/apis.js';
 import { Button, Input, Select } from '../ui/index.js';
+import useDialogFocusTrap from '../hooks/useDialogFocusTrap.js';
 import {
   PRODUCT_STATUS_OPTIONS,
   buildProductPayload,
@@ -22,7 +23,7 @@ export default function ProductForm({
   // eslint-disable-next-line no-unused-vars -- This ESLint setup does not count JSX member expressions as usage.
   const Ui = { Button, Input, Select };
   const isEdit = mode === 'edit';
-  const previousFocusRef = useRef(null);
+  const dialogRef = useRef(null);
   const [values, setValues] = useState(() => createProductFormState(product));
   const [errors, setErrors] = useState({});
   const [generalError, setGeneralError] = useState('');
@@ -36,31 +37,13 @@ export default function ProductForm({
     setPending(false);
   }, [open, product]);
 
-  useEffect(() => {
-    if (!open) return undefined;
-    previousFocusRef.current =
-      document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const focusTimer = window.setTimeout(() => {
-      const firstField = document.getElementById('product-form-name');
-      if (firstField instanceof HTMLElement) {
-        firstField.focus();
-      }
-    }, 0);
-
-    const handleKeydown = (event) => {
-      if (event.key === 'Escape' && !pending) {
-        onClose?.();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeydown);
-
-    return () => {
-      window.clearTimeout(focusTimer);
-      document.removeEventListener('keydown', handleKeydown);
-      previousFocusRef.current?.focus?.();
-    };
-  }, [onClose, open, pending]);
+  useDialogFocusTrap({
+    closeOnEscape: !pending,
+    containerRef: dialogRef,
+    initialFocus: '#product-form-name',
+    onClose,
+    open,
+  });
 
   if (!open) return null;
 
@@ -77,6 +60,13 @@ export default function ProductForm({
 
     if (hasFormErrors(nextErrors)) {
       setGeneralError('Revisá los campos marcados.');
+      window.requestAnimationFrame(() => {
+        document
+          .querySelector(
+            '#product-form-name[aria-invalid="true"], #product-form-price[aria-invalid="true"], #product-form-stock[aria-invalid="true"], #product-form-image-url[aria-invalid="true"], #product-form-category[aria-invalid="true"], #product-form-status[aria-invalid="true"]',
+          )
+          ?.focus?.({ preventScroll: true });
+      });
       return;
     }
 
@@ -118,6 +108,7 @@ export default function ProductForm({
         aria-labelledby="product-form-title"
         aria-modal="true"
         className={styles.drawer}
+        ref={dialogRef}
         role="dialog"
       >
         <header className={styles.header}>

@@ -184,11 +184,13 @@ function testFieldsValidationAndUi() {
   assert.match(formHelperSource, /http:|https:/);
   assert.match(formSource, /role="dialog"/);
   assert.match(formSource, /aria-modal="true"/);
-  assert.match(formSource, /event\.key === 'Escape'/);
+  assert.match(formSource, /useDialogFocusTrap/);
+  assert.match(formSource, /initialFocus:\s*['"]#category-form-name['"]/);
   assert.match(formSource, /loading=\{pending\}/);
   assert.match(formSource, /preview/);
-  assert.match(deleteSource, /role="dialog"/);
+  assert.match(deleteSource, /role="alertdialog"/);
   assert.match(deleteSource, /aria-modal="true"/);
+  assert.match(deleteSource, /initialFocus:\s*['"]#category-delete-cancel['"]/);
   assert.match(deleteSource, /category-delete-confirm/);
   assert.match(deleteSource, /formatProductCount\(category\.productCount\)/);
   assert.match(deleteSource, /fisica/);

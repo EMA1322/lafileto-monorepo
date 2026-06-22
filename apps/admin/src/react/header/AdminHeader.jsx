@@ -75,13 +75,13 @@ export default function AdminHeader({ featureSettings = false }) {
       <div>
         <p>Confirma que queres cerrar la sesion actual.</p>
         <div style="display:flex; gap:.5rem; justify-content:flex-end; margin-top:1rem;">
-          <button class="btn btn--secondary" type="button" data-close-modal>Cancelar</button>
+          <button id="cancelHeaderLogoutBtn" class="btn btn--secondary" type="button" data-close-modal>Cancelar</button>
           <button id="confirmHeaderLogoutBtn" class="btn btn--danger" type="button">Cerrar sesion</button>
         </div>
       </div>
     `;
 
-    openModal(modalHtml, '#confirmHeaderLogoutBtn', 'Cerrar sesion');
+    openModal(modalHtml, '#cancelHeaderLogoutBtn', 'Cerrar sesion');
 
     const confirmBtn = document.getElementById('confirmHeaderLogoutBtn');
     if (!confirmBtn) return;

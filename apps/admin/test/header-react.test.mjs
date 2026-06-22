@@ -88,6 +88,7 @@ function testHeaderComponentContract() {
   const drawerSource = read('src/react/header/useHeaderDrawer.js');
   const brandingSource = read('src/react/header/useHeaderBranding.js');
   const brandingHelpersSource = read('src/react/header/headerBranding.helpers.js');
+  const dialogFocusTrapSource = read('src/react/hooks/useDialogFocusTrap.js');
 
   assert.match(componentSource, /data-admin-react-header="true"/);
   assert.match(componentSource, /getVisibleHeaderNavItems/);
@@ -100,8 +101,9 @@ function testHeaderComponentContract() {
   assert.match(componentSource, /tabIndex=\{-1\}/);
   assert.match(
     componentSource,
-    /openModal\(modalHtml,\s*['"]#confirmHeaderLogoutBtn['"],\s*['"]Cerrar sesion['"]\)/,
+    /openModal\(modalHtml,\s*['"]#cancelHeaderLogoutBtn['"],\s*['"]Cerrar sesion['"]\)/,
   );
+  assert.match(componentSource, /id="cancelHeaderLogoutBtn"/);
   assert.match(componentSource, /logout\(\)/);
   assert.match(componentSource, /getCurrentUser/);
   assert.match(componentSource, /getIconHref/);
@@ -115,13 +117,19 @@ function testHeaderComponentContract() {
   assert.match(drawerSource, /setBodyScrollLock\(true\)/);
   assert.match(drawerSource, /setBodyScrollLock\(false\)/);
 
+  assert.match(dialogFocusTrapSource, /createFocusTrap/);
+  assert.match(dialogFocusTrapSource, /escapeDeactivates:\s*false/);
+  assert.match(dialogFocusTrapSource, /returnFocusOnDeactivate:\s*false/);
+  assert.match(dialogFocusTrapSource, /previousFocusRef/);
+  assert.match(dialogFocusTrapSource, /event\.key !== ['"]Escape['"]/);
+
   const modalsSource = read('src/utils/modals.js');
   assert.match(modalsSource, /modalTitleEl\s*=\s*document\.getElementById\(['"]modal-title['"]\)/);
   assert.match(
     modalsSource,
     /openModal\(content = ['"]['"], focusSelector = ['"]#modal-close['"], title = ['"]['"]\)/,
   );
-  assert.match(modalsSource, /modalTitleEl\.textContent = String\(title \|\| ['"]['"]\)/);
+  assert.match(modalsSource, /modalTitleEl\.textContent = String\(title \|\| ['"]Dialogo['"]\)/);
   assert.match(modalsSource, /modalTitleEl\.textContent = ['"]['"]/);
 
   assert.match(brandingHelpersSource, /admin\.settings\.brand\.logo/);

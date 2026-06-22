@@ -92,7 +92,7 @@ export function openModal(content = '', focusSelector = '#modal-close', title = 
   } else {
     modalBodyEl.innerHTML = String(content ?? '');
   }
-  modalTitleEl.textContent = String(title || '');
+  modalTitleEl.textContent = String(title || 'Dialogo');
 
   // Mostrar modal y marcar atributos ARIA SOLO en el contenedor
   modalEl.classList.remove('hidden');

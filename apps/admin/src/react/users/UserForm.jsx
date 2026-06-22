@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { usersApi } from '@/utils/apis.js';
 import { Button, Input, Select } from '../ui/index.js';
+import useDialogFocusTrap from '../hooks/useDialogFocusTrap.js';
 import {
   buildUserPayload,
   createUserFormState,
@@ -22,7 +23,7 @@ export default function UserForm({
   // eslint-disable-next-line no-unused-vars -- This ESLint setup does not count JSX member expressions as usage.
   const Ui = { Button, Input, Select };
   const isEdit = mode === 'edit';
-  const previousFocusRef = useRef(null);
+  const dialogRef = useRef(null);
   const [values, setValues] = useState(() => createUserFormState(user));
   const [errors, setErrors] = useState({});
   const [generalError, setGeneralError] = useState('');
@@ -36,25 +37,13 @@ export default function UserForm({
     setPending(false);
   }, [open, user]);
 
-  useEffect(() => {
-    if (!open) return undefined;
-    previousFocusRef.current =
-      document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const focusTimer = window.setTimeout(() => {
-      document.getElementById('user-form-fullName')?.focus();
-    }, 0);
-
-    const handleKeydown = (event) => {
-      if (event.key === 'Escape' && !pending) onClose?.();
-    };
-
-    document.addEventListener('keydown', handleKeydown);
-    return () => {
-      window.clearTimeout(focusTimer);
-      document.removeEventListener('keydown', handleKeydown);
-      previousFocusRef.current?.focus?.();
-    };
-  }, [onClose, open, pending]);
+  useDialogFocusTrap({
+    closeOnEscape: !pending,
+    containerRef: dialogRef,
+    initialFocus: '#user-form-fullName',
+    onClose,
+    open,
+  });
 
   if (!open) return null;
 
@@ -70,6 +59,13 @@ export default function UserForm({
     setErrors(nextErrors);
     if (hasUserFormErrors(nextErrors)) {
       setGeneralError('Revisa los campos marcados.');
+      window.requestAnimationFrame(() => {
+        document
+          .querySelector(
+            '#user-form-fullName[aria-invalid="true"], #user-form-email[aria-invalid="true"], #user-form-phone[aria-invalid="true"], #user-form-password[aria-invalid="true"], #user-form-roleId[aria-invalid="true"], #user-form-status[aria-invalid="true"]',
+          )
+          ?.focus?.({ preventScroll: true });
+      });
       return;
     }
 
@@ -101,6 +97,7 @@ export default function UserForm({
         aria-labelledby="user-form-title"
         aria-modal="true"
         className={styles.drawer}
+        ref={dialogRef}
         role="dialog"
       >
         <header className={styles.header}>

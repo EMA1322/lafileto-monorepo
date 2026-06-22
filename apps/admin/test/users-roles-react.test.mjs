@@ -180,12 +180,29 @@ function testFormsAndDangerousActions() {
   assert.match(formHelperSource, /password\.length < 8/);
   assert.match(formHelperSource, /mode === 'create'/);
 
-  for (const source of [formSource, deleteSource, roleFormSource, roleDeleteSource, matrixSource]) {
+  for (const source of [formSource, roleFormSource, matrixSource]) {
     assert.match(source, /role="dialog"/);
     assert.match(source, /aria-modal="true"/);
-    assert.match(source, /event\.key === 'Escape'/);
+    assert.match(source, /useDialogFocusTrap/);
   }
 
+  for (const source of [deleteSource, roleDeleteSource]) {
+    assert.match(source, /role="alertdialog"/);
+    assert.match(source, /aria-modal="true"/);
+    assert.match(source, /useDialogFocusTrap/);
+  }
+
+  assert.match(formSource, /initialFocus:\s*['"]#user-form-fullName['"]/);
+  assert.match(deleteSource, /initialFocus:\s*['"]#user-delete-cancel['"]/);
+  assert.match(
+    roleFormSource,
+    /initialFocus:\s*isEdit \? ['"]#role-form-name['"] : ['"]#role-form-roleId['"]/,
+  );
+  assert.match(roleDeleteSource, /initialFocus:\s*['"]#role-delete-cancel['"]/);
+  assert.match(
+    matrixSource,
+    /initialFocus:\s*requiresStrongConfirmation\s*\?\s*['"]#permissions-sensitive-confirm['"]\s*:\s*['"]#permissions-save['"]/,
+  );
   assert.match(deleteSource, /Accion peligrosa/);
   assert.match(roleDeleteSource, /Accion peligrosa/);
   assert.match(matrixSource, /confirmedSensitiveChange/);
