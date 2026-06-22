@@ -418,7 +418,7 @@ export default function UsersPage() {
 
   return (
     <AdminThemeScope className={styles.theme}>
-      <main className={styles.page} aria-labelledby="users-page-title">
+      <section className={styles.page} aria-labelledby="users-page-title">
         <header className={styles.header}>
           <div>
             <h1 id="users-page-title">Usuarios</h1>
@@ -523,7 +523,7 @@ export default function UsersPage() {
           ]}
           onValueChange={setActiveTab}
         />
-      </main>
+      </section>
 
       <UserForm
         mode={userFormState.mode}

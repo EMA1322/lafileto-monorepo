@@ -24,12 +24,12 @@
 
 import { createFocusTrap } from 'focus-trap';
 
-let modalEl, modalBodyEl, modalCloseBtnEl, modalOverlayEl; // refs a nodos del DOM
-let lastModalTriggerEl = null;    // elemento que disparó la apertura del modal
-let keydownHandler = null;        // referencia al handler de teclado (para limpiar)
-let bodyClickHandler = null;      // delega cierre por [data-close-modal]
-let isInitialized = false;        // evita registrar listeners múltiples
-let modalTrap = null;             // instancia focus-trap para modal global
+let modalEl, modalBodyEl, modalCloseBtnEl, modalOverlayEl, modalTitleEl; // refs a nodos del DOM
+let lastModalTriggerEl = null; // elemento que disparó la apertura del modal
+let keydownHandler = null; // referencia al handler de teclado (para limpiar)
+let bodyClickHandler = null; // delega cierre por [data-close-modal]
+let isInitialized = false; // evita registrar listeners múltiples
+let modalTrap = null; // instancia focus-trap para modal global
 
 /**
  * Inicializa referencias y listeners del modal global.
@@ -37,12 +37,13 @@ let modalTrap = null;             // instancia focus-trap para modal global
  */
 export function initModals() {
   // Obtener nodos según estructura de index.html
-  modalEl         = document.getElementById('global-modal');
-  modalBodyEl     = document.getElementById('modal-body');
+  modalEl = document.getElementById('global-modal');
+  modalBodyEl = document.getElementById('modal-body');
   modalCloseBtnEl = document.getElementById('modal-close');
-  modalOverlayEl  = document.getElementById('modal-overlay');
+  modalOverlayEl = document.getElementById('modal-overlay');
+  modalTitleEl = document.getElementById('modal-title');
 
-  if (!modalEl || !modalBodyEl || !modalCloseBtnEl || !modalOverlayEl) {
+  if (!modalEl || !modalBodyEl || !modalCloseBtnEl || !modalOverlayEl || !modalTitleEl) {
     console.error('[Modals] No se encontraron nodos requeridos. Verificá index.html');
     return;
   }
@@ -77,12 +78,13 @@ export function initModals() {
  * - content: HTML string o Node a montar en el cuerpo del modal.
  * - focusSelector: selector del elemento a enfocar inicialmente (opcional).
  */
-export function openModal(content = '', focusSelector = '#modal-close') {
+export function openModal(content = '', focusSelector = '#modal-close', title = '') {
   if (!modalEl) initModals();
   if (!modalEl) return; // defensa si init falló
 
   // Guardar el elemento actualmente enfocado para restaurarlo al cerrar
-  lastModalTriggerEl = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  lastModalTriggerEl =
+    document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
   // Inyectar contenido
   if (content instanceof Node) {
@@ -90,6 +92,7 @@ export function openModal(content = '', focusSelector = '#modal-close') {
   } else {
     modalBodyEl.innerHTML = String(content ?? '');
   }
+  modalTitleEl.textContent = String(title || '');
 
   // Mostrar modal y marcar atributos ARIA SOLO en el contenedor
   modalEl.classList.remove('hidden');
@@ -109,7 +112,6 @@ export function openModal(content = '', focusSelector = '#modal-close') {
       closeModal();
       return;
     }
-
   };
   document.addEventListener('keydown', keydownHandler);
 
@@ -169,13 +171,14 @@ export function closeModal() {
 
   // Vaciar contenido dinámico
   modalBodyEl.innerHTML = '';
+  modalTitleEl.textContent = '';
 
   // Restaurar foco al disparador de forma segura (microtask)
   queueMicrotask(() => {
     if (
-      lastModalTriggerEl
-      && document.contains(lastModalTriggerEl)
-      && typeof lastModalTriggerEl.focus === 'function'
+      lastModalTriggerEl &&
+      document.contains(lastModalTriggerEl) &&
+      typeof lastModalTriggerEl.focus === 'function'
     ) {
       lastModalTriggerEl.focus();
     } else if (document.body && typeof document.body.focus === 'function') {
@@ -184,7 +187,6 @@ export function closeModal() {
     lastModalTriggerEl = null;
   });
 }
-
 
 /* Utilidad: devuelve elementos focusables visibles dentro de un contenedor */
 function getFocusableElements(container) {
@@ -195,10 +197,11 @@ function getFocusableElements(container) {
     'textarea:not([disabled])',
     'input:not([disabled])',
     'select:not([disabled])',
-    '[tabindex]:not([tabindex="-1"])'
+    '[tabindex]:not([tabindex="-1"])',
   ].join(',');
 
   // Filtra elementos no visibles (offsetParent === null) salvo el activo
-  return Array.from(container.querySelectorAll(selectors))
-    .filter(el => el.offsetParent !== null || el === document.activeElement);
+  return Array.from(container.querySelectorAll(selectors)).filter(
+    (el) => el.offsetParent !== null || el === document.activeElement,
+  );
 }

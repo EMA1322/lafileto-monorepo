@@ -96,7 +96,12 @@ function testHeaderComponentContract() {
   assert.match(componentSource, /aria-current=\{isActive \? ['"]page['"] : undefined\}/);
   assert.match(componentSource, /aria-controls="adminHeaderDrawer"/);
   assert.match(componentSource, /aria-expanded=\{isDrawerOpen\}/);
-  assert.match(componentSource, /openModal/);
+  assert.match(componentSource, /inert=\{isDrawerOpen \? undefined : ['"]['"]\}/);
+  assert.match(componentSource, /tabIndex=\{-1\}/);
+  assert.match(
+    componentSource,
+    /openModal\(modalHtml,\s*['"]#confirmHeaderLogoutBtn['"],\s*['"]Cerrar sesion['"]\)/,
+  );
   assert.match(componentSource, /logout\(\)/);
   assert.match(componentSource, /getCurrentUser/);
   assert.match(componentSource, /getIconHref/);
@@ -109,6 +114,15 @@ function testHeaderComponentContract() {
   assert.match(drawerSource, /toggleButtonRef\.current\?\.focus/);
   assert.match(drawerSource, /setBodyScrollLock\(true\)/);
   assert.match(drawerSource, /setBodyScrollLock\(false\)/);
+
+  const modalsSource = read('src/utils/modals.js');
+  assert.match(modalsSource, /modalTitleEl\s*=\s*document\.getElementById\(['"]modal-title['"]\)/);
+  assert.match(
+    modalsSource,
+    /openModal\(content = ['"]['"], focusSelector = ['"]#modal-close['"], title = ['"]['"]\)/,
+  );
+  assert.match(modalsSource, /modalTitleEl\.textContent = String\(title \|\| ['"]['"]\)/);
+  assert.match(modalsSource, /modalTitleEl\.textContent = ['"]['"]/);
 
   assert.match(brandingHelpersSource, /admin\.settings\.brand\.logo/);
   assert.match(brandingHelpersSource, /admin:settings-brand-logo-updated/);
@@ -128,6 +142,26 @@ function testNavigationContract() {
   assert.match(navSource, /item\.key === ['"]settings['"] && !featureSettings/);
   assert.match(navSource, /canRead\(item\.key\)/);
   assert.match(navSource, /getActiveHeaderRoute/);
+}
+
+function testSingleMainLandmarkContract() {
+  const indexSource = fs.readFileSync(path.join(adminRoot, 'index.html'), 'utf8');
+  const routerSource = read('src/utils/router.js');
+  const renderViewSource = read('src/utils/renderView.js');
+
+  assert.doesNotMatch(indexSource, /<div id="app" role="main">/);
+  assert.doesNotMatch(routerSource, /setAttribute\(['"]role['"],\s*['"]main['"]\)/);
+  assert.doesNotMatch(renderViewSource, /setAttribute\(['"]role['"],\s*['"]main['"]\)/);
+
+  for (const relativePath of [
+    'src/react/pages/LoginPage.jsx',
+    'src/react/pages/UsersPage.jsx',
+    'src/react/pages/SettingsPage.jsx',
+  ]) {
+    const source = read(relativePath);
+    assert.doesNotMatch(source, /<main\b/);
+    assert.doesNotMatch(source, /<\/main>/);
+  }
 }
 
 function testNoReactRouterOrForbiddenScope() {
@@ -186,5 +220,6 @@ export function runHeaderReactTests() {
   testHeaderRouteContracts();
   testHeaderComponentContract();
   testNavigationContract();
+  testSingleMainLandmarkContract();
   testNoReactRouterOrForbiddenScope();
 }
