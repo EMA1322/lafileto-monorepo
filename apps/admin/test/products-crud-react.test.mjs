@@ -117,11 +117,13 @@ function testUiFlowAndRbac() {
   assert.match(pageSource, /syncFilters\(\{ page: page - 1 \}\)/);
   assert.match(formSource, /role="dialog"/);
   assert.match(formSource, /aria-modal="true"/);
-  assert.match(formSource, /event\.key === 'Escape'/);
+  assert.match(formSource, /useDialogFocusTrap/);
+  assert.match(formSource, /initialFocus:\s*['"]#product-form-name['"]/);
   assert.match(formSource, /loading=\{pending\}/);
-  assert.match(deleteSource, /role="dialog"/);
+  assert.match(deleteSource, /role="alertdialog"/);
   assert.match(deleteSource, /aria-modal="true"/);
-  assert.match(deleteSource, /event\.key === 'Escape'/);
+  assert.match(deleteSource, /useDialogFocusTrap/);
+  assert.match(deleteSource, /initialFocus:\s*['"]#product-delete-cancel['"]/);
   assert.match(deleteSource, /loading=\{pending\}/);
 }
 

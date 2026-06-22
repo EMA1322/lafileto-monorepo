@@ -135,10 +135,16 @@ function testProductCrudContractStillPresent() {
   const pageSource = read('src/react/pages/ProductsPage.jsx');
   const productFormSource = read('src/react/products/ProductForm.jsx');
   const productDeleteSource = read('src/react/products/ProductDeleteDialog.jsx');
+  const offerFormSource = read('src/react/products/ProductOfferForm.jsx');
+  const offerDeleteSource = read('src/react/products/ProductOfferDeleteDialog.jsx');
 
   assert.match(productFormSource, /productsApi\.create/);
   assert.match(productFormSource, /productsApi\.update/);
   assert.match(productDeleteSource, /productsApi\.remove/);
+  assert.match(offerFormSource, /useDialogFocusTrap/);
+  assert.match(offerFormSource, /initialFocus:\s*['"]#product-offer-discount-percent['"]/);
+  assert.match(offerDeleteSource, /role="alertdialog"/);
+  assert.match(offerDeleteSource, /initialFocus:\s*['"]#product-offer-delete-cancel['"]/);
   assert.match(pageSource, /setFormState\(\{ mode: 'create'/);
   assert.match(pageSource, /setFormState\(\{ mode: 'edit'/);
   assert.match(pageSource, /setDeleteTarget\(product\)/);

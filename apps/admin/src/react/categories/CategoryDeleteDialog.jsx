@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { categoriesApi } from '@/utils/apis.js';
 import { Button } from '../ui/index.js';
+import useDialogFocusTrap from '../hooks/useDialogFocusTrap.js';
 import { formatProductCount } from './categoriesList.helpers.js';
 import styles from './CategoryForm.module.css';
 
@@ -12,7 +13,7 @@ export default function CategoryDeleteDialog({
 }) {
   // eslint-disable-next-line no-unused-vars -- This ESLint setup does not count JSX member expressions as usage.
   const Ui = { Button };
-  const previousFocusRef = useRef(null);
+  const dialogRef = useRef(null);
   const [pending, setPending] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -22,31 +23,13 @@ export default function CategoryDeleteDialog({
     setErrorMessage('');
   }, [category, open]);
 
-  useEffect(() => {
-    if (!open) return undefined;
-    previousFocusRef.current =
-      document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const focusTimer = window.setTimeout(() => {
-      const confirmButton = document.getElementById('category-delete-confirm');
-      if (confirmButton instanceof HTMLElement) {
-        confirmButton.focus();
-      }
-    }, 0);
-
-    const handleKeydown = (event) => {
-      if (event.key === 'Escape' && !pending) {
-        onClose?.();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeydown);
-
-    return () => {
-      window.clearTimeout(focusTimer);
-      document.removeEventListener('keydown', handleKeydown);
-      previousFocusRef.current?.focus?.();
-    };
-  }, [onClose, open, pending]);
+  useDialogFocusTrap({
+    closeOnEscape: !pending,
+    containerRef: dialogRef,
+    initialFocus: '#category-delete-cancel',
+    onClose,
+    open,
+  });
 
   if (!open || !category) return null;
 
@@ -80,7 +63,8 @@ export default function CategoryDeleteDialog({
         aria-labelledby="category-delete-title"
         aria-modal="true"
         className={styles.dialog}
-        role="dialog"
+        ref={dialogRef}
+        role="alertdialog"
       >
         <header className={styles.header}>
           <div className={styles.titleGroup}>
@@ -118,7 +102,7 @@ export default function CategoryDeleteDialog({
         </div>
 
         <footer className={styles.footer}>
-          <Button disabled={pending} onClick={onClose} variant="ghost">
+          <Button disabled={pending} id="category-delete-cancel" onClick={onClose} variant="ghost">
             Cancelar
           </Button>
           <Button

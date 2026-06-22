@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { productsApi } from '@/utils/apis.js';
 import { Button } from '../ui/index.js';
+import useDialogFocusTrap from '../hooks/useDialogFocusTrap.js';
 import styles from './ProductForm.module.css';
 
 export default function ProductDeleteDialog({ onClose, onDeleted, open = false, product = null }) {
   // eslint-disable-next-line no-unused-vars -- This ESLint setup does not count JSX member expressions as usage.
   const Ui = { Button };
-  const previousFocusRef = useRef(null);
+  const dialogRef = useRef(null);
   const [pending, setPending] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -16,31 +17,13 @@ export default function ProductDeleteDialog({ onClose, onDeleted, open = false, 
     setErrorMessage('');
   }, [open, product]);
 
-  useEffect(() => {
-    if (!open) return undefined;
-    previousFocusRef.current =
-      document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const focusTimer = window.setTimeout(() => {
-      const confirmButton = document.getElementById('product-delete-confirm');
-      if (confirmButton instanceof HTMLElement) {
-        confirmButton.focus();
-      }
-    }, 0);
-
-    const handleKeydown = (event) => {
-      if (event.key === 'Escape' && !pending) {
-        onClose?.();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeydown);
-
-    return () => {
-      window.clearTimeout(focusTimer);
-      document.removeEventListener('keydown', handleKeydown);
-      previousFocusRef.current?.focus?.();
-    };
-  }, [onClose, open, pending]);
+  useDialogFocusTrap({
+    closeOnEscape: !pending,
+    containerRef: dialogRef,
+    initialFocus: '#product-delete-cancel',
+    onClose,
+    open,
+  });
 
   if (!open || !product) return null;
 
@@ -72,7 +55,8 @@ export default function ProductDeleteDialog({ onClose, onDeleted, open = false, 
         aria-labelledby="product-delete-title"
         aria-modal="true"
         className={styles.dialog}
-        role="dialog"
+        ref={dialogRef}
+        role="alertdialog"
       >
         <header className={styles.header}>
           <div className={styles.titleGroup}>
@@ -105,7 +89,7 @@ export default function ProductDeleteDialog({ onClose, onDeleted, open = false, 
         </div>
 
         <footer className={styles.footer}>
-          <Button disabled={pending} onClick={onClose} variant="ghost">
+          <Button disabled={pending} id="product-delete-cancel" onClick={onClose} variant="ghost">
             Cancelar
           </Button>
           <Button
