@@ -20,12 +20,16 @@ export function getVisibleHeaderNavItems({
   canReadModule,
   featureSettings = false,
   items = HEADER_NAV_ITEMS,
+  canAccessUserManagement = () => false,
 } = {}) {
   const canRead = typeof canReadModule === 'function' ? canReadModule : () => false;
+  const canAccessUsers =
+    typeof canAccessUserManagement === 'function' ? canAccessUserManagement : () => false;
 
   return items.filter((item) => {
     if (!item || !item.key || !item.hash) return false;
     if (item.key === 'settings' && !featureSettings) return false;
+    if (item.key === 'users' && !canAccessUsers()) return false;
     return canRead(item.key);
   });
 }

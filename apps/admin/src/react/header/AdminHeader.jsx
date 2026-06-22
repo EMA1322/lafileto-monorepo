@@ -12,6 +12,7 @@ import {
   isHeaderRouteActive,
 } from './adminHeader.helpers.js';
 import { getActiveHeaderRoute, getVisibleHeaderNavItems } from './headerNavigation.helpers.js';
+import { canAccessUserManagement } from '../users/userManagementAccess.helpers.js';
 import useHeaderBranding from './useHeaderBranding.js';
 import useHeaderDrawer from './useHeaderDrawer.js';
 import styles from './AdminHeader.module.css';
@@ -58,6 +59,7 @@ export default function AdminHeader({ featureSettings = false }) {
   const navItems = useMemo(
     () =>
       getVisibleHeaderNavItems({
+        canAccessUserManagement: () => canAccessUserManagement(getCurrentUser()?.roleId),
         canReadModule: canRead,
         featureSettings,
       }),

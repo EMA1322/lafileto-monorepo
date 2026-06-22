@@ -116,6 +116,7 @@ function testUsersPageContract() {
   const roleDeleteSource = read('src/react/users/RoleDeleteDialog.jsx');
   const rolesPanelSource = read('src/react/users/RolesPanel.jsx');
   const matrixSource = read('src/react/users/PermissionsMatrix.jsx');
+  const accessHelperSource = read('src/react/users/userManagementAccess.helpers.js');
   const helpersSource = [
     read('src/react/users/userForm.helpers.js'),
     read('src/react/users/usersList.helpers.js'),
@@ -130,6 +131,7 @@ function testUsersPageContract() {
     roleDeleteSource,
     rolesPanelSource,
     matrixSource,
+    accessHelperSource,
     helpersSource,
   ].join('\n');
 
@@ -151,6 +153,10 @@ function testUsersPageContract() {
   assert.match(pageSource, /canWrite\('users'\)/);
   assert.match(pageSource, /canUpdate\('users'\)/);
   assert.match(pageSource, /canDelete\('users'\)/);
+  assert.match(pageSource, /canAccessUserManagement\(currentRoleId\)/);
+  assert.match(pageSource, /getUserManagementRestrictionMessage\(\)/);
+  assert.match(accessHelperSource, /ADMIN_ROLE_ID/);
+  assert.match(accessHelperSource, /No tenes permisos para gestionar usuarios, roles o permisos/);
   assert.match(deleteSource, /No podes eliminar tu propio usuario/);
   assert.match(roleDeleteSource, /El rol administrador no se puede eliminar/);
   assert.match(rolesPanelSource, /disabled=\{protectedRole\}/);
@@ -207,6 +213,18 @@ function testFormsAndDangerousActions() {
   assert.match(roleDeleteSource, /Accion peligrosa/);
   assert.match(matrixSource, /confirmedSensitiveChange/);
   assert.match(matrixSource, /Confirmo que quiero modificar permisos sensibles/);
+}
+
+function testUsersBackendVisualContract() {
+  const routerSource = read('src/utils/router.js');
+  const headerSource = read('src/react/header/headerNavigation.helpers.js');
+  const pageSource = read('src/react/pages/UsersPage.jsx');
+
+  assert.match(routerSource, /hashRoute === 'users'/);
+  assert.match(routerSource, /canAccessUserManagement\(getCurrentUser\(\)\?\.roleId\)/);
+  assert.match(headerSource, /item\.key === 'users' && !canAccessUsers\(\)/);
+  assert.match(pageSource, /const canManageRoles = canManageUsers/);
+  assert.doesNotMatch(pageSource, /hasFullPermissions/);
 }
 
 function testCanonicalUserContractAndTemporaryAliases() {
@@ -332,6 +350,7 @@ export function runUsersRolesReactTests() {
   testAdminApisContract();
   testUsersPageContract();
   testFormsAndDangerousActions();
+  testUsersBackendVisualContract();
   testCanonicalUserContractAndTemporaryAliases();
   testScopeBoundaries();
 }

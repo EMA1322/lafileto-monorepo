@@ -8,7 +8,7 @@ import { mountReactView, unmountReactView } from './reactViewAdapter.js';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { ensureStylesheetLoaded } from './styles.js';
-import { isAuthenticated, ensureAuthReady, pickHomeRoute, logout } from './auth.js';
+import { isAuthenticated, ensureAuthReady, pickHomeRoute, logout, getCurrentUser } from './auth.js';
 import notify from './notify.js';
 import { isFeatureEnabled } from './featureFlags.js';
 import {
@@ -17,6 +17,7 @@ import {
   canRead,
 } from './rbac.js';
 import { uiNotFound } from './ui-templates.js';
+import { canAccessUserManagement } from '../react/users/userManagementAccess.helpers.js';
 
 const FEATURE_SETTINGS = isFeatureEnabled(import.meta.env.VITE_FEATURE_SETTINGS);
 let headerRootRef = null;
@@ -243,6 +244,15 @@ async function router() {
 
   // -------- Guard: permiso de lectura (R)
   const moduleKey = moduleKeyFromHash(hashRoute);
+  if (
+    !isLoginRoute &&
+    hashRoute === 'users' &&
+    !canAccessUserManagement(getCurrentUser()?.roleId)
+  ) {
+    await renderNoAccess();
+    notify('No autorizado', { type: 'warning', code: 'PERMISSION_DENIED' });
+    return;
+  }
   if (!isLoginRoute && moduleKey && !canRead(moduleKey)) {
     await renderNoAccess();
     // Emite notificación con código estandarizado (sin cambiar texto visible)
