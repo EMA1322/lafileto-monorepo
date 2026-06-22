@@ -201,7 +201,7 @@ function testFormsAndDangerousActions() {
   assert.match(roleDeleteSource, /initialFocus:\s*['"]#role-delete-cancel['"]/);
   assert.match(
     matrixSource,
-    /initialFocus:\s*requiresStrongConfirmation \? ['"]#permissions-sensitive-confirm['"] : ['"]#permissions-save['"]/,
+    /initialFocus:\s*requiresStrongConfirmation\s*\?\s*['"]#permissions-sensitive-confirm['"]\s*:\s*['"]#permissions-save['"]/,
   );
   assert.match(deleteSource, /Accion peligrosa/);
   assert.match(roleDeleteSource, /Accion peligrosa/);
