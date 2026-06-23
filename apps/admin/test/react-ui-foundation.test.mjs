@@ -23,6 +23,8 @@ const expectedFiles = [
   'IconAction.module.css',
   'IconButton.jsx',
   'IconButton.module.css',
+  'ListSurface.jsx',
+  'ListSurface.module.css',
   'StateBlock.jsx',
   'StateBlock.module.css',
   'TableShell.jsx',
@@ -40,6 +42,10 @@ const requiredExports = [
   'IconAction',
   'IconButton',
   'Input',
+  'ListPagination',
+  'ListSurface',
+  'ListSurfaceFooter',
+  'ListSurfaceHeader',
   'Select',
   'StateBlock',
   'TableEmpty',
@@ -148,6 +154,19 @@ export function runReactUiFoundationTests() {
     /focus-visible/,
     'React primitive styles should define visible focus states',
   );
+
+  const listSurfaceSource = read(path.join('src', 'react', 'ui', 'ListSurface.jsx'));
+  assert.match(listSurfaceSource, /export function ListSurface/);
+  assert.match(listSurfaceSource, /export function ListSurfaceHeader/);
+  assert.match(listSurfaceSource, /export function ListSurfaceFooter/);
+  assert.match(listSurfaceSource, /export function ListPagination/);
+  assert.match(listSurfaceSource, /aria-live="polite"/);
+  assert.match(listSurfaceSource, /aria-label=\{label\}/);
+
+  const listSurfaceStyles = read(path.join('src', 'react', 'ui', 'ListSurface.module.css'));
+  assert.match(listSurfaceStyles, /--admin-react-/);
+  assert.match(listSurfaceStyles, /text-wrap:\s*balance/);
+  assert.match(listSurfaceStyles, /@media\s*\(max-width:\s*760px\)/);
 
   const iconActionSource = read(path.join('src', 'react', 'ui', 'IconAction.jsx'));
   assert.match(iconActionSource, /<button\b/, 'IconAction should render a real button');

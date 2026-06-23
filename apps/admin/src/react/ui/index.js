@@ -5,6 +5,12 @@ export { default as Card } from './Card.jsx';
 export { Input, Select } from './Field.jsx';
 export { default as IconAction } from './IconAction.jsx';
 export { default as IconButton } from './IconButton.jsx';
+export {
+  ListPagination,
+  ListSurface,
+  ListSurfaceFooter,
+  ListSurfaceHeader,
+} from './ListSurface.jsx';
 export { default as StateBlock } from './StateBlock.jsx';
 export { TableEmpty, TableScroll, TableShell, TableToolbar } from './TableShell.jsx';
 export { default as Tabs } from './Tabs.jsx';

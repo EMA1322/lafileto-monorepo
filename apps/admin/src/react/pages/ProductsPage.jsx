@@ -6,6 +6,10 @@ import {
   Badge,
   Button,
   Input,
+  ListPagination,
+  ListSurface,
+  ListSurfaceFooter,
+  ListSurfaceHeader,
   Select,
   StateBlock,
   TableScroll,
@@ -285,6 +289,10 @@ export default function ProductsPage() {
     Badge,
     Button,
     Input,
+    ListPagination,
+    ListSurface,
+    ListSurfaceFooter,
+    ListSurfaceHeader,
     Select,
     StateBlock,
     TableScroll,
@@ -453,226 +461,230 @@ export default function ProductsPage() {
   const resultTo = Math.min(meta.total, page * meta.pageSize);
 
   return (
-    <AdminThemeScope className={styles.page}>
-      <header className={styles.header}>
-        <div>
-          <p className={styles.eyebrow}>Catalogo</p>
-          <h1>Productos</h1>
-          <p>Listado operativo con datos reales, filtros y paginacion.</p>
-        </div>
-        {permissions.canWrite ? (
-          <Button onClick={handleCreate} variant="primary">
-            Crear producto
-          </Button>
-        ) : null}
-      </header>
-
-      <TableShell>
-        <TableToolbar>
-          <form className={styles.filters} onSubmit={handleSubmit}>
-            <Input
-              id="products-filter-q"
-              label="Buscar"
-              onChange={(event) =>
-                setDraftFilters((current) => ({ ...current, q: event.target.value }))
-              }
-              placeholder="Buscar por nombre"
-              type="search"
-              value={draftFilters.q}
-            />
-            <Select
-              id="products-filter-category"
-              label="Categoria"
-              onChange={(event) => syncFilters({ categoryId: event.target.value, page: 1 })}
-              value={filters.categoryId}
-            >
-              <option value="all">Todas las categorias</option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </Select>
-            <Select
-              id="products-filter-status"
-              label="Estado"
-              onChange={(event) => syncFilters({ status: event.target.value, page: 1 })}
-              value={filters.status}
-            >
-              {STATUS_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </Select>
-            <Select
-              id="products-filter-offer"
-              label="Oferta"
-              onChange={(event) => syncFilters({ hasOffer: event.target.value, page: 1 })}
-              value={filters.hasOffer}
-            >
-              {OFFER_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </Select>
-            <Select
-              id="products-filter-order-by"
-              label="Ordenar por"
-              onChange={(event) => syncFilters({ orderBy: event.target.value, page: 1 })}
-              value={filters.orderBy}
-            >
-              {ORDER_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </Select>
-            <Select
-              id="products-filter-order-dir"
-              label="Direccion"
-              onChange={(event) => syncFilters({ orderDir: event.target.value, page: 1 })}
-              value={filters.orderDir}
-            >
-              {ORDER_DIRECTION_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </Select>
-            <Select
-              id="products-filter-page-size"
-              label="Por pagina"
-              onChange={(event) => syncFilters({ pageSize: event.target.value, page: 1 })}
-              value={filters.pageSize}
-            >
-              {PAGE_SIZE_OPTIONS.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </Select>
-            <div className={styles.filterActions}>
-              <Button type="submit" variant="primary">
-                Buscar
+    <AdminThemeScope>
+      <ListSurface>
+        <ListSurfaceHeader
+          action={
+            permissions.canWrite ? (
+              <Button onClick={handleCreate} variant="primary">
+                Crear producto
               </Button>
-              <Button onClick={handleClear} variant="ghost">
-                Limpiar
-              </Button>
-            </div>
-          </form>
-        </TableToolbar>
+            ) : null
+          }
+          description="Listado operativo con datos reales, filtros y paginacion."
+          eyebrow="Catalogo"
+          title="Productos"
+        />
 
-        {status === VIEW_STATUS.loading ? (
-          <StateBlock
-            description="Consultando el catalogo."
-            status="loading"
-            title="Cargando productos"
-          />
-        ) : null}
-
-        {status === VIEW_STATUS.error ? (
-          <StateBlock
-            action={
-              <Button onClick={() => void loadProducts()} variant="primary">
-                Reintentar
-              </Button>
-            }
-            description={errorMessage}
-            status="error"
-            title="No pudimos cargar los productos"
-          />
-        ) : null}
-
-        {status === VIEW_STATUS.empty ? (
-          <StateBlock
-            action={
-              <Button onClick={handleClear} variant="secondary">
-                Limpiar filtros
-              </Button>
-            }
-            description="No hay productos para los filtros seleccionados."
-            status="empty"
-            title="Sin resultados"
-          />
-        ) : null}
-
-        {hasData ? (
-          <>
-            <ProductsTable
-              categoriesById={categoriesById}
-              items={items}
-              onDelete={handleDelete}
-              onEdit={handleEdit}
-              onOfferCreate={handleOfferCreate}
-              onOfferDelete={handleOfferDelete}
-              onOfferEdit={handleOfferEdit}
-              permissions={permissions}
-            />
-            <ProductsCards
-              categoriesById={categoriesById}
-              items={items}
-              onDelete={handleDelete}
-              onEdit={handleEdit}
-              onOfferCreate={handleOfferCreate}
-              onOfferDelete={handleOfferDelete}
-              onOfferEdit={handleOfferEdit}
-              permissions={permissions}
-            />
-          </>
-        ) : null}
-      </TableShell>
-
-      <footer className={styles.footer}>
-        <p id="products-meta" aria-live="polite">
-          {meta.total > 0
-            ? `${resultFrom}-${resultTo} de ${meta.total} productos`
-            : 'Sin resultados'}
-        </p>
-        <nav aria-label="Paginacion de productos" className={styles.pagination}>
-          <Button disabled={page <= 1} onClick={() => handlePage(1)} size="sm" variant="ghost">
-            Primero
-          </Button>
-          <Button
-            disabled={page <= 1}
-            onClick={() => handlePage(page - 1)}
-            size="sm"
-            variant="ghost"
-          >
-            Anterior
-          </Button>
-          {Array.from({ length: pageCount }, (_, index) => index + 1)
-            .slice(Math.max(0, page - 3), Math.max(0, page - 3) + 5)
-            .map((currentPage) => (
-              <Button
-                aria-current={currentPage === page ? 'page' : undefined}
-                key={currentPage}
-                onClick={() => handlePage(currentPage)}
-                size="sm"
-                variant={currentPage === page ? 'primary' : 'ghost'}
+        <TableShell>
+          <TableToolbar>
+            <form className={styles.filters} onSubmit={handleSubmit}>
+              <Input
+                id="products-filter-q"
+                label="Buscar"
+                onChange={(event) =>
+                  setDraftFilters((current) => ({ ...current, q: event.target.value }))
+                }
+                placeholder="Buscar por nombre"
+                type="search"
+                value={draftFilters.q}
+              />
+              <Select
+                id="products-filter-category"
+                label="Categoria"
+                onChange={(event) => syncFilters({ categoryId: event.target.value, page: 1 })}
+                value={filters.categoryId}
               >
-                {currentPage}
-              </Button>
-            ))}
-          <Button
-            disabled={page >= pageCount}
-            onClick={() => handlePage(page + 1)}
-            size="sm"
-            variant="ghost"
-          >
-            Siguiente
-          </Button>
-          <Button
-            disabled={page >= pageCount}
-            onClick={() => handlePage(pageCount)}
-            size="sm"
-            variant="ghost"
-          >
-            Ultimo
-          </Button>
-        </nav>
-      </footer>
+                <option value="all">Todas las categorias</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </Select>
+              <Select
+                id="products-filter-status"
+                label="Estado"
+                onChange={(event) => syncFilters({ status: event.target.value, page: 1 })}
+                value={filters.status}
+              >
+                {STATUS_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </Select>
+              <Select
+                id="products-filter-offer"
+                label="Oferta"
+                onChange={(event) => syncFilters({ hasOffer: event.target.value, page: 1 })}
+                value={filters.hasOffer}
+              >
+                {OFFER_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </Select>
+              <Select
+                id="products-filter-order-by"
+                label="Ordenar por"
+                onChange={(event) => syncFilters({ orderBy: event.target.value, page: 1 })}
+                value={filters.orderBy}
+              >
+                {ORDER_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </Select>
+              <Select
+                id="products-filter-order-dir"
+                label="Direccion"
+                onChange={(event) => syncFilters({ orderDir: event.target.value, page: 1 })}
+                value={filters.orderDir}
+              >
+                {ORDER_DIRECTION_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </Select>
+              <Select
+                id="products-filter-page-size"
+                label="Por pagina"
+                onChange={(event) => syncFilters({ pageSize: event.target.value, page: 1 })}
+                value={filters.pageSize}
+              >
+                {PAGE_SIZE_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </Select>
+              <div className={styles.filterActions}>
+                <Button type="submit" variant="primary">
+                  Buscar
+                </Button>
+                <Button onClick={handleClear} variant="ghost">
+                  Limpiar
+                </Button>
+              </div>
+            </form>
+          </TableToolbar>
+
+          {status === VIEW_STATUS.loading ? (
+            <StateBlock
+              description="Consultando el catalogo."
+              status="loading"
+              title="Cargando productos"
+            />
+          ) : null}
+
+          {status === VIEW_STATUS.error ? (
+            <StateBlock
+              action={
+                <Button onClick={() => void loadProducts()} variant="primary">
+                  Reintentar
+                </Button>
+              }
+              description={errorMessage}
+              status="error"
+              title="No pudimos cargar los productos"
+            />
+          ) : null}
+
+          {status === VIEW_STATUS.empty ? (
+            <StateBlock
+              action={
+                <Button onClick={handleClear} variant="secondary">
+                  Limpiar filtros
+                </Button>
+              }
+              description="No hay productos para los filtros seleccionados."
+              status="empty"
+              title="Sin resultados"
+            />
+          ) : null}
+
+          {hasData ? (
+            <>
+              <ProductsTable
+                categoriesById={categoriesById}
+                items={items}
+                onDelete={handleDelete}
+                onEdit={handleEdit}
+                onOfferCreate={handleOfferCreate}
+                onOfferDelete={handleOfferDelete}
+                onOfferEdit={handleOfferEdit}
+                permissions={permissions}
+              />
+              <ProductsCards
+                categoriesById={categoriesById}
+                items={items}
+                onDelete={handleDelete}
+                onEdit={handleEdit}
+                onOfferCreate={handleOfferCreate}
+                onOfferDelete={handleOfferDelete}
+                onOfferEdit={handleOfferEdit}
+                permissions={permissions}
+              />
+            </>
+          ) : null}
+        </TableShell>
+
+        <ListSurfaceFooter
+          meta={
+            meta.total > 0
+              ? `${resultFrom}-${resultTo} de ${meta.total} productos`
+              : 'Sin resultados'
+          }
+          metaId="products-meta"
+        >
+          <ListPagination label="Paginacion de productos">
+            <Button disabled={page <= 1} onClick={() => handlePage(1)} size="sm" variant="ghost">
+              Primero
+            </Button>
+            <Button
+              disabled={page <= 1}
+              onClick={() => handlePage(page - 1)}
+              size="sm"
+              variant="ghost"
+            >
+              Anterior
+            </Button>
+            {Array.from({ length: pageCount }, (_, index) => index + 1)
+              .slice(Math.max(0, page - 3), Math.max(0, page - 3) + 5)
+              .map((currentPage) => (
+                <Button
+                  aria-current={currentPage === page ? 'page' : undefined}
+                  key={currentPage}
+                  onClick={() => handlePage(currentPage)}
+                  size="sm"
+                  variant={currentPage === page ? 'primary' : 'ghost'}
+                >
+                  {currentPage}
+                </Button>
+              ))}
+            <Button
+              disabled={page >= pageCount}
+              onClick={() => handlePage(page + 1)}
+              size="sm"
+              variant="ghost"
+            >
+              Siguiente
+            </Button>
+            <Button
+              disabled={page >= pageCount}
+              onClick={() => handlePage(pageCount)}
+              size="sm"
+              variant="ghost"
+            >
+              Ultimo
+            </Button>
+          </ListPagination>
+        </ListSurfaceFooter>
+      </ListSurface>
 
       <ProductForm
         categories={categories}
