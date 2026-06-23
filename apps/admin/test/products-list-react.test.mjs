@@ -147,6 +147,11 @@ function testProductsPageStatesAndUiFoundation() {
   assert.match(source, /Select/);
   assert.match(source, /StateBlock/);
   assert.match(source, /TableShell/);
+  assert.match(source, /ListSurface/);
+  assert.match(source, /ListSurfaceHeader/);
+  assert.match(source, /ListSurfaceFooter/);
+  assert.match(source, /ListPagination/);
+  assert.match(source, /metaId="products-meta"/);
   assert.match(source, /TableScroll/);
   assert.match(source, /aria-current=\{currentPage === page \? 'page' : undefined\}/);
   assert.match(styles, /--admin-react-/, 'styles should use admin React tokens');

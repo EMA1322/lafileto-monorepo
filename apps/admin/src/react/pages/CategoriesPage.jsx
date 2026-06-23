@@ -6,6 +6,10 @@ import {
   Badge,
   Button,
   Input,
+  ListPagination,
+  ListSurface,
+  ListSurfaceFooter,
+  ListSurfaceHeader,
   Select,
   StateBlock,
   TableScroll,
@@ -196,6 +200,10 @@ export default function CategoriesPage() {
     Badge,
     Button,
     Input,
+    ListPagination,
+    ListSurface,
+    ListSurfaceFooter,
+    ListSurfaceHeader,
     Select,
     StateBlock,
     TableScroll,
@@ -339,203 +347,207 @@ export default function CategoriesPage() {
   const resultTo = Math.min(meta.total, page * meta.pageSize);
 
   return (
-    <AdminThemeScope className={styles.page}>
-      <header className={styles.header}>
-        <div>
-          <p className={styles.eyebrow}>Catalogo</p>
-          <h1>Categorias</h1>
-          <p>Gestion operativa de categorias con filtros, estado y acciones RBAC.</p>
-        </div>
-        {permissions.canWrite ? (
-          <Button onClick={handleCreate} variant="primary">
-            Nueva categoria
-          </Button>
-        ) : null}
-      </header>
-
-      <TableShell>
-        <TableToolbar>
-          <form className={styles.filters} onSubmit={handleSubmit}>
-            <Input
-              id="categories-filter-q"
-              label="Buscar"
-              onChange={(event) =>
-                setDraftFilters((current) => ({ ...current, q: event.target.value }))
-              }
-              placeholder="Buscar por nombre"
-              type="search"
-              value={draftFilters.q}
-            />
-            <Select
-              id="categories-filter-status"
-              label="Estado"
-              onChange={(event) => syncFilters({ status: event.target.value, page: 1 })}
-              value={filters.status}
-            >
-              {STATUS_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </Select>
-            <Select
-              id="categories-filter-order-by"
-              label="Ordenar por"
-              onChange={(event) => syncFilters({ orderBy: event.target.value, page: 1 })}
-              value={filters.orderBy}
-            >
-              {ORDER_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </Select>
-            <Select
-              id="categories-filter-order-dir"
-              label="Direccion"
-              onChange={(event) => syncFilters({ orderDir: event.target.value, page: 1 })}
-              value={filters.orderDir}
-            >
-              {ORDER_DIRECTION_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </Select>
-            <Select
-              id="categories-filter-page-size"
-              label="Por pagina"
-              onChange={(event) => syncFilters({ pageSize: event.target.value, page: 1 })}
-              value={filters.pageSize}
-            >
-              {PAGE_SIZE_OPTIONS.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </Select>
-            <div className={styles.filterActions}>
-              <Button type="submit" variant="primary">
-                Buscar
+    <AdminThemeScope>
+      <ListSurface>
+        <ListSurfaceHeader
+          action={
+            permissions.canWrite ? (
+              <Button onClick={handleCreate} variant="primary">
+                Nueva categoria
               </Button>
-              <Button onClick={handleClear} variant="ghost">
-                Limpiar
-              </Button>
-            </div>
-          </form>
-        </TableToolbar>
+            ) : null
+          }
+          description="Gestion operativa de categorias con filtros, estado y acciones RBAC."
+          eyebrow="Catalogo"
+          title="Categorias"
+        />
 
-        {status === VIEW_STATUS.loading ? (
-          <StateBlock
-            description="Consultando categorias."
-            status="loading"
-            title="Cargando categorias"
-          />
-        ) : null}
-
-        {status === VIEW_STATUS.error ? (
-          <StateBlock
-            action={
-              <Button onClick={() => void loadCategories()} variant="primary">
-                Reintentar
-              </Button>
-            }
-            description={errorMessage}
-            status="error"
-            title="No pudimos cargar las categorias"
-          />
-        ) : null}
-
-        {status === VIEW_STATUS.empty ? (
-          <StateBlock
-            action={
-              permissions.canWrite ? (
-                <Button onClick={handleCreate} variant="secondary">
-                  Crear categoria
-                </Button>
-              ) : (
-                <Button onClick={handleClear} variant="secondary">
-                  Limpiar filtros
-                </Button>
-              )
-            }
-            description="No hay categorias para los filtros seleccionados."
-            status="empty"
-            title="Sin resultados"
-          />
-        ) : null}
-
-        {hasData ? (
-          <>
-            <CategoriesTable
-              items={items}
-              onDelete={handleDelete}
-              onEdit={handleEdit}
-              onToggle={handleToggle}
-              permissions={permissions}
-              togglingId={togglingId}
-            />
-            <CategoriesCards
-              items={items}
-              onDelete={handleDelete}
-              onEdit={handleEdit}
-              onToggle={handleToggle}
-              permissions={permissions}
-              togglingId={togglingId}
-            />
-          </>
-        ) : null}
-      </TableShell>
-
-      <footer className={styles.footer}>
-        <p id="categories-meta" aria-live="polite">
-          {meta.total > 0
-            ? `${resultFrom}-${resultTo} de ${meta.total} categorias`
-            : 'Sin resultados'}
-        </p>
-        <nav aria-label="Paginacion de categorias" className={styles.pagination}>
-          <Button disabled={page <= 1} onClick={() => handlePage(1)} size="sm" variant="ghost">
-            Primero
-          </Button>
-          <Button
-            disabled={page <= 1}
-            onClick={() => handlePage(page - 1)}
-            size="sm"
-            variant="ghost"
-          >
-            Anterior
-          </Button>
-          {Array.from({ length: pageCount }, (_, index) => index + 1)
-            .slice(Math.max(0, page - 3), Math.max(0, page - 3) + 5)
-            .map((currentPage) => (
-              <Button
-                aria-current={currentPage === page ? 'page' : undefined}
-                key={currentPage}
-                onClick={() => handlePage(currentPage)}
-                size="sm"
-                variant={currentPage === page ? 'primary' : 'ghost'}
+        <TableShell>
+          <TableToolbar>
+            <form className={styles.filters} onSubmit={handleSubmit}>
+              <Input
+                id="categories-filter-q"
+                label="Buscar"
+                onChange={(event) =>
+                  setDraftFilters((current) => ({ ...current, q: event.target.value }))
+                }
+                placeholder="Buscar por nombre"
+                type="search"
+                value={draftFilters.q}
+              />
+              <Select
+                id="categories-filter-status"
+                label="Estado"
+                onChange={(event) => syncFilters({ status: event.target.value, page: 1 })}
+                value={filters.status}
               >
-                {currentPage}
-              </Button>
-            ))}
-          <Button
-            disabled={page >= pageCount}
-            onClick={() => handlePage(page + 1)}
-            size="sm"
-            variant="ghost"
-          >
-            Siguiente
-          </Button>
-          <Button
-            disabled={page >= pageCount}
-            onClick={() => handlePage(pageCount)}
-            size="sm"
-            variant="ghost"
-          >
-            Ultimo
-          </Button>
-        </nav>
-      </footer>
+                {STATUS_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </Select>
+              <Select
+                id="categories-filter-order-by"
+                label="Ordenar por"
+                onChange={(event) => syncFilters({ orderBy: event.target.value, page: 1 })}
+                value={filters.orderBy}
+              >
+                {ORDER_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </Select>
+              <Select
+                id="categories-filter-order-dir"
+                label="Direccion"
+                onChange={(event) => syncFilters({ orderDir: event.target.value, page: 1 })}
+                value={filters.orderDir}
+              >
+                {ORDER_DIRECTION_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </Select>
+              <Select
+                id="categories-filter-page-size"
+                label="Por pagina"
+                onChange={(event) => syncFilters({ pageSize: event.target.value, page: 1 })}
+                value={filters.pageSize}
+              >
+                {PAGE_SIZE_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </Select>
+              <div className={styles.filterActions}>
+                <Button type="submit" variant="primary">
+                  Buscar
+                </Button>
+                <Button onClick={handleClear} variant="ghost">
+                  Limpiar
+                </Button>
+              </div>
+            </form>
+          </TableToolbar>
+
+          {status === VIEW_STATUS.loading ? (
+            <StateBlock
+              description="Consultando categorias."
+              status="loading"
+              title="Cargando categorias"
+            />
+          ) : null}
+
+          {status === VIEW_STATUS.error ? (
+            <StateBlock
+              action={
+                <Button onClick={() => void loadCategories()} variant="primary">
+                  Reintentar
+                </Button>
+              }
+              description={errorMessage}
+              status="error"
+              title="No pudimos cargar las categorias"
+            />
+          ) : null}
+
+          {status === VIEW_STATUS.empty ? (
+            <StateBlock
+              action={
+                permissions.canWrite ? (
+                  <Button onClick={handleCreate} variant="secondary">
+                    Crear categoria
+                  </Button>
+                ) : (
+                  <Button onClick={handleClear} variant="secondary">
+                    Limpiar filtros
+                  </Button>
+                )
+              }
+              description="No hay categorias para los filtros seleccionados."
+              status="empty"
+              title="Sin resultados"
+            />
+          ) : null}
+
+          {hasData ? (
+            <>
+              <CategoriesTable
+                items={items}
+                onDelete={handleDelete}
+                onEdit={handleEdit}
+                onToggle={handleToggle}
+                permissions={permissions}
+                togglingId={togglingId}
+              />
+              <CategoriesCards
+                items={items}
+                onDelete={handleDelete}
+                onEdit={handleEdit}
+                onToggle={handleToggle}
+                permissions={permissions}
+                togglingId={togglingId}
+              />
+            </>
+          ) : null}
+        </TableShell>
+
+        <ListSurfaceFooter
+          meta={
+            meta.total > 0
+              ? `${resultFrom}-${resultTo} de ${meta.total} categorias`
+              : 'Sin resultados'
+          }
+          metaId="categories-meta"
+        >
+          <ListPagination label="Paginacion de categorias">
+            <Button disabled={page <= 1} onClick={() => handlePage(1)} size="sm" variant="ghost">
+              Primero
+            </Button>
+            <Button
+              disabled={page <= 1}
+              onClick={() => handlePage(page - 1)}
+              size="sm"
+              variant="ghost"
+            >
+              Anterior
+            </Button>
+            {Array.from({ length: pageCount }, (_, index) => index + 1)
+              .slice(Math.max(0, page - 3), Math.max(0, page - 3) + 5)
+              .map((currentPage) => (
+                <Button
+                  aria-current={currentPage === page ? 'page' : undefined}
+                  key={currentPage}
+                  onClick={() => handlePage(currentPage)}
+                  size="sm"
+                  variant={currentPage === page ? 'primary' : 'ghost'}
+                >
+                  {currentPage}
+                </Button>
+              ))}
+            <Button
+              disabled={page >= pageCount}
+              onClick={() => handlePage(page + 1)}
+              size="sm"
+              variant="ghost"
+            >
+              Siguiente
+            </Button>
+            <Button
+              disabled={page >= pageCount}
+              onClick={() => handlePage(pageCount)}
+              size="sm"
+              variant="ghost"
+            >
+              Ultimo
+            </Button>
+          </ListPagination>
+        </ListSurfaceFooter>
+      </ListSurface>
 
       <CategoryForm
         category={formState?.category}

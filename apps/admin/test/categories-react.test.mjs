@@ -202,6 +202,11 @@ function testFieldsValidationAndUi() {
   assert.match(pageSource, /VIEW_STATUS\.error/);
   assert.match(pageSource, /VIEW_STATUS\.empty/);
   assert.match(pageSource, /VIEW_STATUS\.success/);
+  assert.match(pageSource, /ListSurface/);
+  assert.match(pageSource, /ListSurfaceHeader/);
+  assert.match(pageSource, /ListSurfaceFooter/);
+  assert.match(pageSource, /ListPagination/);
+  assert.match(pageSource, /metaId="categories-meta"/);
   assert.match(pageSource, /CategoriesTable/);
   assert.match(pageSource, /CategoriesCards/);
   assert.match(stylesSource, /\.mobileList/);
