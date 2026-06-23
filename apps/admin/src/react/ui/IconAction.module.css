@@ -1,0 +1,137 @@
+.action {
+  position: relative;
+  display: inline-grid;
+  width: 2.5rem;
+  min-width: 2.5rem;
+  height: 2.5rem;
+  min-height: 2.5rem;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: var(--admin-react-radius-md, 0.5rem);
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.action:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.action:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--admin-react-focus-ring, rgba(250, 167, 24, 0.42));
+}
+
+.action:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+  transform: none;
+}
+
+.icon {
+  width: 1.1rem;
+  height: 1.1rem;
+  pointer-events: none;
+}
+
+.neutral {
+  background: var(--admin-react-surface-muted, #1f2632);
+  border-color: var(--admin-react-border, rgba(255, 255, 255, 0.1));
+  color: var(--admin-react-text, #f8fafc);
+}
+
+.neutral:hover:not(:disabled) {
+  background: var(--admin-react-surface-elevated, #171c26);
+  border-color: var(--admin-react-border-strong, rgba(255, 255, 255, 0.18));
+}
+
+.primary {
+  background: var(--admin-react-accent, #faa718);
+  border-color: var(--admin-react-accent, #faa718);
+  color: var(--admin-react-accent-contrast, #171006);
+}
+
+.primary:hover:not(:disabled) {
+  background: var(--admin-react-accent-hover, #ffc04d);
+  border-color: var(--admin-react-accent-hover, #ffc04d);
+}
+
+.danger {
+  background: color-mix(in srgb, var(--admin-react-danger, #f87171) 16%, transparent);
+  border-color: color-mix(in srgb, var(--admin-react-danger, #f87171) 44%, transparent);
+  color: var(--admin-react-danger, #f87171);
+}
+
+.danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--admin-react-danger, #f87171) 24%, transparent);
+  border-color: color-mix(in srgb, var(--admin-react-danger, #f87171) 58%, transparent);
+}
+
+.tooltip {
+  position: absolute;
+  bottom: calc(100% + var(--admin-react-space-2, 0.5rem));
+  left: 50%;
+  z-index: 1;
+  max-width: min(16rem, 72vw);
+  padding: var(--admin-react-space-1, 0.25rem) var(--admin-react-space-2, 0.5rem);
+  border: 1px solid var(--admin-react-border-strong, rgba(255, 255, 255, 0.18));
+  border-radius: var(--admin-react-radius-sm, 0.375rem);
+  color: var(--admin-react-text, #f8fafc);
+  background: var(--admin-react-surface-elevated, #171c26);
+  box-shadow: var(--admin-react-shadow-soft, 0 18px 50px rgba(0, 0, 0, 0.28));
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+  text-align: center;
+  text-overflow: ellipsis;
+  transform: translate(-50%, 0.25rem);
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease;
+  white-space: nowrap;
+}
+
+.action:hover:not(:disabled) .tooltip,
+.action:focus-visible .tooltip {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+@media (pointer: coarse) {
+  .action {
+    width: 2.75rem;
+    min-width: 2.75rem;
+    height: 2.75rem;
+    min-height: 2.75rem;
+  }
+}
+
+@media (max-width: 48rem) {
+  .action {
+    width: 2.75rem;
+    min-width: 2.75rem;
+    height: 2.75rem;
+    min-height: 2.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .action,
+  .tooltip {
+    transition: none;
+  }
+
+  .action:hover:not(:disabled) {
+    transform: none;
+  }
+}

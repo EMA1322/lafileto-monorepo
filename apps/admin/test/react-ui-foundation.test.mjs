@@ -19,6 +19,8 @@ const expectedFiles = [
   'Card.module.css',
   'Field.jsx',
   'Field.module.css',
+  'IconAction.jsx',
+  'IconAction.module.css',
   'IconButton.jsx',
   'IconButton.module.css',
   'StateBlock.jsx',
@@ -35,6 +37,7 @@ const requiredExports = [
   'Badge',
   'Button',
   'Card',
+  'IconAction',
   'IconButton',
   'Input',
   'Select',
@@ -144,5 +147,71 @@ export function runReactUiFoundationTests() {
     allUiStyles,
     /focus-visible/,
     'React primitive styles should define visible focus states',
+  );
+
+  const iconActionSource = read(path.join('src', 'react', 'ui', 'IconAction.jsx'));
+  assert.match(iconActionSource, /<button\b/, 'IconAction should render a real button');
+  assert.match(iconActionSource, /type = 'button'/, 'IconAction should default to type button');
+  assert.match(
+    iconActionSource,
+    /aria-label=\{label\}/,
+    'IconAction should expose label as aria-label',
+  );
+  assert.match(
+    iconActionSource,
+    /IconAction requires a non-empty label/,
+    'IconAction should require a non-empty label',
+  );
+  assert.match(
+    iconActionSource,
+    /IconAction requires an icon/,
+    'IconAction should require an icon',
+  );
+  assert.match(
+    iconActionSource,
+    /aria-hidden['"]?: 'true'/,
+    'IconAction should make element icons decorative',
+  );
+  assert.match(
+    iconActionSource,
+    /disabled=\{disabled\}/,
+    'IconAction should use a real disabled attribute',
+  );
+  assert.match(
+    iconActionSource,
+    /new Set\(\['neutral', 'primary', 'danger'\]\)/,
+    'IconAction should support neutral, primary, and danger variants',
+  );
+
+  const iconActionStyles = read(path.join('src', 'react', 'ui', 'IconAction.module.css'));
+  assert.match(iconActionStyles, /:focus-visible/, 'IconAction should define visible focus');
+  assert.match(
+    iconActionStyles,
+    /touch-action:\s*manipulation/,
+    'IconAction should optimize touch action',
+  );
+  assert.match(
+    iconActionStyles,
+    /(?:width|min-width|height|min-height):\s*2\.5rem/,
+    'IconAction should provide a 40px default target',
+  );
+  assert.match(
+    iconActionStyles,
+    /@media\s*\(pointer:\s*coarse\)[\s\S]*2\.75rem/,
+    'IconAction should provide a 44px coarse pointer target',
+  );
+  assert.match(
+    iconActionStyles,
+    /@media\s*\(max-width:\s*48rem\)[\s\S]*2\.75rem/,
+    'IconAction should provide a 44px mobile target',
+  );
+  assert.match(iconActionStyles, /\.neutral\b/, 'IconAction should define neutral styles');
+  assert.match(iconActionStyles, /\.primary\b/, 'IconAction should define primary styles');
+  assert.match(iconActionStyles, /\.danger\b/, 'IconAction should define danger styles');
+  assert.match(iconActionStyles, /\.tooltip\b/, 'IconAction should include a local visual tooltip');
+  assert.match(
+    iconActionStyles,
+    /text-overflow:\s*ellipsis/,
+    'IconAction tooltip should handle long labels without overflow',
   );
 }

@@ -3,6 +3,7 @@ export { default as Badge } from './Badge.jsx';
 export { default as Button } from './Button.jsx';
 export { default as Card } from './Card.jsx';
 export { Input, Select } from './Field.jsx';
+export { default as IconAction } from './IconAction.jsx';
 export { default as IconButton } from './IconButton.jsx';
 export { default as StateBlock } from './StateBlock.jsx';
 export { TableEmpty, TableScroll, TableShell, TableToolbar } from './TableShell.jsx';
