@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { fetchMe, getCurrentUser, getPermissions } from '@/utils/auth.js';
+import { fetchMe, getCurrentUser } from '@/utils/auth.js';
 import { canDelete, canUpdate, canWrite } from '@/utils/rbac.js';
 import { rolesApi, usersApi } from '@/utils/apis.js';
 import {
@@ -20,7 +20,11 @@ import RoleForm from '../users/RoleForm.jsx';
 import RolesPanel from '../users/RolesPanel.jsx';
 import UserDeleteDialog from '../users/UserDeleteDialog.jsx';
 import UserForm from '../users/UserForm.jsx';
-import { ADMIN_ROLE_ID, normalizeRole, normalizeRolesResponse } from '../users/roles.helpers.js';
+import { normalizeRole, normalizeRolesResponse } from '../users/roles.helpers.js';
+import {
+  canAccessUserManagement,
+  getUserManagementRestrictionMessage,
+} from '../users/userManagementAccess.helpers.js';
 import {
   buildUsersQuery,
   DEFAULT_USER_FILTERS,
@@ -46,11 +50,6 @@ const VIEW_STATUS = {
 function getInitialFilters() {
   if (typeof window === 'undefined') return DEFAULT_USER_FILTERS;
   return parseUsersFiltersFromHash(window.location.hash);
-}
-
-function hasFullPermissions(permissions = {}) {
-  const values = Object.values(permissions || {});
-  return values.length > 0 && values.every((perm) => perm?.r && perm?.w && perm?.u && perm?.d);
 }
 
 function getEffectiveCurrentUser(userFromState = null) {
@@ -203,19 +202,19 @@ export default function UsersPage() {
   const [roleFormState, setRoleFormState] = useState({ open: false, mode: 'create', role: null });
   const [deleteRole, setDeleteRole] = useState(null);
   const [permissionsRole, setPermissionsRole] = useState(null);
+  const currentRoleId = currentUser?.roleId || '';
+  const canManageUsers = canAccessUserManagement(currentRoleId);
 
   const permissions = useMemo(
     () => ({
-      canWrite: canWrite('users') || canWrite('user'),
-      canUpdate: canUpdate('users') || canUpdate('user'),
-      canDelete: canDelete('users') || canDelete('user'),
+      canWrite: canManageUsers && (canWrite('users') || canWrite('user')),
+      canUpdate: canManageUsers && (canUpdate('users') || canUpdate('user')),
+      canDelete: canManageUsers && (canDelete('users') || canDelete('user')),
     }),
-    [],
+    [canManageUsers],
   );
 
-  const currentRoleId = currentUser?.roleId || '';
-  const canManageRoles =
-    currentRoleId === ADMIN_ROLE_ID || hasFullPermissions(getPermissions?.() || {});
+  const canManageRoles = canManageUsers;
 
   const loadUsers = useCallback(
     async (nextFilters = filters, { signal } = {}) => {
@@ -271,11 +270,21 @@ export default function UsersPage() {
   }, []);
 
   useEffect(() => {
+    if (!canManageUsers) {
+      setUsers([]);
+      setRoles([]);
+      setStatus(VIEW_STATUS.error);
+      setRolesStatus(VIEW_STATUS.error);
+      setErrorMessage(getUserManagementRestrictionMessage());
+      setRolesErrorMessage(getUserManagementRestrictionMessage());
+      return undefined;
+    }
+
     const controller = new AbortController();
     void loadUsers(filters, { signal: controller.signal });
     void loadRoles({ signal: controller.signal });
     return () => controller.abort();
-  }, [filters, loadRoles, loadUsers]);
+  }, [canManageUsers, filters, loadRoles, loadUsers]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -415,6 +424,27 @@ export default function UsersPage() {
       </>
     );
   })();
+
+  if (!canManageUsers) {
+    return (
+      <AdminThemeScope className={styles.theme}>
+        <section className={styles.page} aria-labelledby="users-page-title">
+          <header className={styles.header}>
+            <div>
+              <h1 id="users-page-title">Usuarios</h1>
+              <p>Gestiona usuarios, roles y permisos del panel.</p>
+            </div>
+          </header>
+
+          <StateBlock
+            description="Contacta a un administrador si necesitas realizar esta accion."
+            status="empty"
+            title={getUserManagementRestrictionMessage()}
+          />
+        </section>
+      </AdminThemeScope>
+    );
+  }
 
   return (
     <AdminThemeScope className={styles.theme}>

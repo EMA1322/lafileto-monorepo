@@ -106,6 +106,7 @@ function testHeaderComponentContract() {
   assert.match(componentSource, /id="cancelHeaderLogoutBtn"/);
   assert.match(componentSource, /logout\(\)/);
   assert.match(componentSource, /getCurrentUser/);
+  assert.match(componentSource, /canAccessUserManagement\(getCurrentUser\(\)\?\.roleId\)/);
   assert.match(componentSource, /getIconHref/);
   assert.doesNotMatch(componentSource, /lucide-react/);
 
@@ -148,6 +149,7 @@ function testNavigationContract() {
 
   assert.doesNotMatch(`${navSource}\n${componentSource}`, /#config|config:\s*\{/);
   assert.match(navSource, /item\.key === ['"]settings['"] && !featureSettings/);
+  assert.match(navSource, /item\.key === ['"]users['"] && !canAccessUsers\(\)/);
   assert.match(navSource, /canRead\(item\.key\)/);
   assert.match(navSource, /getActiveHeaderRoute/);
 }
