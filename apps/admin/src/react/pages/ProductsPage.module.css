@@ -169,6 +169,141 @@
   gap: 0.35rem;
 }
 
+.deleteAction:hover:not(:disabled),
+.deleteAction:focus-visible {
+  border-color: color-mix(in srgb, var(--admin-react-danger, #f87171) 58%, transparent);
+  color: var(--admin-react-danger, #b42318);
+  background: color-mix(in srgb, var(--admin-react-danger, #f87171) 18%, var(--admin-react-surface, #ffffff));
+}
+
+.viewOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: var(--admin-react-space-4, 1rem);
+  background: rgba(38, 26, 19, 0.24);
+}
+
+.viewDialog {
+  display: grid;
+  width: min(42rem, 100%);
+  max-height: calc(100vh - 2rem);
+  grid-template-rows: auto 1fr;
+  overflow: hidden;
+  border: 1px solid var(--admin-react-border, #e8d8c4);
+  border-radius: var(--admin-react-radius-lg, 0.75rem);
+  background: var(--admin-react-surface, #ffffff);
+  box-shadow: var(--admin-react-shadow-soft, 0 18px 50px rgba(86, 55, 24, 0.08));
+}
+
+.viewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--admin-react-space-3, 0.75rem);
+  padding: var(--admin-react-space-4, 1rem);
+  border-bottom: 1px solid var(--admin-react-border, #e8d8c4);
+}
+
+.viewTitleGroup {
+  display: grid;
+  min-width: 0;
+  gap: var(--admin-react-space-1, 0.25rem);
+}
+
+.viewEyebrow,
+.viewTitle {
+  margin: 0;
+}
+
+.viewEyebrow {
+  color: var(--admin-react-accent, #faa718);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.viewTitle {
+  color: var(--admin-react-text, #261a13);
+  font-size: 1.25rem;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.viewCloseButton {
+  width: 2.5rem;
+  min-width: 2.5rem;
+  min-height: 2.5rem;
+  border: 1px solid var(--admin-react-border, #e8d8c4);
+  border-radius: var(--admin-react-radius-md, 0.5rem);
+  color: var(--admin-react-text, #261a13);
+  background: var(--admin-react-surface-muted, #fff3e4);
+  font: inherit;
+  font-size: 1.2rem;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.viewCloseButton:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--admin-react-focus-ring, rgba(250, 167, 24, 0.42));
+}
+
+.viewBody {
+  display: grid;
+  gap: var(--admin-react-space-4, 1rem);
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: var(--admin-react-space-4, 1rem);
+}
+
+.viewMedia .productImage,
+.viewMedia .productPlaceholder {
+  width: 100%;
+  height: auto;
+  min-height: 12rem;
+  aspect-ratio: 16 / 10;
+}
+
+.viewDetails {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--admin-react-space-3, 0.75rem);
+  margin: 0;
+}
+
+.viewDetails div {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+  padding: var(--admin-react-space-3, 0.75rem);
+  border: 1px solid var(--admin-react-border, #e8d8c4);
+  border-radius: var(--admin-react-radius-md, 0.5rem);
+  background: var(--admin-react-surface-muted, #fff3e4);
+}
+
+.viewDetails dt {
+  color: var(--admin-react-text-muted, #6a584b);
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.viewDetails dd {
+  margin: 0;
+  color: var(--admin-react-text, #261a13);
+  font-size: 0.95rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.viewWide {
+  grid-column: 1 / -1;
+}
+
 .mobileList {
   display: none;
 }
@@ -245,6 +380,14 @@
 
   .mobileList {
     display: grid;
+  }
+
+  .viewDialog {
+    max-height: calc(100vh - 1rem);
+  }
+
+  .viewDetails {
+    grid-template-columns: 1fr;
   }
 }
 

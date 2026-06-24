@@ -1,10 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Eye, Pencil, Trash2 } from 'lucide-react';
 import { productsApi, categoriesApi } from '@/utils/apis.js';
 import { canDelete, canRead, canUpdate, canWrite } from '@/utils/rbac.js';
 import {
   AdminThemeScope,
   Badge,
   Button,
+  IconAction,
   Input,
   ListPagination,
   ListSurface,
@@ -32,6 +34,7 @@ import ProductDeleteDialog from '../products/ProductDeleteDialog.jsx';
 import ProductForm from '../products/ProductForm.jsx';
 import ProductOfferDeleteDialog from '../products/ProductOfferDeleteDialog.jsx';
 import ProductOfferForm from '../products/ProductOfferForm.jsx';
+import useDialogFocusTrap from '../hooks/useDialogFocusTrap.js';
 import styles from './ProductsPage.module.css';
 
 const VIEW_STATUS = {
@@ -132,6 +135,7 @@ function ProductActions({
   onOfferCreate,
   onOfferDelete,
   onOfferEdit,
+  onView,
   permissions,
   product,
 }) {
@@ -139,39 +143,40 @@ function ProductActions({
   const canCreateOffer = !hasOffer && permissions.canWriteOffer;
   const canEditOffer = hasOffer && permissions.canUpdateOffer;
   const canDeleteOffer = hasOffer && permissions.canDeleteOffer;
-  const hasProductActions = permissions.canUpdate || permissions.canDelete;
-  const hasOfferActions = canCreateOffer || canEditOffer || canDeleteOffer;
+  const hasProductActions = permissions.canRead || permissions.canUpdate || permissions.canDelete;
+  const hasHiddenOfferActions = canCreateOffer || canEditOffer || canDeleteOffer;
+  void hasHiddenOfferActions;
+  void onOfferCreate;
+  void onOfferDelete;
+  void onOfferEdit;
 
-  if (!hasProductActions && !hasOfferActions) {
+  if (!hasProductActions) {
     return <span className={styles.muted}>Sin acciones</span>;
   }
 
   return (
     <div className={styles.actions} aria-label="Acciones de producto">
+      {permissions.canRead ? (
+        <IconAction
+          icon={<Eye />}
+          label={`Ver producto: ${product.name}`}
+          onClick={() => onView(product)}
+        />
+      ) : null}
       {permissions.canUpdate ? (
-        <Button onClick={() => onEdit(product)} size="sm" variant="ghost">
-          Editar
-        </Button>
+        <IconAction
+          icon={<Pencil />}
+          label={`Editar producto: ${product.name}`}
+          onClick={() => onEdit(product)}
+        />
       ) : null}
       {permissions.canDelete ? (
-        <Button onClick={() => onDelete(product)} size="sm" variant="danger">
-          Eliminar
-        </Button>
-      ) : null}
-      {canCreateOffer ? (
-        <Button onClick={() => onOfferCreate(product)} size="sm" variant="secondary">
-          Crear oferta
-        </Button>
-      ) : null}
-      {canEditOffer ? (
-        <Button onClick={() => onOfferEdit(product)} size="sm" variant="secondary">
-          Editar oferta
-        </Button>
-      ) : null}
-      {canDeleteOffer ? (
-        <Button onClick={() => onOfferDelete(product)} size="sm" variant="danger">
-          Quitar oferta
-        </Button>
+        <IconAction
+          className={styles.deleteAction}
+          icon={<Trash2 />}
+          label={`Eliminar producto: ${product.name}`}
+          onClick={() => onDelete(product)}
+        />
       ) : null}
     </div>
   );
@@ -185,6 +190,7 @@ function ProductsTable({
   onOfferCreate,
   onOfferDelete,
   onOfferEdit,
+  onView,
   permissions,
 }) {
   return (
@@ -245,6 +251,7 @@ function ProductsTable({
                     onOfferCreate={onOfferCreate}
                     onOfferDelete={onOfferDelete}
                     onOfferEdit={onOfferEdit}
+                    onView={onView}
                     permissions={permissions}
                     product={product}
                   />
@@ -266,6 +273,7 @@ function ProductsCards({
   onOfferCreate,
   onOfferDelete,
   onOfferEdit,
+  onView,
   permissions,
 }) {
   return (
@@ -306,6 +314,7 @@ function ProductsCards({
                 onOfferCreate={onOfferCreate}
                 onOfferDelete={onOfferDelete}
                 onOfferEdit={onOfferEdit}
+                onView={onView}
                 permissions={permissions}
                 product={product}
               />
@@ -313,6 +322,98 @@ function ProductsCards({
           </article>
         );
       })}
+    </div>
+  );
+}
+
+function ProductViewDialog({ categoryLabel = '', onClose, open = false, product = null }) {
+  const dialogRef = useRef(null);
+
+  useDialogFocusTrap({
+    containerRef: dialogRef,
+    initialFocus: '#product-view-close',
+    onClose,
+    open,
+  });
+
+  if (!open || !product) return null;
+
+  function handleOverlayMouseDown(event) {
+    if (event.target === event.currentTarget) {
+      onClose?.();
+    }
+  }
+
+  return (
+    <div className={styles.viewOverlay} onMouseDown={handleOverlayMouseDown}>
+      <section
+        aria-labelledby="product-view-title"
+        aria-modal="true"
+        className={styles.viewDialog}
+        ref={dialogRef}
+        role="dialog"
+      >
+        <header className={styles.viewHeader}>
+          <div className={styles.viewTitleGroup}>
+            <p className={styles.viewEyebrow}>Producto</p>
+            <h2 className={styles.viewTitle} id="product-view-title">
+              {product.name}
+            </h2>
+          </div>
+          <button
+            aria-label="Cerrar detalle"
+            className={styles.viewCloseButton}
+            id="product-view-close"
+            onClick={onClose}
+            type="button"
+          >
+            x
+          </button>
+        </header>
+
+        <div className={styles.viewBody}>
+          <div className={styles.viewMedia}>
+            <ProductImage product={product} />
+          </div>
+
+          <dl className={styles.viewDetails}>
+            <div>
+              <dt>Nombre</dt>
+              <dd>{product.name}</dd>
+            </div>
+            <div>
+              <dt>Categoria</dt>
+              <dd>{categoryLabel || 'Sin categoria'}</dd>
+            </div>
+            <div className={styles.viewWide}>
+              <dt>Descripcion</dt>
+              <dd>{product.description || 'Sin descripcion'}</dd>
+            </div>
+            <div>
+              <dt>Precio</dt>
+              <dd>{formatMoney(product.price)}</dd>
+            </div>
+            <div>
+              <dt>Stock</dt>
+              <dd>{product.stock}</dd>
+            </div>
+            <div>
+              <dt>Publicacion</dt>
+              <dd>
+                <StatusBadge status={product.status} />
+              </dd>
+            </div>
+            {product.offer ? (
+              <div>
+                <dt>Oferta</dt>
+                <dd>
+                  <OfferBadge product={product} />
+                </dd>
+              </div>
+            ) : null}
+          </dl>
+        </div>
+      </section>
     </div>
   );
 }
@@ -328,6 +429,7 @@ export default function ProductsPage() {
     AdminThemeScope,
     Badge,
     Button,
+    IconAction,
     Input,
     ListPagination,
     ListSurface,
@@ -347,6 +449,7 @@ export default function ProductsPage() {
     ProductImage,
     ProductOfferDeleteDialog,
     ProductOfferForm,
+    ProductViewDialog,
     ProductsCards,
     ProductsTable,
     OfferBadge,
@@ -363,6 +466,7 @@ export default function ProductsPage() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [offerFormState, setOfferFormState] = useState(null);
   const [offerDeleteTarget, setOfferDeleteTarget] = useState(null);
+  const [viewTarget, setViewTarget] = useState(null);
 
   const permissions = useMemo(
     () => ({
@@ -464,6 +568,10 @@ export default function ProductsPage() {
 
   function handleOfferDelete(product) {
     setOfferDeleteTarget(product);
+  }
+
+  function handleView(product) {
+    setViewTarget(product);
   }
 
   function handleProductSaved({ mode }) {
@@ -657,6 +765,7 @@ export default function ProductsPage() {
                 onOfferCreate={handleOfferCreate}
                 onOfferDelete={handleOfferDelete}
                 onOfferEdit={handleOfferEdit}
+                onView={handleView}
                 permissions={permissions}
               />
               <ProductsCards
@@ -667,6 +776,7 @@ export default function ProductsPage() {
                 onOfferCreate={handleOfferCreate}
                 onOfferDelete={handleOfferDelete}
                 onOfferEdit={handleOfferEdit}
+                onView={handleView}
                 permissions={permissions}
               />
             </>
@@ -752,6 +862,12 @@ export default function ProductsPage() {
         onDeleted={handleOfferDeleted}
         open={Boolean(offerDeleteTarget)}
         product={offerDeleteTarget}
+      />
+      <ProductViewDialog
+        categoryLabel={viewTarget ? getCategoryLabel(viewTarget, categoriesById) : ''}
+        onClose={() => setViewTarget(null)}
+        open={Boolean(viewTarget)}
+        product={viewTarget}
       />
     </AdminThemeScope>
   );
