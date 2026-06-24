@@ -201,6 +201,16 @@ export function runReactUiFoundationTests() {
     /new Set\(\['neutral', 'primary', 'danger'\]\)/,
     'IconAction should support neutral, primary, and danger variants',
   );
+  assert.match(
+    iconActionSource,
+    /createPortal\(/,
+    'IconAction tooltip should render outside clipping table containers',
+  );
+  assert.match(
+    iconActionSource,
+    /aria-describedby=\{isTooltipVisible \? tooltipId : undefined\}/,
+    'IconAction should expose the visible tooltip as a description',
+  );
 
   const iconActionStyles = read(path.join('src', 'react', 'ui', 'IconAction.module.css'));
   assert.match(iconActionStyles, /:focus-visible/, 'IconAction should define visible focus');
@@ -228,6 +238,11 @@ export function runReactUiFoundationTests() {
   assert.match(iconActionStyles, /\.primary\b/, 'IconAction should define primary styles');
   assert.match(iconActionStyles, /\.danger\b/, 'IconAction should define danger styles');
   assert.match(iconActionStyles, /\.tooltip\b/, 'IconAction should include a local visual tooltip');
+  assert.match(
+    iconActionStyles,
+    /position:\s*fixed/,
+    'IconAction tooltip should avoid ancestor overflow clipping',
+  );
   assert.match(
     iconActionStyles,
     /text-overflow:\s*ellipsis/,

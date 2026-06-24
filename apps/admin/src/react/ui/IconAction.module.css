@@ -77,11 +77,9 @@
 }
 
 .tooltip {
-  position: absolute;
-  bottom: calc(100% + var(--admin-react-space-2, 0.5rem));
-  left: 50%;
-  z-index: 1;
-  max-width: min(16rem, 72vw);
+  position: fixed;
+  z-index: calc(var(--admin-react-z-modal, 50) + 1);
+  max-width: min(16rem, calc(100vw - 1rem));
   padding: var(--admin-react-space-1, 0.25rem) var(--admin-react-space-2, 0.5rem);
   border: 1px solid var(--admin-react-border-strong, #d8bea3);
   border-radius: var(--admin-react-radius-sm, 0.375rem);
@@ -91,22 +89,23 @@
   font-size: 0.75rem;
   font-weight: 700;
   line-height: 1.2;
-  opacity: 0;
   overflow: hidden;
   pointer-events: none;
   text-align: center;
   text-overflow: ellipsis;
-  transform: translate(-50%, 0.25rem);
+  transform: translateY(0);
   transition:
     opacity 200ms ease,
     transform 200ms ease;
   white-space: nowrap;
 }
 
-.action:hover:not(:disabled) .tooltip,
-.action:focus-visible .tooltip {
-  opacity: 1;
-  transform: translate(-50%, 0);
+.tooltip[data-placement='top'] {
+  transform-origin: center bottom;
+}
+
+.tooltip[data-placement='bottom'] {
+  transform-origin: center top;
 }
 
 @media (pointer: coarse) {
