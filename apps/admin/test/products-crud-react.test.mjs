@@ -90,11 +90,21 @@ function testFormContract() {
   assert.match(helperSource, /active/);
   assert.match(helperSource, /archived/);
   assert.match(helperSource, /validateProductForm/);
+  assert.match(helperSource, /validateProductActivation/);
+  assert.match(helperSource, /buildStatusFromActiveSwitch/);
   assert.match(helperSource, /Number\.isFinite\(price\)/);
   assert.match(helperSource, /Number\.isInteger\(stock\)/);
   assert.match(helperSource, /new URL\(imageUrl\)/);
   assert.match(helperSource, /buildProductPayload/);
   assert.match(helperSource, /mapProductApiError/);
+  assert.match(formSource, /role="switch"/);
+  assert.match(formSource, /product-form-status-active/);
+  assert.match(
+    formSource,
+    /Archivado\. Este estado es interno y se conserva al editar el producto\./,
+  );
+  assert.match(formSource, /buildStatusFromActiveSwitch\(current, checked\)/);
+  assert.doesNotMatch(formSource, /id="product-form-status"[\s\S]*<option/);
   assert.doesNotMatch(combined, /\bslug\b|\bsku\b|\bisFeatured\b/);
   assert.doesNotMatch(combined, /\bcurrency\b/);
 }
@@ -120,6 +130,9 @@ function testUiFlowAndRbac() {
   assert.match(formSource, /useDialogFocusTrap/);
   assert.match(formSource, /initialFocus:\s*['"]#product-form-name['"]/);
   assert.match(formSource, /loading=\{pending\}/);
+  assert.match(formSource, /onOfferSaved/);
+  assert.match(formSource, /onOfferDeleteRequest/);
+  assert.doesNotMatch(formSource, /Guardar producto y oferta/);
   assert.match(deleteSource, /role="alertdialog"/);
   assert.match(deleteSource, /aria-modal="true"/);
   assert.match(deleteSource, /useDialogFocusTrap/);

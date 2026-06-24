@@ -108,14 +108,34 @@ function testOfferValidationAndPayloads() {
   assert.match(formSource, /offersApi\.create\(buildOfferCreatePayload\(product, values\)\)/);
   assert.match(
     formSource,
-    /offersApi\.update\(product\.offer\.id, buildOfferUpdatePayload\(values\)\)/,
+    /offersApi\.update\(currentOffer\.id, buildOfferUpdatePayload\(values\)\)/,
   );
-  assert.match(formSource, /isEdit && !product\.offer\?\.id/);
+  assert.match(formSource, /isEdit && !currentOffer\?\.id/);
+  assert.match(formSource, /estimateOfferFinalPrice/);
+  assert.match(formSource, /hasPersistedOffer/);
+  assert.match(formSource, /role="switch"/);
+  assert.match(formSource, /Aplicar oferta/);
+  assert.match(formSource, /Guardar oferta/);
+  assert.match(formSource, /onDeleteRequest\?\.\(productWithCurrentOffer\)/);
 
   for (const forbidden of ['startDate', 'endDate', 'startsAt', 'endsAt', 'validFrom', 'validTo']) {
     assert.doesNotMatch(combined, new RegExp(`\\b${forbidden}\\b`));
   }
-  assert.doesNotMatch(combined, /\bstatus\b/i);
+  assert.doesNotMatch(combined, /Guardar producto y oferta|vigencia/i);
+}
+
+function testEmbeddedOfferStateMachine() {
+  const formSource = read('src/react/products/ProductOfferForm.jsx');
+
+  assert.match(formSource, /embedded = false/);
+  assert.match(formSource, /open: open && !embedded/);
+  assert.match(formSource, /if \(!checked && offerExists\)/);
+  assert.match(formSource, /setValues\(\(current\) => \(\{ \.\.\.current, enabled: true \}\)\)/);
+  assert.match(formSource, /if \(!offerEnabled\) return/);
+  assert.match(formSource, /Sin oferta aplicada\. No se enviara ninguna mutacion de oferta\./);
+  assert.match(formSource, /Oferta nueva pendiente de guardar\./);
+  assert.match(formSource, /Precio final estimado/);
+  assert.match(formSource, /La oferta se guarda de forma separada del producto\./);
 }
 
 function testMobileCardsExposeOfferActions() {
@@ -148,6 +168,10 @@ function testProductCrudContractStillPresent() {
   assert.match(pageSource, /setFormState\(\{ mode: 'create'/);
   assert.match(pageSource, /setFormState\(\{ mode: 'edit'/);
   assert.match(pageSource, /setDeleteTarget\(product\)/);
+  assert.match(productFormSource, /ProductOfferForm/);
+  assert.match(productFormSource, /Primero guard/);
+  assert.match(productFormSource, /onOfferDeleteRequest/);
+  assert.match(productFormSource, /onOfferSaved/);
   assert.match(pageSource, /productsApi\.list\(buildProductsQuery\(filters\)\)/);
   assert.match(pageSource, /serializeFiltersToHash/);
 }
@@ -165,6 +189,7 @@ export function runProductsOffersReactTests() {
   testOfferBadgeAndNormalization();
   testOfferRbacStaysSeparate();
   testOfferValidationAndPayloads();
+  testEmbeddedOfferStateMachine();
   testMobileCardsExposeOfferActions();
   testProductCrudContractStillPresent();
   testScopeBoundaries();

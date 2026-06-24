@@ -7,11 +7,16 @@ import {
 } from '../src/react/products/productsList.helpers.js';
 import {
   buildProductPayload,
+  buildStatusFromActiveSwitch,
   createProductFormState,
+  validateProductActivation,
+  validateProductForm,
 } from '../src/react/products/productForm.helpers.js';
 import {
   buildOfferCreatePayload,
   buildOfferUpdatePayload,
+  estimateOfferFinalPrice,
+  hasPersistedOffer,
   validateOfferForm,
 } from '../src/react/products/productOffer.helpers.js';
 
@@ -93,6 +98,76 @@ function testOfferValidation() {
   assert.deepEqual(valid, {});
 }
 
+function testProductActivationValidation() {
+  const invalidPrice = validateProductActivation({
+    name: 'Pizza',
+    price: '0',
+    stock: '4',
+    categoryId: 'cat-1',
+    status: 'draft',
+  });
+  assert.equal(invalidPrice.price, 'Para activar el producto, el precio debe ser mayor a 0.');
+  assert.equal(Object.hasOwn(invalidPrice, 'stock'), false);
+
+  const invalidStock = validateProductActivation({
+    name: 'Pizza',
+    price: '1200',
+    stock: '0',
+    categoryId: 'cat-1',
+    status: 'draft',
+  });
+  assert.equal(invalidStock.stock, 'Para activar el producto, el stock debe ser mayor a 0.');
+  assert.equal(Object.hasOwn(invalidStock, 'price'), false);
+
+  const activeSubmitErrors = validateProductForm({
+    name: 'Pizza',
+    price: '0',
+    stock: '0',
+    categoryId: 'cat-1',
+    status: 'active',
+  });
+  assert.equal(
+    activeSubmitErrors.price,
+    'Para publicar el producto, el precio debe ser mayor a 0.',
+  );
+  assert.equal(activeSubmitErrors.stock, 'Para publicar el producto, el stock debe ser mayor a 0.');
+
+  const validActive = validateProductForm({
+    name: 'Pizza',
+    price: '1200',
+    stock: '4',
+    categoryId: 'cat-1',
+    status: 'active',
+  });
+  assert.deepEqual(validActive, {});
+}
+
+function testProductStatusSwitchPayloads() {
+  const draftState = {
+    name: 'Pizza',
+    description: 'Con muzzarella',
+    price: '1200',
+    stock: '4',
+    categoryId: 'cat-1',
+    status: buildStatusFromActiveSwitch({ status: 'active' }, false),
+    imageUrl: '',
+  };
+  assert.equal(draftState.status, 'draft');
+  assert.deepEqual(buildProductPayload(draftState), {
+    name: 'Pizza',
+    description: 'Con muzzarella',
+    price: 1200,
+    stock: 4,
+    categoryId: 'cat-1',
+    status: 'draft',
+    imageUrl: null,
+  });
+
+  const archivedStatus = buildStatusFromActiveSwitch({ status: 'archived' }, false);
+  assert.equal(archivedStatus, 'archived');
+  assert.equal(buildProductPayload({ ...draftState, status: archivedStatus }).status, 'archived');
+}
+
 function testBuildQueryOfferFilter() {
   const all = buildProductsQuery({ hasOffer: 'all' });
   assert.equal(Object.hasOwn(all, 'hasOffer'), false);
@@ -121,10 +196,28 @@ function testOfferPayloads() {
   });
 }
 
+function testOfferStateHelpers() {
+  const product = {
+    id: 'p-1',
+    price: 1000,
+    offer: {
+      id: 'o-1',
+      discountPercent: 15,
+    },
+  };
+
+  assert.equal(hasPersistedOffer(product), true);
+  assert.equal(hasPersistedOffer({ id: 'p-1' }), false);
+  assert.equal(estimateOfferFinalPrice(product, { discountPercent: '15' }), 850);
+}
+
 export function runProductsContractTests() {
   testProductMapping();
   testProductFormContract();
   testOfferValidation();
+  testProductActivationValidation();
+  testProductStatusSwitchPayloads();
   testBuildQueryOfferFilter();
   testOfferPayloads();
+  testOfferStateHelpers();
 }
