@@ -1,15 +1,25 @@
+.toolbar {
+  align-items: stretch;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--admin-react-surface-muted, #fff3e4) 54%, transparent),
+      var(--admin-react-surface, #ffffff)
+    );
+}
+
 .filters {
   display: grid;
   width: 100%;
   grid-template-columns: minmax(13rem, 1.3fr) repeat(6, minmax(9rem, 1fr)) auto;
   align-items: end;
-  gap: 0.75rem;
+  gap: var(--admin-react-space-3, 0.75rem);
 }
 
 .filterActions {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--admin-react-space-2, 0.5rem);
 }
 
 .tableScroll {
@@ -17,21 +27,40 @@
 }
 
 .table {
-  min-width: 76rem;
+  min-width: 70rem;
+}
+
+.table tbody tr {
+  transition:
+    background-color 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.table tbody tr:hover {
+  background: var(--admin-react-surface-hover, #fff7ec);
+  box-shadow: inset 0.1875rem 0 0 color-mix(in srgb, var(--admin-react-accent, #faa718) 62%, transparent);
 }
 
 .productCell {
   display: grid;
-  grid-template-columns: 4rem minmax(12rem, 1fr);
-  align-items: center;
-  gap: 0.75rem;
+  grid-template-columns: 4.75rem minmax(15rem, 1fr);
+  align-items: start;
+  gap: var(--admin-react-space-3, 0.75rem);
+  min-width: 20rem;
+}
+
+.productSummary {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
 }
 
 .productCell strong,
 .mobileHeader h2 {
   display: block;
   color: var(--admin-react-text, #261a13);
-  font-size: 0.95rem;
+  font-size: 1rem;
+  line-height: 1.25;
 }
 
 .productCell span,
@@ -41,17 +70,40 @@
   font-size: 0.82rem;
 }
 
+.productCategory {
+  font-weight: 700;
+}
+
+.productDescription,
+.mobileDescription {
+  max-width: 48rem;
+  line-height: 1.45;
+}
+
+.numericCell {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.secondaryCell {
+  color: var(--admin-react-text-muted, #6a584b);
+  white-space: nowrap;
+}
+
 .productImage,
 .productPlaceholder {
-  width: 4rem;
-  height: 3.25rem;
+  width: 4.75rem;
+  height: 3.75rem;
   border: 1px solid var(--admin-react-border, #e8d8c4);
   border-radius: var(--admin-react-radius-md, 0.5rem);
   background: var(--admin-react-surface-muted, #fff3e4);
 }
 
 .productImage {
+  display: block;
   object-fit: cover;
+  aspect-ratio: 19 / 15;
 }
 
 .productPlaceholder {
@@ -62,6 +114,41 @@
   font-size: 0.72rem;
   font-weight: 700;
   text-align: center;
+}
+
+.alertGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.25rem;
+}
+
+.infoAlert {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1px solid color-mix(in srgb, var(--admin-react-warning, #a86000) 40%, var(--admin-react-border, #e8d8c4));
+  border-radius: 999px;
+  padding: 0.125rem 0.5rem;
+  color: var(--admin-react-text, #261a13);
+  background: color-mix(in srgb, var(--admin-react-warning, #a86000) 11%, var(--admin-react-surface, #ffffff));
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.infoAlert::before {
+  content: "!";
+  display: inline-grid;
+  width: 1rem;
+  height: 1rem;
+  place-items: center;
+  border-radius: 999px;
+  color: var(--admin-react-surface, #ffffff);
+  background: var(--admin-react-warning, #a86000);
+  font-size: 0.68rem;
+  line-height: 1;
 }
 
 .offerStack {
@@ -88,15 +175,25 @@
 
 .mobileItem {
   display: grid;
-  grid-template-columns: 4.5rem 1fr;
-  gap: 0.75rem;
-  padding: 1rem;
+  grid-template-columns: 4.75rem 1fr;
+  gap: var(--admin-react-space-3, 0.75rem);
+  padding: var(--admin-react-space-4, 1rem);
   border-top: 1px solid var(--admin-react-border, #e8d8c4);
+  background: var(--admin-react-surface, #ffffff);
+  transition:
+    background-color 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.mobileItem:hover {
+  background: var(--admin-react-surface-hover, #fff7ec);
+  box-shadow: inset 0.1875rem 0 0 color-mix(in srgb, var(--admin-react-accent, #faa718) 62%, transparent);
 }
 
 .mobileBody {
   display: grid;
   gap: 0.65rem;
+  min-width: 0;
 }
 
 .mobileHeader,
@@ -129,8 +226,17 @@
 }
 
 @media (max-width: 760px) {
+  .toolbar {
+    padding: var(--admin-react-space-3, 0.75rem);
+  }
+
   .filters {
     grid-template-columns: 1fr;
+  }
+
+  .filterActions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
   }
 
   .tableScroll {
@@ -140,5 +246,30 @@
   .mobileList {
     display: grid;
   }
+}
 
+@media (max-width: 420px) {
+  .mobileItem {
+    grid-template-columns: 1fr;
+  }
+
+  .productImage,
+  .productPlaceholder {
+    width: 100%;
+    height: auto;
+    min-height: 9rem;
+    aspect-ratio: 16 / 10;
+  }
+
+  .mobileHeader,
+  .mobileMeta {
+    display: grid;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .table tbody tr,
+  .mobileItem {
+    transition: none;
+  }
 }
