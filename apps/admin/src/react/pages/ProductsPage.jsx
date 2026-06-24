@@ -84,6 +84,22 @@ function ProductImage({ product }) {
   );
 }
 
+function getCategoryLabel(product, categoriesById) {
+  return categoriesById.get(String(product.categoryId)) || product.categoryName || 'Sin categoria';
+}
+
+function getProductAlerts(product) {
+  const pricePending = Number(product.price) <= 0;
+  const withoutStock = Number(product.stock) <= 0;
+  const alerts = [];
+
+  if (pricePending) alerts.push('Precio pendiente');
+  if (withoutStock) alerts.push('Sin stock');
+  if (pricePending || withoutStock) alerts.push('No publicable');
+
+  return alerts;
+}
+
 function StatusBadge({ status }) {
   const isActive = status === 'active';
   return (
@@ -180,51 +196,62 @@ function ProductsTable({
             <th scope="col">Precio</th>
             <th scope="col">Stock</th>
             <th scope="col">Estado</th>
-            <th scope="col">Categoria</th>
             <th scope="col">Oferta</th>
             <th scope="col">Actualizado</th>
             <th scope="col">Acciones</th>
           </tr>
         </thead>
         <tbody>
-          {items.map((product) => (
-            <tr key={product.id}>
-              <td>
-                <div className={styles.productCell}>
-                  <ProductImage product={product} />
-                  <div>
-                    <strong>{product.name}</strong>
-                    <span>{product.description || 'Sin descripcion'}</span>
+          {items.map((product) => {
+            const categoryLabel = getCategoryLabel(product, categoriesById);
+            const alerts = getProductAlerts(product);
+
+            return (
+              <tr key={product.id}>
+                <td>
+                  <div className={styles.productCell}>
+                    <ProductImage product={product} />
+                    <div className={styles.productSummary}>
+                      <strong>{product.name}</strong>
+                      <span className={styles.productCategory}>{categoryLabel}</span>
+                      <span className={styles.productDescription}>
+                        {product.description || 'Sin descripcion'}
+                      </span>
+                      {alerts.length > 0 ? (
+                        <span className={styles.alertGroup} aria-label="Alertas de publicacion">
+                          {alerts.map((alert) => (
+                            <span className={styles.infoAlert} key={alert}>
+                              {alert}
+                            </span>
+                          ))}
+                        </span>
+                      ) : null}
+                    </div>
                   </div>
-                </div>
-              </td>
-              <td>{formatMoney(product.price)}</td>
-              <td>{product.stock}</td>
-              <td>
-                <StatusBadge status={product.status} />
-              </td>
-              <td>
-                {categoriesById.get(String(product.categoryId)) ||
-                  product.categoryName ||
-                  'Sin categoria'}
-              </td>
-              <td>
-                <OfferBadge product={product} />
-              </td>
-              <td>{formatDateTime(product.updatedAt)}</td>
-              <td>
-                <ProductActions
-                  onDelete={onDelete}
-                  onEdit={onEdit}
-                  onOfferCreate={onOfferCreate}
-                  onOfferDelete={onOfferDelete}
-                  onOfferEdit={onOfferEdit}
-                  permissions={permissions}
-                  product={product}
-                />
-              </td>
-            </tr>
-          ))}
+                </td>
+                <td className={styles.numericCell}>{formatMoney(product.price)}</td>
+                <td className={styles.numericCell}>{product.stock}</td>
+                <td>
+                  <StatusBadge status={product.status} />
+                </td>
+                <td>
+                  <OfferBadge product={product} />
+                </td>
+                <td className={styles.secondaryCell}>{formatDateTime(product.updatedAt)}</td>
+                <td>
+                  <ProductActions
+                    onDelete={onDelete}
+                    onEdit={onEdit}
+                    onOfferCreate={onOfferCreate}
+                    onOfferDelete={onOfferDelete}
+                    onOfferEdit={onOfferEdit}
+                    permissions={permissions}
+                    product={product}
+                  />
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </TableScroll>
@@ -243,36 +270,49 @@ function ProductsCards({
 }) {
   return (
     <div className={styles.mobileList}>
-      {items.map((product) => (
-        <article className={styles.mobileItem} key={product.id}>
-          <ProductImage product={product} />
-          <div className={styles.mobileBody}>
-            <div className={styles.mobileHeader}>
-              <h2>{product.name}</h2>
-              <StatusBadge status={product.status} />
+      {items.map((product) => {
+        const categoryLabel = getCategoryLabel(product, categoriesById);
+        const alerts = getProductAlerts(product);
+
+        return (
+          <article className={styles.mobileItem} key={product.id}>
+            <ProductImage product={product} />
+            <div className={styles.mobileBody}>
+              <div className={styles.mobileHeader}>
+                <div>
+                  <h2>{product.name}</h2>
+                  <p>{categoryLabel}</p>
+                </div>
+                <StatusBadge status={product.status} />
+              </div>
+              <p className={styles.mobileDescription}>{product.description || 'Sin descripcion'}</p>
+              <div className={styles.mobileMeta}>
+                <span>{formatMoney(product.price)}</span>
+                <span>Stock {product.stock}</span>
+              </div>
+              {alerts.length > 0 ? (
+                <div className={styles.alertGroup} aria-label="Alertas de publicacion">
+                  {alerts.map((alert) => (
+                    <span className={styles.infoAlert} key={alert}>
+                      {alert}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+              <OfferBadge product={product} />
+              <ProductActions
+                onDelete={onDelete}
+                onEdit={onEdit}
+                onOfferCreate={onOfferCreate}
+                onOfferDelete={onOfferDelete}
+                onOfferEdit={onOfferEdit}
+                permissions={permissions}
+                product={product}
+              />
             </div>
-            <p>
-              {categoriesById.get(String(product.categoryId)) ||
-                product.categoryName ||
-                'Sin categoria'}
-            </p>
-            <div className={styles.mobileMeta}>
-              <span>{formatMoney(product.price)}</span>
-              <span>Stock {product.stock}</span>
-            </div>
-            <OfferBadge product={product} />
-            <ProductActions
-              onDelete={onDelete}
-              onEdit={onEdit}
-              onOfferCreate={onOfferCreate}
-              onOfferDelete={onOfferDelete}
-              onOfferEdit={onOfferEdit}
-              permissions={permissions}
-              product={product}
-            />
-          </div>
-        </article>
-      ))}
+          </article>
+        );
+      })}
     </div>
   );
 }
@@ -471,13 +511,13 @@ export default function ProductsPage() {
               </Button>
             ) : null
           }
-          description="Listado operativo con datos reales, filtros y paginacion."
+          description="Administra el catalogo, disponibilidad y datos de publicacion de cada producto."
           eyebrow="Catalogo"
           title="Productos"
         />
 
         <TableShell>
-          <TableToolbar>
+          <TableToolbar className={styles.toolbar}>
             <form className={styles.filters} onSubmit={handleSubmit}>
               <Input
                 id="products-filter-q"
