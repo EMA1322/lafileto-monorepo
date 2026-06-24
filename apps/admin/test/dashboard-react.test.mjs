@@ -136,9 +136,13 @@ function testDashboardPageContract() {
   assert.match(source, /href:\s*['"]#categories['"]/);
   assert.match(source, /href:\s*['"]#settings['"]/);
   assert.match(source, /canRead/);
-  assert.match(source, /canWrite/);
-  assert.match(source, /window\.location\.hash\s*=\s*href/);
-  assert.match(source, /Todavia no hay actividad para mostrar/);
+  assert.doesNotMatch(source, /canWrite/);
+  assert.doesNotMatch(source, /window\.location\.hash\s*=\s*href/);
+  assert.match(source, /No hay actividad reciente disponible/);
+  assert.match(source, /Actualizar resumen/);
+  assert.match(source, /productsWithoutImage/);
+  assert.doesNotMatch(source, /offerPercent/);
+  assert.doesNotMatch(source, /productsNotPublishable|notPublishable|unpublishable/);
   assert.doesNotMatch(
     source,
     /Google Maps|mapbox|leaflet|chart\.js|recharts|echarts|recent orders|trending products|timeline fake/i,

@@ -1,14 +1,14 @@
 .theme {
   min-height: 100%;
   background:
-    linear-gradient(180deg, rgba(250, 167, 24, 0.08), rgba(250, 167, 24, 0) 22rem),
+    linear-gradient(180deg, rgba(250, 167, 24, 0.07), rgba(250, 167, 24, 0) 18rem),
     var(--admin-react-bg, #fff9f1);
 }
 
 .pageShell {
-  width: min(100%, 1180px);
+  width: min(100%, 1160px);
   margin: 0 auto;
-  padding: clamp(1rem, 2vw, 2rem);
+  padding: clamp(0.875rem, 2vw, 1.5rem);
   color: var(--admin-react-text, #261a13);
 }
 
@@ -29,14 +29,12 @@
   grid-template-columns: minmax(0, 1fr) auto;
   gap: var(--admin-react-space-4, 1rem);
   align-items: start;
-  margin-bottom: var(--admin-react-space-5, 1.5rem);
-  padding: var(--admin-react-space-5, 1.5rem);
+  margin-bottom: var(--admin-react-space-4, 1rem);
+  padding: var(--admin-react-space-4, 1rem);
   border: 1px solid var(--admin-react-border, #e8d8c4);
   border-radius: var(--admin-react-radius-lg, 0.75rem);
-  background:
-    linear-gradient(135deg, rgba(250, 167, 24, 0.14), transparent 42%),
-    var(--admin-react-surface, #ffffff);
-  box-shadow: var(--admin-react-shadow-soft, 0 12px 32px rgba(86, 55, 24, 0.08));
+  background: var(--admin-react-surface, #ffffff);
+  box-shadow: var(--admin-react-shadow-soft, 0 14px 36px rgba(86, 55, 24, 0.08));
 }
 
 .headingBlock {
@@ -44,18 +42,19 @@
 }
 
 .title {
-  margin: var(--admin-react-space-3, 0.75rem) 0 0;
+  margin: var(--admin-react-space-2, 0.5rem) 0 0;
   color: var(--admin-react-text, #261a13);
-  font-size: clamp(2rem, 4vw, 3.75rem);
-  line-height: 1;
+  font-size: clamp(1.65rem, 2vw, 2.25rem);
+  line-height: 1.05;
+  text-wrap: balance;
 }
 
 .subtitle {
-  max-width: 48rem;
-  margin: var(--admin-react-space-3, 0.75rem) 0 0;
+  max-width: 46rem;
+  margin: var(--admin-react-space-2, 0.5rem) 0 0;
   color: var(--admin-react-text-muted, #6a584b);
-  font-size: 1rem;
-  line-height: 1.55;
+  font-size: 0.95rem;
+  line-height: 1.5;
 }
 
 .metaRow {
@@ -63,35 +62,59 @@
   flex-wrap: wrap;
   gap: var(--admin-react-space-2, 0.5rem);
   align-items: center;
-  margin-top: var(--admin-react-space-4, 1rem);
+  margin-top: var(--admin-react-space-3, 0.75rem);
   color: var(--admin-react-text-soft, #8a7564);
   font-size: 0.875rem;
 }
 
+.metaRow span {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--admin-react-space-1, 0.25rem);
+}
+
 .stateBlock {
-  min-height: 18rem;
+  min-height: 16rem;
 }
 
 .successView {
   display: grid;
-  gap: var(--admin-react-space-5, 1.5rem);
+  gap: var(--admin-react-space-4, 1rem);
 }
 
 .metricGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--admin-react-space-4, 1rem);
+  gap: var(--admin-react-space-3, 0.75rem);
 }
 
 .metricTile {
-  min-height: 9rem;
+  display: grid;
+  min-height: 7.5rem;
+  align-content: start;
+  gap: var(--admin-react-space-2, 0.5rem);
   overflow: hidden;
+}
+
+.metricIcon,
+.businessIcon,
+.pendingIcon,
+.quickIcon {
+  display: inline-flex;
+  width: 2rem;
+  height: 2rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--admin-react-radius-md, 0.5rem);
+  color: var(--admin-react-text, #261a13);
+  background: var(--admin-react-surface-muted, #fff3e4);
 }
 
 .metricLabel {
   margin: 0;
   color: var(--admin-react-text-muted, #6a584b);
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   font-weight: 750;
   line-height: 1.25;
   text-transform: uppercase;
@@ -99,110 +122,95 @@
 
 .metricValue {
   display: block;
-  margin-top: var(--admin-react-space-3, 0.75rem);
   color: var(--admin-react-text, #261a13);
-  font-size: clamp(1.7rem, 3vw, 2.6rem);
+  font-size: 2rem;
+  font-variant-numeric: tabular-nums;
   line-height: 1;
 }
 
-.metricBar {
-  display: block;
-  width: 4rem;
-  height: 0.25rem;
-  margin-top: var(--admin-react-space-4, 1rem);
-  border-radius: 999px;
-  background: var(--admin-react-border-strong, #d8bea3);
-}
-
 .accent {
-  background: var(--admin-react-accent, #faa718);
+  background: color-mix(in srgb, var(--admin-react-accent, #faa718) 22%, white);
 }
 
 .info {
-  background: var(--admin-react-info, #60a5fa);
+  background: color-mix(in srgb, var(--admin-react-info, #60a5fa) 22%, white);
 }
 
 .warning {
-  background: var(--admin-react-warning, #fbbf24);
+  background: color-mix(in srgb, var(--admin-react-warning, #fbbf24) 28%, white);
 }
 
 .success {
-  background: var(--admin-react-success, #34d399);
+  background: color-mix(in srgb, var(--admin-react-success, #34d399) 22%, white);
 }
 
 .neutral {
-  background: var(--admin-react-text-soft, #8a7564);
+  background: var(--admin-react-surface-muted, #fff3e4);
 }
 
-.quickPanel {
-  overflow: hidden;
-}
-
-.quickGrid {
+.operationalGrid,
+.lowerGrid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: var(--admin-react-space-3, 0.75rem);
-}
-
-.quickAction {
-  display: grid;
-  gap: var(--admin-react-space-1, 0.25rem);
-  min-height: 5.25rem;
-  padding: var(--admin-react-space-4, 1rem);
-  border: 1px solid var(--admin-react-border, #e8d8c4);
-  border-radius: var(--admin-react-radius-md, 0.5rem);
-  color: var(--admin-react-text, #261a13);
-  background: var(--admin-react-surface, #ffffff);
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition:
-    border-color 160ms ease,
-    background-color 160ms ease,
-    transform 160ms ease;
-}
-
-.quickAction:hover {
-  border-color: color-mix(in srgb, var(--admin-react-accent, #faa718) 50%, transparent);
-  background: var(--admin-react-surface-hover, #fff7ec);
-  transform: translateY(-1px);
-}
-
-.quickAction:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px var(--admin-react-focus-ring, rgba(250, 167, 24, 0.42));
-}
-
-.quickAction span {
-  font-weight: 750;
-  line-height: 1.25;
-}
-
-.quickAction small {
-  color: var(--admin-react-text-soft, #8a7564);
-}
-
-.panelGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
   gap: var(--admin-react-space-4, 1rem);
 }
 
-.inlineStack {
-  display: grid;
-  gap: var(--admin-react-space-2, 0.5rem);
+.businessCard {
+  min-width: 0;
 }
 
-.mutedText,
+.businessRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--admin-react-space-3, 0.75rem);
+  align-items: start;
+}
+
+.businessText {
+  min-width: 0;
+}
+
+.businessText p,
+.contractNote,
+.pendingList p,
 .emptyText {
-  margin: 0;
+  margin: var(--admin-react-space-1, 0.25rem) 0 0;
   color: var(--admin-react-text-muted, #6a584b);
   font-size: 0.9rem;
   line-height: 1.45;
 }
 
-.checkList,
-.insightList,
+.detailList {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--admin-react-space-3, 0.75rem);
+  margin: var(--admin-react-space-4, 1rem) 0 0;
+}
+
+.detailList div {
+  min-width: 0;
+  padding: var(--admin-react-space-3, 0.75rem);
+  border: 1px solid var(--admin-react-border, #e8d8c4);
+  border-radius: var(--admin-react-radius-md, 0.5rem);
+  background: var(--admin-react-surface, #ffffff);
+}
+
+.detailList dt {
+  color: var(--admin-react-text-soft, #8a7564);
+  font-size: 0.75rem;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.detailList dd {
+  margin: var(--admin-react-space-1, 0.25rem) 0 0;
+  color: var(--admin-react-text, #261a13);
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.pendingList,
 .activityList {
   display: grid;
   gap: var(--admin-react-space-3, 0.75rem);
@@ -211,13 +219,11 @@
   list-style: none;
 }
 
-.checkList li,
-.insightList li,
-.activityList li {
-  display: flex;
+.pendingList li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   gap: var(--admin-react-space-3, 0.75rem);
   align-items: center;
-  justify-content: space-between;
   min-width: 0;
   padding: var(--admin-react-space-3, 0.75rem);
   border: 1px solid var(--admin-react-border, #e8d8c4);
@@ -225,22 +231,101 @@
   background: var(--admin-react-surface, #ffffff);
 }
 
-.checkList span,
-.insightList span,
-.activityList li {
+.pendingList strong {
+  color: var(--admin-react-text, #261a13);
+  line-height: 1.25;
+}
+
+.contractNote {
+  padding-top: var(--admin-react-space-3, 0.75rem);
+  border-top: 1px solid var(--admin-react-border, #e8d8c4);
+}
+
+.quickPanel {
   min-width: 0;
+  overflow: hidden;
+}
+
+.quickGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--admin-react-space-3, 0.75rem);
+}
+
+.quickAction {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--admin-react-space-3, 0.75rem);
+  align-items: center;
+  min-height: 4.5rem;
+  padding: var(--admin-react-space-3, 0.75rem);
+  border: 1px solid var(--admin-react-border, #e8d8c4);
+  border-radius: var(--admin-react-radius-md, 0.5rem);
+  color: var(--admin-react-text, #261a13);
+  background: var(--admin-react-surface, #ffffff);
+  text-decoration: none;
+  touch-action: manipulation;
+  transition:
+    border-color 200ms ease,
+    background-color 200ms ease,
+    box-shadow 200ms ease,
+    transform 200ms ease;
+}
+
+.quickAction:hover {
+  border-color: color-mix(in srgb, var(--admin-react-accent, #faa718) 52%, transparent);
+  background: var(--admin-react-surface-hover, #fff7ec);
+  transform: translateY(-1px);
+}
+
+.quickAction:focus,
+.quickAction:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--admin-react-focus-ring, rgba(250, 167, 24, 0.42));
+}
+
+.quickAction strong,
+.quickAction small {
+  display: block;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.quickAction strong {
+  font-size: 0.95rem;
+  line-height: 1.25;
+}
+
+.quickAction small {
+  margin-top: var(--admin-react-space-1, 0.25rem);
   color: var(--admin-react-text-muted, #6a584b);
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.activityList li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--admin-react-space-2, 0.5rem);
+  align-items: start;
+  min-width: 0;
+  padding: var(--admin-react-space-3, 0.75rem);
+  border: 1px solid var(--admin-react-border, #e8d8c4);
+  border-radius: var(--admin-react-radius-md, 0.5rem);
+  color: var(--admin-react-text-muted, #6a584b);
+  background: var(--admin-react-surface, #ffffff);
   line-height: 1.4;
 }
 
-.insightList strong {
-  color: var(--admin-react-text, #261a13);
-  font-size: 1.1rem;
+.activityList span {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 @media (max-width: 1023px) {
   .metricGrid,
-  .quickGrid {
+  .operationalGrid,
+  .lowerGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -248,23 +333,24 @@
 @media (max-width: 767px) {
   .pageHeader,
   .metricGrid,
+  .operationalGrid,
+  .lowerGrid,
   .quickGrid,
-  .panelGrid {
+  .detailList {
     grid-template-columns: 1fr;
   }
 
   .pageHeader {
-    padding: var(--admin-react-space-4, 1rem);
+    align-items: stretch;
   }
 
-  .title {
-    font-size: 2.25rem;
+  .pendingList li {
+    grid-template-columns: auto minmax(0, 1fr);
   }
 
-  .checkList li,
-  .insightList li,
-  .activityList li {
-    align-items: flex-start;
+  .pendingList li > :last-child {
+    grid-column: 2;
+    justify-self: start;
   }
 }
 
