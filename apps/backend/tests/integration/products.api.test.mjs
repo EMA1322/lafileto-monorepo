@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 
 process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-secret';
@@ -8,9 +9,12 @@ const { productRepository } = await import('../../src/repositories/productReposi
 const { categoryRepository } = await import('../../src/repositories/categoryRepository.js');
 const { offerRepository } = await import('../../src/repositories/offerRepository.js');
 const { productsController } = await import('../../src/controllers/productsController.js');
+const { publicCatalogService } = await import('../../src/services/publicCatalogService.js');
 const { offersController } = await import('../../src/controllers/offersController.js');
 const { validator } = await import('../../src/middlewares/validator.js');
-const { productCreateSchema, productUpdateSchema } = await import('../../src/validators/productValidators.js');
+const { productCreateSchema, productUpdateSchema } = await import(
+  '../../src/validators/productValidators.js'
+);
 const { ApiError } = await import('../../src/utils/errors.js');
 
 const originalProductRepository = { ...productRepository };
@@ -19,7 +23,7 @@ const originalOfferRepository = { ...offerRepository };
 
 const categoriesFixture = new Map([
   ['cat-001', { id: 'cat-001', name: 'Principales' }],
-  ['cat-002', { id: 'cat-002', name: 'Pizzas' }]
+  ['cat-002', { id: 'cat-002', name: 'Pizzas' }],
 ]);
 
 const initialProducts = [
@@ -33,7 +37,7 @@ const initialProducts = [
     status: 'ACTIVE',
     categoryId: 'cat-001',
     createdAt: new Date('2024-01-01T10:00:00.000Z'),
-    updatedAt: new Date('2024-01-01T10:00:00.000Z')
+    updatedAt: new Date('2024-01-01T10:00:00.000Z'),
   },
   {
     id: 'prod-002',
@@ -45,7 +49,7 @@ const initialProducts = [
     status: 'ACTIVE',
     categoryId: 'cat-001',
     createdAt: new Date('2024-01-05T10:00:00.000Z'),
-    updatedAt: new Date('2024-01-05T10:00:00.000Z')
+    updatedAt: new Date('2024-01-05T10:00:00.000Z'),
   },
   {
     id: 'prod-003',
@@ -57,7 +61,7 @@ const initialProducts = [
     status: 'DRAFT',
     categoryId: 'cat-001',
     createdAt: new Date('2024-02-01T10:00:00.000Z'),
-    updatedAt: new Date('2024-02-01T10:00:00.000Z')
+    updatedAt: new Date('2024-02-01T10:00:00.000Z'),
   },
   {
     id: 'prod-004',
@@ -69,7 +73,7 @@ const initialProducts = [
     status: 'ARCHIVED',
     categoryId: 'cat-002',
     createdAt: new Date('2024-02-15T10:00:00.000Z'),
-    updatedAt: new Date('2024-02-15T10:00:00.000Z')
+    updatedAt: new Date('2024-02-15T10:00:00.000Z'),
   },
   {
     id: 'prod-005',
@@ -81,7 +85,7 @@ const initialProducts = [
     status: 'ACTIVE',
     categoryId: 'cat-001',
     createdAt: new Date('2024-03-01T10:00:00.000Z'),
-    updatedAt: new Date('2024-03-01T10:00:00.000Z')
+    updatedAt: new Date('2024-03-01T10:00:00.000Z'),
   },
   {
     id: 'prod-006',
@@ -93,7 +97,7 @@ const initialProducts = [
     status: 'ACTIVE',
     categoryId: 'cat-002',
     createdAt: new Date('2024-03-10T10:00:00.000Z'),
-    updatedAt: new Date('2024-03-10T10:00:00.000Z')
+    updatedAt: new Date('2024-03-10T10:00:00.000Z'),
   },
   {
     id: 'prod-007',
@@ -105,8 +109,8 @@ const initialProducts = [
     status: 'ACTIVE',
     categoryId: 'cat-002',
     createdAt: new Date('2024-03-15T10:00:00.000Z'),
-    updatedAt: new Date('2024-03-15T10:00:00.000Z')
-  }
+    updatedAt: new Date('2024-03-15T10:00:00.000Z'),
+  },
 ];
 
 let products = [];
@@ -115,28 +119,28 @@ const initialOffers = [
   {
     id: 'offer-001',
     productId: 'prod-001',
-    discountPct: 10
+    discountPct: 10,
   },
   {
     id: 'offer-002',
     productId: 'prod-002',
-    discountPct: 20
+    discountPct: 20,
   },
   {
     id: 'offer-003',
     productId: 'prod-003',
-    discountPct: 15
+    discountPct: 15,
   },
   {
     id: 'offer-004',
     productId: 'prod-004',
-    discountPct: 5
+    discountPct: 5,
   },
   {
     id: 'offer-005',
     productId: 'prod-005',
-    discountPct: 30
-  }
+    discountPct: 30,
+  },
 ];
 
 let offers = new Map();
@@ -145,7 +149,7 @@ function cloneProduct(product) {
   return {
     ...product,
     createdAt: new Date(product.createdAt),
-    updatedAt: new Date(product.updatedAt)
+    updatedAt: new Date(product.updatedAt),
   };
 }
 
@@ -153,7 +157,7 @@ function resetProducts() {
   products = initialProducts.map((item) => ({
     ...item,
     createdAt: new Date(item.createdAt),
-    updatedAt: new Date(item.updatedAt)
+    updatedAt: new Date(item.updatedAt),
   }));
 }
 
@@ -161,7 +165,7 @@ function cloneOffer(offer) {
   return {
     ...offer,
     createdAt: offer.createdAt ? new Date(offer.createdAt) : undefined,
-    updatedAt: offer.updatedAt ? new Date(offer.updatedAt) : undefined
+    updatedAt: offer.updatedAt ? new Date(offer.updatedAt) : undefined,
   };
 }
 
@@ -210,7 +214,7 @@ productRepository.list = async function list({
   orderBy = 'name',
   orderDirection = 'asc',
   all = false,
-  hasOffer
+  hasOffer,
 } = {}) {
   const normalizedPage = Number.isInteger(page) && page > 0 ? page : 1;
   const normalizedPageSize = Number.isInteger(pageSize) && pageSize > 0 ? pageSize : 10;
@@ -221,7 +225,11 @@ productRepository.list = async function list({
     const needle = q.trim().toLowerCase();
     filtered = filtered.filter((item) => {
       const fields = [item.name, item.description];
-      return fields.some((value) => String(value ?? '').toLowerCase().includes(needle));
+      return fields.some((value) =>
+        String(value ?? '')
+          .toLowerCase()
+          .includes(needle),
+      );
     });
   }
 
@@ -281,7 +289,7 @@ productRepository.create = async (data) => {
     status: data.status,
     categoryId: data.categoryId,
     createdAt: now,
-    updatedAt: now
+    updatedAt: now,
   };
   products.push(created);
   return cloneProduct(created);
@@ -299,7 +307,7 @@ productRepository.update = async (id, data) => {
     imageUrl: data.imageUrl !== undefined ? data.imageUrl : current.imageUrl,
     price: data.price !== undefined ? Number.parseFloat(data.price) : current.price,
     stock: data.stock !== undefined ? Number(data.stock) : current.stock,
-    updatedAt: new Date()
+    updatedAt: new Date(),
   };
   products[idx] = next;
   return cloneProduct(next);
@@ -313,7 +321,7 @@ productRepository.updateStatus = async (id, status) => {
   products[idx] = {
     ...products[idx],
     status,
-    updatedAt: new Date()
+    updatedAt: new Date(),
   };
   return cloneProduct(products[idx]);
 };
@@ -392,7 +400,7 @@ offerRepository.list = async ({
   orderDirection = 'asc',
   all = false,
   now,
-  activeOnly = false
+  activeOnly = false,
 } = {}) => {
   const entries = [];
 
@@ -406,7 +414,13 @@ offerRepository.list = async ({
     if (typeof q === 'string' && q.trim().length > 0) {
       const needle = q.trim().toLowerCase();
       const fields = [product.name, product.description];
-      if (!fields.some((value) => String(value ?? '').toLowerCase().includes(needle))) {
+      if (
+        !fields.some((value) =>
+          String(value ?? '')
+            .toLowerCase()
+            .includes(needle),
+        )
+      ) {
         return false;
       }
     }
@@ -443,7 +457,7 @@ offerRepository.list = async ({
   if (all) {
     const items = sorted.map(({ offer, product }) => ({
       ...cloneOffer(offer),
-      product: cloneProduct(product)
+      product: cloneProduct(product),
     }));
     return { items, total: items.length };
   }
@@ -453,7 +467,7 @@ offerRepository.list = async ({
   const start = (normalizedPage - 1) * normalizedPageSize;
   const items = sorted.slice(start, start + normalizedPageSize).map(({ offer, product }) => ({
     ...cloneOffer(offer),
-    product: cloneProduct(product)
+    product: cloneProduct(product),
   }));
 
   return { items, total: sorted.length };
@@ -472,7 +486,7 @@ offerRepository.create = async (data) => {
     productId: data.productId,
     discountPct: data.discountPct,
     createdAt: now,
-    updatedAt: now
+    updatedAt: now,
   };
   offers.set(created.id, created);
   const product = products.find((item) => item.id === created.productId);
@@ -490,7 +504,7 @@ offerRepository.update = async (id, data) => {
     ...existing,
     ...data,
     discountPct: data.discountPct === undefined ? existing.discountPct : data.discountPct,
-    updatedAt: new Date()
+    updatedAt: new Date(),
   };
   offers.set(id, updated);
   const product = products.find((item) => item.id === updated.productId);
@@ -530,8 +544,22 @@ function createResponse() {
     json(payload) {
       this.body = payload;
       return this;
-    }
+    },
   };
+}
+
+async function assertValidationError(run, expectedField) {
+  let error = null;
+  await run((err) => {
+    error = err;
+  });
+
+  assert.ok(error instanceof ApiError);
+  assert.equal(error.code, 'VALIDATION_ERROR');
+  assert.ok(
+    error.details?.fields?.some((field) => field.path === expectedField),
+    `Expected validation field ${expectedField}`,
+  );
 }
 
 async function runValidator(schema, where, payload) {
@@ -545,21 +573,25 @@ async function runValidator(schema, where, payload) {
 }
 
 test('POST /products crea un producto nuevo', async () => {
-  const { err: validationError, req: validatedReq } = await runValidator(productCreateSchema, 'body', {
-    name: 'Ravioles de espinaca',
-    description: 'Con salsa rosa',
-    imageUrl: 'https://cdn.test/products/ravioles.png',
-    price: 1850.5,
-    stock: 30,
-    status: 'active',
-    categoryId: 'cat-001'
-  });
+  const { err: validationError, req: validatedReq } = await runValidator(
+    productCreateSchema,
+    'body',
+    {
+      name: 'Ravioles de espinaca',
+      description: 'Con salsa rosa',
+      imageUrl: 'https://cdn.test/products/ravioles.png',
+      price: 1850.5,
+      stock: 30,
+      status: 'active',
+      categoryId: 'cat-001',
+    },
+  );
   assert.equal(validationError, undefined);
 
   const req = {
     validated: {
-      body: validatedReq.validated.body
-    }
+      body: validatedReq.validated.body,
+    },
   };
   const res = createResponse();
   let error = null;
@@ -574,8 +606,68 @@ test('POST /products crea un producto nuevo', async () => {
   assert.equal(res.body?.data?.price, 1850.5);
   assert.equal(res.body?.data?.status, 'active');
   assert.equal(res.body?.data?.imageUrl, 'https://cdn.test/products/ravioles.png');
-  assert.equal(res.body?.data?.offer, null);
+  assert.equal(Object.hasOwn(res.body?.data ?? {}, 'offer'), false);
   assert.equal(products.length, initialProducts.length + 1);
+});
+
+test('POST /products rechaza ACTIVE con price 0', async () => {
+  const req = {
+    validated: {
+      body: {
+        name: 'Producto sin precio',
+        price: 0,
+        stock: 10,
+        status: 'active',
+        categoryId: 'cat-001',
+      },
+    },
+  };
+  const res = createResponse();
+
+  await assertValidationError((next) => productsController.create(req, res, next), 'price');
+});
+
+test('POST /products rechaza ACTIVE con stock 0', async () => {
+  const req = {
+    validated: {
+      body: {
+        name: 'Producto sin stock',
+        price: 1200,
+        stock: 0,
+        status: 'active',
+        categoryId: 'cat-001',
+      },
+    },
+  };
+  const res = createResponse();
+
+  await assertValidationError((next) => productsController.create(req, res, next), 'stock');
+});
+
+test('POST /products permite DRAFT con price y stock 0', async () => {
+  const req = {
+    validated: {
+      body: {
+        name: 'Producto pendiente',
+        price: 0,
+        stock: 0,
+        status: 'draft',
+        categoryId: 'cat-001',
+      },
+    },
+  };
+  const res = createResponse();
+  let error = null;
+
+  await productsController.create(req, res, (err) => {
+    error = err;
+  });
+
+  assert.equal(error, null);
+  assert.equal(res.statusCode, 201);
+  assert.equal(res.body?.data?.status, 'draft');
+  assert.equal(res.body?.data?.price, 0);
+  assert.equal(res.body?.data?.stock, 0);
 });
 
 test('productCreateSchema rechaza imageUrl sin protocolo http/https', async () => {
@@ -585,7 +677,7 @@ test('productCreateSchema rechaza imageUrl sin protocolo http/https', async () =
     stock: 5,
     status: 'active',
     categoryId: 'cat-001',
-    imageUrl: 'ftp://cdn.test/products/prod-invalid.png'
+    imageUrl: 'ftp://cdn.test/products/prod-invalid.png',
   });
 
   assert.ok(err instanceof ApiError);
@@ -630,9 +722,9 @@ test('PUT /products/:id actualiza datos principales', async () => {
         name: 'Pollo a la Parrilla Especial',
         price: 2250.75,
         stock: 18,
-        imageUrl: 'https://cdn.test/products/prod-002-updated.png'
-      }
-    }
+        imageUrl: 'https://cdn.test/products/prod-002-updated.png',
+      },
+    },
   };
   const res = createResponse();
   let error = null;
@@ -649,6 +741,55 @@ test('PUT /products/:id actualiza datos principales', async () => {
   assert.equal(res.body?.data?.imageUrl, 'https://cdn.test/products/prod-002-updated.png');
 });
 
+test('PATCH /products/:id/status rechaza activar DRAFT sin precio publicable', async () => {
+  products.push({
+    id: 'prod-invalid-price',
+    name: 'Borrador sin precio',
+    description: null,
+    imageUrl: null,
+    price: 0,
+    stock: 8,
+    status: 'DRAFT',
+    categoryId: 'cat-001',
+    createdAt: new Date('2024-04-01T10:00:00.000Z'),
+    updatedAt: new Date('2024-04-01T10:00:00.000Z'),
+  });
+
+  const req = {
+    validated: {
+      params: { id: 'prod-invalid-price' },
+      body: { status: 'active' },
+    },
+  };
+  const res = createResponse();
+
+  await assertValidationError((next) => productsController.changeStatus(req, res, next), 'price');
+});
+
+test('PUT /products/:id rechaza dejar ACTIVE con price 0', async () => {
+  const req = {
+    validated: {
+      params: { id: 'prod-001' },
+      body: { price: 0 },
+    },
+  };
+  const res = createResponse();
+
+  await assertValidationError((next) => productsController.update(req, res, next), 'price');
+});
+
+test('PUT /products/:id rechaza dejar ACTIVE con stock 0', async () => {
+  const req = {
+    validated: {
+      params: { id: 'prod-001' },
+      body: { stock: 0 },
+    },
+  };
+  const res = createResponse();
+
+  await assertValidationError((next) => productsController.update(req, res, next), 'stock');
+});
+
 test('DELETE /products/:id elimina el producto', async () => {
   const req = { validated: { params: { id: 'prod-004' } } };
   const res = createResponse();
@@ -662,7 +803,10 @@ test('DELETE /products/:id elimina el producto', async () => {
   assert.equal(res.statusCode, 200);
   assert.equal(res.body?.ok, true);
   assert.equal(res.body?.data?.deleted, true);
-  assert.equal(products.find((item) => item.id === 'prod-004'), undefined);
+  assert.equal(
+    products.find((item) => item.id === 'prod-004'),
+    undefined,
+  );
 });
 
 test('GET /products con filtros combinados retorna meta coherente', async () => {
@@ -679,9 +823,9 @@ test('GET /products con filtros combinados retorna meta coherente', async () => 
         orderBy: 'price',
         orderDir: 'desc',
         orderDirection: undefined,
-        all: false
-      }
-    }
+        all: false,
+      },
+    },
   };
   const res = createResponse();
   let error = null;
@@ -699,7 +843,7 @@ test('GET /products con filtros combinados retorna meta coherente', async () => 
     page: 1,
     pageSize: 1,
     total: 2,
-    pageCount: 2
+    pageCount: 2,
   });
 });
 
@@ -717,9 +861,9 @@ test('GET /products?status=inactive incluye draft y archived', async () => {
         orderBy: 'name',
         orderDir: 'asc',
         orderDirection: undefined,
-        all: false
-      }
-    }
+        all: false,
+      },
+    },
   };
   const res = createResponse();
   let error = null;
@@ -736,6 +880,34 @@ test('GET /products?status=inactive incluye draft y archived', async () => {
   assert.deepEqual(statuses, ['archived', 'draft']);
 });
 
+test('publicCatalogService.listProducts incluye solo productos ACTIVE', async () => {
+  const items = await publicCatalogService.listProducts();
+
+  const ids = items.map((item) => item.id);
+  assert.ok(ids.includes('prod-001'));
+  assert.ok(ids.includes('prod-002'));
+  assert.ok(!ids.includes('prod-003'));
+  assert.ok(!ids.includes('prod-004'));
+});
+
+test('migración degrada ACTIVE inválidos a DRAFT sin tocar schema', async () => {
+  const sql = await readFile(
+    new URL(
+      '../../prisma/migrations/20260624090000_enforce_product_publication_contract/migration.sql',
+      import.meta.url,
+    ),
+    'utf8',
+  );
+
+  assert.match(sql, /UPDATE\s+`Product`/i);
+  assert.match(sql, /SET\s+`status`\s*=\s*'DRAFT'/i);
+  assert.match(sql, /WHERE\s+`status`\s*=\s*'ACTIVE'/i);
+  assert.match(sql, /`price`\s*<=\s*0/i);
+  assert.match(sql, /`stock`\s*<=\s*0/i);
+  assert.doesNotMatch(sql, /\bALTER\s+TABLE\b/i);
+  assert.doesNotMatch(sql, /\bDELETE\s+FROM\b/i);
+  assert.doesNotMatch(sql, /\bDROP\b/i);
+});
 
 test('GET /products?hasOffer=true incluye solo productos con offer', async () => {
   const req = {
@@ -752,9 +924,9 @@ test('GET /products?hasOffer=true incluye solo productos con offer', async () =>
         orderDir: 'asc',
         orderDirection: undefined,
         all: false,
-        hasOffer: true
-      }
-    }
+        hasOffer: true,
+      },
+    },
   };
   const res = createResponse();
   let error = null;
@@ -786,9 +958,9 @@ test('GET /products?hasOffer=false incluye solo productos sin offer y combina st
         orderDir: 'asc',
         orderDirection: undefined,
         all: false,
-        hasOffer: false
-      }
-    }
+        hasOffer: false,
+      },
+    },
   };
   const res = createResponse();
   let error = null;
@@ -820,9 +992,9 @@ test('GET /products?q=pollo es case-insensitive', async () => {
         orderBy: 'name',
         orderDir: 'asc',
         orderDirection: undefined,
-        all: false
-      }
-    }
+        all: false,
+      },
+    },
   };
   const res = createResponse();
   let error = null;
@@ -852,9 +1024,9 @@ test('GET /products?q=coc encuentra Coca Cola (case-insensitive)', async () => {
         orderBy: 'name',
         orderDir: 'asc',
         orderDirection: undefined,
-        all: false
-      }
-    }
+        all: false,
+      },
+    },
   };
   const res = createResponse();
   let error = null;
@@ -884,9 +1056,9 @@ test('GET /products?all=1 retorna todos con meta normalizada', async () => {
         orderBy: 'updatedAt',
         orderDir: 'asc',
         orderDirection: undefined,
-        all: true
-      }
-    }
+        all: true,
+      },
+    },
   };
   const res = createResponse();
   let error = null;
@@ -903,7 +1075,7 @@ test('GET /products?all=1 retorna todos con meta normalizada', async () => {
     page: 1,
     pageSize: 50,
     total: products.length,
-    pageCount: 1
+    pageCount: 1,
   });
 });
 
@@ -921,9 +1093,9 @@ test('GET /products incluye resumen de oferta con finalPrice', async () => {
         orderBy: 'name',
         orderDir: 'asc',
         orderDirection: undefined,
-        all: false
-      }
-    }
+        all: false,
+      },
+    },
   };
   const res = createResponse();
   let error = null;
@@ -978,9 +1150,9 @@ test('GET /offers devuelve ofertas con nombres normalizados', async () => {
         orderDir: 'asc',
         orderDirection: undefined,
         all: false,
-        activeOnly: true
-      }
-    }
+        activeOnly: true,
+      },
+    },
   };
   const res = createResponse();
   let error = null;
@@ -1015,9 +1187,9 @@ test('POST /offers crea oferta y se refleja en productos', async () => {
     validated: {
       body: {
         productId: 'prod-006',
-        discountPercent: 25
-      }
-    }
+        discountPercent: 25,
+      },
+    },
   };
   const res = createResponse();
   let error = null;
@@ -1033,7 +1205,11 @@ test('POST /offers crea oferta y se refleja en productos', async () => {
   assert.equal(res.body?.data?.productId, 'prod-006');
 
   const productRes = createResponse();
-  await productsController.show({ validated: { params: { id: 'prod-006' } } }, productRes, () => {});
+  await productsController.show(
+    { validated: { params: { id: 'prod-006' } } },
+    productRes,
+    () => {},
+  );
 
   assert.equal(productRes.statusCode, 200);
   assert.equal(productRes.body?.data?.offer?.discountPercent, 25);
@@ -1045,9 +1221,9 @@ test('POST /offers valida rango de descuento (inferior)', async () => {
     validated: {
       body: {
         productId: 'prod-006',
-        discountPercent: 0
-      }
-    }
+        discountPercent: 0,
+      },
+    },
   };
   const res = createResponse();
   let error = null;
@@ -1063,11 +1239,11 @@ test('POST /offers valida rango de descuento (inferior)', async () => {
 test('PUT /offers/:id actualiza porcentaje', async () => {
   const req = {
     validated: {
-      params: { id: 'offer-003' },
+      params: { id: 'offer-001' },
       body: {
-        discountPercent: 40
-      }
-    }
+        discountPercent: 40,
+      },
+    },
   };
   const res = createResponse();
   let error = null;
@@ -1082,10 +1258,14 @@ test('PUT /offers/:id actualiza porcentaje', async () => {
   assert.equal(res.body?.data?.isActive, true);
 
   const productRes = createResponse();
-  await productsController.show({ validated: { params: { id: 'prod-003' } } }, productRes, () => {});
+  await productsController.show(
+    { validated: { params: { id: 'prod-001' } } },
+    productRes,
+    () => {},
+  );
 
   assert.equal(productRes.body?.data?.offer?.discountPercent, 40);
-  assert.equal(productRes.body?.data?.offer?.finalPrice, 1140);
+  assert.equal(productRes.body?.data?.offer?.finalPrice, 1500);
 });
 
 test('PUT /offers/:id valida rango de descuento (superior)', async () => {
@@ -1093,9 +1273,9 @@ test('PUT /offers/:id valida rango de descuento (superior)', async () => {
     validated: {
       params: { id: 'offer-003' },
       body: {
-        discountPercent: 101
-      }
-    }
+        discountPercent: 101,
+      },
+    },
   };
   const res = createResponse();
   let error = null;
@@ -1122,7 +1302,11 @@ test('DELETE /offers/:id elimina la oferta y la oculta en productos', async () =
   assert.equal(res.body?.ok, true);
 
   const productRes = createResponse();
-  await productsController.show({ validated: { params: { id: 'prod-001' } } }, productRes, () => {});
+  await productsController.show(
+    { validated: { params: { id: 'prod-001' } } },
+    productRes,
+    () => {},
+  );
 
   assert.equal(productRes.body?.data?.offer, null);
 });

@@ -15,7 +15,7 @@ const DEFAULT_ORDER_BY = 'name';
 const STATUS_INPUT_MAP = new Map([
   ['draft', 'DRAFT'],
   ['active', 'ACTIVE'],
-  ['archived', 'ARCHIVED']
+  ['archived', 'ARCHIVED'],
 ]);
 
 const ALLOWED_STATUS_FILTERS = new Set(['all', 'draft', 'active', 'archived', 'inactive']);
@@ -92,7 +92,7 @@ export function sanitizeProduct(row) {
     status,
     categoryId: row.categoryId,
     createdAt: row.createdAt,
-    updatedAt: row.updatedAt
+    updatedAt: row.updatedAt,
   };
 }
 
@@ -102,7 +102,7 @@ async function attachActiveOfferSummaries(products, { now } = {}) {
   if (list.length === 0) {
     return list.map((product) => ({
       ...product,
-      offer: null
+      offer: null,
     }));
   }
 
@@ -116,14 +116,14 @@ async function attachActiveOfferSummaries(products, { now } = {}) {
       const summary = buildOfferSummary(
         {
           ...offer,
-          productStatus: product.status
+          productStatus: product.status,
         },
         product.price,
-        { now: reference }
+        { now: reference },
       );
       const isActive = isOfferActive({ ...offer, productStatus: product.status }, reference);
       return isActive && summary ? { ...summary, isActive } : null;
-    })()
+    })(),
   }));
 }
 
@@ -131,7 +131,7 @@ async function ensureCategoryExists(categoryId) {
   const category = await categoryRepository.findById(categoryId);
   if (!category) {
     throw createError('VALIDATION_ERROR', 'La categoría indicada no existe.', {
-      fields: [{ path: 'categoryId', message: 'Seleccioná una categoría válida.' }]
+      fields: [{ path: 'categoryId', message: 'Seleccioná una categoría válida.' }],
     });
   }
 }
@@ -141,6 +141,39 @@ function toPriceInput(value) {
   const num = Number(value);
   if (!Number.isFinite(num)) return undefined;
   return num.toFixed(2);
+}
+
+function toComparableNumber(value) {
+  if (typeof value === 'number') return value;
+  if (value && typeof value.toNumber === 'function') return value.toNumber();
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function ensurePublishableProduct({ status, price, stock }) {
+  if (status !== 'ACTIVE') return;
+
+  const fields = [];
+  if (toComparableNumber(price) <= 0) {
+    fields.push({
+      path: 'price',
+      message: 'Para publicar el producto, el precio debe ser mayor a 0.',
+    });
+  }
+  if (Number(stock) <= 0) {
+    fields.push({
+      path: 'stock',
+      message: 'Para publicar el producto, el stock debe ser mayor a 0.',
+    });
+  }
+
+  if (fields.length > 0) {
+    throw createError(
+      'VALIDATION_ERROR',
+      'El producto no se puede publicar: requiere precio mayor a 0 y stock mayor a 0.',
+      { fields },
+    );
+  }
 }
 
 export const productService = {
@@ -156,7 +189,7 @@ export const productService = {
     orderDir,
     orderDirection,
     all,
-    hasOffer
+    hasOffer,
   } = {}) {
     const normalizedSearch = typeof q === 'string' ? q.trim() : '';
     const normalizedStatus = normalizeStatusFilter(status);
@@ -168,7 +201,7 @@ export const productService = {
     const normalizedPageSize = normalizePageSize(pageSize, {
       defaultValue: DEFAULT_PAGE_SIZE,
       min: MIN_PAGE_SIZE,
-      max: MAX_PAGE_SIZE
+      max: MAX_PAGE_SIZE,
     });
 
     const min = Number(priceMin);
@@ -180,7 +213,7 @@ export const productService = {
       categoryId: normalizedCategoryId.length > 0 ? normalizedCategoryId : undefined,
       priceMin: Number.isFinite(min) ? min : undefined,
       priceMax: Number.isFinite(max) ? max : undefined,
-      hasOffer: typeof hasOffer === 'boolean' ? hasOffer : undefined
+      hasOffer: typeof hasOffer === 'boolean' ? hasOffer : undefined,
     };
 
     const referenceNow = new Date();
@@ -192,7 +225,7 @@ export const productService = {
         ...filters,
         orderBy: orderField,
         orderDirection: direction,
-        all: true
+        all: true,
       });
       const sanitized = items.map(sanitizeProduct);
       const enriched = await attachActiveOfferSummaries(sanitized, { now: referenceNow });
@@ -204,8 +237,8 @@ export const productService = {
           page: 1,
           pageSize: normalizedPageSize,
           total: effectiveTotal,
-          pageCount
-        }
+          pageCount,
+        },
       };
     }
 
@@ -215,7 +248,7 @@ export const productService = {
       ...filters,
       orderBy: orderField,
       orderDirection: direction,
-      all: false
+      all: false,
     });
 
     const safeTotal = Number.isFinite(total) ? total : items.length;
@@ -230,8 +263,8 @@ export const productService = {
         page: normalizedPage,
         pageSize: normalizedPageSize,
         total: safeTotal,
-        pageCount
-      }
+        pageCount,
+      },
     };
   },
 
@@ -248,18 +281,22 @@ export const productService = {
 
     const sanitized = sanitizeProduct(product);
     const referenceNow = new Date();
-    const activeOffer = await offerRepository.findActiveByProductId(productId, { now: referenceNow });
+    const activeOffer = await offerRepository.findActiveByProductId(productId, {
+      now: referenceNow,
+    });
     return {
       ...sanitized,
       offer: (() => {
         const offerForState = {
           ...activeOffer,
-          productStatus: sanitized?.status
+          productStatus: sanitized?.status,
         };
-        const summary = buildOfferSummary(offerForState, sanitized?.price ?? 0, { now: referenceNow });
+        const summary = buildOfferSummary(offerForState, sanitized?.price ?? 0, {
+          now: referenceNow,
+        });
         const isActive = isOfferActive(offerForState, referenceNow);
         return isActive && summary ? { ...summary, isActive } : null;
-      })()
+      })(),
     };
   },
 
@@ -277,18 +314,19 @@ export const productService = {
         fields: [
           ...(name ? [] : [{ path: 'name', message: 'El nombre es obligatorio.' }]),
           ...(price !== undefined ? [] : [{ path: 'price', message: 'El precio es obligatorio.' }]),
-          ...(categoryId ? [] : [{ path: 'categoryId', message: 'La categoría es obligatoria.' }])
-        ]
+          ...(categoryId ? [] : [{ path: 'categoryId', message: 'La categoría es obligatoria.' }]),
+        ],
       });
     }
 
     if (!Number.isInteger(stock) || stock < 0) {
       throw createError('VALIDATION_ERROR', 'El stock es inválido.', {
-        fields: [{ path: 'stock', message: 'El stock debe ser un entero mayor o igual a 0.' }]
+        fields: [{ path: 'stock', message: 'El stock debe ser un entero mayor o igual a 0.' }],
       });
     }
 
     await ensureCategoryExists(categoryId);
+    ensurePublishableProduct({ status: statusInput, price, stock });
 
     const created = await productRepository.create({
       name,
@@ -297,7 +335,7 @@ export const productService = {
       price,
       stock,
       status: statusInput,
-      categoryId
+      categoryId,
     });
     return sanitizeProduct(created);
   },
@@ -319,7 +357,7 @@ export const productService = {
       const name = typeof payload.name === 'string' ? payload.name.trim() : '';
       if (!name) {
         throw createError('VALIDATION_ERROR', 'El nombre es obligatorio.', {
-          fields: [{ path: 'name', message: 'El nombre es obligatorio.' }]
+          fields: [{ path: 'name', message: 'El nombre es obligatorio.' }],
         });
       }
       data.name = name;
@@ -337,7 +375,7 @@ export const productService = {
       const price = toPriceInput(payload.price);
       if (price === undefined) {
         throw createError('VALIDATION_ERROR', 'El precio es inválido.', {
-          fields: [{ path: 'price', message: 'El precio debe ser numérico.' }]
+          fields: [{ path: 'price', message: 'El precio debe ser numérico.' }],
         });
       }
       data.price = price;
@@ -347,7 +385,7 @@ export const productService = {
       const stock = Number(payload.stock);
       if (!Number.isInteger(stock) || stock < 0) {
         throw createError('VALIDATION_ERROR', 'El stock es inválido.', {
-          fields: [{ path: 'stock', message: 'El stock debe ser un entero mayor o igual a 0.' }]
+          fields: [{ path: 'stock', message: 'El stock debe ser un entero mayor o igual a 0.' }],
         });
       }
       data.stock = stock;
@@ -357,7 +395,7 @@ export const productService = {
       const statusInput = normalizeStatusInput(payload.status, { required: true });
       if (!statusInput) {
         throw createError('VALIDATION_ERROR', 'El estado es inválido.', {
-          fields: [{ path: 'status', message: 'Estado inválido.' }]
+          fields: [{ path: 'status', message: 'Estado inválido.' }],
         });
       }
       data.status = statusInput;
@@ -367,7 +405,7 @@ export const productService = {
       const categoryId = typeof payload.categoryId === 'string' ? payload.categoryId.trim() : '';
       if (!categoryId) {
         throw createError('VALIDATION_ERROR', 'La categoría es obligatoria.', {
-          fields: [{ path: 'categoryId', message: 'Seleccioná una categoría válida.' }]
+          fields: [{ path: 'categoryId', message: 'Seleccioná una categoría válida.' }],
         });
       }
       await ensureCategoryExists(categoryId);
@@ -377,6 +415,12 @@ export const productService = {
     if (Object.keys(data).length === 0) {
       return sanitizeProduct(existing);
     }
+
+    ensurePublishableProduct({
+      status: data.status ?? existing.status,
+      price: data.price ?? existing.price,
+      stock: data.stock ?? existing.stock,
+    });
 
     const updated = await productRepository.update(productId, data);
     return sanitizeProduct(updated);
@@ -396,13 +440,19 @@ export const productService = {
     const statusInput = normalizeStatusInput(status, { required: true });
     if (!statusInput) {
       throw createError('VALIDATION_ERROR', 'El estado es inválido.', {
-        fields: [{ path: 'status', message: 'Estado inválido.' }]
+        fields: [{ path: 'status', message: 'Estado inválido.' }],
       });
     }
 
     if (statusInput === existing.status) {
       return sanitizeProduct(existing);
     }
+
+    ensurePublishableProduct({
+      status: statusInput,
+      price: existing.price,
+      stock: existing.stock,
+    });
 
     const updated = await productRepository.updateStatus(productId, statusInput);
     return sanitizeProduct(updated);
@@ -421,5 +471,5 @@ export const productService = {
 
     await productRepository.deleteById(productId);
     return { id: productId, deleted: true };
-  }
+  },
 };
