@@ -3,16 +3,16 @@
   justify-items: center;
   gap: var(--admin-react-space-2, 0.5rem);
   padding: var(--admin-react-space-5, 1.5rem);
-  border: 1px solid var(--admin-react-border, rgba(255, 255, 255, 0.1));
+  border: 1px solid var(--admin-react-border, #e8d8c4);
   border-radius: var(--admin-react-radius-lg, 0.75rem);
-  color: var(--admin-react-text-muted, #b7c0cf);
-  background: var(--admin-react-surface, #11151d);
+  color: var(--admin-react-text-muted, #6a584b);
+  background: var(--admin-react-surface, #ffffff);
   text-align: center;
 }
 
 .title {
   margin: 0;
-  color: var(--admin-react-text, #f8fafc);
+  color: var(--admin-react-text, #261a13);
   font-size: 1rem;
   line-height: 1.25;
 }
@@ -20,7 +20,7 @@
 .description {
   max-width: 34rem;
   margin: 0;
-  color: var(--admin-react-text-muted, #b7c0cf);
+  color: var(--admin-react-text-muted, #6a584b);
   font-size: 0.875rem;
   line-height: 1.5;
 }
@@ -42,7 +42,7 @@
   background: color-mix(
     in srgb,
     var(--admin-react-danger, #f87171) 10%,
-    var(--admin-react-surface, #11151d)
+    var(--admin-react-surface, #ffffff)
   );
 }
 
@@ -51,7 +51,7 @@
   background: color-mix(
     in srgb,
     var(--admin-react-success, #34d399) 10%,
-    var(--admin-react-surface, #11151d)
+    var(--admin-react-surface, #ffffff)
   );
 }
 

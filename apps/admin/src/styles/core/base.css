@@ -32,6 +32,10 @@
     background: var(--c-bg);
   }
 
+  :root {
+    color-scheme: light;
+  }
+
   a {
     color: var(--c-link);
     text-decoration: none;
@@ -39,7 +43,7 @@
   a:hover { text-decoration: underline; }
 
   h1, h2, h3, h4, h5, h6 {
-    font-weight: var(--fw-semibold);
+    font-weight: var(--fw-bold);
     color: var(--c-text);
     line-height: var(--lh-tight);
     margin-bottom: var(--space-3);

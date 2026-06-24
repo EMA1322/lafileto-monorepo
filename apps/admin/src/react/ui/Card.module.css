@@ -1,17 +1,17 @@
 .card {
-  border: 1px solid var(--admin-react-border, rgba(255, 255, 255, 0.1));
+  border: 1px solid var(--admin-react-border, #e8d8c4);
   border-radius: var(--admin-react-radius-lg, 0.75rem);
-  color: var(--admin-react-text, #f8fafc);
-  background: var(--admin-react-surface, #11151d);
+  color: var(--admin-react-text, #261a13);
+  background: var(--admin-react-surface, #ffffff);
 }
 
 .elevated {
-  background: var(--admin-react-surface-elevated, #171c26);
-  box-shadow: var(--admin-react-shadow-soft, 0 18px 50px rgba(0, 0, 0, 0.28));
+  background: var(--admin-react-surface-elevated, #ffffff);
+  box-shadow: var(--admin-react-shadow-soft, 0 18px 50px rgba(86, 55, 24, 0.08));
 }
 
 .muted {
-  background: var(--admin-react-surface-muted, #1f2632);
+  background: var(--admin-react-surface-muted, #fff3e4);
 }
 
 .header {
@@ -20,7 +20,7 @@
   justify-content: space-between;
   gap: var(--admin-react-space-4, 1rem);
   padding: var(--admin-react-space-4, 1rem);
-  border-bottom: 1px solid var(--admin-react-border, rgba(255, 255, 255, 0.1));
+  border-bottom: 1px solid var(--admin-react-border, #e8d8c4);
 }
 
 .heading {
@@ -29,14 +29,14 @@
 
 .title {
   margin: 0;
-  color: var(--admin-react-text, #f8fafc);
+  color: var(--admin-react-text, #261a13);
   font-size: 1rem;
   line-height: 1.25;
 }
 
 .description {
   margin: var(--admin-react-space-1, 0.25rem) 0 0;
-  color: var(--admin-react-text-muted, #b7c0cf);
+  color: var(--admin-react-text-muted, #6a584b);
   font-size: 0.875rem;
   line-height: 1.45;
 }

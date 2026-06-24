@@ -1,8 +1,8 @@
 .shell {
   overflow: hidden;
-  border: 1px solid var(--admin-react-border, rgba(255, 255, 255, 0.1));
+  border: 1px solid var(--admin-react-border, #e8d8c4);
   border-radius: var(--admin-react-radius-lg, 0.75rem);
-  background: var(--admin-react-surface, #11151d);
+  background: var(--admin-react-surface, #ffffff);
 }
 
 .toolbar {
@@ -11,7 +11,7 @@
   justify-content: space-between;
   gap: var(--admin-react-space-3, 0.75rem);
   padding: var(--admin-react-space-3, 0.75rem) var(--admin-react-space-4, 1rem);
-  border-bottom: 1px solid var(--admin-react-border, rgba(255, 255, 255, 0.1));
+  border-bottom: 1px solid var(--admin-react-border, #e8d8c4);
 }
 
 .scroll {
@@ -29,27 +29,27 @@
 .scroll th,
 .scroll td {
   padding: var(--admin-react-space-3, 0.75rem) var(--admin-react-space-4, 1rem);
-  border-bottom: 1px solid var(--admin-react-border, rgba(255, 255, 255, 0.1));
+  border-bottom: 1px solid var(--admin-react-border, #e8d8c4);
   text-align: left;
   vertical-align: middle;
 }
 
 .scroll th {
-  color: var(--admin-react-text-soft, #8792a3);
-  background: var(--admin-react-surface-muted, #1f2632);
+  color: var(--admin-react-text-soft, #8a7564);
+  background: var(--admin-react-surface-muted, #fff3e4);
   font-size: 0.75rem;
   font-weight: 800;
   text-transform: uppercase;
 }
 
 .scroll td {
-  color: var(--admin-react-text, #f8fafc);
+  color: var(--admin-react-text, #261a13);
   font-size: 0.875rem;
 }
 
 .empty {
   padding: var(--admin-react-space-5, 1.5rem);
-  color: var(--admin-react-text-muted, #b7c0cf);
+  color: var(--admin-react-text-muted, #6a584b);
   text-align: center;
 }
 

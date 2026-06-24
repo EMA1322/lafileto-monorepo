@@ -12,11 +12,11 @@
   text-decoration: none;
   cursor: pointer;
   transition:
-    background-color 160ms ease,
-    border-color 160ms ease,
-    color 160ms ease,
-    box-shadow 160ms ease,
-    transform 160ms ease;
+    background-color 200ms ease,
+    border-color 200ms ease,
+    color 200ms ease,
+    box-shadow 200ms ease,
+    transform 200ms ease;
 }
 
 .button:hover:not(:disabled) {
@@ -49,30 +49,30 @@
 .primary {
   background: var(--admin-react-accent, #faa718);
   border-color: var(--admin-react-accent, #faa718);
-  color: var(--admin-react-accent-contrast, #171006);
+  color: var(--admin-react-accent-contrast, #261a13);
 }
 
 .primary:hover:not(:disabled) {
-  background: var(--admin-react-accent-hover, #ffc04d);
-  border-color: var(--admin-react-accent-hover, #ffc04d);
+  background: var(--admin-react-accent-hover, #e09500);
+  border-color: var(--admin-react-accent-hover, #e09500);
 }
 
 .secondary {
-  background: var(--admin-react-surface-muted, #1f2632);
-  border-color: var(--admin-react-border-strong, rgba(255, 255, 255, 0.18));
-  color: var(--admin-react-text, #f8fafc);
+  background: var(--admin-react-surface, #ffffff);
+  border-color: var(--admin-react-border-strong, #d8bea3);
+  color: var(--admin-react-text, #261a13);
 }
 
 .secondary:hover:not(:disabled),
 .ghost:hover:not(:disabled) {
-  background: var(--admin-react-surface-elevated, #171c26);
-  border-color: var(--admin-react-border-strong, rgba(255, 255, 255, 0.18));
+  background: var(--admin-react-surface-hover, #fff7ec);
+  border-color: var(--admin-react-border-strong, #d8bea3);
 }
 
 .ghost {
   background: transparent;
   border-color: transparent;
-  color: var(--admin-react-text-muted, #b7c0cf);
+  color: var(--admin-react-text-muted, #6a584b);
 }
 
 .danger {

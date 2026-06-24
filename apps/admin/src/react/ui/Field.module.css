@@ -4,28 +4,28 @@
 }
 
 .label {
-  color: var(--admin-react-text, #f8fafc);
+  color: var(--admin-react-text, #261a13);
   font-size: 0.875rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .control {
   width: 100%;
   min-height: 2.5rem;
-  border: 1px solid var(--admin-react-border, rgba(255, 255, 255, 0.1));
+  border: 1px solid var(--admin-react-border, #e8d8c4);
   border-radius: var(--admin-react-radius-md, 0.5rem);
   padding: 0 var(--admin-react-space-3, 0.75rem);
-  color: var(--admin-react-text, #f8fafc);
-  background: var(--admin-react-surface, #11151d);
+  color: var(--admin-react-text, #261a13);
+  background: var(--admin-react-surface, #ffffff);
   font: inherit;
   transition:
-    border-color 160ms ease,
-    box-shadow 160ms ease,
-    background-color 160ms ease;
+    border-color 200ms ease,
+    box-shadow 200ms ease,
+    background-color 200ms ease;
 }
 
 .control::placeholder {
-  color: var(--admin-react-text-soft, #8792a3);
+  color: var(--admin-react-text-soft, #8a7564);
 }
 
 .control:focus-visible {
@@ -55,7 +55,7 @@
 }
 
 .hint {
-  color: var(--admin-react-text-soft, #8792a3);
+  color: var(--admin-react-text-soft, #8a7564);
 }
 
 .error {

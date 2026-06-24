@@ -4,7 +4,7 @@
   inset: 0;
   display: flex;
   justify-content: flex-end;
-  background: rgba(3, 7, 18, 0.64);
+  background: rgba(38, 26, 19, 0.24);
 }
 
 .drawer,
@@ -13,17 +13,17 @@
   width: min(100%, 34rem);
   max-height: 100%;
   flex-direction: column;
-  border-left: 1px solid var(--admin-react-border, rgba(255, 255, 255, 0.1));
-  background: var(--admin-react-surface, #111722);
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.36);
-  color: var(--admin-react-text, #f8fafc);
+  border-left: 1px solid var(--admin-react-border, #e8d8c4);
+  background: var(--admin-react-surface, #ffffff);
+  box-shadow: 0 24px 80px rgba(86, 55, 24, 0.12);
+  color: var(--admin-react-text, #261a13);
 }
 
 .dialog {
   width: min(calc(100% - 2rem), 30rem);
   max-height: calc(100% - 2rem);
   margin: auto;
-  border: 1px solid var(--admin-react-border, rgba(255, 255, 255, 0.1));
+  border: 1px solid var(--admin-react-border, #e8d8c4);
   border-radius: var(--admin-react-radius-lg, 0.75rem);
 }
 
@@ -34,13 +34,13 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 1rem;
-  border-bottom: 1px solid var(--admin-react-border, rgba(255, 255, 255, 0.1));
+  border-bottom: 1px solid var(--admin-react-border, #e8d8c4);
 }
 
 .footer {
   align-items: center;
   justify-content: flex-end;
-  border-top: 1px solid var(--admin-react-border, rgba(255, 255, 255, 0.1));
+  border-top: 1px solid var(--admin-react-border, #e8d8c4);
   border-bottom: 0;
 }
 
@@ -52,7 +52,7 @@
 .eyebrow,
 .hint {
   margin: 0;
-  color: var(--admin-react-text-muted, #b7c0cf);
+  color: var(--admin-react-text-muted, #6a584b);
   font-size: 0.78rem;
 }
 
@@ -72,10 +72,10 @@
 .closeButton {
   width: 2.25rem;
   height: 2.25rem;
-  border: 1px solid var(--admin-react-border, rgba(255, 255, 255, 0.1));
+  border: 1px solid var(--admin-react-border, #e8d8c4);
   border-radius: var(--admin-react-radius-md, 0.5rem);
-  background: var(--admin-react-surface-muted, #1f2632);
-  color: var(--admin-react-text, #f8fafc);
+  background: var(--admin-react-surface-muted, #fff3e4);
+  color: var(--admin-react-text, #261a13);
   cursor: pointer;
 }
 
@@ -102,18 +102,18 @@
   align-items: center;
   gap: 0.75rem;
   padding: 0.75rem;
-  border: 1px solid var(--admin-react-border, rgba(255, 255, 255, 0.1));
+  border: 1px solid var(--admin-react-border, #e8d8c4);
   border-radius: var(--admin-react-radius-md, 0.5rem);
-  background: var(--admin-react-surface-muted, #1f2632);
+  background: var(--admin-react-surface-muted, #fff3e4);
 }
 
 .previewImage,
 .previewPlaceholder {
   width: 5.5rem;
   height: 4.25rem;
-  border: 1px solid var(--admin-react-border, rgba(255, 255, 255, 0.1));
+  border: 1px solid var(--admin-react-border, #e8d8c4);
   border-radius: var(--admin-react-radius-md, 0.5rem);
-  background: #0f172a;
+  background: #ffffff;
 }
 
 .previewImage {
@@ -124,7 +124,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--admin-react-text-soft, #8792a3);
+  color: var(--admin-react-text-soft, #8a7564);
   font-size: 0.75rem;
   font-weight: 700;
   text-align: center;
@@ -132,12 +132,12 @@
 
 .dangerText {
   margin: 0;
-  color: var(--admin-react-text-muted, #b7c0cf);
+  color: var(--admin-react-text-muted, #6a584b);
   line-height: 1.45;
 }
 
 .categoryName {
-  color: var(--admin-react-text, #f8fafc);
+  color: var(--admin-react-text, #261a13);
   font-weight: 800;
 }
 

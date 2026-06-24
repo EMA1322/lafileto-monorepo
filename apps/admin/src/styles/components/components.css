@@ -91,26 +91,26 @@
   .btn--primary {
     --btn-bg: var(--c-primary);
     --btn-color: var(--c-on-primary);
-    --btn-border: color-mix(in srgb, var(--c-primary), #000 18%);
+    --btn-border: color-mix(in srgb, var(--c-primary), var(--c-text) 18%);
   }
   .btn--secondary {
     --btn-bg: var(--c-secondary);
-    --btn-color: #ffffff;
-    --btn-border: color-mix(in srgb, var(--c-secondary), #000 18%);
+    --btn-color: var(--c-surface)fff;
+    --btn-border: color-mix(in srgb, var(--c-secondary), var(--c-text) 18%);
   }
   .btn--danger {
     --btn-bg: var(--c-error);
     --btn-color: var(--c-white);
-    --btn-border: color-mix(in srgb, var(--c-error), #000 18%);
+    --btn-border: color-mix(in srgb, var(--c-error), var(--c-text) 18%);
   }
   .btn--danger:hover {
-    --btn-bg: color-mix(in srgb, var(--c-error), #000 10%);
-    --btn-border: color-mix(in srgb, var(--c-error), #000 26%);
+    --btn-bg: color-mix(in srgb, var(--c-error), var(--c-text) 10%);
+    --btn-border: color-mix(in srgb, var(--c-error), var(--c-text) 26%);
     filter: none;
   }
   .btn--danger:active {
-    --btn-bg: color-mix(in srgb, var(--c-error), #000 16%);
-    --btn-border: color-mix(in srgb, var(--c-error), #000 32%);
+    --btn-bg: color-mix(in srgb, var(--c-error), var(--c-text) 16%);
+    --btn-border: color-mix(in srgb, var(--c-error), var(--c-text) 32%);
   }
   .btn--danger:focus-visible {
     outline: none;
@@ -325,7 +325,7 @@
   .modal__overlay {
     position: absolute;
     inset: 0;
-    background: color-mix(in srgb, var(--surface-0, #000) 35%, transparent);
+    background: color-mix(in srgb, var(--surface-0, var(--c-text)) 35%, transparent);
     opacity: 0;
     transition: opacity .2s ease;
   }
@@ -690,13 +690,13 @@
     line-height: 1;
     border: 1px solid transparent;
   }
-  .badge--primary   { background: color-mix(in srgb, var(--c-primary), #fff 80%); color: var(--c-text); border-color: color-mix(in srgb, var(--c-primary), #000 12%); }
-  .badge--success   { background: color-mix(in srgb, var(--c-success), #fff 85%); color: var(--c-text); border-color: color-mix(in srgb, var(--c-success), #000 12%); }
-  .badge--warning   { background: color-mix(in srgb, var(--c-warning), #fff 85%); color: var(--c-text); border-color: color-mix(in srgb, var(--c-warning), #000 12%); }
-  .badge--error     { background: color-mix(in srgb, var(--c-error),   #fff 85%); color: var(--c-text); border-color: color-mix(in srgb, var(--c-error),   #000 12%); }
+  .badge--primary   { background: color-mix(in srgb, var(--c-primary), var(--c-surface) 80%); color: var(--c-text); border-color: color-mix(in srgb, var(--c-primary), var(--c-text) 12%); }
+  .badge--success   { background: color-mix(in srgb, var(--c-success), var(--c-surface) 85%); color: var(--c-text); border-color: color-mix(in srgb, var(--c-success), var(--c-text) 12%); }
+  .badge--warning   { background: color-mix(in srgb, var(--c-warning), var(--c-surface) 85%); color: var(--c-text); border-color: color-mix(in srgb, var(--c-warning), var(--c-text) 12%); }
+  .badge--error     { background: color-mix(in srgb, var(--c-error),   var(--c-surface) 85%); color: var(--c-text); border-color: color-mix(in srgb, var(--c-error),   var(--c-text) 12%); }
   .badge--neutral   { background: var(--c-neutral-100); color: var(--c-text); border-color: var(--c-border); }
   /* Accent badge variant for compact status labels (e.g. account role). */
-  .badge--accent    { background: color-mix(in srgb, var(--c-secondary), #fff 86%); color: var(--c-text); border-color: color-mix(in srgb, var(--c-secondary), #000 12%); }
+  .badge--accent    { background: color-mix(in srgb, var(--c-secondary), var(--c-surface) 86%); color: var(--c-text); border-color: color-mix(in srgb, var(--c-secondary), var(--c-text) 12%); }
 
   /* Reusable pill/chip primitive for compact identity blocks (e.g. current user). */
   .c-pill {
@@ -900,9 +900,9 @@
   .nav__link:hover { background: var(--c-neutral-100); }
   .nav__link[aria-current="page"],
   .nav__link.is-active {
-    background: color-mix(in srgb, var(--c-secondary), #fff 85%);
+    background: color-mix(in srgb, var(--c-secondary), var(--c-surface) 85%);
     color: #0b172a;
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c-secondary), #000 15%);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c-secondary), var(--c-text) 15%);
   }
 
   /* ——— Tablas ——— */

@@ -30,14 +30,14 @@
 .categoryCell strong,
 .mobileHeader h2 {
   display: block;
-  color: var(--admin-react-text, #f8fafc);
+  color: var(--admin-react-text, #261a13);
   font-size: 0.95rem;
 }
 
 .categoryCell span,
 .muted,
 .mobileBody p {
-  color: var(--admin-react-text-muted, #b7c0cf);
+  color: var(--admin-react-text-muted, #6a584b);
   font-size: 0.82rem;
 }
 
@@ -45,9 +45,9 @@
 .categoryPlaceholder {
   width: 4rem;
   height: 3.25rem;
-  border: 1px solid var(--admin-react-border, rgba(255, 255, 255, 0.1));
+  border: 1px solid var(--admin-react-border, #e8d8c4);
   border-radius: var(--admin-react-radius-md, 0.5rem);
-  background: var(--admin-react-surface-muted, #1f2632);
+  background: var(--admin-react-surface-muted, #fff3e4);
 }
 
 .categoryImage {
@@ -58,7 +58,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--admin-react-text-soft, #8792a3);
+  color: var(--admin-react-text-soft, #8a7564);
   font-size: 0.72rem;
   font-weight: 700;
   text-align: center;
@@ -79,7 +79,7 @@
   grid-template-columns: 4.5rem 1fr;
   gap: 0.75rem;
   padding: 1rem;
-  border-top: 1px solid var(--admin-react-border, rgba(255, 255, 255, 0.1));
+  border-top: 1px solid var(--admin-react-border, #e8d8c4);
 }
 
 .mobileBody {
@@ -101,7 +101,7 @@
 }
 
 .mobileMeta {
-  color: var(--admin-react-text-muted, #b7c0cf);
+  color: var(--admin-react-text-muted, #6a584b);
   font-size: 0.86rem;
   font-weight: 700;
 }
