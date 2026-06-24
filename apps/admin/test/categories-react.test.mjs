@@ -198,6 +198,17 @@ function testFieldsValidationAndUi() {
   assert.match(pageSource, /canWrite\('categories'\)/);
   assert.match(pageSource, /canUpdate\('categories'\)/);
   assert.match(pageSource, /canDelete\('categories'\)/);
+  assert.match(pageSource, /IconAction/);
+  assert.match(pageSource, /Pencil/);
+  assert.match(pageSource, /EyeOff/);
+  assert.match(pageSource, /Eye/);
+  assert.match(pageSource, /Trash2/);
+  assert.match(pageSource, /Editar categoria:/);
+  assert.match(pageSource, /Activar'\s*:\s*'Desactivar'|Desactivar'\s*:\s*'Activar'/);
+  assert.match(pageSource, /Eliminar categoria:/);
+  assert.match(pageSource, /disabled=\{isToggling\}/);
+  assert.doesNotMatch(pageSource, /Ver categoria/);
+  assert.doesNotMatch(pageSource, /variant="danger"/);
   assert.match(pageSource, /VIEW_STATUS\.loading/);
   assert.match(pageSource, /VIEW_STATUS\.error/);
   assert.match(pageSource, /VIEW_STATUS\.empty/);
