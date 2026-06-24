@@ -6,15 +6,27 @@ import {
   buildOfferCreatePayload,
   buildOfferUpdatePayload,
   createOfferFormState,
+  estimateOfferFinalPrice,
+  hasPersistedOffer,
   hasOfferFormErrors,
   mapOfferApiError,
   validateOfferForm,
 } from './productOffer.helpers.js';
 import styles from './ProductOfferForm.module.css';
 
+const moneyFormatter = new Intl.NumberFormat('es-AR', {
+  currency: 'ARS',
+  minimumFractionDigits: 2,
+  style: 'currency',
+});
+
 export default function ProductOfferForm({
+  canDeleteOffer = true,
+  canSaveOffer = true,
+  embedded = false,
   mode = 'create',
   onClose,
+  onDeleteRequest,
   onSaved,
   open = false,
   product = null,
@@ -26,6 +38,7 @@ export default function ProductOfferForm({
   const [values, setValues] = useState(() => createOfferFormState(product));
   const [errors, setErrors] = useState({});
   const [generalError, setGeneralError] = useState('');
+  const [currentOffer, setCurrentOffer] = useState(product?.offer ?? null);
   const [pending, setPending] = useState(false);
 
   useEffect(() => {
@@ -33,6 +46,7 @@ export default function ProductOfferForm({
     setValues(createOfferFormState(product));
     setErrors({});
     setGeneralError('');
+    setCurrentOffer(product?.offer ?? null);
     setPending(false);
   }, [open, product]);
 
@@ -41,10 +55,17 @@ export default function ProductOfferForm({
     containerRef: dialogRef,
     initialFocus: '#product-offer-discount-percent',
     onClose,
-    open,
+    open: open && !embedded,
   });
 
   if (!open || !product) return null;
+
+  const productWithCurrentOffer = { ...product, offer: currentOffer };
+  const offerExists = hasPersistedOffer(productWithCurrentOffer);
+  const offerEnabled = Boolean(values.enabled);
+  const finalPrice = estimateOfferFinalPrice(product, values);
+  const canSubmitOffer = canSaveOffer && offerEnabled && !pending;
+  const shouldShowFields = offerEnabled;
 
   function updateValue(field, value) {
     setValues((current) => ({ ...current, [field]: value }));
@@ -52,8 +73,26 @@ export default function ProductOfferForm({
     setGeneralError('');
   }
 
+  function handleToggleOffer(event) {
+    const checked = event.target.checked;
+    setGeneralError('');
+
+    if (!checked && offerExists) {
+      setValues((current) => ({ ...current, enabled: true }));
+      onDeleteRequest?.(productWithCurrentOffer);
+      return;
+    }
+
+    setValues((current) => ({ ...current, enabled: checked }));
+    if (!checked) {
+      setErrors({});
+    }
+  }
+
   async function handleSubmit(event) {
     event.preventDefault();
+    if (!offerEnabled) return;
+
     const nextErrors = validateOfferForm(values);
     setErrors(nextErrors);
 
@@ -67,7 +106,7 @@ export default function ProductOfferForm({
       return;
     }
 
-    if (isEdit && !product.offer?.id) {
+    if (isEdit && !currentOffer?.id) {
       setGeneralError('No pudimos identificar la oferta.');
       return;
     }
@@ -77,8 +116,8 @@ export default function ProductOfferForm({
 
     try {
       const response =
-        isEdit && product.offer?.id
-          ? await offersApi.update(product.offer.id, buildOfferUpdatePayload(values))
+        isEdit && currentOffer?.id
+          ? await offersApi.update(currentOffer.id, buildOfferUpdatePayload(values))
           : await offersApi.create(buildOfferCreatePayload(product, values));
 
       if (!response?.ok) {
@@ -87,7 +126,10 @@ export default function ProductOfferForm({
         );
       }
 
-      onSaved?.({ mode, offer: response.data ?? null, product });
+      const savedOffer = response.data ?? null;
+      setCurrentOffer(savedOffer);
+      setValues(createOfferFormState({ ...product, offer: savedOffer }));
+      onSaved?.({ embedded, mode: currentOffer?.id ? 'edit' : mode, offer: savedOffer, product });
     } catch (error) {
       const mapped = mapOfferApiError(error);
       setErrors(mapped.fieldErrors);
@@ -95,6 +137,121 @@ export default function ProductOfferForm({
     } finally {
       setPending(false);
     }
+  }
+
+  function renderContent() {
+    const ContentTag = embedded ? 'div' : 'form';
+
+    return (
+      <ContentTag
+        className={embedded ? styles.inlineBody : styles.body}
+        {...(embedded ? {} : { noValidate: true, onSubmit: handleSubmit })}
+      >
+        <div className={styles.offerSwitchRow}>
+          <div className={styles.offerSwitchText}>
+            <label className={styles.switchLabel} htmlFor="product-offer-enabled">
+              Aplicar oferta
+            </label>
+            <p className={styles.description} id="product-offer-enabled-description">
+              {offerExists
+                ? 'La oferta se conserva hasta que confirmes quitarla.'
+                : 'Activala para cargar un porcentaje y guardarlo como oferta separada.'}
+            </p>
+          </div>
+          <input
+            aria-describedby="product-offer-enabled-description"
+            checked={offerEnabled}
+            className={styles.switchInput}
+            disabled={pending}
+            id="product-offer-enabled"
+            onChange={handleToggleOffer}
+            role="switch"
+            type="checkbox"
+          />
+        </div>
+
+        {generalError ? (
+          <p className={styles.error} role="alert">
+            {generalError}
+          </p>
+        ) : null}
+
+        {!shouldShowFields ? (
+          <p className={styles.summary} role="status">
+            Sin oferta aplicada. No se enviara ninguna mutacion de oferta.
+          </p>
+        ) : (
+          <>
+            <p className={styles.summary} role="status">
+              {offerExists
+                ? `Oferta actual: ${Math.round(currentOffer.discountPercent)}% de descuento.`
+                : 'Oferta nueva pendiente de guardar.'}
+            </p>
+            <Input
+              error={errors.discountPercent}
+              id="product-offer-discount-percent"
+              label="Descuento (%)"
+              max="100"
+              min="1"
+              onChange={(event) => updateValue('discountPercent', event.target.value)}
+              required
+              step="1"
+              type="number"
+              value={values.discountPercent}
+            />
+            <p className={styles.estimate} role="status">
+              Precio final estimado: <strong>{moneyFormatter.format(finalPrice)}</strong>
+            </p>
+            <p className={styles.description}>
+              La oferta se guarda de forma separada del producto.
+            </p>
+          </>
+        )}
+
+        <footer className={embedded ? styles.inlineFooter : styles.footer}>
+          {!embedded ? (
+            <Button disabled={pending} onClick={onClose} variant="ghost">
+              Cancelar
+            </Button>
+          ) : null}
+          {offerExists && embedded && canDeleteOffer ? (
+            <Button
+              disabled={pending}
+              onClick={() => onDeleteRequest?.(productWithCurrentOffer)}
+              type="button"
+              variant="ghost"
+            >
+              Quitar oferta
+            </Button>
+          ) : null}
+          <Button
+            disabled={!canSubmitOffer}
+            loading={pending}
+            onClick={embedded ? handleSubmit : undefined}
+            type={embedded ? 'button' : 'submit'}
+            variant="primary"
+          >
+            Guardar oferta
+          </Button>
+        </footer>
+      </ContentTag>
+    );
+  }
+
+  if (embedded) {
+    return (
+      <section className={styles.inlinePanel} aria-labelledby="product-offer-form-title">
+        <div className={styles.inlineHeader}>
+          <div className={styles.titleGroup}>
+            <p className={styles.eyebrow}>Oferta</p>
+            <h3 className={styles.inlineTitle} id="product-offer-form-title">
+              Oferta del producto
+            </h3>
+          </div>
+        </div>
+        {renderContent()}
+      </section>
+    );
   }
 
   function handleOverlayMouseDown(event) {
@@ -130,41 +287,7 @@ export default function ProductOfferForm({
           </button>
         </header>
 
-        <form className={styles.body} onSubmit={handleSubmit} noValidate>
-          <p className={styles.description}>
-            Producto: <span className={styles.productName}>{product.name}</span>
-          </p>
-          {product.offer ? (
-            <p className={styles.summary}>
-              Oferta actual: {Math.round(product.offer.discountPercent)}% de descuento.
-            </p>
-          ) : null}
-          {generalError ? (
-            <p className={styles.error} role="alert">
-              {generalError}
-            </p>
-          ) : null}
-          <Input
-            error={errors.discountPercent}
-            id="product-offer-discount-percent"
-            label="Descuento (%)"
-            max="100"
-            min="1"
-            onChange={(event) => updateValue('discountPercent', event.target.value)}
-            required
-            step="1"
-            type="number"
-            value={values.discountPercent}
-          />
-          <footer className={styles.footer}>
-            <Button disabled={pending} onClick={onClose} variant="ghost">
-              Cancelar
-            </Button>
-            <Button loading={pending} type="submit" variant="primary">
-              {isEdit ? 'Guardar oferta' : 'Crear oferta'}
-            </Button>
-          </footer>
-        </form>
+        {renderContent()}
       </section>
     </div>
   );

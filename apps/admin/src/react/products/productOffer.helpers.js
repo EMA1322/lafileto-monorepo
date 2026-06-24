@@ -1,5 +1,10 @@
 export const OFFER_FORM_FIELDS = ['discountPercent'];
 
+function toNumber(value, fallback = 0) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
 function normalizeText(value) {
   return value === undefined || value === null ? '' : String(value).trim();
 }
@@ -28,9 +33,14 @@ function getApiFieldDetails(error) {
 export function createOfferFormState(product = {}) {
   const discountPercent = product?.offer?.discountPercent;
   return {
+    enabled: Boolean(product?.offer),
     discountPercent:
       discountPercent === undefined || discountPercent === null ? '' : String(discountPercent),
   };
+}
+
+export function hasPersistedOffer(product = {}) {
+  return Boolean(product?.offer?.id);
 }
 
 export function validateOfferForm(values = {}) {
@@ -68,6 +78,14 @@ export function buildOfferUpdatePayload(values = {}) {
   return {
     discountPercent: Number(values.discountPercent),
   };
+}
+
+export function estimateOfferFinalPrice(product = {}, values = {}) {
+  const basePrice = toNumber(product?.price);
+  const discountPercent = toNumber(values.discountPercent);
+  if (basePrice <= 0 || discountPercent <= 0) return basePrice;
+  const ratio = Math.max(0, Math.min(100, discountPercent)) / 100;
+  return Math.round(basePrice * (1 - ratio) * 100) / 100;
 }
 
 export function mapOfferApiError(error) {

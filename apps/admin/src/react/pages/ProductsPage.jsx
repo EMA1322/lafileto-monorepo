@@ -592,13 +592,28 @@ export default function ProductsPage() {
     void loadProducts();
   }
 
-  function handleOfferSaved() {
-    setOfferFormState(null);
+  function handleOfferSaved(event = {}) {
+    if (!event.embedded) {
+      setOfferFormState(null);
+    } else if (event.product?.id) {
+      setFormState((current) =>
+        current?.product?.id === event.product.id
+          ? { ...current, product: { ...current.product, offer: event.offer ?? null } }
+          : current,
+      );
+    }
     void loadProducts();
   }
 
-  function handleOfferDeleted() {
+  function handleOfferDeleted(product) {
     setOfferDeleteTarget(null);
+    if (product?.id) {
+      setFormState((current) =>
+        current?.product?.id === product.id
+          ? { ...current, product: { ...current.product, offer: null } }
+          : current,
+      );
+    }
     void loadProducts();
   }
 
@@ -839,7 +854,14 @@ export default function ProductsPage() {
       <ProductForm
         categories={categories}
         mode={formState?.mode || 'create'}
+        offerPermissions={{
+          canDelete: permissions.canDeleteOffer,
+          canUpdate: permissions.canUpdateOffer,
+          canWrite: permissions.canWriteOffer,
+        }}
         onClose={() => setFormState(null)}
+        onOfferDeleteRequest={handleOfferDelete}
+        onOfferSaved={handleOfferSaved}
         onSaved={handleProductSaved}
         open={Boolean(formState)}
         product={formState?.product}

@@ -3,19 +3,25 @@ import { productsApi } from '@/utils/apis.js';
 import { Button, Input, Select } from '../ui/index.js';
 import useDialogFocusTrap from '../hooks/useDialogFocusTrap.js';
 import {
-  PRODUCT_STATUS_OPTIONS,
   buildProductPayload,
+  buildStatusFromActiveSwitch,
   createProductFormState,
   hasFormErrors,
+  isArchivedProduct,
   mapProductApiError,
+  validateProductActivation,
   validateProductForm,
 } from './productForm.helpers.js';
+import ProductOfferForm from './ProductOfferForm.jsx';
 import styles from './ProductForm.module.css';
 
 export default function ProductForm({
   categories = [],
   mode = 'create',
+  offerPermissions = {},
   onClose,
+  onOfferDeleteRequest,
+  onOfferSaved,
   onSaved,
   open = false,
   product = null,
@@ -47,9 +53,51 @@ export default function ProductForm({
 
   if (!open) return null;
 
+  const archived = isArchivedProduct(values);
+  const activeChecked = values.status === 'active';
+  const canSaveOffer = product?.offer
+    ? Boolean(offerPermissions.canUpdate)
+    : Boolean(offerPermissions.canWrite);
+  const canDeleteOffer = Boolean(product?.offer && offerPermissions.canDelete);
+  const canManageOffer = isEdit ? Boolean(canSaveOffer || canDeleteOffer) : false;
+
+  function focusFirstInvalid() {
+    window.requestAnimationFrame(() => {
+      document
+        .querySelector(
+          '#product-form-name[aria-invalid="true"], #product-form-price[aria-invalid="true"], #product-form-stock[aria-invalid="true"], #product-form-image-url[aria-invalid="true"], #product-form-category[aria-invalid="true"]',
+        )
+        ?.focus?.({ preventScroll: true });
+    });
+  }
+
   function updateValue(field, value) {
     setValues((current) => ({ ...current, [field]: value }));
     setErrors((current) => ({ ...current, [field]: '' }));
+    setGeneralError('');
+  }
+
+  function handleActiveToggle(event) {
+    const checked = event.target.checked;
+    if (archived) return;
+
+    if (checked) {
+      const activationErrors = validateProductActivation(values);
+      if (hasFormErrors(activationErrors)) {
+        setErrors((current) => ({ ...current, ...activationErrors }));
+        setGeneralError(
+          'Para activar el producto, completa precio y stock con valores mayores a 0.',
+        );
+        focusFirstInvalid();
+        return;
+      }
+    }
+
+    setValues((current) => ({
+      ...current,
+      status: buildStatusFromActiveSwitch(current, checked),
+    }));
+    setErrors((current) => ({ ...current, status: '' }));
     setGeneralError('');
   }
 
@@ -60,13 +108,7 @@ export default function ProductForm({
 
     if (hasFormErrors(nextErrors)) {
       setGeneralError('Revisá los campos marcados.');
-      window.requestAnimationFrame(() => {
-        document
-          .querySelector(
-            '#product-form-name[aria-invalid="true"], #product-form-price[aria-invalid="true"], #product-form-stock[aria-invalid="true"], #product-form-image-url[aria-invalid="true"], #product-form-category[aria-invalid="true"], #product-form-status[aria-invalid="true"]',
-          )
-          ?.focus?.({ preventScroll: true });
-      });
+      focusFirstInvalid();
       return;
     }
 
@@ -91,6 +133,7 @@ export default function ProductForm({
       const mapped = mapProductApiError(error);
       setErrors(mapped.fieldErrors);
       setGeneralError(mapped.generalError);
+      focusFirstInvalid();
     } finally {
       setPending(false);
     }
@@ -212,21 +255,64 @@ export default function ProductForm({
                 ))}
               </Select>
 
-              <Select
-                error={errors.status}
-                id="product-form-status"
-                label="Estado"
-                onChange={(event) => updateValue('status', event.target.value)}
-                required
-                value={values.status}
-              >
-                {PRODUCT_STATUS_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </Select>
+              <section className={styles.statusPanel} aria-labelledby="product-status-title">
+                <div className={styles.statusHeader}>
+                  <div>
+                    <h3 className={styles.statusTitle} id="product-status-title">
+                      Publicacion
+                    </h3>
+                    <p className={styles.statusHint} id="product-status-description">
+                      {archived
+                        ? 'Archivado. Este estado es interno y se conserva al editar el producto.'
+                        : activeChecked
+                          ? 'Activo y visible en el cliente.'
+                          : 'Inactivo y editable solo en admin.'}
+                    </p>
+                  </div>
+                  {!archived ? (
+                    <input
+                      aria-describedby="product-status-description"
+                      aria-label="Activo"
+                      checked={activeChecked}
+                      className={styles.switchInput}
+                      disabled={pending}
+                      id="product-form-status-active"
+                      onChange={handleActiveToggle}
+                      role="switch"
+                      type="checkbox"
+                    />
+                  ) : (
+                    <span className={styles.lockedStatus} role="status">
+                      Archivado
+                    </span>
+                  )}
+                </div>
+                {errors.status ? (
+                  <p className={styles.error} role="alert">
+                    {errors.status}
+                  </p>
+                ) : null}
+              </section>
             </div>
+
+            {!isEdit ? (
+              <p className={styles.offerNotice} role="status">
+                Primero guardá el producto. Después podés configurar una oferta desde Editar.
+              </p>
+            ) : null}
+
+            {isEdit && canManageOffer ? (
+              <ProductOfferForm
+                canDeleteOffer={canDeleteOffer}
+                canSaveOffer={canSaveOffer}
+                embedded
+                mode={product?.offer?.id ? 'edit' : 'create'}
+                onDeleteRequest={onOfferDeleteRequest}
+                onSaved={onOfferSaved}
+                open
+                product={product}
+              />
+            ) : null}
           </div>
 
           <footer className={styles.footer}>

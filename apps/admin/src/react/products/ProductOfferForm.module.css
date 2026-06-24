@@ -88,6 +88,97 @@
   background: var(--admin-react-surface-muted, #fff3e4);
 }
 
+.inlinePanel {
+  display: grid;
+  gap: var(--admin-react-space-3, 0.75rem);
+  padding: var(--admin-react-space-4, 1rem);
+  border: 1px solid var(--admin-react-border, #e8d8c4);
+  border-radius: var(--admin-react-radius-md, 0.5rem);
+  background: var(--admin-react-surface, #ffffff);
+}
+
+.inlineHeader,
+.inlineBody {
+  display: grid;
+  gap: var(--admin-react-space-3, 0.75rem);
+}
+
+.inlineTitle {
+  margin: 0;
+  color: var(--admin-react-text, #261a13);
+  font-size: 1rem;
+  line-height: 1.25;
+}
+
+.offerSwitchRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--admin-react-space-4, 1rem);
+}
+
+.offerSwitchText {
+  display: grid;
+  gap: var(--admin-react-space-1, 0.25rem);
+}
+
+.switchLabel {
+  color: var(--admin-react-text, #261a13);
+  font-weight: 800;
+}
+
+.switchInput {
+  position: relative;
+  flex: 0 0 auto;
+  width: 3rem;
+  height: 1.625rem;
+  margin: 0;
+  border: 1px solid var(--admin-react-border-strong, #d8b98f);
+  border-radius: 999px;
+  appearance: none;
+  background: var(--admin-react-surface-muted, #fff3e4);
+  cursor: pointer;
+}
+
+.switchInput::after {
+  position: absolute;
+  top: 0.1875rem;
+  left: 0.1875rem;
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 999px;
+  background: var(--admin-react-text-muted, #6a584b);
+  content: "";
+  transition: transform 160ms ease, background 160ms ease;
+}
+
+.switchInput:checked {
+  border-color: var(--admin-react-accent, #faa718);
+  background: rgba(250, 167, 24, 0.18);
+}
+
+.switchInput:checked::after {
+  transform: translateX(1.375rem);
+  background: var(--admin-react-accent-strong, #c96f05);
+}
+
+.switchInput:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--admin-react-focus-ring, rgba(250, 167, 24, 0.42));
+}
+
+.estimate {
+  margin: 0;
+  color: var(--admin-react-text, #261a13);
+  line-height: 1.4;
+}
+
+.inlineFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--admin-react-space-2, 0.5rem);
+}
+
 .productName {
   color: var(--admin-react-text, #261a13);
   font-weight: 800;
@@ -122,6 +213,12 @@
   }
 
   .footer {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .offerSwitchRow,
+  .inlineFooter {
     display: grid;
     grid-template-columns: 1fr;
   }

@@ -4,6 +4,10 @@ export const PRODUCT_STATUS_OPTIONS = [
   { value: 'archived', label: 'Archivado' },
 ];
 
+export const PRODUCT_ACTIVE_STATUS = 'active';
+export const PRODUCT_DRAFT_STATUS = 'draft';
+export const PRODUCT_ARCHIVED_STATUS = 'archived';
+
 export const PRODUCT_FORM_FIELDS = [
   'name',
   'description',
@@ -74,6 +78,15 @@ export function validateProductForm(values = {}) {
     errors.status = 'Seleccioná un estado válido.';
   }
 
+  if (status === PRODUCT_ACTIVE_STATUS) {
+    if (Number.isFinite(price) && price <= 0) {
+      errors.price = 'Para publicar el producto, el precio debe ser mayor a 0.';
+    }
+    if (Number.isInteger(stock) && stock <= 0) {
+      errors.stock = 'Para publicar el producto, el stock debe ser mayor a 0.';
+    }
+  }
+
   if (imageUrl) {
     let isValid = false;
     try {
@@ -87,6 +100,21 @@ export function validateProductForm(values = {}) {
     if (!isValid) {
       errors.imageUrl = 'Ingresá una URL http(s) válida.';
     }
+  }
+
+  return errors;
+}
+
+export function validateProductActivation(values = {}) {
+  const price = Number(values.price);
+  const stock = Number(values.stock);
+  const errors = {};
+
+  if (!Number.isFinite(price) || price <= 0) {
+    errors.price = 'Para activar el producto, el precio debe ser mayor a 0.';
+  }
+  if (!Number.isInteger(stock) || stock <= 0) {
+    errors.stock = 'Para activar el producto, el stock debe ser mayor a 0.';
   }
 
   return errors;
@@ -116,6 +144,16 @@ export function buildProductPayload(values = {}) {
   }
 
   return payload;
+}
+
+export function isArchivedProduct(values = {}) {
+  return normalizeStatus(values.status) === PRODUCT_ARCHIVED_STATUS;
+}
+
+export function buildStatusFromActiveSwitch(values = {}, checked = false) {
+  const currentStatus = normalizeStatus(values.status);
+  if (currentStatus === PRODUCT_ARCHIVED_STATUS) return PRODUCT_ARCHIVED_STATUS;
+  return checked ? PRODUCT_ACTIVE_STATUS : PRODUCT_DRAFT_STATUS;
 }
 
 function normalizeFieldName(field) {
