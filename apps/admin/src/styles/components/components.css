@@ -94,9 +94,19 @@
     --btn-border: color-mix(in srgb, var(--c-primary), var(--c-text) 18%);
   }
   .btn--secondary {
-    --btn-bg: var(--c-secondary);
-    --btn-color: var(--c-surface)fff;
-    --btn-border: color-mix(in srgb, var(--c-secondary), var(--c-text) 18%);
+    --btn-bg: var(--surface-2, var(--c-surface-muted));
+    --btn-color: var(--text, var(--c-text));
+    --btn-border: var(--border-strong, var(--c-border));
+    --btn-shadow: none;
+  }
+  .btn--secondary:hover {
+    --btn-bg: var(--surface-hover);
+    --btn-border: color-mix(in srgb, var(--border-strong, var(--c-border)) 88%, var(--text, var(--c-text)));
+    filter: none;
+  }
+  .btn--secondary:active {
+    --btn-bg: color-mix(in srgb, var(--surface-hover) 84%, var(--text, var(--c-text)));
+    --btn-border: color-mix(in srgb, var(--border-strong, var(--c-border)) 82%, var(--text, var(--c-text)));
   }
   .btn--danger {
     --btn-bg: var(--c-error);
