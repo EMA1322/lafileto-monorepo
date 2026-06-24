@@ -1,15 +1,25 @@
+.toolbar {
+  align-items: stretch;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--admin-react-surface-muted, #fff3e4) 54%, transparent),
+      var(--admin-react-surface, #ffffff)
+    );
+}
+
 .filters {
   display: grid;
   width: 100%;
   grid-template-columns: minmax(14rem, 1.4fr) repeat(4, minmax(9rem, 1fr)) auto;
   align-items: end;
-  gap: 0.75rem;
+  gap: var(--admin-react-space-3, 0.75rem);
 }
 
 .filterActions {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--admin-react-space-2, 0.5rem);
 }
 
 .tableScroll {
@@ -20,18 +30,37 @@
   min-width: 62rem;
 }
 
+.table tbody tr {
+  transition:
+    background-color 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.table tbody tr:hover {
+  background: var(--admin-react-surface-hover, #fff7ec);
+  box-shadow: inset 0.1875rem 0 0 color-mix(in srgb, var(--admin-react-accent, #faa718) 62%, transparent);
+}
+
 .categoryCell {
   display: grid;
-  grid-template-columns: 4rem minmax(12rem, 1fr);
+  grid-template-columns: 4rem minmax(14rem, 1fr);
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--admin-react-space-3, 0.75rem);
+  min-width: 18rem;
+}
+
+.categorySummary {
+  display: grid;
+  min-width: 0;
+  gap: 0.25rem;
 }
 
 .categoryCell strong,
 .mobileHeader h2 {
   display: block;
   color: var(--admin-react-text, #261a13);
-  font-size: 0.95rem;
+  font-size: 1rem;
+  line-height: 1.25;
 }
 
 .categoryCell span,
@@ -39,6 +68,19 @@
 .mobileBody p {
   color: var(--admin-react-text-muted, #6a584b);
   font-size: 0.82rem;
+}
+
+.categoryUrl {
+  max-width: 30rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.countCell {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .categoryImage,
@@ -51,6 +93,8 @@
 }
 
 .categoryImage {
+  display: block;
+  aspect-ratio: 16 / 13;
   object-fit: cover;
 }
 
@@ -67,7 +111,15 @@
 .actions {
   display: inline-flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 0.35rem;
+}
+
+.deleteAction:hover:not(:disabled),
+.deleteAction:focus-visible {
+  border-color: color-mix(in srgb, var(--admin-react-danger, #f87171) 58%, transparent);
+  color: var(--admin-react-danger, #b42318);
+  background: color-mix(in srgb, var(--admin-react-danger, #f87171) 18%, var(--admin-react-surface, #ffffff));
 }
 
 .mobileList {
@@ -77,13 +129,23 @@
 .mobileItem {
   display: grid;
   grid-template-columns: 4.5rem 1fr;
-  gap: 0.75rem;
-  padding: 1rem;
+  gap: var(--admin-react-space-3, 0.75rem);
+  padding: var(--admin-react-space-4, 1rem);
   border-top: 1px solid var(--admin-react-border, #e8d8c4);
+  background: var(--admin-react-surface, #ffffff);
+  transition:
+    background-color 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.mobileItem:hover {
+  background: var(--admin-react-surface-hover, #fff7ec);
+  box-shadow: inset 0.1875rem 0 0 color-mix(in srgb, var(--admin-react-accent, #faa718) 62%, transparent);
 }
 
 .mobileBody {
   display: grid;
+  min-width: 0;
   gap: 0.65rem;
 }
 
@@ -117,8 +179,17 @@
 }
 
 @media (max-width: 760px) {
+  .toolbar {
+    padding: var(--admin-react-space-3, 0.75rem);
+  }
+
   .filters {
     grid-template-columns: 1fr;
+  }
+
+  .filterActions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
   }
 
   .tableScroll {
@@ -129,4 +200,30 @@
     display: grid;
   }
 
+}
+
+@media (max-width: 420px) {
+  .mobileItem {
+    grid-template-columns: 1fr;
+  }
+
+  .categoryImage,
+  .categoryPlaceholder {
+    width: 100%;
+    height: auto;
+    min-height: 9rem;
+    aspect-ratio: 16 / 10;
+  }
+
+  .mobileHeader,
+  .mobileMeta {
+    display: grid;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .table tbody tr,
+  .mobileItem {
+    transition: none;
+  }
 }

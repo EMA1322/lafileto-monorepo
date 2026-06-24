@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Eye, EyeOff, Pencil, Trash2 } from 'lucide-react';
 import { categoriesApi } from '@/utils/apis.js';
 import { canDelete, canRead, canUpdate, canWrite } from '@/utils/rbac.js';
 import {
   AdminThemeScope,
   Badge,
   Button,
+  IconAction,
   Input,
   ListPagination,
   ListSurface,
@@ -60,8 +62,10 @@ function CategoryImage({ category }) {
         alt={`Imagen de ${category.name}`}
         className={styles.categoryImage}
         decoding="async"
+        height="52"
         loading="lazy"
         src={category.imageUrl}
+        width="64"
       />
     );
   }
@@ -90,23 +94,26 @@ function CategoryActions({ category, onDelete, onEdit, onToggle, permissions, to
     <div className={styles.actions} aria-label="Acciones de categoria">
       {permissions.canUpdate ? (
         <>
-          <Button onClick={() => onEdit(category)} size="sm" variant="ghost">
-            Editar
-          </Button>
-          <Button
-            loading={isToggling}
+          <IconAction
+            icon={<Pencil />}
+            label={`Editar categoria: ${category.name}`}
+            onClick={() => onEdit(category)}
+          />
+          <IconAction
+            disabled={isToggling}
+            icon={category.active ? <EyeOff /> : <Eye />}
+            label={`${category.active ? 'Desactivar' : 'Activar'} categoria: ${category.name}`}
             onClick={() => onToggle(category)}
-            size="sm"
-            variant="secondary"
-          >
-            {category.active ? 'Desactivar' : 'Activar'}
-          </Button>
+          />
         </>
       ) : null}
       {permissions.canDelete ? (
-        <Button onClick={() => onDelete(category)} size="sm" variant="danger">
-          Eliminar
-        </Button>
+        <IconAction
+          className={styles.deleteAction}
+          icon={<Trash2 />}
+          label={`Eliminar categoria: ${category.name}`}
+          onClick={() => onDelete(category)}
+        />
       ) : null}
     </div>
   );
@@ -130,13 +137,15 @@ function CategoriesTable({ items, onDelete, onEdit, onToggle, permissions, toggl
               <td>
                 <div className={styles.categoryCell}>
                   <CategoryImage category={category} />
-                  <div>
+                  <div className={styles.categorySummary}>
                     <strong>{category.name}</strong>
-                    <span>{category.imageUrl || 'Sin URL de imagen'}</span>
+                    <span className={styles.categoryUrl}>
+                      {category.imageUrl || 'Sin URL de imagen'}
+                    </span>
                   </div>
                 </div>
               </td>
-              <td>{formatProductCount(category.productCount)}</td>
+              <td className={styles.countCell}>{formatProductCount(category.productCount)}</td>
               <td>
                 <StatusBadge active={category.active} />
               </td>
@@ -166,10 +175,12 @@ function CategoriesCards({ items, onDelete, onEdit, onToggle, permissions, toggl
           <CategoryImage category={category} />
           <div className={styles.mobileBody}>
             <div className={styles.mobileHeader}>
-              <h2>{category.name}</h2>
+              <div>
+                <h2>{category.name}</h2>
+                <p className={styles.categoryUrl}>{category.imageUrl || 'Sin URL de imagen'}</p>
+              </div>
               <StatusBadge active={category.active} />
             </div>
-            <p>{category.imageUrl || 'Sin URL de imagen'}</p>
             <div className={styles.mobileMeta}>
               <span>{formatProductCount(category.productCount)}</span>
             </div>
@@ -209,6 +220,7 @@ export default function CategoriesPage() {
     TableScroll,
     TableShell,
     TableToolbar,
+    IconAction,
   };
   // eslint-disable-next-line no-unused-vars -- This ESLint setup does not count JSX member expressions as usage.
   const View = {
@@ -357,13 +369,13 @@ export default function CategoriesPage() {
               </Button>
             ) : null
           }
-          description="Gestion operativa de categorias con filtros, estado y acciones RBAC."
+          description="Administra las categorias que organizan el catalogo y facilitan la navegacion de los clientes."
           eyebrow="Catalogo"
           title="Categorias"
         />
 
         <TableShell>
-          <TableToolbar>
+          <TableToolbar className={styles.toolbar}>
             <form className={styles.filters} onSubmit={handleSubmit}>
               <Input
                 id="categories-filter-q"
