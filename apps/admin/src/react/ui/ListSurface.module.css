@@ -1,8 +1,8 @@
 .surface {
   min-height: 100%;
   padding: clamp(1rem, 2vw, 1.75rem);
-  color: var(--admin-react-text, #f8fafc);
-  background: var(--admin-react-bg, #090b10);
+  color: var(--admin-react-text, #261a13);
+  background: var(--admin-react-bg, #fff9f1);
 }
 
 .header {
@@ -27,7 +27,7 @@
 .heading p {
   max-width: 46rem;
   margin: 0.35rem 0 0;
-  color: var(--admin-react-text-muted, #b7c0cf);
+  color: var(--admin-react-text-muted, #6a584b);
 }
 
 .eyebrow {
@@ -53,7 +53,7 @@
 
 .meta {
   margin: 0;
-  color: var(--admin-react-text-muted, #b7c0cf);
+  color: var(--admin-react-text-muted, #6a584b);
   font-size: 0.9rem;
 }
 

@@ -3,14 +3,14 @@
   place-items: center;
   border: 1px solid transparent;
   border-radius: var(--admin-react-radius-md, 0.5rem);
-  color: var(--admin-react-text-muted, #b7c0cf);
+  color: var(--admin-react-text-muted, #6a584b);
   background: transparent;
   cursor: pointer;
   transition:
-    background-color 160ms ease,
-    border-color 160ms ease,
-    color 160ms ease,
-    box-shadow 160ms ease;
+    background-color 200ms ease,
+    border-color 200ms ease,
+    color 200ms ease,
+    box-shadow 200ms ease;
 }
 
 .button:focus-visible {
@@ -34,27 +34,28 @@
 }
 
 .ghost:hover:not(:disabled) {
-  background: var(--admin-react-surface-muted, #1f2632);
-  color: var(--admin-react-text, #f8fafc);
+  background: var(--admin-react-surface-hover, #fff7ec);
+  color: var(--admin-react-text, #261a13);
 }
 
 .secondary {
-  background: var(--admin-react-surface-muted, #1f2632);
-  border-color: var(--admin-react-border, rgba(255, 255, 255, 0.1));
-  color: var(--admin-react-text, #f8fafc);
+  background: var(--admin-react-surface, #ffffff);
+  border-color: var(--admin-react-border, #e8d8c4);
+  color: var(--admin-react-text, #261a13);
 }
 
 .secondary:hover:not(:disabled) {
-  border-color: var(--admin-react-border-strong, rgba(255, 255, 255, 0.18));
+  border-color: var(--admin-react-border-strong, #d8bea3);
 }
 
 .danger {
-  color: var(--admin-react-danger, #f87171);
+  color: var(--admin-react-text-muted, #6a584b);
 }
 
 .danger:hover:not(:disabled) {
   background: color-mix(in srgb, var(--admin-react-danger, #f87171) 14%, transparent);
   border-color: color-mix(in srgb, var(--admin-react-danger, #f87171) 38%, transparent);
+  color: var(--admin-react-danger, #b42318);
 }
 
 @media (prefers-reduced-motion: reduce) {

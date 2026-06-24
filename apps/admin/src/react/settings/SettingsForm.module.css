@@ -15,20 +15,20 @@
   align-content: start;
   min-width: 0;
   padding: var(--admin-react-space-4, 1rem);
-  border: 1px solid var(--admin-react-border, rgba(255, 255, 255, 0.1));
+  border: 1px solid var(--admin-react-border, #e8d8c4);
   border-radius: var(--admin-react-radius-md, 0.5rem);
-  background: var(--admin-react-surface, #11151d);
+  background: var(--admin-react-surface, #ffffff);
 }
 
 .section legend {
   padding: 0 var(--admin-react-space-1, 0.25rem);
-  color: var(--admin-react-text, #f8fafc);
+  color: var(--admin-react-text, #261a13);
   font-weight: 800;
 }
 
 .sectionHint {
   margin: 0;
-  color: var(--admin-react-text-muted, #b7c0cf);
+  color: var(--admin-react-text-muted, #6a584b);
   font-size: 0.875rem;
 }
 
@@ -49,7 +49,7 @@
 }
 
 .label {
-  color: var(--admin-react-text, #f8fafc);
+  color: var(--admin-react-text, #261a13);
   font-size: 0.875rem;
   font-weight: 700;
 }
@@ -59,11 +59,11 @@
 .select {
   width: 100%;
   min-width: 0;
-  border: 1px solid var(--admin-react-border, rgba(255, 255, 255, 0.1));
+  border: 1px solid var(--admin-react-border, #e8d8c4);
   border-radius: var(--admin-react-radius-md, 0.5rem);
   padding: 0 var(--admin-react-space-3, 0.75rem);
-  color: var(--admin-react-text, #f8fafc);
-  background: var(--admin-react-surface-muted, #1f2632);
+  color: var(--admin-react-text, #261a13);
+  background: var(--admin-react-surface-muted, #fff3e4);
 }
 
 .control,
@@ -100,7 +100,7 @@
   display: flex;
   align-items: center;
   gap: var(--admin-react-space-2, 0.5rem);
-  color: var(--admin-react-text, #f8fafc);
+  color: var(--admin-react-text, #261a13);
   font-weight: 700;
 }
 
@@ -121,10 +121,10 @@
   width: 5rem;
   height: 5rem;
   overflow: hidden;
-  border: 1px solid var(--admin-react-border, rgba(255, 255, 255, 0.1));
+  border: 1px solid var(--admin-react-border, #e8d8c4);
   border-radius: var(--admin-react-radius-md, 0.5rem);
-  color: var(--admin-react-text-muted, #b7c0cf);
-  background: var(--admin-react-surface-muted, #1f2632);
+  color: var(--admin-react-text-muted, #6a584b);
+  background: var(--admin-react-surface-muted, #fff3e4);
   font-size: 0.8125rem;
   text-align: center;
 }
@@ -149,9 +149,9 @@
   align-items: end;
   min-width: 0;
   padding: var(--admin-react-space-3, 0.75rem);
-  border: 1px solid var(--admin-react-border, rgba(255, 255, 255, 0.1));
+  border: 1px solid var(--admin-react-border, #e8d8c4);
   border-radius: var(--admin-react-radius-md, 0.5rem);
-  background: var(--admin-react-surface-muted, #1f2632);
+  background: var(--admin-react-surface-muted, #fff3e4);
 }
 
 .hourRow {
@@ -159,7 +159,7 @@
 }
 
 .dayLabel {
-  color: var(--admin-react-text, #f8fafc);
+  color: var(--admin-react-text, #261a13);
   font-weight: 800;
 }
 

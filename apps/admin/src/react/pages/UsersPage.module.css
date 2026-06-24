@@ -19,13 +19,13 @@
 .header h1,
 .panelHeader h2 {
   margin: 0;
-  color: var(--admin-react-text, #f8fafc);
+  color: var(--admin-react-text, #261a13);
 }
 
 .header p,
 .panelHeader p {
   margin: var(--admin-react-space-1, 0.25rem) 0 0;
-  color: var(--admin-react-text-muted, #b7c0cf);
+  color: var(--admin-react-text-muted, #6a584b);
 }
 
 .toolbar {
@@ -44,7 +44,7 @@
 .matrixTable {
   width: 100%;
   border-collapse: collapse;
-  color: var(--admin-react-text, #f8fafc);
+  color: var(--admin-react-text, #261a13);
 }
 
 .table caption,
@@ -61,7 +61,7 @@
 .matrixTable th,
 .matrixTable td {
   padding: var(--admin-react-space-3, 0.75rem);
-  border-bottom: 1px solid var(--admin-react-border, rgba(255, 255, 255, 0.1));
+  border-bottom: 1px solid var(--admin-react-border, #e8d8c4);
   text-align: left;
   vertical-align: top;
 }
@@ -73,7 +73,7 @@
 }
 
 .muted {
-  color: var(--admin-react-text-muted, #b7c0cf);
+  color: var(--admin-react-text-muted, #6a584b);
 }
 
 .badge {
@@ -81,7 +81,7 @@
   align-items: center;
   min-height: 1.5rem;
   padding: 0 var(--admin-react-space-2, 0.5rem);
-  border: 1px solid var(--admin-react-border, rgba(255, 255, 255, 0.1));
+  border: 1px solid var(--admin-react-border, #e8d8c4);
   border-radius: var(--admin-react-radius-md, 0.5rem);
   font-size: 0.8125rem;
   font-weight: 700;
@@ -102,7 +102,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--admin-react-space-3, 0.75rem);
-  color: var(--admin-react-text-muted, #b7c0cf);
+  color: var(--admin-react-text-muted, #6a584b);
 }
 
 .pagination {
@@ -121,9 +121,9 @@
   display: grid;
   gap: var(--admin-react-space-3, 0.75rem);
   padding: var(--admin-react-space-4, 1rem);
-  border: 1px solid var(--admin-react-border, rgba(255, 255, 255, 0.1));
+  border: 1px solid var(--admin-react-border, #e8d8c4);
   border-radius: var(--admin-react-radius-md, 0.5rem);
-  background: var(--admin-react-surface-muted, #1f2632);
+  background: var(--admin-react-surface-muted, #fff3e4);
 }
 
 .mobileHeader {
@@ -137,14 +137,14 @@
 .mobileHeader h3,
 .matrixCard h3 {
   margin: 0;
-  color: var(--admin-react-text, #f8fafc);
+  color: var(--admin-react-text, #261a13);
   font-size: 1rem;
 }
 
 .mobileMeta {
   display: grid;
   gap: var(--admin-react-space-1, 0.25rem);
-  color: var(--admin-react-text-muted, #b7c0cf);
+  color: var(--admin-react-text-muted, #6a584b);
 }
 
 .rolesTableWrap,
@@ -170,7 +170,7 @@
   justify-content: space-between;
   gap: var(--admin-react-space-2, 0.5rem);
   padding: var(--admin-react-space-2, 0.5rem);
-  border: 1px solid var(--admin-react-border, rgba(255, 255, 255, 0.1));
+  border: 1px solid var(--admin-react-border, #e8d8c4);
   border-radius: var(--admin-react-radius-sm, 0.375rem);
 }
 

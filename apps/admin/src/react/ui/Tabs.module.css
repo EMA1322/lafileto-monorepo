@@ -9,10 +9,10 @@
   max-width: 100%;
   gap: var(--admin-react-space-1, 0.25rem);
   overflow-x: auto;
-  border: 1px solid var(--admin-react-border, rgba(255, 255, 255, 0.1));
+  border: 1px solid var(--admin-react-border, #e8d8c4);
   border-radius: var(--admin-react-radius-lg, 0.75rem);
   padding: var(--admin-react-space-1, 0.25rem);
-  background: var(--admin-react-surface, #11151d);
+  background: var(--admin-react-surface, #ffffff);
 }
 
 .tab {
@@ -20,7 +20,7 @@
   border: 0;
   border-radius: var(--admin-react-radius-md, 0.5rem);
   padding: 0 var(--admin-react-space-3, 0.75rem);
-  color: var(--admin-react-text-muted, #b7c0cf);
+  color: var(--admin-react-text-muted, #6a584b);
   background: transparent;
   font: inherit;
   font-size: 0.875rem;
@@ -29,8 +29,8 @@
 }
 
 .tab:hover:not(:disabled) {
-  color: var(--admin-react-text, #f8fafc);
-  background: var(--admin-react-surface-muted, #1f2632);
+  color: var(--admin-react-text, #261a13);
+  background: var(--admin-react-surface-muted, #fff3e4);
 }
 
 .tab:focus-visible {
@@ -45,7 +45,7 @@
 
 .selected,
 .selected:hover:not(:disabled) {
-  color: var(--admin-react-accent-contrast, #171006);
+  color: var(--admin-react-accent-contrast, #261a13);
   background: var(--admin-react-accent, #faa718);
 }
 
