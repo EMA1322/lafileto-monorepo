@@ -113,27 +113,41 @@ export default function RoleForm({ mode = 'create', onClose, onSaved, open = fal
               {generalError}
             </p>
           ) : null}
-          {!isEdit ? (
-            <Input
-              error={errors.roleId}
-              hint="Opcional. Si se omite, backend genera role-* desde el nombre."
-              id="role-form-roleId"
-              label="Identificador"
-              maxLength={50}
-              onChange={(event) => updateValue('roleId', event.target.value)}
-              placeholder="role-operador"
-              value={values.roleId}
-            />
-          ) : null}
-          <Input
-            error={errors.name}
-            id="role-form-name"
-            label="Nombre visible"
-            maxLength={80}
-            onChange={(event) => updateValue('name', event.target.value)}
-            required
-            value={values.name}
-          />
+          <section className={styles.formSection} aria-labelledby="role-details-section">
+            <div className={styles.sectionHeader}>
+              <h3 id="role-details-section">Datos del rol</h3>
+              <p>El nombre ayuda a reconocer el rol; los permisos se editan desde la matriz.</p>
+            </div>
+            <div className={styles.grid}>
+              {!isEdit ? (
+                <Input
+                  error={errors.roleId}
+                  hint="Opcional. Si se omite, se genera role-* desde el nombre."
+                  id="role-form-roleId"
+                  label="Identificador"
+                  maxLength={50}
+                  onChange={(event) => updateValue('roleId', event.target.value)}
+                  placeholder="role-operador"
+                  value={values.roleId}
+                />
+              ) : (
+                <div className={styles.readOnlyBox}>
+                  <span className={styles.readOnlyLabel}>Identificador</span>
+                  <strong>{values.roleId}</strong>
+                  <p>No se edita para mantener las relaciones existentes de usuarios y permisos.</p>
+                </div>
+              )}
+              <Input
+                error={errors.name}
+                id="role-form-name"
+                label="Nombre visible"
+                maxLength={80}
+                onChange={(event) => updateValue('name', event.target.value)}
+                required
+                value={values.name}
+              />
+            </div>
+          </section>
           <footer className={styles.footer}>
             <Button disabled={pending} onClick={onClose} variant="ghost">
               Cancelar

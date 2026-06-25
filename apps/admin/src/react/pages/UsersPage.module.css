@@ -35,6 +35,15 @@
   align-items: end;
 }
 
+.toolbarShell {
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--admin-react-surface-muted, #fff3e4) 54%, transparent),
+      var(--admin-react-surface, #ffffff)
+    );
+}
+
 .panelBlock {
   display: grid;
   gap: var(--admin-react-space-4, 1rem);
@@ -45,6 +54,14 @@
   width: 100%;
   border-collapse: collapse;
   color: var(--admin-react-text, #261a13);
+}
+
+.table {
+  min-width: 58rem;
+}
+
+.matrixTable {
+  min-width: 48rem;
 }
 
 .table caption,
@@ -66,35 +83,69 @@
   vertical-align: top;
 }
 
+.table tbody tr,
+.mobileItem,
+.matrixCard {
+  transition:
+    background-color 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.table tbody tr:hover,
+.mobileItem:hover,
+.matrixCard:hover {
+  background: var(--admin-react-surface-hover, #fff7ec);
+  box-shadow: inset 0.1875rem 0 0 color-mix(in srgb, var(--admin-react-accent, #faa718) 62%, transparent);
+}
+
+.userCell,
+.contactCell,
+.roleCell,
+.roleSummary {
+  display: grid;
+  min-width: 0;
+  gap: 0.25rem;
+}
+
+.userCell strong,
+.roleSummary strong {
+  color: var(--admin-react-text, #261a13);
+  font-size: 1rem;
+  line-height: 1.25;
+}
+
+.userCell span,
+.contactCell span,
+.roleCell span,
+.roleSummary span,
+.roleScope {
+  margin: 0;
+  color: var(--admin-react-text-muted, #6a584b);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.contactCell,
+.roleCell {
+  overflow-wrap: anywhere;
+}
+
 .actions {
-  display: flex;
+  display: inline-flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: var(--admin-react-space-2, 0.5rem);
+}
+
+.deleteAction:hover:not(:disabled),
+.deleteAction:focus-visible {
+  border-color: color-mix(in srgb, var(--admin-react-danger, #f87171) 58%, transparent);
+  color: var(--admin-react-danger, #b42318);
+  background: color-mix(in srgb, var(--admin-react-danger, #f87171) 18%, var(--admin-react-surface, #ffffff));
 }
 
 .muted {
   color: var(--admin-react-text-muted, #6a584b);
-}
-
-.badge {
-  display: inline-flex;
-  align-items: center;
-  min-height: 1.5rem;
-  padding: 0 var(--admin-react-space-2, 0.5rem);
-  border: 1px solid var(--admin-react-border, #e8d8c4);
-  border-radius: var(--admin-react-radius-md, 0.5rem);
-  font-size: 0.8125rem;
-  font-weight: 700;
-}
-
-.badgeSuccess {
-  color: #bbf7d0;
-  background: rgba(34, 197, 94, 0.12);
-}
-
-.badgeWarning {
-  color: #fde68a;
-  background: rgba(245, 158, 11, 0.12);
 }
 
 .footer {
@@ -141,6 +192,12 @@
   font-size: 1rem;
 }
 
+.mobileHeader p {
+  margin: var(--admin-react-space-1, 0.25rem) 0 0;
+  color: var(--admin-react-text-muted, #6a584b);
+  font-size: 0.8rem;
+}
+
 .mobileMeta {
   display: grid;
   gap: var(--admin-react-space-1, 0.25rem);
@@ -172,6 +229,30 @@
   padding: var(--admin-react-space-2, 0.5rem);
   border: 1px solid var(--admin-react-border, #e8d8c4);
   border-radius: var(--admin-react-radius-sm, 0.375rem);
+}
+
+.sensitiveEnabled,
+.sensitiveMuted {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.625rem;
+  padding: 0 var(--admin-react-space-2, 0.5rem);
+  border: 1px solid var(--admin-react-border, #e8d8c4);
+  border-radius: var(--admin-react-radius-sm, 0.375rem);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.sensitiveEnabled {
+  border-color: color-mix(in srgb, var(--admin-react-warning, #a86000) 42%, var(--admin-react-border, #e8d8c4));
+  color: var(--admin-react-warning, #a86000);
+  background: color-mix(in srgb, var(--admin-react-warning, #a86000) 10%, var(--admin-react-surface, #ffffff));
+}
+
+.sensitiveMuted {
+  color: var(--admin-react-text-muted, #6a584b);
+  background: var(--admin-react-surface-muted, #fff3e4);
 }
 
 @media (max-width: 840px) {
@@ -206,5 +287,13 @@
   .matrixCards {
     display: grid;
     gap: var(--admin-react-space-3, 0.75rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .table tbody tr,
+  .mobileItem,
+  .matrixCard {
+    transition: none;
   }
 }
