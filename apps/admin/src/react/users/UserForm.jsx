@@ -125,80 +125,107 @@ export default function UserForm({
             </p>
           ) : null}
 
-          <div className={styles.grid}>
-            <Input
-              error={errors.fullName}
-              id="user-form-fullName"
-              label="Nombre completo"
-              maxLength={120}
-              onChange={(event) => updateValue('fullName', event.target.value)}
-              required
-              value={values.fullName}
-            />
-            {!isEdit ? (
+          <section className={styles.formSection} aria-labelledby="user-personal-section">
+            <div className={styles.sectionHeader}>
+              <h3 id="user-personal-section">Datos personales</h3>
+              <p>Informacion principal para identificar y contactar al usuario.</p>
+            </div>
+            <div className={styles.grid}>
               <Input
-                error={errors.email}
-                id="user-form-email"
-                label="Email"
-                onChange={(event) => updateValue('email', event.target.value)}
+                error={errors.fullName}
+                id="user-form-fullName"
+                label="Nombre completo"
+                maxLength={120}
+                onChange={(event) => updateValue('fullName', event.target.value)}
                 required
-                type="email"
-                value={values.email}
+                value={values.fullName}
               />
-            ) : null}
-            <Input
-              error={errors.phone}
-              hint="Solo numeros, espacios, +, - o ()."
-              id="user-form-phone"
-              label="Telefono"
-              maxLength={20}
-              onChange={(event) => updateValue('phone', event.target.value)}
-              required
-              type="tel"
-              value={values.phone}
-            />
-            {!isEdit ? (
+              {isEdit ? (
+                <div className={styles.readOnlyBox}>
+                  <span className={styles.readOnlyLabel}>Email</span>
+                  <strong>{values.email || 'Sin email disponible'}</strong>
+                  <p>El email identifica el acceso y no se edita desde este formulario.</p>
+                </div>
+              ) : (
+                <Input
+                  error={errors.email}
+                  id="user-form-email"
+                  label="Email"
+                  onChange={(event) => updateValue('email', event.target.value)}
+                  required
+                  type="email"
+                  value={values.email}
+                />
+              )}
               <Input
-                error={errors.password}
-                id="user-form-password"
-                label="Contrasena"
-                minLength={8}
-                onChange={(event) => updateValue('password', event.target.value)}
+                error={errors.phone}
+                hint="Solo numeros, espacios, +, - o ()."
+                id="user-form-phone"
+                label="Telefono"
+                maxLength={20}
+                onChange={(event) => updateValue('phone', event.target.value)}
                 required
-                type="password"
-                value={values.password}
+                type="tel"
+                value={values.phone}
               />
-            ) : null}
-            <Select
-              error={errors.roleId}
-              id="user-form-roleId"
-              label="Rol"
-              onChange={(event) => updateValue('roleId', event.target.value)}
-              required
-              value={values.roleId}
-            >
-              <option value="">Seleccionar rol</option>
-              {roles.map((role) => (
-                <option key={role.roleId} value={role.roleId}>
-                  {role.name || role.roleId}
-                </option>
-              ))}
-            </Select>
-            <Select
-              error={errors.status}
-              id="user-form-status"
-              label="Estado"
-              onChange={(event) => updateValue('status', event.target.value)}
-              required
-              value={values.status}
-            >
-              {USER_STATUS_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </Select>
-          </div>
+            </div>
+          </section>
+
+          <section className={styles.formSection} aria-labelledby="user-access-section">
+            <div className={styles.sectionHeader}>
+              <h3 id="user-access-section">Acceso al panel</h3>
+              <p>Rol asignado, estado del usuario y credenciales cuando se crea el acceso.</p>
+            </div>
+            <div className={styles.grid}>
+              {isEdit ? (
+                <div className={styles.readOnlyBox}>
+                  <span className={styles.readOnlyLabel}>Contrasena</span>
+                  <strong>No visible</strong>
+                  <p>Por seguridad no se muestra ni se cambia desde la edicion de usuario.</p>
+                </div>
+              ) : (
+                <Input
+                  error={errors.password}
+                  id="user-form-password"
+                  label="Contrasena"
+                  minLength={8}
+                  onChange={(event) => updateValue('password', event.target.value)}
+                  required
+                  type="password"
+                  value={values.password}
+                />
+              )}
+              <Select
+                error={errors.roleId}
+                id="user-form-roleId"
+                label="Rol"
+                onChange={(event) => updateValue('roleId', event.target.value)}
+                required
+                value={values.roleId}
+              >
+                <option value="">Seleccionar rol</option>
+                {roles.map((role) => (
+                  <option key={role.roleId} value={role.roleId}>
+                    {role.name || role.roleId}
+                  </option>
+                ))}
+              </Select>
+              <Select
+                error={errors.status}
+                id="user-form-status"
+                label="Estado"
+                onChange={(event) => updateValue('status', event.target.value)}
+                required
+                value={values.status}
+              >
+                {USER_STATUS_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </Select>
+            </div>
+          </section>
 
           <footer className={styles.footer}>
             <Button disabled={pending} onClick={onClose} variant="ghost">

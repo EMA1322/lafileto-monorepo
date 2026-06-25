@@ -12,6 +12,21 @@ import { ADMIN_ROLE_ID } from './roles.helpers.js';
 import styles from '../pages/UsersPage.module.css';
 import formStyles from './UserForm.module.css';
 
+const PERMISSION_LABELS = {
+  r: 'Leer',
+  w: 'Crear',
+  u: 'Editar',
+  d: 'Eliminar',
+};
+
+function SensitivePermissionState({ enabled }) {
+  return (
+    <span className={enabled ? styles.sensitiveEnabled : styles.sensitiveMuted}>
+      {enabled ? 'Cambio de estado habilitado' : 'Sin cambio de estado'}
+    </span>
+  );
+}
+
 export default function PermissionsMatrix({
   currentRoleId = '',
   onClose,
@@ -130,20 +145,21 @@ export default function PermissionsMatrix({
             <thead>
               <tr>
                 <th scope="col">Modulo</th>
-                <th scope="col">R</th>
-                <th scope="col">W</th>
-                <th scope="col">U</th>
-                <th scope="col">D</th>
+                <th scope="col">Leer</th>
+                <th scope="col">Crear</th>
+                <th scope="col">Editar</th>
+                <th scope="col">Eliminar</th>
+                <th scope="col">Accion sensible</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((row) => (
                 <tr key={row.moduleKey}>
                   <th scope="row">{row.name}</th>
-                  {['r', 'w', 'u', 'd'].map((permission) => (
+                  {Object.keys(PERMISSION_LABELS).map((permission) => (
                     <td key={permission}>
                       <input
-                        aria-label={`${row.name} ${permission.toUpperCase()}`}
+                        aria-label={`${PERMISSION_LABELS[permission]} en ${row.name}`}
                         checked={Boolean(row[permission])}
                         onChange={(event) =>
                           updatePermission(row.moduleKey, permission, event.target.checked)
@@ -152,6 +168,9 @@ export default function PermissionsMatrix({
                       />
                     </td>
                   ))}
+                  <td>
+                    <SensitivePermissionState enabled={row.changeStatus} />
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -162,9 +181,9 @@ export default function PermissionsMatrix({
             <article className={styles.matrixCard} key={row.moduleKey}>
               <h3>{row.name}</h3>
               <div className={styles.permissionSwitches}>
-                {['r', 'w', 'u', 'd'].map((permission) => (
+                {Object.keys(PERMISSION_LABELS).map((permission) => (
                   <label className={styles.permissionToggle} key={permission}>
-                    <span>{permission.toUpperCase()}</span>
+                    <span>{PERMISSION_LABELS[permission]}</span>
                     <input
                       checked={Boolean(row[permission])}
                       onChange={(event) =>
@@ -175,6 +194,7 @@ export default function PermissionsMatrix({
                   </label>
                 ))}
               </div>
+              <SensitivePermissionState enabled={row.changeStatus} />
             </article>
           ))}
         </div>
@@ -210,6 +230,12 @@ export default function PermissionsMatrix({
         </header>
 
         <div className={formStyles.body}>
+          <div className={formStyles.readOnlyBox}>
+            <p className={formStyles.description}>
+              Los permisos se guardan por modulo. La accion sensible de cambio de estado se muestra
+              como dato de solo lectura y se conserva al guardar.
+            </p>
+          </div>
           {requiresStrongConfirmation ? (
             <div className={formStyles.warningBox}>
               <p className={formStyles.description}>

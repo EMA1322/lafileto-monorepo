@@ -55,6 +55,63 @@
   gap: var(--admin-react-space-4, 1rem);
 }
 
+.formSection {
+  display: grid;
+  gap: var(--admin-react-space-3, 0.75rem);
+  padding: var(--admin-react-space-4, 1rem);
+  border: 1px solid var(--admin-react-border, #e8d8c4);
+  border-radius: var(--admin-react-radius-md, 0.5rem);
+  background: var(--admin-react-surface, #ffffff);
+}
+
+.sectionHeader {
+  display: grid;
+  gap: var(--admin-react-space-1, 0.25rem);
+}
+
+.sectionHeader h3 {
+  margin: 0;
+  color: var(--admin-react-text, #261a13);
+  font-size: 0.95rem;
+  line-height: 1.25;
+}
+
+.sectionHeader p {
+  margin: 0;
+  color: var(--admin-react-text-muted, #6a584b);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.readOnlyBox {
+  display: grid;
+  gap: var(--admin-react-space-1, 0.25rem);
+  padding: var(--admin-react-space-3, 0.75rem);
+  border: 1px dashed var(--admin-react-border-strong, #d8bea3);
+  border-radius: var(--admin-react-radius-md, 0.5rem);
+  color: var(--admin-react-text, #261a13);
+  background: var(--admin-react-surface-muted, #fff3e4);
+}
+
+.readOnlyBox strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.readOnlyBox p {
+  margin: 0;
+  color: var(--admin-react-text-muted, #6a584b);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.readOnlyLabel {
+  color: var(--admin-react-text-muted, #6a584b);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
 .titleGroup {
   display: grid;
   gap: var(--admin-react-space-1, 0.25rem);
@@ -82,6 +139,21 @@
   color: var(--admin-react-text, #261a13);
   background: var(--admin-react-surface-muted, #fff3e4);
   cursor: pointer;
+  transition:
+    background-color 200ms ease,
+    border-color 200ms ease,
+    box-shadow 200ms ease,
+    color 200ms ease;
+}
+
+.closeButton:hover:not(:disabled) {
+  border-color: var(--admin-react-border-strong, #d8bea3);
+  background: var(--admin-react-surface-hover, #fff7ec);
+}
+
+.closeButton:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--admin-react-focus-ring, rgba(250, 167, 24, 0.42));
 }
 
 .error {
@@ -127,5 +199,11 @@
 
   .footer {
     flex-wrap: wrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .closeButton {
+    transition: none;
   }
 }

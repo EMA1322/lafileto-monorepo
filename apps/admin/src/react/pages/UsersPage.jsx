@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Pencil, Trash2 } from 'lucide-react';
 import { fetchMe, getCurrentUser } from '@/utils/auth.js';
 import { canDelete, canUpdate, canWrite } from '@/utils/rbac.js';
 import { rolesApi, usersApi } from '@/utils/apis.js';
@@ -6,6 +7,7 @@ import {
   AdminThemeScope,
   Badge,
   Button,
+  IconAction,
   Input,
   Select,
   StateBlock,
@@ -58,11 +60,7 @@ function getEffectiveCurrentUser(userFromState = null) {
 
 function StatusBadge({ status }) {
   const isActive = status === 'active';
-  return (
-    <span className={`${styles.badge} ${isActive ? styles.badgeSuccess : styles.badgeWarning}`}>
-      {formatUserStatus(status)}
-    </span>
-  );
+  return <Badge variant={isActive ? 'success' : 'warning'}>{formatUserStatus(status)}</Badge>;
 }
 
 function UserActions({ currentUserId, onDelete, onEdit, permissions, user }) {
@@ -74,14 +72,19 @@ function UserActions({ currentUserId, onDelete, onEdit, permissions, user }) {
   return (
     <div className={styles.actions} aria-label="Acciones de usuario">
       {permissions.canUpdate ? (
-        <Button onClick={() => onEdit(user)} size="sm" variant="ghost">
-          Editar
-        </Button>
+        <IconAction
+          icon={<Pencil />}
+          label={`Editar usuario: ${user.fullName || user.email || user.id}`}
+          onClick={() => onEdit(user)}
+        />
       ) : null}
       {permissions.canDelete && !isCurrentUser ? (
-        <Button onClick={() => onDelete(user)} size="sm" variant="danger">
-          Eliminar
-        </Button>
+        <IconAction
+          className={styles.deleteAction}
+          icon={<Trash2 />}
+          label={`Eliminar usuario: ${user.fullName || user.email || user.id}`}
+          onClick={() => onDelete(user)}
+        />
       ) : null}
     </div>
   );
@@ -94,10 +97,9 @@ function UsersTable({ currentUserId, items, onDelete, onEdit, permissions, roles
         <caption>Listado de usuarios</caption>
         <thead>
           <tr>
-            <th scope="col">Nombre</th>
-            <th scope="col">Email</th>
-            <th scope="col">Telefono</th>
-            <th scope="col">Rol</th>
+            <th scope="col">Usuario</th>
+            <th scope="col">Contacto</th>
+            <th scope="col">Rol asignado</th>
             <th scope="col">Estado</th>
             <th scope="col">Acciones</th>
           </tr>
@@ -105,11 +107,23 @@ function UsersTable({ currentUserId, items, onDelete, onEdit, permissions, roles
         <tbody>
           {items.map((user) => (
             <tr key={user.id}>
-              <td>{user.fullName || '-'}</td>
-              <td>{user.email || '-'}</td>
-              <td>{user.phone || '-'}</td>
               <td>
-                <Badge>{getRoleLabel(user.roleId, roles)}</Badge>
+                <div className={styles.userCell}>
+                  <strong>{user.fullName || '-'}</strong>
+                  <span>ID {user.id || '-'}</span>
+                </div>
+              </td>
+              <td>
+                <div className={styles.contactCell}>
+                  <span>{user.email || 'Sin email disponible'}</span>
+                  <span>{user.phone || 'Sin telefono registrado'}</span>
+                </div>
+              </td>
+              <td>
+                <div className={styles.roleCell}>
+                  <Badge>{getRoleLabel(user.roleId, roles)}</Badge>
+                  <span>{user.roleId || '-'}</span>
+                </div>
               </td>
               <td>
                 <StatusBadge status={user.status} />
@@ -137,13 +151,16 @@ function UsersCards({ currentUserId, items, onDelete, onEdit, permissions, roles
       {items.map((user) => (
         <article className={styles.mobileItem} key={user.id}>
           <div className={styles.mobileHeader}>
-            <h2>{user.fullName || '-'}</h2>
+            <div>
+              <h2>{user.fullName || '-'}</h2>
+              <p>ID {user.id || '-'}</p>
+            </div>
             <StatusBadge status={user.status} />
           </div>
           <div className={styles.mobileMeta}>
-            <span>{user.email || '-'}</span>
-            <span>{user.phone || '-'}</span>
-            <span>{getRoleLabel(user.roleId, roles)}</span>
+            <span>Email: {user.email || 'Sin email disponible'}</span>
+            <span>Telefono: {user.phone || 'Sin telefono registrado'}</span>
+            <span>Rol: {getRoleLabel(user.roleId, roles)}</span>
           </div>
           <UserActions
             currentUserId={currentUserId}
@@ -164,6 +181,7 @@ export default function UsersPage() {
     AdminThemeScope,
     Badge,
     Button,
+    IconAction,
     Input,
     Select,
     StateBlock,
@@ -473,7 +491,7 @@ export default function UsersPage() {
               label: 'Usuarios',
               content: (
                 <TableShell>
-                  <TableToolbar>
+                  <TableToolbar className={styles.toolbarShell}>
                     <form className={styles.toolbar} onSubmit={applyFilters}>
                       <Input
                         id="users-filter-q"

@@ -1,6 +1,43 @@
-import { Button, StateBlock } from '../ui/index.js';
+import { KeyRound, Pencil, Trash2 } from 'lucide-react';
+import { Button, IconAction, StateBlock } from '../ui/index.js';
 import { isProtectedRole } from './roles.helpers.js';
 import styles from '../pages/UsersPage.module.css';
+
+function getRoleScopeCopy(role) {
+  if (isProtectedRole(role.roleId)) {
+    return 'Rol protegido. Puede gestionar usuarios, roles, modulos y permisos.';
+  }
+
+  return 'El alcance real se define en la matriz de permisos por modulo.';
+}
+
+function RoleActions({ onDelete, onEdit, onPermissions, protectedRole, role }) {
+  return (
+    <div className={styles.actions} aria-label="Acciones de rol">
+      <IconAction
+        icon={<Pencil />}
+        label={`Editar rol: ${role.name || role.roleId}`}
+        onClick={() => onEdit(role)}
+      />
+      <IconAction
+        icon={<KeyRound />}
+        label={`Editar permisos del rol: ${role.name || role.roleId}`}
+        onClick={() => onPermissions(role)}
+      />
+      <IconAction
+        className={styles.deleteAction}
+        disabled={protectedRole}
+        icon={<Trash2 />}
+        label={
+          protectedRole
+            ? `No se puede eliminar el rol administrador: ${role.name || role.roleId}`
+            : `Eliminar rol: ${role.name || role.roleId}`
+        }
+        onClick={() => onDelete(role)}
+      />
+    </div>
+  );
+}
 
 export default function RolesPanel({
   canManageRoles = false,
@@ -13,7 +50,7 @@ export default function RolesPanel({
   roles = [],
 }) {
   // eslint-disable-next-line no-unused-vars -- This ESLint setup does not count JSX member expressions as usage.
-  const Ui = { Button, StateBlock };
+  const Ui = { Button, IconAction, StateBlock };
 
   if (!canManageRoles) {
     return (
@@ -48,7 +85,7 @@ export default function RolesPanel({
       <header className={styles.panelHeader}>
         <div>
           <h2 id="roles-panel-title">Roles & Permisos</h2>
-          <p>Administra roles, restricciones y matriz RBAC.</p>
+          <p>Revisa el alcance real de cada rol y administra permisos por modulo.</p>
         </div>
         <Button onClick={onCreate} variant="primary">
           Crear rol
@@ -61,7 +98,7 @@ export default function RolesPanel({
           <thead>
             <tr>
               <th scope="col">Rol</th>
-              <th scope="col">Nombre visible</th>
+              <th scope="col">Alcance</th>
               <th scope="col">Acciones</th>
             </tr>
           </thead>
@@ -70,28 +107,23 @@ export default function RolesPanel({
               const protectedRole = isProtectedRole(role.roleId);
               return (
                 <tr key={role.roleId}>
-                  <td>{role.roleId}</td>
-                  <td>{role.name}</td>
                   <td>
-                    <div className={styles.actions}>
-                      <Button onClick={() => onEdit(role)} size="sm" variant="ghost">
-                        Editar
-                      </Button>
-                      <Button onClick={() => onPermissions(role)} size="sm" variant="secondary">
-                        Permisos
-                      </Button>
-                      <Button
-                        disabled={protectedRole}
-                        onClick={() => onDelete(role)}
-                        size="sm"
-                        title={
-                          protectedRole ? 'El rol administrador no se puede eliminar.' : undefined
-                        }
-                        variant="danger"
-                      >
-                        Eliminar
-                      </Button>
+                    <div className={styles.roleSummary}>
+                      <strong>{role.name}</strong>
+                      <span>{role.roleId}</span>
                     </div>
+                  </td>
+                  <td>
+                    <p className={styles.roleScope}>{getRoleScopeCopy(role)}</p>
+                  </td>
+                  <td>
+                    <RoleActions
+                      onDelete={onDelete}
+                      onEdit={onEdit}
+                      onPermissions={onPermissions}
+                      protectedRole={protectedRole}
+                      role={role}
+                    />
                   </td>
                 </tr>
               );
@@ -106,25 +138,19 @@ export default function RolesPanel({
           return (
             <article className={styles.mobileItem} key={role.roleId}>
               <div className={styles.mobileHeader}>
-                <h3>{role.name}</h3>
-                <span>{role.roleId}</span>
+                <div>
+                  <h3>{role.name}</h3>
+                  <p>{role.roleId}</p>
+                </div>
               </div>
-              <div className={styles.actions}>
-                <Button onClick={() => onEdit(role)} size="sm" variant="ghost">
-                  Editar
-                </Button>
-                <Button onClick={() => onPermissions(role)} size="sm" variant="secondary">
-                  Permisos
-                </Button>
-                <Button
-                  disabled={protectedRole}
-                  onClick={() => onDelete(role)}
-                  size="sm"
-                  variant="danger"
-                >
-                  Eliminar
-                </Button>
-              </div>
+              <p className={styles.roleScope}>{getRoleScopeCopy(role)}</p>
+              <RoleActions
+                onDelete={onDelete}
+                onEdit={onEdit}
+                onPermissions={onPermissions}
+                protectedRole={protectedRole}
+                role={role}
+              />
             </article>
           );
         })}
