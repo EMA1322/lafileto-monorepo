@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { settingsApi } from '@/utils/apis.js';
 import { canRead, canWrite, ensureRbacLoaded } from '@/utils/rbac.js';
 import { AdminThemeScope, Button, StateBlock } from '../ui/index.js';
@@ -69,6 +69,7 @@ export default function SettingsPage() {
   const [draft, setDraft] = useState(() => normalizeSettingsConfig(null));
   const [saving, setSaving] = useState(false);
   const [permissionsReady, setPermissionsReady] = useState(false);
+  const formRef = useRef(null);
 
   const permissions = useMemo(
     () => ({
@@ -201,8 +202,12 @@ export default function SettingsPage() {
 
     if (Object.keys(nextFieldErrors).length > 0) {
       setFieldErrors(nextFieldErrors);
-      setSaveError('Revisa los campos con errores antes de guardar.');
+      setSaveError('Hay campos para revisar. Corregi los errores marcados y volve a guardar.');
       setSaveSuccess('');
+      window.setTimeout(() => {
+        const firstInvalid = formRef.current?.querySelector('[aria-invalid="true"]');
+        if (typeof firstInvalid?.focus === 'function') firstInvalid.focus();
+      }, 0);
       return;
     }
 
@@ -219,7 +224,9 @@ export default function SettingsPage() {
       setOriginalConfig(saved);
       setDraft(saved);
       syncSettingsBranding(saved);
-      setSaveSuccess('Configuracion guardada correctamente.');
+      setSaveSuccess(
+        'Configuracion guardada. Los cambios quedan listos para los canales que la consumen.',
+      );
     } catch (error) {
       const mapped = mapSettingsApiError(error);
       setFieldErrors(mapped.fieldErrors);
@@ -234,7 +241,13 @@ export default function SettingsPage() {
 
   let content = null;
   if (!permissionsReady || status === VIEW_STATUS.loading) {
-    content = <StateBlock status="loading" title="Cargando configuracion" />;
+    content = (
+      <StateBlock
+        description="Estamos leyendo la configuracion actual antes de habilitar el formulario."
+        status="loading"
+        title="Cargando configuracion"
+      />
+    );
   } else if (status === VIEW_STATUS.error) {
     content = (
       <StateBlock
@@ -247,14 +260,20 @@ export default function SettingsPage() {
         }
         description={loadError}
         status="error"
-        title="No pudimos cargar Settings"
+        title="No pudimos cargar configuracion"
       />
     );
   } else if (status === VIEW_STATUS.empty) {
-    content = <StateBlock status="empty" title="No hay configuracion disponible" />;
+    content = (
+      <StateBlock
+        description="El Backend no devolvio datos de Settings. Reintenta antes de editar."
+        status="empty"
+        title="No hay configuracion disponible"
+      />
+    );
   } else {
     content = (
-      <form className={styles.panel} onSubmit={handleSubmit}>
+      <form className={styles.panel} onSubmit={handleSubmit} ref={formRef}>
         {!permissions.canWrite ? (
           <p className={`${styles.alert} ${styles.alertInfo}`} role="status">
             No tenes permiso para editar. La configuracion se muestra en modo solo lectura.
@@ -283,13 +302,19 @@ export default function SettingsPage() {
         />
 
         <footer className={styles.footer}>
-          <span>{isDirty ? 'Hay cambios sin guardar.' : 'Sin cambios pendientes.'}</span>
+          <span aria-live="polite">
+            {saving
+              ? 'Guardando configuracion...'
+              : isDirty
+                ? 'Hay cambios sin guardar.'
+                : 'Sin cambios pendientes.'}
+          </span>
           <div className={styles.actions}>
             <Button disabled={saving} onClick={() => loadSettings()} variant="ghost">
               Actualizar
             </Button>
             <Button disabled={!canSave} loading={saving} type="submit" variant="primary">
-              Guardar
+              Guardar cambios
             </Button>
           </div>
         </footer>
@@ -303,7 +328,10 @@ export default function SettingsPage() {
         <header className={styles.header}>
           <div>
             <h1 id="settings-page-title">Configuracion</h1>
-            <p>Gestiona identidad, contacto, disponibilidad y datos publicos del sitio.</p>
+            <p>
+              Gestiona identidad, contacto, horarios, pagos y disponibilidad sin cambiar el contrato
+              publico del sitio.
+            </p>
           </div>
           <div className={styles.actions}>
             <Button

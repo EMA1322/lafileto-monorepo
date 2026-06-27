@@ -14,14 +14,19 @@ export default function DeliverySection({ disabled, errors, onFieldChange, value
 
   return (
     <fieldset className={styles.section}>
-      <legend>Delivery/disponibilidad</legend>
+      <legend>Configuracion comercial</legend>
       <p className={styles.sectionHint}>
-        Control operativo sin campos nuevos fuera del contrato actual.
+        Control operativo de disponibilidad y banner, sin campos nuevos fuera del contrato actual.
       </p>
 
       <label className={styles.field} htmlFor="settings-hours-override">
         <span className={styles.label}>Forzado de disponibilidad</span>
         <select
+          aria-describedby={
+            errors['hours.override']
+              ? 'settings-hours-override-error settings-hours-override-hint'
+              : 'settings-hours-override-hint'
+          }
           aria-invalid={errors['hours.override'] ? 'true' : undefined}
           className={styles.select}
           disabled={disabled}
@@ -35,8 +40,13 @@ export default function DeliverySection({ disabled, errors, onFieldChange, value
             </option>
           ))}
         </select>
+        <span className={styles.hint} id="settings-hours-override-hint">
+          Automatico usa los horarios; forzar abierto o cerrado pisa la disponibilidad publica.
+        </span>
         {errors['hours.override'] ? (
-          <span className={styles.error}>{errors['hours.override']}</span>
+          <span className={styles.error} id="settings-hours-override-error">
+            {errors['hours.override']}
+          </span>
         ) : null}
       </label>
 
@@ -53,6 +63,7 @@ export default function DeliverySection({ disabled, errors, onFieldChange, value
       <Ui.TextAreaField
         disabled={disabled}
         error={errors['hours.alert.message']}
+        hint="Hasta 280 caracteres. Solo se muestra si la alerta queda habilitada y tiene mensaje."
         id="settings-hours-alert-message"
         label="Mensaje del banner"
         maxLength={280}

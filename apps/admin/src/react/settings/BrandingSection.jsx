@@ -1,11 +1,38 @@
 import { useMemo, useState } from 'react';
 import styles from './SettingsForm.module.css';
 
-function TextField({ disabled, error, id, label, maxLength, onChange, type = 'text', value }) {
+function FieldMessage({ children, id, tone = 'hint' }) {
+  if (!children) return null;
+
+  return (
+    <span className={tone === 'error' ? styles.error : styles.hint} id={id}>
+      {children}
+    </span>
+  );
+}
+
+function getDescribedBy(id, hint, error) {
+  return (
+    [hint ? `${id}-hint` : '', error ? `${id}-error` : ''].filter(Boolean).join(' ') || undefined
+  );
+}
+
+function TextField({
+  disabled,
+  error,
+  hint,
+  id,
+  label,
+  maxLength,
+  onChange,
+  type = 'text',
+  value,
+}) {
   return (
     <label className={styles.field} htmlFor={id}>
       <span className={styles.label}>{label}</span>
       <input
+        aria-describedby={getDescribedBy(id, hint, error)}
         aria-invalid={error ? 'true' : undefined}
         className={styles.control}
         disabled={disabled}
@@ -15,16 +42,20 @@ function TextField({ disabled, error, id, label, maxLength, onChange, type = 'te
         type={type}
         value={value}
       />
-      {error ? <span className={styles.error}>{error}</span> : null}
+      <FieldMessage id={`${id}-hint`}>{hint}</FieldMessage>
+      <FieldMessage id={`${id}-error`} tone="error">
+        {error}
+      </FieldMessage>
     </label>
   );
 }
 
-function TextAreaField({ disabled, error, id, label, maxLength, onChange, value }) {
+function TextAreaField({ disabled, error, hint, id, label, maxLength, onChange, value }) {
   return (
     <label className={styles.field} htmlFor={id}>
       <span className={styles.label}>{label}</span>
       <textarea
+        aria-describedby={getDescribedBy(id, hint, error)}
         aria-invalid={error ? 'true' : undefined}
         className={styles.textarea}
         disabled={disabled}
@@ -33,7 +64,10 @@ function TextAreaField({ disabled, error, id, label, maxLength, onChange, value 
         onChange={(event) => onChange(event.target.value)}
         value={value}
       />
-      {error ? <span className={styles.error}>{error}</span> : null}
+      <FieldMessage id={`${id}-hint`}>{hint}</FieldMessage>
+      <FieldMessage id={`${id}-error`} tone="error">
+        {error}
+      </FieldMessage>
     </label>
   );
 }
@@ -45,13 +79,16 @@ export default function BrandingSection({ disabled, errors, onFieldChange, value
 
   return (
     <fieldset className={styles.section}>
-      <legend>Branding</legend>
-      <p className={styles.sectionHint}>Logo, favicon y SEO publico asociados al negocio.</p>
+      <legend>Marca y SEO</legend>
+      <p className={styles.sectionHint}>
+        Identidad visual y metadatos que el Client usa en Header, Footer y Contacto.
+      </p>
 
       <div className={styles.grid}>
         <TextField
           disabled={disabled}
           error={errors['brand.logo']}
+          hint="Usa una URL http/https o deja vacio para mostrar la marca por defecto."
           id="settings-brand-logo"
           label="Logo (URL)"
           onChange={(next) => {
@@ -62,7 +99,7 @@ export default function BrandingSection({ disabled, errors, onFieldChange, value
           value={value.brand.logo}
         />
         <div className={styles.preview} aria-label="Vista previa del logo">
-          <span className={styles.label}>Preview</span>
+          <span className={styles.label}>Vista previa</span>
           <div className={styles.logoPreview}>
             {canPreview && !logoFailed ? (
               <img alt="Logo configurado" onError={() => setLogoFailed(true)} src={logoUrl} />
@@ -74,6 +111,7 @@ export default function BrandingSection({ disabled, errors, onFieldChange, value
         <TextField
           disabled={disabled}
           error={errors['brand.favicon']}
+          hint="El favicon se aplica en el navegador cuando la URL es valida."
           id="settings-brand-favicon"
           label="Favicon (URL)"
           onChange={(next) => onFieldChange('brand.favicon', next)}
@@ -83,6 +121,7 @@ export default function BrandingSection({ disabled, errors, onFieldChange, value
         <TextField
           disabled={disabled}
           error={errors['seo.contact.title']}
+          hint="Hasta 70 caracteres."
           id="settings-seo-contact-title"
           label="Contacto - Meta titulo"
           maxLength={70}
@@ -92,6 +131,7 @@ export default function BrandingSection({ disabled, errors, onFieldChange, value
         <TextAreaField
           disabled={disabled}
           error={errors['seo.contact.description']}
+          hint="Hasta 180 caracteres."
           id="settings-seo-contact-description"
           label="Contacto - Meta descripcion"
           maxLength={180}
@@ -101,6 +141,7 @@ export default function BrandingSection({ disabled, errors, onFieldChange, value
         <TextField
           disabled={disabled}
           error={errors['seo.about.title']}
+          hint="Hasta 70 caracteres."
           id="settings-seo-about-title"
           label="Nosotros - Meta titulo"
           maxLength={70}
@@ -110,6 +151,7 @@ export default function BrandingSection({ disabled, errors, onFieldChange, value
         <TextAreaField
           disabled={disabled}
           error={errors['seo.about.description']}
+          hint="Hasta 180 caracteres."
           id="settings-seo-about-description"
           label="Nosotros - Meta descripcion"
           maxLength={180}
@@ -121,4 +163,4 @@ export default function BrandingSection({ disabled, errors, onFieldChange, value
   );
 }
 
-export { TextAreaField, TextField };
+export { FieldMessage, TextAreaField, TextField };

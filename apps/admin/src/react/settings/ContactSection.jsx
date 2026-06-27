@@ -7,13 +7,17 @@ export default function ContactSection({ disabled, errors, onFieldChange, value 
 
   return (
     <fieldset className={styles.section}>
-      <legend>Contacto</legend>
-      <p className={styles.sectionHint}>Datos visibles en el sitio publico y CTA de WhatsApp.</p>
+      <legend>Contacto, WhatsApp y ubicacion</legend>
+      <p className={styles.sectionHint}>
+        Datos publicos que aparecen en Header, Footer, Contacto y Confirmacion cuando estan
+        disponibles.
+      </p>
 
       <div className={styles.grid}>
         <Ui.TextField
           disabled={disabled}
           error={errors['identity.phone']}
+          hint="Se usa como telefono visible y como respaldo de WhatsApp si no hay numero cargado."
           id="settings-identity-phone"
           label="Telefono"
           onChange={(next) => onFieldChange('identity.phone', next)}
@@ -23,6 +27,7 @@ export default function ContactSection({ disabled, errors, onFieldChange, value 
         <Ui.TextField
           disabled={disabled}
           error={errors['identity.email']}
+          hint="Se muestra como contacto publico si el formato es valido."
           id="settings-identity-email"
           label="Email"
           onChange={(next) => onFieldChange('identity.email', next)}
@@ -32,6 +37,7 @@ export default function ContactSection({ disabled, errors, onFieldChange, value 
         <Ui.TextAreaField
           disabled={disabled}
           error={errors['identity.address']}
+          hint="Hasta 180 caracteres. El Client la muestra como direccion del local."
           id="settings-identity-address"
           label="Direccion"
           maxLength={180}
@@ -41,6 +47,7 @@ export default function ContactSection({ disabled, errors, onFieldChange, value 
         <Ui.TextField
           disabled={disabled}
           error={errors['whatsapp.number']}
+          hint="Usa solo numeros o formato local. El sistema guarda solo digitos."
           id="settings-whatsapp-number"
           label="WhatsApp"
           onChange={(next) => onFieldChange('whatsapp.number', next)}
@@ -50,6 +57,7 @@ export default function ContactSection({ disabled, errors, onFieldChange, value 
         <Ui.TextAreaField
           disabled={disabled}
           error={errors['whatsapp.message']}
+          hint="Hasta 280 caracteres. Se usa para preparar el mensaje inicial de WhatsApp."
           id="settings-whatsapp-message"
           label="Mensaje CTA de WhatsApp"
           maxLength={280}
@@ -59,6 +67,7 @@ export default function ContactSection({ disabled, errors, onFieldChange, value 
         <Ui.TextAreaField
           disabled={disabled}
           error={errors['map.embedSrc']}
+          hint="Pega el src de un iframe de Google Maps o una URL /maps/embed valida."
           id="settings-map-embed-src"
           label="Embed src de Google Maps"
           onChange={(next) => onFieldChange('map.embedSrc', next)}

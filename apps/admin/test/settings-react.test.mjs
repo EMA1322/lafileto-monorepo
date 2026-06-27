@@ -247,6 +247,35 @@ function testSettingsFieldsAndValidationContract() {
   assert.match(payloadSource, /\.\.\.original/);
 }
 
+function testSettingsLongFormPolishContract() {
+  const pageSource = read('src/react/pages/SettingsPage.jsx');
+  const formStyles = read('src/react/settings/SettingsForm.module.css');
+  const pageStyles = read('src/react/pages/SettingsPage.module.css');
+  const brandingSource = read('src/react/settings/BrandingSection.jsx');
+  const contactSource = read('src/react/settings/ContactSection.jsx');
+  const paymentsSource = read('src/react/settings/PaymentsSection.jsx');
+  const hoursSource = read('src/react/settings/HoursSection.jsx');
+  const deliverySource = read('src/react/settings/DeliverySection.jsx');
+
+  assert.match(pageSource, /formRef/);
+  assert.match(pageSource, /querySelector\('\[aria-invalid="true"\]'\)/);
+  assert.match(pageSource, /Guardar cambios/);
+  assert.match(pageSource, /aria-live="polite"/);
+  assert.match(brandingSource, /aria-describedby/);
+  assert.match(brandingSource, /FieldMessage/);
+  assert.match(contactSource, /Contacto, WhatsApp y ubicacion/);
+  assert.match(paymentsSource, /Transferencia visible en Contacto/);
+  assert.match(paymentsSource, /Transferencia oculta para el Client publico/);
+  assert.match(hoursSource, /DAY_LABELS/);
+  assert.match(hoursSource, /Lunes/);
+  assert.match(deliverySource, /Configuracion comercial/);
+  assert.match(formStyles, /\.hint/);
+  assert.match(formStyles, /\.inlineStatus/);
+  assert.match(formStyles, /grid-template-columns:\s*minmax\(0,\s*1fr\)/);
+  assert.match(pageStyles, /@media \(min-width:\s*769px\)/);
+  assert.match(pageStyles, /position:\s*sticky/);
+}
+
 function testScopeBoundaries() {
   const forbiddenExistingFiles = [
     'apps/backend/src/routes/settings.routes.js',
@@ -296,5 +325,6 @@ export function runSettingsReactTests() {
   testSettingsLegacyFilesAreRemoved();
   testSettingsPageContract();
   testSettingsFieldsAndValidationContract();
+  testSettingsLongFormPolishContract();
   testScopeBoundaries();
 }

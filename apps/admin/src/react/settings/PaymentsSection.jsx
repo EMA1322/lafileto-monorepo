@@ -13,7 +13,8 @@ export default function PaymentsSection({ disabled, errors, onFieldChange, value
     <fieldset className={styles.section}>
       <legend>Pagos</legend>
       <p className={styles.sectionHint}>
-        Datos privados para transferencias cuando estan habilitadas.
+        Datos para transferencias. El Client solo los publica cuando la transferencia esta
+        habilitada.
       </p>
 
       <label className={styles.checkbox} htmlFor="settings-payments-enabled">
@@ -26,6 +27,12 @@ export default function PaymentsSection({ disabled, errors, onFieldChange, value
         />
         Habilitar pagos por transferencia
       </label>
+      <p className={styles.inlineStatus} role="status">
+        {paymentsEnabled
+          ? 'Transferencia visible en Contacto si hay datos cargados.'
+          : 'Transferencia oculta para el Client publico.'}
+      </p>
+      {errors.payments ? <p className={styles.error}>{errors.payments}</p> : null}
       {errors['payments.enabled'] ? (
         <p className={styles.error}>{errors['payments.enabled']}</p>
       ) : null}
@@ -34,6 +41,7 @@ export default function PaymentsSection({ disabled, errors, onFieldChange, value
         <Ui.TextField
           disabled={paymentFieldsDisabled}
           error={errors['payments.bankName']}
+          hint="Hasta 80 caracteres."
           id="settings-payments-bank-name"
           label="Banco"
           maxLength={80}
@@ -43,6 +51,7 @@ export default function PaymentsSection({ disabled, errors, onFieldChange, value
         <Ui.TextField
           disabled={paymentFieldsDisabled}
           error={errors['payments.cbu']}
+          hint="22 digitos. Puede escribirse con espacios."
           id="settings-payments-cbu"
           label="CBU"
           onChange={(next) => onFieldChange('payments.cbu', formatCbuMask(next))}
@@ -51,6 +60,7 @@ export default function PaymentsSection({ disabled, errors, onFieldChange, value
         <Ui.TextField
           disabled={paymentFieldsDisabled}
           error={errors['payments.alias']}
+          hint="Hasta 40 caracteres."
           id="settings-payments-alias"
           label="Alias"
           maxLength={40}
@@ -60,6 +70,7 @@ export default function PaymentsSection({ disabled, errors, onFieldChange, value
         <Ui.TextField
           disabled={paymentFieldsDisabled}
           error={errors['payments.cuit']}
+          hint="11 digitos, sin guiones."
           id="settings-payments-cuit"
           label="CUIT"
           onChange={(next) => onFieldChange('payments.cuit', next)}

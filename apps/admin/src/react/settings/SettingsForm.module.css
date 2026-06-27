@@ -1,35 +1,39 @@
 .form {
   display: grid;
-  gap: var(--admin-react-space-4, 1rem);
+  gap: var(--admin-react-space-5, 1.25rem);
 }
 
 .sections {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--admin-react-space-4, 1rem);
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--admin-react-space-5, 1.25rem);
 }
 
 .section {
   display: grid;
-  gap: var(--admin-react-space-3, 0.75rem);
+  gap: var(--admin-react-space-4, 1rem);
   align-content: start;
   min-width: 0;
-  padding: var(--admin-react-space-4, 1rem);
+  padding: var(--admin-react-space-5, 1.25rem);
   border: 1px solid var(--admin-react-border, #e8d8c4);
   border-radius: var(--admin-react-radius-md, 0.5rem);
   background: var(--admin-react-surface, #ffffff);
+  box-shadow: var(--admin-react-shadow-sm, 0 8px 22px rgba(38, 26, 19, 0.06));
 }
 
 .section legend {
-  padding: 0 var(--admin-react-space-1, 0.25rem);
+  padding: 0 var(--admin-react-space-2, 0.5rem);
   color: var(--admin-react-text, #261a13);
   font-weight: 800;
+  font-size: 1rem;
 }
 
 .sectionHint {
-  margin: 0;
+  max-width: 46rem;
+  margin: calc(var(--admin-react-space-2, 0.5rem) * -1) 0 0;
   color: var(--admin-react-text-muted, #6a584b);
   font-size: 0.875rem;
+  line-height: 1.5;
 }
 
 .grid {
@@ -44,7 +48,7 @@
 
 .field {
   display: grid;
-  gap: var(--admin-react-space-2, 0.5rem);
+  gap: var(--admin-react-space-1, 0.25rem);
   min-width: 0;
 }
 
@@ -94,6 +98,25 @@
   margin: 0;
   color: var(--admin-react-danger, #f87171);
   font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.hint {
+  color: var(--admin-react-text-muted, #6a584b);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.inlineStatus {
+  width: fit-content;
+  margin: calc(var(--admin-react-space-2, 0.5rem) * -1) 0 0;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--admin-react-border, #e8d8c4);
+  border-radius: 999px;
+  color: var(--admin-react-text, #261a13);
+  background: var(--admin-react-surface-muted, #fff3e4);
+  font-size: 0.8125rem;
+  font-weight: 700;
 }
 
 .checkbox {
@@ -159,8 +182,16 @@
 }
 
 .dayLabel {
+  display: grid;
+  gap: 0.125rem;
   color: var(--admin-react-text, #261a13);
   font-weight: 800;
+}
+
+.dayLabel small {
+  color: var(--admin-react-text-muted, #6a584b);
+  font-size: 0.75rem;
+  font-weight: 600;
 }
 
 .actions {
@@ -169,9 +200,13 @@
   gap: var(--admin-react-space-2, 0.5rem);
 }
 
-@media (max-width: 960px) {
-  .sections {
-    grid-template-columns: 1fr;
+@media (min-width: 1080px) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .textarea {
+    min-height: 6.25rem;
   }
 }
 
