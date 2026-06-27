@@ -12,7 +12,7 @@
 .noaccess__card {
   width: 100%;
   max-width: 520px;
-  background: var(--surface-card); /* ⬅️ antes: --background-color (no definida) */
+  background: var(--surface-card);
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-soft);
