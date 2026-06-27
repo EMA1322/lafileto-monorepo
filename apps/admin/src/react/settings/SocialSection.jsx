@@ -19,7 +19,7 @@ export default function SocialSection({
     <fieldset className={styles.section}>
       <legend>Redes</legend>
       <p className={styles.sectionHint}>
-        Links publicos del negocio usados por Header/Footer del Client.
+        Links publicos del negocio. Header y Footer los muestran cuando tienen nombre y URL valida.
       </p>
 
       <div className={styles.socialRows}>
@@ -29,6 +29,7 @@ export default function SocialSection({
               <Ui.TextField
                 disabled={disabled}
                 error={errors[`socialLinks.${index}.label`]}
+                hint="Ejemplo: Instagram."
                 id={`settings-social-${index}-label`}
                 label="Nombre"
                 maxLength={40}
@@ -38,6 +39,7 @@ export default function SocialSection({
               <Ui.TextField
                 disabled={disabled}
                 error={errors[`socialLinks.${index}.url`]}
+                hint="Debe comenzar con http:// o https://."
                 id={`settings-social-${index}-url`}
                 label="URL"
                 onChange={(next) => onSocialChange(index, 'url', next)}
