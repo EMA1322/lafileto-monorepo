@@ -16,6 +16,21 @@
       "value": ""
     },
     {
+      "key": "adminEmail",
+      "value": "",
+      "description": "Set a local administrator email before running authentication requests."
+    },
+    {
+      "key": "adminPassword",
+      "value": "",
+      "description": "Set a unique local administrator password before running authentication requests."
+    },
+    {
+      "key": "newUserPassword",
+      "value": "",
+      "description": "Set a unique local password when creating a user."
+    },
+    {
       "key": "categoryId",
       "value": "<replace-with-category-id>"
     },
@@ -49,7 +64,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\"email\":\"admin@lafileto.com\",\"password\":\"secret123\"}"
+              "raw": "{\"email\":\"{{adminEmail}}\",\"password\":\"{{adminPassword}}\"}"
             }
           }
         },
@@ -131,7 +146,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\"name\":\"User\",\"email\":\"user@example.com\",\"password\":\"secret123\",\"roleId\":2}"
+              "raw": "{\"name\":\"User\",\"email\":\"user@example.com\",\"password\":\"{{newUserPassword}}\",\"roleId\":2}"
             }
           }
         },

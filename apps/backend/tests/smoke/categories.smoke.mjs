@@ -3,21 +3,23 @@
 // Requiere backend corriendo y .env con CORS correcto.
 
 const API_BASE = process.env.API_BASE || 'http://localhost:3000/api/v1';
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@lafileto.ar';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'ChangeMe!2025';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
-async function apiFetch(path, { method='GET', body, token } = {}) {
+async function apiFetch(path, { method = 'GET', body, token } = {}) {
   const res = await fetch(API_BASE + path, {
     method,
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {})
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: body ? JSON.stringify(body) : undefined,
   });
   const text = await res.text();
   let json = {};
-  try { json = JSON.parse(text); } catch {}
+  try {
+    json = JSON.parse(text);
+  } catch {}
   if (!res.ok || json?.ok === false) {
     const e = new Error(json?.error?.message || `HTTP ${res.status}`);
     e.code = json?.error?.code;
@@ -28,13 +30,19 @@ async function apiFetch(path, { method='GET', body, token } = {}) {
   return json; // envelope
 }
 
-function assert(cond, msg) { if (!cond) throw new Error('Assert: ' + msg); }
+function assert(cond, msg) {
+  if (!cond) throw new Error('Assert: ' + msg);
+}
 
 async function run() {
+  if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
+    throw new Error('ADMIN_EMAIL and ADMIN_PASSWORD must be set for the categories smoke test.');
+  }
+
   console.log('> Login…');
   const { data: login } = await apiFetch('/auth/login', {
     method: 'POST',
-    body: { email: ADMIN_EMAIL, password: ADMIN_PASSWORD }
+    body: { email: ADMIN_EMAIL, password: ADMIN_PASSWORD },
   });
   const token = login.token;
 
@@ -42,14 +50,17 @@ async function run() {
   let id = null;
 
   console.log('> Admin list…');
-  const { data: listA } = await apiFetch(`/admin/categories?page=1&pageSize=20&orderBy=name&orderDir=asc`, { token });
+  const { data: listA } = await apiFetch(
+    `/admin/categories?page=1&pageSize=20&orderBy=name&orderDir=asc`,
+    { token },
+  );
   assert(Array.isArray(listA), 'admin list returns array');
 
   console.log('> Create…');
   const { data: created } = await apiFetch('/admin/categories', {
     method: 'POST',
     body: { name: slug, status: 'active' },
-    token
+    token,
   });
   id = created.id;
   assert(created.name === slug, 'created name matches');
@@ -59,7 +70,7 @@ async function run() {
   const { data: updated } = await apiFetch(`/admin/categories/${id}`, {
     method: 'PUT',
     body: { name: newName, status: 'inactive' },
-    token
+    token,
   });
   assert(updated.name === newName && updated.status === 'inactive', 'updated ok');
 
@@ -68,12 +79,20 @@ async function run() {
   assert(deleted.deletedAt, 'has deletedAt');
 
   console.log('> Restore…');
-  const { data: restored } = await apiFetch(`/admin/categories/${id}/restore`, { method: 'PUT', token });
+  const { data: restored } = await apiFetch(`/admin/categories/${id}/restore`, {
+    method: 'PUT',
+    token,
+  });
   assert(restored.status === 'active' && !restored.deletedAt, 'restored active');
 
   console.log('> Public list…');
-  const { data: listP } = await apiFetch(`/categories?page=1&pageSize=50&q=${encodeURIComponent('SMOKE_')}`);
-  assert(listP.some(x => x.id === id), 'public list shows restored active');
+  const { data: listP } = await apiFetch(
+    `/categories?page=1&pageSize=50&q=${encodeURIComponent('SMOKE_')}`,
+  );
+  assert(
+    listP.some((x) => x.id === id),
+    'public list shows restored active',
+  );
 
   console.log('> Cleanup (soft-delete again)…');
   await apiFetch(`/admin/categories/${id}`, { method: 'DELETE', token });
@@ -81,7 +100,7 @@ async function run() {
   console.log('OK ✅ Smoke done');
 }
 
-run().catch(err => {
+run().catch((err) => {
   console.error('❌ Smoke failed:', err.code || err.status || '', err.message);
   if (err.details) console.error('details:', err.details);
   process.exitCode = 1;

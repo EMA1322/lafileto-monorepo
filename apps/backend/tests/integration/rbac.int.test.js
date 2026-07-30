@@ -1,8 +1,8 @@
 // Integration: RBAC (requiere token admin con permisos "users.*")
-import test from "node:test";
-import assert from "node:assert/strict";
-import { app } from "../../src/app.js";
-import { prisma } from "../../src/config/prisma.js";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { app } from '../../src/app.js';
+import { prisma } from '../../src/config/prisma.js';
 
 let server;
 let baseUrl;
@@ -11,13 +11,13 @@ test.before(async () => {
   server = app.listen(0);
 
   await new Promise((resolve, reject) => {
-    server.once("listening", resolve);
-    server.once("error", reject);
+    server.once('listening', resolve);
+    server.once('error', reject);
   });
 
   const address = server.address();
-  if (!address || typeof address === "string") {
-    throw new Error("Unexpected server address");
+  if (!address || typeof address === 'string') {
+    throw new Error('Unexpected server address');
   }
 
   baseUrl = `http://127.0.0.1:${address.port}`;
@@ -37,18 +37,18 @@ test.after(async () => {
   });
 });
 
-async function api(path, { method = "GET", headers = {}, json } = {}) {
+async function api(path, { method = 'GET', headers = {}, json } = {}) {
   if (!baseUrl) {
-    throw new Error("Server not initialized");
+    throw new Error('Server not initialized');
   }
 
   const finalHeaders = { ...headers };
   let body;
 
   if (json !== undefined) {
-    body = typeof json === "string" ? json : JSON.stringify(json);
-    if (!finalHeaders["Content-Type"]) {
-      finalHeaders["Content-Type"] = "application/json";
+    body = typeof json === 'string' ? json : JSON.stringify(json);
+    if (!finalHeaders['Content-Type']) {
+      finalHeaders['Content-Type'] = 'application/json';
     }
   }
 
@@ -75,15 +75,19 @@ async function api(path, { method = "GET", headers = {}, json } = {}) {
   };
 }
 
-const email = process.env.ADMIN_EMAIL || "admin@lafileto.ar";
-const password = process.env.ADMIN_PASSWORD || "ChangeMe!2025";
+const email = process.env.ADMIN_EMAIL;
+const password = process.env.ADMIN_PASSWORD;
 
-let token = "";
+if (!email || !password) {
+  throw new Error('ADMIN_EMAIL and ADMIN_PASSWORD must be set for RBAC integration tests.');
+}
+
+let token = '';
 const roleId = `role-test-${Date.now()}`;
 
-test("login admin (precondition)", async () => {
-  const res = await api("/auth/login", {
-    method: "POST",
+test('login admin (precondition)', async () => {
+  const res = await api('/auth/login', {
+    method: 'POST',
     json: { email, password },
   });
 
@@ -92,9 +96,9 @@ test("login admin (precondition)", async () => {
   assert.ok(token);
 });
 
-test("GET /rbac/roles → 200 (lista)", async () => {
-  const res = await api("/rbac/roles", {
-    method: "GET",
+test('GET /rbac/roles → 200 (lista)', async () => {
+  const res = await api('/rbac/roles', {
+    method: 'GET',
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -104,13 +108,13 @@ test("GET /rbac/roles → 200 (lista)", async () => {
   assert.ok(Array.isArray(res.body?.data));
 });
 
-test("POST /rbac/roles → 201 (crear rol nuevo)", async () => {
-  const res = await api("/rbac/roles", {
-    method: "POST",
+test('POST /rbac/roles → 201 (crear rol nuevo)', async () => {
+  const res = await api('/rbac/roles', {
+    method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
     },
-    json: { roleId, name: "Role Temporal Test" },
+    json: { roleId, name: 'Role Temporal Test' },
   });
 
   assert.equal(res.status, 201);
@@ -118,11 +122,11 @@ test("POST /rbac/roles → 201 (crear rol nuevo)", async () => {
   assert.equal(res.body?.data?.roleId, roleId);
 });
 
-test("PUT /rbac/roles/:roleId/permissions → 200 sin auditoría", async () => {
+test('PUT /rbac/roles/:roleId/permissions → 200 sin auditoría', async () => {
   const matrix = { dashboard: { r: true, w: false, u: false, d: false } };
 
   const res = await api(`/rbac/roles/${roleId}/permissions`, {
-    method: "PUT",
+    method: 'PUT',
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -135,11 +139,11 @@ test("PUT /rbac/roles/:roleId/permissions → 200 sin auditoría", async () => {
 
   // Auditoría eliminada: solo verificamos persistencia de permisos
   const rows = await prisma.rolePermission.findMany({ where: { roleId } });
-  assert.ok(rows.find((r) => r.moduleKey === "dashboard" && r.r === true));
+  assert.ok(rows.find((r) => r.moduleKey === 'dashboard' && r.r === true));
 });
 
 // Limpieza (borra el rol y sus permisos)
-test("cleanup test role", async () => {
+test('cleanup test role', async () => {
   await prisma.rolePermission.deleteMany({ where: { roleId } });
   try {
     await prisma.role.delete({ where: { roleId } });

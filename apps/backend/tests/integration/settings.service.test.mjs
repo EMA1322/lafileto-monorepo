@@ -89,7 +89,7 @@ test('updateAdminSettings persiste siteConfig sanitizado con metadata de actuali
 
   const response = await settingsService.updateAdminSettings(
     {
-      identity: { phone: '2661230000', email: 'admin@lafileto.com' },
+      identity: { phone: '2661230000', email: 'admin@example.invalid' },
       payments: { enabled: true, cbu: '0000123456789012345678' },
     },
     'user-123',
