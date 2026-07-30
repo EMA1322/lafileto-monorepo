@@ -9,17 +9,19 @@ scope: Checklist funcional del módulo Usuarios + Roles & Permisos.
 
 1. Backend levantado: `pnpm -F backend dev` (API en `http://localhost:3000`).
 2. Admin levantado: `pnpm -F admin dev` (SPA en `http://localhost:5174`).
-3. Base de datos con al menos un usuario admin (`admin@lafileto.ar`).
+3. Base de datos con al menos un usuario admin configurado mediante `ADMIN_EMAIL`.
 4. Navegador limpio (sin tokens previos) o modo incógnito.
 
 ## Checklist funcional
 
 ### 1. Inicio de sesión y bootstrap
+
 - Login con credenciales de admin.
 - Confirmar que la SPA navega a `/#/dashboard` (o a la primera ruta con permiso `R`).
 - Verificar en la consola de red que se ejecuta `GET /api/v1/auth/me` y responde `{ user, permissions }`.
 
 ### 2. Gestión de usuarios
+
 - Abrir `/#/users` y confirmar que la tabla muestra todos los registros sin paginación.
 - Crear un usuario nuevo con teléfono válido (7–20 caracteres, dígitos o símbolos `()+-`).
 - Editar un usuario existente (sin cambiar contraseña) y validar que los cambios persisten al refrescar.
@@ -29,6 +31,7 @@ scope: Checklist funcional del módulo Usuarios + Roles & Permisos.
 - Eliminar un usuario común y confirmar que desaparece de la grilla.
 
 ### 3. Roles & Permisos
+
 - Crear un rol nuevo (ej. `role-cocinero`) y completar la matriz `r/w/u/d`.
 - Editar el nombre del rol y guardar; toasts verdes en éxito.
 - Intentar eliminar un rol asignado a un usuario → toast "ROLE_IN_USE".
@@ -36,12 +39,14 @@ scope: Checklist funcional del módulo Usuarios + Roles & Permisos.
 - Si se edita el rol actual, comprobar que la barra superior refresca permisos (llamado a `auth/me`).
 
 ### 4. Navegación protegida
+
 - Cambiar al nuevo usuario creado con permisos limitados.
 - Verificar que la SPA redirige a la primera ruta con permiso de lectura y bloquea las otras con "No autorizado".
 - Desde la pantalla "No autorizado", el botón "Volver al inicio de sesión" debe ejecutar `logout()` y volver a `/#/login`.
 - Simular token inválido (borrar de localStorage y refrescar) → el interceptor de `apiClient` debe disparar `logout()`.
 
 ### 5. Logout
+
 - Desde cualquier vista protegida, presionar "Cerrar sesión".
 - Confirmar que se realiza `POST /api/v1/auth/logout`, se limpia localStorage y se redirige a `/#/login`.
 - Reintentar acceder a rutas protegidas sin token → guard redirige a login.

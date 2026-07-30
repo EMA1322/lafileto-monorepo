@@ -74,8 +74,12 @@ async function api(path, { method = 'GET', headers = {}, json } = {}) {
   };
 }
 
-const email = process.env.ADMIN_EMAIL || 'admin@lafileto.ar';
-const password = process.env.ADMIN_PASSWORD || 'ChangeMe!2025';
+const email = process.env.ADMIN_EMAIL;
+const password = process.env.ADMIN_PASSWORD;
+
+if (!email || !password) {
+  throw new Error('ADMIN_EMAIL and ADMIN_PASSWORD must be set for auth integration tests.');
+}
 
 let token = '';
 

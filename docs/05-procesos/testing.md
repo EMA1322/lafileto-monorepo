@@ -20,7 +20,7 @@ curl -i http://localhost:3000/_debug/ping
 
 TOKEN=$(curl -s -X POST http://localhost:3000/api/v1/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@lafileto.ar","password":"<PASS>"}' | jq -r '.data.accessToken')
+   -d '{"email":"${ADMIN_EMAIL}","password":"${ADMIN_PASSWORD}"}' | jq -r '.data.accessToken')
 
 curl -i http://localhost:3000/api/v1/auth/me -H "Authorization: Bearer $TOKEN"
 curl -i "http://localhost:3000/api/v1/users?all=1" -H "Authorization: Bearer $TOKEN"
@@ -38,7 +38,7 @@ curl -i "http://localhost:5174/api/v1/categories?page=1&pageSize=10"
 
 ## Checklist visual rapido (Admin React)
 
-1. Login como admin (`admin@lafileto.ar`).
+1. Login como el admin configurado mediante `ADMIN_EMAIL`.
 2. `/#/products`: validar listado, filtros `q`, `categoryId`, `status`, `hasOffer`, CRUD, cambio de estado y gestion de ofertas.
 3. `/#/categories`: validar busqueda, `status=all|active|inactive`, orden, paginacion, `productCount`, CRUD y toggle `active`.
 4. `/#/users`: validar listado, crear/editar/eliminar, estado, aliases de lectura tolerados (`userId`, `state`, `role_id`) y contrato canonico (`id`, `fullName`, `roleId`, `status`).

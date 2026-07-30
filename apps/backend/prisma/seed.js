@@ -16,7 +16,7 @@ async function upsertRole(roleId, name) {
   await prisma.role.upsert({
     where: { roleId },
     update: { name },
-    create: { roleId, name }
+    create: { roleId, name },
   });
 }
 
@@ -24,7 +24,7 @@ async function upsertModule(moduleKey, name) {
   await prisma.module.upsert({
     where: { moduleKey },
     update: { name },
-    create: { moduleKey, name }
+    create: { moduleKey, name },
   });
 }
 
@@ -37,7 +37,7 @@ async function upsertPermission(roleId, moduleKey, flags) {
       w: !!flags.w,
       u: !!flags.u,
       d: !!flags.d,
-      changeStatus: !!flags.changeStatus
+      changeStatus: !!flags.changeStatus,
     },
     create: {
       roleId,
@@ -46,8 +46,8 @@ async function upsertPermission(roleId, moduleKey, flags) {
       w: !!flags.w,
       u: !!flags.u,
       d: !!flags.d,
-      changeStatus: !!flags.changeStatus
-    }
+      changeStatus: !!flags.changeStatus,
+    },
   });
 }
 
@@ -57,28 +57,28 @@ const RBAC_MODULES = [
     key: 'dashboard',
     name: 'Dashboard',
     supervisorFlags: { r: true, w: false, u: false, d: false },
-    viewerFlags: { r: true, w: false, u: false, d: false }
+    viewerFlags: { r: true, w: false, u: false, d: false },
   },
   {
     key: 'products',
     name: 'Productos',
     supervisorFlags: { r: true, w: true, u: true, d: false, changeStatus: true },
-    viewerFlags: { r: true, w: false, u: false, d: false, changeStatus: false }
+    viewerFlags: { r: true, w: false, u: false, d: false, changeStatus: false },
   },
   {
     key: 'offers',
     name: 'Ofertas',
     supervisorFlags: { r: true, w: false, u: false, d: false },
-    viewerFlags: { r: true, w: false, u: false, d: false }
+    viewerFlags: { r: true, w: false, u: false, d: false },
   },
   {
     key: 'categories',
     name: 'Categorías',
     supervisorFlags: { r: true, w: true, u: true, d: false },
-    viewerFlags: { r: true, w: false, u: false, d: false }
+    viewerFlags: { r: true, w: false, u: false, d: false },
   },
   { key: 'settings', name: 'Configuración' },
-  { key: 'users', name: 'Usuarios / Roles & Permisos' }
+  { key: 'users', name: 'Usuarios / Roles & Permisos' },
 ];
 
 const ADMIN_FULL_ACCESS = { r: true, w: true, u: true, d: true, changeStatus: true };
@@ -89,7 +89,7 @@ async function upsertSetting(key, value) {
   await prisma.setting.upsert({
     where: { key },
     update: { value },
-    create: { key, value }
+    create: { key, value },
   });
 }
 
@@ -97,7 +97,7 @@ async function ensureSiteConfigSetting() {
   await prisma.setting.upsert({
     where: { key: 'siteConfig' },
     create: { key: 'siteConfig', value: cloneSiteConfigDefaults() },
-    update: {}
+    update: {},
   });
 }
 
@@ -107,7 +107,7 @@ async function upsertAdminUser({ email, fullName, password, roleId, phone }) {
   await prisma.user.upsert({
     where: { email },
     update: { fullName, passwordHash, roleId, status: 'ACTIVE', phone: normalizedPhone },
-    create: { fullName, email, passwordHash, roleId, status: 'ACTIVE', phone: normalizedPhone }
+    create: { fullName, email, passwordHash, roleId, status: 'ACTIVE', phone: normalizedPhone },
   });
 }
 
@@ -126,6 +126,13 @@ async function categoryTableExists() {
 // Seed I1
 // ==============================
 async function seedI1() {
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminPassword = process.env.ADMIN_PASSWORD;
+
+  if (!adminEmail || !adminPassword) {
+    throw new Error('ADMIN_EMAIL and ADMIN_PASSWORD must be set before seeding.');
+  }
+
   console.log('▶ Seeding roles…');
   await upsertRole('role-admin', 'Administrador');
   await upsertRole('role-supervisor', 'Supervisor');
@@ -155,11 +162,11 @@ async function seedI1() {
 
   console.log('▶ Seeding admin user…');
   await upsertAdminUser({
-    email:   process.env.ADMIN_EMAIL    || 'admin@lafileto.ar',
-    fullName:process.env.ADMIN_FULLNAME || 'La Fileto Admin',
-    password:process.env.ADMIN_PASSWORD || 'ChangeMe!2025',
+    email: adminEmail,
+    fullName: process.env.ADMIN_FULLNAME || 'La Fileto Admin',
+    password: adminPassword,
     roleId: 'role-admin',
-    phone:  process.env.ADMIN_PHONE     || '+54 11 2345-6789'
+    phone: process.env.ADMIN_PHONE || '+54 11 2345-6789',
   });
 
   console.log('▶ Seeding settings…');
@@ -184,30 +191,30 @@ async function seedI2() {
         {
           name: 'Carnes',
           imageUrl: 'https://cdn.example.com/categories/carnes.webp',
-          active: true
+          active: true,
         },
         {
           name: 'Pastas',
           imageUrl: 'https://cdn.example.com/categories/pastas.webp',
-          active: true
+          active: true,
         },
         {
           name: 'Pizzas',
           imageUrl: 'https://cdn.example.com/categories/pizzas.webp',
-          active: true
+          active: true,
         },
         {
           name: 'Bebidas',
           imageUrl: 'https://cdn.example.com/categories/bebidas.webp',
-          active: true
+          active: true,
         },
         {
           name: 'Ensaladas',
           imageUrl: 'https://cdn.example.com/categories/ensaladas.webp',
-          active: true
-        }
+          active: true,
+        },
       ],
-      skipDuplicates: true
+      skipDuplicates: true,
     });
     console.log('✓ I2: categorías demo listas');
   } catch (e) {
