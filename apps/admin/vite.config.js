@@ -1,12 +1,12 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import { visualizer } from 'rollup-plugin-visualizer';
 
-export default defineConfig(() => {
-  const shouldAnalyze =
-    Boolean(process.env.ANALYZE_BUNDLE) && process.env.ANALYZE_BUNDLE !== 'false';
-  const backendTarget = process.env.VITE_API_PROXY_TARGET || 'http://localhost:3000';
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), ['VITE_', 'ANALYZE_']);
+  const shouldAnalyze = Boolean(env.ANALYZE_BUNDLE) && env.ANALYZE_BUNDLE !== 'false';
+  const backendTarget = env.VITE_API_PROXY_TARGET || 'http://localhost:3000';
 
   return {
     plugins: [
