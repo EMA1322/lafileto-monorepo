@@ -9,15 +9,18 @@
     "postinstall": "prisma generate",
     "lint": "pnpm exec eslint . --no-error-on-unmatched-pattern",
     "test": "node ./scripts/test.mjs",
+    "test:db": "node ./scripts/test.mjs --db",
     "prisma": "prisma",
     "prisma:generate": "prisma generate",
-    "prisma:migrate:deploy": "prisma migrate deploy",
-    "prisma:migrate:reset": "prisma migrate reset --force --skip-seed",
+    "prisma:migrate:deploy": "node ./scripts/db-safety.mjs migrate-deploy -- prisma migrate deploy",
+    "prisma:migrate:reset": "node ./scripts/db-safety.mjs migrate-reset -- prisma migrate reset --force --skip-seed",
     "lint:fix": "pnpm exec eslint . --fix --no-error-on-unmatched-pattern",
     "format": "pnpm exec prettier . --write",
-    "db:seed": "node prisma/seed.js",
+    "db:seed": "node ./scripts/db-safety.mjs seed -- node prisma/seed.js",
     "seed": "pnpm run db:seed",
-    "db:reset": "pnpm run prisma:migrate:reset && pnpm run db:seed"
+    "db:reset": "node ./scripts/db-safety.mjs reset",
+    "smoke:local": "node ./scripts/db-safety.mjs smoke-local -- node tests/smoke/categories.smoke.mjs",
+    "smoke:remote": "node ./scripts/db-safety.mjs smoke-remote -- node tests/smoke/categories.smoke.mjs"
   },
   "devDependencies": {
     "nodemon": "^3.1.10",

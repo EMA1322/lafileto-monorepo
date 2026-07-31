@@ -87,8 +87,9 @@ curl -i "http://localhost:5174/api/v1/categories?page=1&pageSize=10"
 
 ### Datos semilla sugeridos
 
-- Ejecutar `pnpm -F backend prisma:migrate:deploy` + `pnpm -F backend db:seed` antes de correr integraciones.
-- Mantener categorías base (`Bebidas`, `Pastas`, `Carnes`, `Ensaladas`, `Postres`) para validar paginado y filtros.
+- `pnpm -F backend test` no usa DB: no correr migraciones ni seed para esa suite.
+- Las integraciones reales viven en `pnpm -F backend test:db`; requieren una DB de test descartable y los opt-ins documentados en `docs/07-anexos/env.md`.
+- Los aliases de migración, seed y reset están protegidos. El reset exige una confirmación adicional y no debe usarse para la verificación cotidiana.
 
 ### Checks previos a merge
 
