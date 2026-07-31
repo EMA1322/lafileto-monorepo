@@ -41,8 +41,11 @@ ADMIN_PHONE=
 
 - El seed requiere `ADMIN_EMAIL` y `ADMIN_PASSWORD`.
 - `ADMIN_FULLNAME` y `ADMIN_PHONE` son overrides opcionales del seed.
-- Los tests inyectan sus propios defaults; no requieren un `.env` de test compartido.
-- CI provee su propia base efímera y credenciales de seed.
+- `pnpm -F backend test` es aislado: fuerza el stub Prisma y no necesita `DATABASE_URL`, MySQL, migraciones ni seed.
+- `pnpm -F backend test:db` exige `NODE_ENV=test`, `ALLOW_DB_TESTS=1` y una `DATABASE_URL` local/permitida con nombre descartable. No se ejecuta en CI por ahora.
+- Los aliases `prisma:migrate:deploy`, `prisma:migrate:reset` y `db:seed` requieren su opt-in específico. `db:reset` requiere además `CONFIRM_DB_RESET=RESET_TEST_DATABASE`.
+- `pnpm -F backend prisma <subcomando>` sigue siendo un escape manual sin protección; revisar destino y variables antes de usarlo.
+- Los smokes son mutantes y opt-in: `smoke:local` sólo admite loopback; `smoke:remote` exige HTTPS, `ALLOW_REMOTE_SMOKE=1` y `SMOKE_EXPECTED_HOST`.
 
 ## Build del Client (SPA pública)
 
