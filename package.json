@@ -19,7 +19,8 @@
     "lint": "pnpm exec eslint . --no-error-on-unmatched-pattern",
     "lint:fix": "pnpm exec eslint . --fix --no-error-on-unmatched-pattern",
     "format": "pnpm exec prettier . --write",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "secrets:scan": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/security/scan-secrets.ps1"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
