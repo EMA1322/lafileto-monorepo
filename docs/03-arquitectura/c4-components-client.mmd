@@ -1,23 +1,17 @@
-```mermaid
 C4Component
-title La Fileto — Componentes del Client público (React)
-
-Container_Boundary(clientSpa, "apps/client") {
-  Component(mainEntry, "main.js", "Bootstrap", "Carga shell (header/footer) y monta React")
-  Component(reactBootstrap, "mountReactShell", "React bootstrap", "Renderiza App en #main-content")
-  Component(appRouter, "AppRouter", "HashRouter", "Rutas Home/Products/Cart/Confirm")
-  Component(pages, "Pages", "React Pages", "HomePage, ProductsPage, CartPage, ConfirmPage")
-  Component(publicApi, "publicApi", "Data access", "Consumo de /api/v1/public/*")
-  Component(cartService, "cartService", "State helper", "Persistencia de carrito en localStorage")
-  Component(asyncUi, "useAsyncResource + AsyncStateNotice", "UX state", "Estados loading/empty/error")
+title Componentes principales de Client
+Container_Boundary(client, "apps/client") {
+  Component(entry, "main.js", "Vite entry", "Carga estilos y arranca los bootstraps React.")
+  Component(bootstrap, "React bootstraps", "React", "Monta Header, Footer y el shell en roots separados.")
+  Component(app, "App y AppRouter", "React + HashRouter", "Declara las rutas del shell público.")
+  Component(pages, "Pages", "React", "Home, Products, Contact, Cart y Confirm.")
+  Component(cart, "Cart utilities", "JavaScript", "localStorage['cart'] y cart:updated.")
+  Component(api, "API client", "JavaScript", "Consumo de catálogo público.")
 }
-
-System_Ext(api, "API Backend", "Express / JSON")
-Rel(mainEntry, reactBootstrap, "Monta")
-Rel(reactBootstrap, appRouter, "Renderiza")
-Rel(appRouter, pages, "Navegación")
-Rel(pages, publicApi, "Carga datos")
-Rel(pages, cartService, "Lee/escribe carrito")
-Rel(pages, asyncUi, "Controla estados técnicos")
-Rel(publicApi, api, "HTTP GET público")
-```
+System_Ext(backend, "Backend API")
+Rel(entry, bootstrap, "Arranca")
+Rel(bootstrap, app, "Monta el shell")
+Rel(app, pages, "Enruta")
+Rel(pages, cart, "Gestiona carrito")
+Rel(pages, api, "Solicita catálogo")
+Rel(api, backend, "GET público", "JSON")

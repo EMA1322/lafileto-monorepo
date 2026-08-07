@@ -1,52 +1,20 @@
 ---
 name: lafileto-project-context
-description: Stable project context for La Fileto. Use when working in the La Fileto monorepo to align on repository structure, stack boundaries, protected contracts, small PR discipline, and Eduardo's manual control of commit, push, pull request, and merge operations.
+description: Navigate the La Fileto monorepo from its current versioned sources before planning, auditing, or implementing work.
 ---
 
-# La Fileto Project Context
+# La Fileto project context
 
-Use this skill to establish stable context before planning, auditing, or implementing work in the La Fileto repository.
+Use this skill as a navigation procedure. It is not a snapshot of mutable project state.
 
-## Repository Shape
+## Procedure
 
-- Treat the repository as a pnpm monorepo.
-- Recognize `apps/client` as the public Client application.
-- Recognize `apps/admin` as the Admin application.
-- Recognize `apps/backend` as the API backend.
-- Recognize `docs` as project documentation.
-- Prefer workspace-aware pnpm commands when verifying a scoped change.
+1. Read the repository [AGENTS.md](../../../AGENTS.md).
+2. Read the [documentation portal](../../../docs/README.md).
+3. Read [current state](../../../docs/project/current-state.md).
+4. Read the closest application `AGENTS.md` when the task is application-scoped.
+5. Read the canonical documentation linked by that guide.
+6. Use the relevant La Fileto audit skill when the task affects its area.
+7. Verify affected behavior before claiming completion.
 
-## Stack
-
-- Client: React, JSX, Vite, hash routing, CSS Modules, design tokens, local foundation primitives, and selective lightweight UI libraries when already approved.
-- Admin: existing modular Vite SPA. Do not assume a migration or framework change unless Eduardo explicitly confirms it.
-- Backend: Node, Express, Prisma, MySQL, and `/api/v1` API routes.
-
-## Protected Contracts
-
-Before changing behavior, identify whether the task touches any protected contract:
-
-- Client hash routes and navigation.
-- Cart persistence through `localStorage['cart']`.
-- Cart synchronization through `cart:updated`.
-- Public add-to-cart hooks such as `.btn-add-to-cart`.
-- Critical `data-*` attributes.
-- API request and response contracts shared by Client, Admin, and Backend.
-- Authentication, authorization, RBAC, and permission-sensitive flows.
-
-Do not remove or rename protected contracts unless the user explicitly approves the change and the compatibility impact is audited.
-
-## Git And PR Discipline
-
-- Keep PRs small: one PR, one theme.
-- Keep implementation scope aligned to the user-approved task.
-- Do not commit, push, create PRs, merge, or close PRs automatically. Eduardo keeps manual control of Git and GitHub actions unless he explicitly asks otherwise.
-- Report local changes and suggested commands, but leave Git publication decisions to Eduardo.
-
-## Operating Rules
-
-- Use English for code, identifiers, filenames, and comments unless the existing code requires otherwise.
-- Use Spanish for explanations, audit reports, and documentation addressed to Eduardo.
-- Analyze with evidence before implementing.
-- Prefer minimal edits in the affected surface instead of broad refactors.
-- Do not copy external code, images, or assets. External visual references may inform patterns only when Eduardo approves visual work.
+Keep current architecture, contracts, roadmap and mutable status in repository documentation rather than repeating them here. Preserve the project's manual control of commits, pushes, pull requests and merges.
