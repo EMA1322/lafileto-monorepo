@@ -1,82 +1,23 @@
 ---
-status: Draft
-owner: Tech Lead
-last_update: 2026-04-13
-scope: Variables por app y ejemplos por entorno.
+status: CANONICAL
+verified_at: 2026-08-07
 ---
 
-## Backend runtime (Express)
+# Contratos de entorno
 
-```
-PORT=3000
-JWT_SECRET=replace-with-a-long-random-secret
-CORS_ALLOWLIST=http://localhost:5173,http://localhost:5174
-BODY_LIMIT=1mb
-REQUEST_TIMEOUT_MS=15000
-```
+Este documento enumera nombres y reglas, nunca valores secretos. Los `.env.example` por aplicación son el punto de partida; el código y los scripts validan las precondiciones finales.
 
-- `PORT` define el puerto HTTP del backend.
-- `CORS_ALLOWLIST` debe incluir las URLs del Client/Admin (separadas por coma).
-- `REQUEST_TIMEOUT_MS` se usa en el middleware `requestTimeout`.
+| Área    | Variables/contrato                                                                                                                                                        |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Client  | `VITE_API_BASE_URL` define la base de API pública.                                                                                                                        |
+| Admin   | `VITE_API_BASE`, `VITE_API_PROXY_TARGET`, `VITE_DATA_SOURCE` y `VITE_FEATURE_SETTINGS` configuran cliente, proxy y flags Vite; la configuración carga env explícitamente. |
+| Backend | `DATABASE_URL`, `JWT_SECRET`, CORS/orígenes y configuración de puerto se validan desde el entorno de Backend.                                                             |
+| Prisma  | `DATABASE_URL`; `SHADOW_DATABASE_URL` solo cuando un flujo Prisma lo requiera.                                                                                            |
 
-## Backend database (Prisma)
+## Operaciones de DB y smoke
 
-```
-DATABASE_URL=mysql://user:replace-with-local-password@localhost:3306/lafileto_example
-# Sólo para prisma migrate dev; usar una base descartable separada.
-# SHADOW_DATABASE_URL=mysql://user:replace-with-local-password@localhost:3306/lafileto_shadow_example
-```
+Los comandos sensibles son opt-in y requieren una DB de prueba permitida. `test:db` exige entorno `test`, `ALLOW_DB_TESTS=1` y URL segura; los wrappers verifican hosts/nombres permitidos. `migrate deploy`, reset y seed añaden sus propios flags `ALLOW_DB_MIGRATE_DEPLOY`, `ALLOW_DB_RESET`, `CONFIRM_DB_RESET=RESET_TEST_DATABASE` y/o `ALLOW_DB_SEED` según la operación.
 
-`DATABASE_URL` es requerida por Prisma, migraciones, seed y CI.
-`SHADOW_DATABASE_URL` sólo corresponde a flujos locales de `prisma migrate dev`.
+Los smokes locales y remotos se habilitan por separado con sus flags `ALLOW_LOCAL_SMOKE` o `ALLOW_REMOTE_SMOKE`; el remoto además valida el host esperado. No usar `pnpm -F backend prisma <subcomando>` como atajo para omitir estas protecciones.
 
-## Backend seed, test y CI
-
-```
-ADMIN_EMAIL=
-ADMIN_FULLNAME="La Fileto Admin"
-ADMIN_PASSWORD=
-ADMIN_PHONE=
-```
-
-- El seed requiere `ADMIN_EMAIL` y `ADMIN_PASSWORD`.
-- `ADMIN_FULLNAME` y `ADMIN_PHONE` son overrides opcionales del seed.
-- `pnpm -F backend test` es aislado: fuerza el stub Prisma y no necesita `DATABASE_URL`, MySQL, migraciones ni seed.
-- `pnpm -F backend test:db` exige `NODE_ENV=test`, `ALLOW_DB_TESTS=1` y una `DATABASE_URL` local/permitida con nombre descartable. No se ejecuta en CI por ahora.
-- Los aliases `prisma:migrate:deploy`, `prisma:migrate:reset` y `db:seed` requieren su opt-in específico. `db:reset` requiere además `CONFIRM_DB_RESET=RESET_TEST_DATABASE`.
-- `pnpm -F backend prisma <subcomando>` sigue siendo un escape manual sin protección; revisar destino y variables antes de usarlo.
-- Los smokes son mutantes y opt-in: `smoke:local` sólo admite loopback; `smoke:remote` exige HTTPS, `ALLOW_REMOTE_SMOKE=1` y `SMOKE_EXPECTED_HOST`.
-
-## Build del Client (SPA pública)
-
-```
-# Opcional: override explícito de base API.
-VITE_API_BASE_URL=/api/v1
-```
-
-- Si `VITE_API_BASE_URL` no se define, el client usa `/api/v1` por defecto.
-- En desarrollo, `client -> /api/v1/public/* -> Vite proxy -> backend`.
-- Para acceso directo al backend desde una IP LAN, configurar `CORS_ALLOWLIST` según corresponda.
-- El client público productivo consume API pública; no usar JSON local como fuente productiva.
-
-## Build y desarrollo del Admin (SPA de gestión)
-
-```
-VITE_API_BASE=/api
-VITE_API_PROXY_TARGET=http://localhost:3000
-VITE_DATA_SOURCE=api
-VITE_FEATURE_SETTINGS=false
-```
-
-- `VITE_API_PROXY_TARGET` configura el destino del proxy de Vite sólo en desarrollo.
-- Todo el tráfico de la Admin pasa por el proxy configurado en `vite.config.js`.
-- El login y el bootstrap de permisos utilizan `POST /api/v1/auth/login` y `GET /api/v1/auth/me`.
-- `VITE_DATA_SOURCE` en admin se conserva para compatibilidad de debug/migración incremental; valor recomendado: `api`.
-- `VITE_FEATURE_SETTINGS` habilita Settings sólo cuando resuelve a un valor verdadero.
-
-## Variable interna de build
-
-`ANALYZE_BUNDLE` pertenece a los scripts `build:analyze` y no forma parte del
-contrato público de los `.env.example`.
-
-> En producción mover secretos a un gestor seguro; no commitear `.env` reales.
+Para valores, orden de carga y ejemplos vigentes consultar `apps/*/.env.example` y los scripts de Backend; no copiar secretos a documentación ni a tests.

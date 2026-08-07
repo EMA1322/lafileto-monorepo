@@ -1,17 +1,13 @@
-```mermaid
 C4Context
-title La Fileto — Contexto del sistema
-Person(cliente, "Cliente")
-Person(admin, "Admin / Operador")
-
-System_Boundary(sys, "La Fileto") {
-  System(clientSpa, "Client SPA (React)", "Flujo público: Home, Products, Cart, Confirm")
-  System(adminSpa, "Admin SPA", "Gestión interna con RBAC")
-  System(api, "API Backend", "Express + Prisma + MySQL")
-}
-
-Rel(cliente, clientSpa, "Consulta catálogo y confirma pedido por WhatsApp")
-Rel(clientSpa, api, "HTTP/JSON público (/api/v1/public/*)")
-Rel(admin, adminSpa, "Gestiona catálogo, usuarios y configuración")
-Rel(adminSpa, api, "HTTP/JSON con JWT")
-```
+title Contexto actual de La Fileto
+Person(customer, "Cliente", "Consulta el menú y arma un pedido.")
+Person(staff, "Personal autorizado", "Administra catálogo, usuarios y configuración.")
+System(client, "Client", "React/Vite público con hash routing.")
+System(admin, "Admin", "React/Vite interno con autenticación y RBAC.")
+System(backend, "Backend API", "Express bajo /api/v1.")
+SystemDb(db, "MySQL", "Persistencia operada por Prisma.")
+Rel(customer, client, "Usa", "HTTPS")
+Rel(staff, admin, "Usa", "HTTPS")
+Rel(client, backend, "Consume API pública", "HTTPS/JSON")
+Rel(admin, backend, "Consume API protegida", "HTTPS/JSON + Bearer JWT")
+Rel(backend, db, "Lee y escribe", "Prisma")

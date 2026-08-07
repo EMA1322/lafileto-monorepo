@@ -1,46 +1,15 @@
-```mermaid
-%% C4 Model — Components (Admin SPA)
 C4Component
-title La Fileto — Admin SPA (Componentes)
-
-Container_Boundary(adminSpa, "Admin SPA (Vite)") {
-
-  Component(router, "Router", "Hash routing", "Resuelve rutas y carga vistas")
-  Component(guardRBAC, "RBAC Guard", "Guard", "Bloquea vistas/acciones según permisos")
-  Component(apiClient, "ApiClient", "Fetch wrapper", "Llama a /api/v1 con JWT y maneja envelope")
-  Component(sessionStore, "SessionStore", "State", "Token, usuario y roles activos")
-
-  Component(loginView, "LoginView", "View", "Ingreso y obtención de JWT")
-  Component(dashboardView, "DashboardView", "View", "Atajos y métricas básicas")
-  Component(categoriesView, "CategoriesView", "View", "CRUD de categorías")
-  Component(productsView, "ProductsView", "View", "CRUD de productos (precio/discount)")
-  Component(usersView, "UsersView", "View", "CRUD de usuarios")
-  Component(settingsView, "SettingsView (placeholder)", "View", "Ajustes del negocio")
-
-  Component(uiModal, "Modal", "UI", "Diálogos con focus trap")
-  Component(uiSnackbar, "Snackbar", "UI", "Feedback de operación")
-  Component(uiDataTable, "DataTable", "UI", "Listados con orden/búsqueda/paginación")
+title Componentes principales de Admin
+Container_Boundary(admin, "apps/admin") {
+  Component(entry, "main.js", "Vite entry", "Carga estilos, inicializa modales e inicia el router.")
+  Component(router, "Router", "Custom hash router", "Resuelve auth, RBAC y rutas protegidas.")
+  Component(adapter, "reactViewAdapter", "React adapter", "Monta y desmonta vistas React.")
+  Component(pages, "Pages", "React", "Login, Dashboard, Products, Categories, Users y Settings.")
+  Component(api, "API adapter", "JavaScript", "Envelope, token y llamadas protegidas.")
 }
-System_Ext(api, "API Backend", "Express / JSON")
-Rel(apiClient, api, "HTTP/JSON con JWT")
-```
-
-```mermaid
-%% Componentes específicos de Categorías
-C4Component
-title Admin SPA — Categorías
-Container_Boundary(catBoundary, "Módulo Categorías") {
-  Component(categoriesView, "CategoriesView", "View", "Entrada al módulo, invoca init")
-  Component(catState, "categories.state", "Store", "Mantiene items/meta/filtros y llama a /categories")
-  Component(catTable, "categories.render.table", "UI", "Tabla con estados loading/error/empty")
-  Component(catBindings, "categories.render.bindings", "Events", "Debounce búsqueda, paginación, delegación de acciones")
-  Component(catModals, "categories.modals", "UI", "Alta/edición/eliminar/ver con focus trap y toasts")
-  Component(rbac, "applyRBAC", "Helper", "Oculta acciones según permisos effectivePermissions")
-  Component(toast, "toast", "UI", "Feedback accesible (aria-live)")
-}
-System_Ext(api, "API Backend", "Express REST")
-Rel(catState, api, "GET/POST/PUT/PATCH/DELETE /api/v1/categories")
-Rel(catModals, catState, "Refresca lista tras éxito/error")
-Rel(catTable, rbac, "Aplicar data-rbac-action")
-Rel(catBindings, catModals, "Abre modales y maneja optimismo")
-```
+System_Ext(backend, "Backend API")
+Rel(entry, router, "Inicia")
+Rel(router, adapter, "Delega el montaje")
+Rel(adapter, pages, "Renderiza")
+Rel(pages, api, "Solicita operaciones")
+Rel(api, backend, "Bearer JWT + JSON")
