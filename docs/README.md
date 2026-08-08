@@ -13,6 +13,12 @@ Este índice guía la navegación; no reemplaza la evidencia ejecutable. Ante un
 - [Registro de decisiones](project/decision-register.md): decisiones durables aceptadas.
 - [Roadmap](project/roadmap.md): trabajo completado, activo, diferido y pendiente de decisión.
 
+## Workflow operativo
+
+- [Sistema Work Item](work-items/README.md) (**CANONICAL**): contrato versionado de scope y aceptación para una PR.
+- [Template de Work Item](work-items/TEMPLATE.md) (**CANONICAL**): estructura reutilizable para nuevos Work Items.
+- [Salida estándar de Codex](templates/codex-result-template.md) (**CANONICAL**): reporte verificable de implementaciones.
+
 ## Arquitectura y contratos
 
 - [Arquitectura de Client](03-arquitectura/client-react-architecture.md)
