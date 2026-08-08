@@ -1,11 +1,37 @@
-## Qué cambia
+## Objetivo
+
+<!-- Una frase derivada del Work Item. -->
+
+## Work Item
+
+- `WI-NNNN` — `docs/work-items/WI-NNNN-short-slug.md`
+
+## Resumen del diff
+
 - ...
 
-## Cómo probar
-- `pnpm dev` → 5173/5174/3000
-- `GET /api/v1/health` → 200
+<!-- Scope, Out of scope y Acceptance Criteria completos viven en el Work Item. -->
 
-## Checklist
-- [ ] Docs actualizadas si cambian contratos (APIs, env, despliegue)
-- [ ] Sin secrets en el diff (.env)
-- [ ] Build local OK (`pnpm -F client build`, `pnpm -F admin build`)
+## Contratos, seguridad y riesgos
+
+- Contratos afectados o preservados:
+- Seguridad: `N/A — razón`
+- Riesgos o deuda: `N/A — razón`
+
+## Verificación
+
+| Verificación | Resultado                              | Evidencia |
+| ------------ | -------------------------------------- | --------- |
+| ...          | PASS / FAIL / NOT RUN / NOT APPLICABLE | ...       |
+
+## Auditorías
+
+- Pre-commit: `PENDIENTE`
+- Post-PR: `PENDIENTE` — SHA: `N/A`
+
+## Declaraciones del autor
+
+- [ ] El diff mantiene un solo tema y respeta el Work Item aprobado.
+- [ ] No incluí secretos ni archivos `.env`.
+- [ ] No marqué `PASS` sin evidencia fresca; lo no ejecutado está explícito.
+- [ ] Declaré contratos, seguridad y riesgos o justifiqué `N/A`.

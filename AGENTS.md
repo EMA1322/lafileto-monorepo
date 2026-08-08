@@ -25,6 +25,10 @@
 - Do not copy external code or assets.
 - Follow the applicable app-level `AGENTS.md` before changing an app.
 
+## Work Items
+
+For work that results in a pull request, use the approved Work Item as the scope contract and read the [Work Item system](docs/work-items/README.md). Do not expand Scope or Acceptance Criteria silently; report scope gaps and wait for an approved amendment before implementing them. Use the [Codex result template](docs/templates/codex-result-template.md) for implementation reports. La Fileto audits compare the Work Item against the real diff and verification evidence.
+
 ## Git authority
 
 Eduardo keeps manual control of commits, pushes, PR creation or closure, merges, and branch deletion unless explicitly instructed otherwise. Suggest commands when useful; do not perform those actions automatically.

@@ -27,11 +27,31 @@ git diff --cached
 git diff --cached --check
 ```
 
+List untracked files separately:
+
+```bash
+git ls-files --others --exclude-standard
+```
+
+## Work Item
+
+For pull requests that use the [Work Item workflow](../../../docs/work-items/README.md):
+
+1. Locate the single Work Item for the PR.
+2. Verify its ID and status. Pre-commit permits `active` or `completed`.
+3. Compare the authorized Scope and Out of scope separately against staged, unstaged, and untracked files.
+4. Evaluate every Acceptance Criterion as `PASS`, `FAIL`, or `NOT APPLICABLE` using observable evidence.
+5. Treat a missing or ambiguous Work Item as `NO APTO`.
+6. Treat work outside Scope as `NO APTO` unless a human-approved Scope amendment is already recorded.
+7. Do not edit the Work Item during the audit.
+
+The Work Item is the authority for scope. The diff is evidence and does not redefine authorization. Do not copy the Work Item template into this skill.
+
 ## Audit Checklist
 
 - Identify the active branch and whether it matches the intended task.
 - List all touched files, separating staged, unstaged, untracked, and deleted files.
-- Confirm the real scope from the diff, not from branch name or intent.
+- Confirm the real changed surface from the diff, then compare it with the authorized Work Item scope.
 - Check whether changes touch forbidden or unrelated areas.
 - Check whitespace with `git diff --check` and, when relevant, `git diff --cached --check`.
 - Identify protected contracts affected by the diff.
@@ -56,13 +76,15 @@ Call out any file outside the approved scope.
 Write the report in Spanish:
 
 1. Rama y estado.
-2. Archivos tocados.
-3. Scope real.
-4. Riesgos.
-5. Contratos afectados.
-6. Comandos ejecutados.
-7. Evidencia relevante.
-8. Dictamen final.
+2. Work Item y status.
+3. Archivos tocados, separados en staged, unstaged y untracked.
+4. Scope match: sí/no.
+5. Acceptance Criteria con resultado `PASS`, `FAIL` o `NOT APPLICABLE`.
+6. Riesgos.
+7. Contratos afectados.
+8. Comandos ejecutados.
+9. Evidencia relevante.
+10. Dictamen final.
 
 Use one of these verdicts:
 

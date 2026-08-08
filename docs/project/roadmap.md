@@ -16,14 +16,16 @@ Estados: `completed`, `active`, `next`, `planned`, `optional`, `blocked`, `defer
 - Settings y Contact públicos.
 - Bloques visuales Client 9F y Admin 10C.
 - SEC-01, SEC-02, SEC-03 y SEC-04.
+- **OPT-A — Project Knowledge Foundation:** docs, AGENTS y skills como sistema navegable de conocimiento durable.
+- **OPT-B — Development Workflow Standardization:** Work Items versionados y Pull Request template operativo.
 
 ## Active
 
-- **OPT-A — Project Knowledge Foundation:** establecer docs, AGENTS y skills como sistema navegable de conocimiento durable.
+No hay bloques activos versionados.
 
 ## Next
 
-No hay un plan versionado verificable que permita programar OPT-B u OPT-C como compromiso actual. Sus etiquetas permanecen en `needs-decision` hasta que una decisión aprobada se registre en este repositorio.
+OPT-C permanece en `needs-decision` hasta que una instrucción aprobada se registre en este repositorio.
 
 ## Deferred / debt
 
@@ -36,7 +38,6 @@ No hay un plan versionado verificable que permita programar OPT-B u OPT-C como c
 
 ## Needs decision
 
-- Alcance y compromiso de OPT-B — Development Workflow Standardization.
 - Alcance y compromiso de OPT-C — Verification & CI Foundation.
 - Cualquier nueva fase visual de Client o Admin: 9F/10C no son trabajo futuro.
 - Separar `products:changeStatus` como permiso runtime o mantener el comportamiento actual basado en `products:u`.
