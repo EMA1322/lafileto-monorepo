@@ -1,7 +1,7 @@
 ---
 status: CURRENT
-verified_at: 2026-08-07
-verified_commit: 4c52414d27c7bacd78c29ffb85ddca2661c203ca
+verified_at: 2026-08-08
+baseline_commit: 1fdff76b7875f0489478c5d0b75e1a80873d9768
 scope: Snapshot operativo del conocimiento versionado de La Fileto.
 ---
 
@@ -9,7 +9,7 @@ scope: Snapshot operativo del conocimiento versionado de La Fileto.
 
 ## Authority
 
-Este documento resume el estado operativo verificado del repositorio. No reemplaza código, schema, configuración, workflows ni tests ejecutados por sus runners. Si existe una contradicción, registrar la discrepancia y consultar el [decision register](./decision-register.md); no inferir intención de producto desde el comportamiento actual.
+Este documento resume el estado operativo verificado del repositorio. No reemplaza código, schema, configuración, workflows ni tests ejecutados por sus runners. `baseline_commit` identifica la revisión desde la que se verificó y construyó este snapshot; no afirma que ese commit contenga los cambios descritos. El estado vigente es el contenido de este documento en la revisión que se consulta. Si existe una contradicción, registrar la discrepancia y consultar el [decision register](./decision-register.md); no inferir intención de producto desde el comportamiento actual.
 
 ## Repository
 
@@ -29,15 +29,15 @@ El backend es Node ESM con Express, Prisma y MySQL. La API vive bajo `/api/v1`; 
 
 ## Testing
 
-Los archivos existentes no equivalen automáticamente a cobertura ejecutada. El runner normal Backend usa Prisma stub e incluye Categories, Users, Settings y guards DB; Auth/RBAC reales son `test:db` opt-in. Los archivos de Products, Dashboard y CORS existentes no forman parte de ese runner normal. Admin ejecuta un runner explícito de 13 suites y deja `rbac.integration.test.js` fuera. Client usa Vitest con nueve archivos y 66 tests en la verificación de este commit. Ver [testing](../05-procesos/testing.md).
+Los archivos existentes no equivalen automáticamente a cobertura ejecutada. El runner normal Backend usa Prisma stub e incluye Categories, Users, Settings y guards DB; Auth/RBAC reales son `test:db` opt-in. Los archivos de Products, Dashboard y `src/config/_tests_/_cors.test.js` existen, pero no forman parte de ese runner normal. Admin ejecuta un runner explícito de 13 suites y deja `rbac.integration.test.js` fuera. Client usa Vitest con nueve archivos y 66 tests. Ver [testing](../05-procesos/testing.md).
 
 ## CI
 
-`ci.yml` ejecuta lint, test y build en push/PR a `main` y en `workflow_dispatch`. `secret-scan.yml` ejecuta Gitleaks en push/PR a `main`. No hay path filters, publicación de artefactos ni CD implementado. Ver [CI/CD](../05-procesos/ci-cd.md).
+`ci.yml` ejecuta el script raíz `pnpm verify` en un único job sobre push/PR a `main` y `workflow_dispatch`; usa Node.js 22.23.2 desde `.nvmrc`, install frozen, cache pnpm y permisos de lectura. `secret-scan.yml` mantiene Gitleaks como check independiente en push/PR a `main`. Las Actions están fijadas por SHA y Dependabot sólo mantiene el ecosistema `github-actions`. No hay path filters, publicación de artefactos ni CD implementado. Ver [CI/CD](../05-procesos/ci-cd.md).
 
 ## Security
 
-SEC-01 saneó material credencial versionado; SEC-02 alineó contratos de entorno; SEC-03 añadió guards fail-closed para tests, DB y smokes; SEC-04 añadió Gitleaks local y CI. El workflow declara que GitHub Secret Scanning y Push Protection se habilitan manualmente: su estado vivo no es verificable desde el repositorio. Ver [seguridad](../07-anexos/seguridad.md) y [entorno](../07-anexos/env.md).
+SEC-01 saneó material credencial versionado; SEC-02 alineó contratos de entorno; SEC-03 añadió guards fail-closed para tests, DB y smokes; SEC-04 añadió Gitleaks local y CI. El pre-commit ejecuta Gitleaks después de estabilizar el índice con lint-staged. El workflow declara que GitHub Secret Scanning y Push Protection se habilitan manualmente: su estado vivo no es verificable desde el repositorio. Ver [seguridad](../07-anexos/seguridad.md) y [entorno](../07-anexos/env.md).
 
 ## UX/UI
 
@@ -48,9 +48,8 @@ Los bloques visuales Client 9F y Admin 10C están completados en Git. Sus briefs
 - La cobertura efectiva de runners no incluye todos los archivos de test existentes.
 - La reconciliación API/Postman permanece pendiente.
 - CD y backup/restore no están implementados.
-- La integración local adicional de secret scan/Husky y Dependabot Actions permanece diferida.
-- El tooling/lint raíz tiene deuda vinculada al visualizador local; no se declara como comando verde sin verificación.
+- El gate global de Prettier, la limpieza de warnings históricos y una eventual verificación por cambios permanecen diferidos.
 
 ## Completed major blocks
 
-Client React, contratos públicos, foundation/rediseño Client, Admin React, Settings/Contact públicos, visual Client 9F, visual Admin 10C y SEC-01…SEC-04 están completados. Ver [roadmap](./roadmap.md) para la clasificación completa.
+Client React, contratos públicos, foundation/rediseño Client, Admin React, Settings/Contact públicos, visual Client 9F, visual Admin 10C, SEC-01…SEC-04 y OPT-A…OPT-C están completados. Ver [roadmap](./roadmap.md) para la clasificación completa.

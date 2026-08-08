@@ -18,6 +18,7 @@
     "clean": "rimraf **/node_modules **/dist || true",
     "lint": "pnpm exec eslint . --no-error-on-unmatched-pattern",
     "lint:fix": "pnpm exec eslint . --fix --no-error-on-unmatched-pattern",
+    "verify": "pnpm lint && pnpm -r test && pnpm -F admin build && pnpm -F client build",
     "format": "pnpm exec prettier . --write",
     "prepare": "husky install",
     "secrets:scan": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/security/scan-secrets.ps1"

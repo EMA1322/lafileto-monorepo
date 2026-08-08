@@ -1,6 +1,6 @@
 ---
 status: CURRENT
-verified_at: 2026-08-07
+verified_at: 2026-08-08
 scope: Trabajo aprobado, deuda demostrada y decisiones pendientes.
 ---
 
@@ -18,6 +18,7 @@ Estados: `completed`, `active`, `next`, `planned`, `optional`, `blocked`, `defer
 - SEC-01, SEC-02, SEC-03 y SEC-04.
 - **OPT-A — Project Knowledge Foundation:** docs, AGENTS y skills como sistema navegable de conocimiento durable.
 - **OPT-B — Development Workflow Standardization:** Work Items versionados y Pull Request template operativo.
+- **OPT-C / OPT-07 — Verification & CI Foundation:** runtime Node compartido, lint raíz corregido, verificación local/CI canónica, pre-commit con Gitleaks y mantenimiento de Actions.
 
 ## Active
 
@@ -25,19 +26,17 @@ No hay bloques activos versionados.
 
 ## Next
 
-OPT-C permanece en `needs-decision` hasta que una instrucción aprobada se registre en este repositorio.
+No hay bloques en estado `next`.
 
 ## Deferred / debt
 
-- **OPT-07/tooling:** integración local adicional de secret scan/Husky y actualizaciones Dependabot de Actions.
 - Ejecutar integración DB en CI solo con estrategia segura aprobada.
 - CD y backup/restore.
 - Reconciliar documentación API, Postman y ejemplos en una tarea contractual dedicada.
 - Revisar documentos clasificados `NEEDS REVIEW` en el portal de docs.
-- Resolver la deuda del visualizador/lint raíz en OPT-C/OPT-07, sin declararlo verde hasta verificarlo.
+- Evaluar por separado un gate global de Prettier, limpieza de warnings históricos o `verify:changed`; no forman parte de OPT-C.
 
 ## Needs decision
 
-- Alcance y compromiso de OPT-C — Verification & CI Foundation.
 - Cualquier nueva fase visual de Client o Admin: 9F/10C no son trabajo futuro.
 - Separar `products:changeStatus` como permiso runtime o mantener el comportamiento actual basado en `products:u`.

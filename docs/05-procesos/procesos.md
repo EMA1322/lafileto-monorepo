@@ -1,6 +1,6 @@
 ---
 status: CANONICAL
-verified_at: 2026-08-07
+verified_at: 2026-08-08
 scope: Workflow de una PR, Definition of Ready, Definition of Done y coordinación.
 ---
 
@@ -70,6 +70,6 @@ La convención del proyecto es una PR por tema y un Work Item por PR. GitHub set
 
 ## Verification and tooling
 
-Cada Work Item selecciona verificaciones mediante los `AGENTS.md` y documentos canónicos aplicables. `pnpm dev`, health, builds, root lint y smokes no son requisitos universales.
+Cada Work Item selecciona verificaciones mediante los `AGENTS.md` y documentos canónicos aplicables. `pnpm verify` es la verificación completa compartida por local y CI; los comandos por aplicación siguen siendo apropiados para scopes más estrechos. `pnpm dev`, health, builds aislados y smokes no son requisitos universales.
 
-La deuda de tooling y CI pertenece a OPT-C/OPT-07. Este proceso no presenta `pnpm -r lint` como universalmente verde ni corrige tooling.
+El pre-commit conserva una fase rápida y mutante de lint-staged, seguida por el escaneo fail-closed del índice final. La verificación completa no se ejecuta automáticamente en ese hook.

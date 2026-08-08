@@ -1,6 +1,6 @@
 ---
 status: CANONICAL
-verified_at: 2026-08-07
+verified_at: 2026-08-08
 scope: Decisiones durables verificadas en el repositorio.
 ---
 
@@ -29,3 +29,4 @@ Las decisiones registradas son durables. `verified_at` identifica la verificaci�
 | DEC-017 | accepted | Históricos no son normativos                            | Actas y evaluaciones preservan trazabilidad                | Marcarlos e indicar reemplazo                           | índice documental                            | —          |
 | DEC-018 | accepted | No copiar código ni assets externos                     | Restricción visual y de propiedad                          | Usar referencias solo como inspiración                  | AGENTS y briefs visuales                     | —          |
 | DEC-019 | accepted | Work Item versionado gobierna scope y aceptación        | Prompts tenían scope mutable; auditoría infería del diff   | WI gobierna scope/AC; prompts y reportes no lo amplían  | `AGENTS.md`, Work Items y audit skills       | —          |
+| DEC-020 | accepted | `pnpm verify` es la verificación completa local y de CI | Root lint y CI tenían semánticas distintas                 | Humanos, Codex y CI comparten una definición DB-free    | `package.json`, `ci.yml`, `.nvmrc`           | —          |

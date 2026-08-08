@@ -12,32 +12,11 @@ const commonGlobals = {
 };
 
 const browserGlobals = {
-  window: 'readonly',
-  document: 'readonly',
-  navigator: 'readonly',
-  location: 'readonly',
-  fetch: 'readonly',
-  Headers: 'readonly',
-  Request: 'readonly',
-  Response: 'readonly',
-  URLSearchParams: 'readonly',
-  FormData: 'readonly',
-  HTMLElement: 'readonly',
-  Element: 'readonly',
-  localStorage: 'readonly',
-  sessionStorage: 'readonly',
-  confirm: 'readonly',
-  requestAnimationFrame: 'readonly',
-  cancelAnimationFrame: 'readonly',
+  ...globals.browser,
 };
 
 const nodeGlobals = {
-  process: 'readonly',
-  module: 'readonly',
-  require: 'readonly',
-  __dirname: 'readonly',
-  __filename: 'readonly',
-  global: 'readonly',
+  ...globals.node,
 };
 
 export default [
@@ -56,9 +35,6 @@ export default [
       },
       globals: {
         ...commonGlobals,
-        ...browserGlobals,
-        ...nodeGlobals,
-        ...globals.browser,
         Intl: 'readonly',
       },
     },
@@ -75,16 +51,37 @@ export default [
   {
     files: [
       'apps/backend/**/*.{js,mjs,cjs}',
-      '**/scripts/**/*.{js,mjs}',
-      '**/*.config.js',
-      '**/*.config.cjs',
+      'apps/admin/scripts/**/*.{js,mjs,cjs}',
+      'apps/admin/test/**/*.{js,mjs,cjs}',
+      'apps/client/scripts/**/*.{js,mjs,cjs}',
+      'packages/rollup-plugin-visualizer/**/*.{js,mjs,cjs}',
+      'scripts/**/*.{js,mjs,cjs}',
+      '**/*.config.{js,mjs,cjs}',
     ],
     languageOptions: {
       globals: { ...commonGlobals, ...nodeGlobals },
     },
   },
   {
-    files: ['apps/**/src/**/*.{js,jsx}'],
+    files: ['apps/admin/src/**/*.{js,jsx}', 'apps/client/src/**/*.{js,jsx}'],
+    languageOptions: {
+      globals: { ...commonGlobals, ...browserGlobals },
+    },
+  },
+  {
+    files: ['apps/admin/src/utils/auth.js'],
+    languageOptions: {
+      globals: { process: 'readonly' },
+    },
+  },
+  {
+    files: ['apps/admin/test/rbac.integration.test.js'],
+    languageOptions: {
+      globals: { ...browserGlobals },
+    },
+  },
+  {
+    files: ['apps/client/test/**/*.{js,jsx,mjs,cjs}'],
     languageOptions: {
       globals: { ...commonGlobals, ...browserGlobals },
     },
