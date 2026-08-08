@@ -37,7 +37,7 @@ Eduardo keeps manual control of commits, pushes, PR creation or closure, merges,
 
 - Never expose secrets or modify `.env` files without explicit need and approval.
 - Read [env.md](docs/07-anexos/env.md), [testing.md](docs/05-procesos/testing.md), and [seguridad.md](docs/07-anexos/seguridad.md) before DB, migration, seed, reset, or smoke work.
-- Do not describe a verification command as green without fresh evidence. `pnpm -r lint` has known tooling debt recorded in current-state and the roadmap.
+- Do not describe a verification command as green without fresh evidence. Use the root `pnpm verify` script for complete repository verification and the application-level commands for narrower Work Item scopes.
 - Use app-level scripts for routine checks; DB and smoke operations are opt-in and are not routine commands.
 
 ## Skills
